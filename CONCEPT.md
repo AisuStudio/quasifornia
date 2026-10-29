@@ -84,6 +84,8 @@ Tonalität: Pop-Kultur-Explosion, unbeschwerter Futurismus gemischt mit Dystopie
 
 Entschieden: Die Bilder sind nur Moodboard (Stil und Farben), sie kommen nicht im Spiel vor. Nicht ins Repo committen (Größe).
 
+Entschieden (Formensprache): Figuren und Objekte bestehen aus runden Grundformen (Kugel, Kapsel, Zylinder), das wirkt "aufblasbar" und passt zu Dinos, Ballons und Reifen. Vorteile: wenig Daten, prozedural erzeugbar (auch durch den Weltenbau-Agenten), günstige Rapier-Collider, einheitlicher Look über fremde Welten, einfach für das Paint-Feature. Architektur darf kantig bleiben (Mix aus rund und kantig). Offen: LOD/Instancing wegen Dreieckszahl glatter Formen; Wiedererkennung über Farbe und Silhouette statt Detail.
+
 ## Farben (aus `Inspirarion/`, per k-means aus den Bildern gezogen)
 Vom Nutzer gewünscht: aus den Inspirationen nur die Farben nehmen.
 - **Hauptakzent Himmel/Meer-Türkis:** `#2499bb` (32 % der gesättigten Pixel), dazu `#1cafd1`, `#5b94ad`, `#78a0ae`
