@@ -10,6 +10,7 @@
     <div class="lbl"><span>Start</span><span id="gap">Abstand</span><span>Portal</span></div>
   </div>
   <div id="modes">
+    <button id="b-inv" type="button" aria-pressed="false" hidden>Inventar · I <span id="b-inv-n">0/5</span></button>
     <button id="b-pix" type="button" aria-pressed="false">Pixel-Look · P</button>
     <button id="b-snd" type="button" aria-pressed="true">Ton · M</button>
   </div>
@@ -23,6 +24,14 @@
     <div class="grp"><button id="t-trick" type="button" aria-label="Kickflip">✦</button><button id="t-throw" type="button" aria-label="Skateboard werfen">⤴</button><button id="t-jump" type="button" aria-label="Sprung">▲</button><button id="t-gas" type="button" aria-label="Gas">GO</button></div>
   </div>
   <div id="boom"><div class="big" id="boom-big">SCHLURP!</div><div class="small" id="boom-small"></div></div>
+  <div id="inv" hidden role="dialog" aria-label="Inventar">
+    <div class="card">
+      <h1>Inventar <small id="inv-n">0/5</small></h1>
+      <p class="sub">Diese Gegenstände findest du in der Stadt. Sie werden im Atoll gebraucht (das Atoll ist noch nicht gebaut).</p>
+      <div id="inv-grid"></div>
+      <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Zurücksetzen</button></div>
+    </div>
+  </div>
   <div id="overlay">
     <div class="card" id="card"></div>
   </div>
