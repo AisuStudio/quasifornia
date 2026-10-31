@@ -49,6 +49,32 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #narr p{margin:0;font:400 15px/1.45 var(--mono);color:var(--paper);min-height:1.45em}
 #toast{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);font-weight:800;font-size:clamp(34px,7vw,76px);line-height:1;text-align:center;color:var(--gold);text-shadow:0 4px 0 #0e0b18,0 0 0 #0e0b18;-webkit-text-stroke:2px #0e0b18;paint-order:stroke fill;opacity:0;transition:opacity .25s;pointer-events:none;text-wrap:balance;max-width:90vw}
 #toast.on{opacity:1}
+#sc-hud{position:relative;display:inline-flex;align-items:center;gap:7px;font:700 13px/1 var(--mono);color:var(--paper);background:rgba(26,22,38,.84);border:2px solid #0e0b18;border-radius:10px;padding:8px 11px;box-shadow:0 3px 0 #0e0b18}
+#sc-hud[hidden]{display:none}
+.sc{display:inline-block;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffd0e8,#ee7cb8 55%,#d54291);border:2px solid #0e0b18}
+#sc-hud.pulse{animation:scp .5s ease}
+@keyframes scp{40%{transform:scale(1.14);background:rgba(120,40,90,.95)}}
+#sc-d{position:absolute;right:6px;top:100%;margin-top:4px;font-weight:800;opacity:0;text-decoration:none;text-shadow:0 2px 0 #0e0b18;pointer-events:none}
+#sc-d.up{color:var(--gold)}#sc-d.dn{color:#ff8fa8}
+#sc-d.on{animation:scd 1.1s ease forwards}
+@keyframes scd{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(14px)}}
+#inv .card{max-height:calc(100vh - 28px);overflow-y:auto}
+#rp-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+#rp-tabs button{font:500 12px/1 var(--mono);color:var(--paper);background:var(--ink-2);border:2px solid #0e0b18;border-radius:10px;padding:8px 11px;cursor:pointer}
+#rp-tabs button[aria-pressed="true"]{background:var(--pink)}
+#rp-tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.aulist{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.au{background:var(--ink-2);border:2px solid #0e0b18;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.au.done{border-color:#2f7a55}
+.au .zl{font:700 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.au em{font-style:normal;font-size:12px;color:var(--haze)}.au .rw{font:600 12px/1.3 var(--mono);color:var(--paper)}
+.bal{display:flex;align-items:center;gap:10px;font:800 40px/1 var(--display);margin:4px 0 8px}.bal .sc{width:28px;height:28px}.bal span{font:600 14px/1 var(--mono);color:var(--haze)}
+.prices{display:flex;justify-content:space-between;background:var(--ink-2);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14px}
+.lg{display:flex;flex-direction:column;gap:3px;font-size:13px;margin-bottom:6px}.lg div{display:flex;justify-content:space-between;gap:12px}
+.lg .up{color:var(--gold)}.lg .dn{color:#ff8fa8}
+.np2{display:flex;flex-direction:column;gap:4px;background:var(--ink-2);border-radius:14px;padding:12px 14px;font-size:14px}.np2 b{color:var(--gold);font-size:17px}
+@media (prefers-reduced-motion:reduce){#sc-hud.pulse,#sc-d.on{animation:none}#sc-d.on{opacity:1}}
+
 #np{position:absolute;right:16px;top:72px;text-align:right;max-width:min(92vw,460px);padding:8px 12px;border-radius:12px;background:rgba(14,11,24,.8);color:#fff;font-size:12px;line-height:1.4;opacity:0;transition:opacity .6s;pointer-events:none}
 #np.on{opacity:1}
 #np b{color:var(--gold);font-size:14px}
@@ -207,7 +233,8 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
     <div class="lbl"><span>Start</span><span id="gap">Abstand</span><span>Portal</span></div>
   </div>
   <div id="modes">
-    <button id="b-inv" type="button" aria-pressed="false" hidden>Inventar · I <span id="b-inv-n">0/5</span></button>
+    <span id="sc-hud" hidden title="Scoops"><i class="sc"></i><b id="sc-n">30</b><u id="sc-d"></u></span>
+    <button id="b-inv" type="button" aria-pressed="false" hidden>Rarepod · I <span id="b-inv-n">0/5</span></button>
     <button id="b-pix" type="button" aria-pressed="false">Pixel-Look · P</button>
     <button id="b-snd" type="button" aria-pressed="true">Ton · M</button>
   </div>
@@ -224,10 +251,12 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
   <div id="boom"><div class="big" id="boom-big">SCHLURP!</div><div class="small" id="boom-small"></div></div>
   <div id="inv" hidden role="dialog" aria-label="Inventar">
     <div class="card">
-      <h1>Inventar <small id="inv-n">0/5</small></h1>
-      <p class="sub">Diese Gegenstände findest du in der Stadt. Sie werden im Atoll gebraucht (das Atoll ist noch nicht gebaut).</p>
-      <div id="inv-grid"></div>
-      <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Zurücksetzen</button></div>
+      <h1>Rarepod <small id="inv-n">0/5</small></h1>
+      <div id="rp-tabs"><button type="button" data-t="inv" aria-pressed="true">Inventar</button><button type="button" data-t="auf" aria-pressed="false">Aufträge</button><button type="button" data-t="sco" aria-pressed="false">Scoops</button><button type="button" data-t="mus" aria-pressed="false">Musik</button></div>
+      <div id="rp-inv"><p class="sub">Diese Gegenstände findest du in der Stadt. Du brauchst sie im Atoll.</p>
+      <div id="inv-grid"></div></div>
+      <div id="rp-auf" hidden></div><div id="rp-sco" hidden></div><div id="rp-mus" hidden></div>
+      <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Inventar zurücksetzen</button></div>
     </div>
   </div>
   <div id="act" hidden><span></span><kbd>Enter</kbd></div>
@@ -828,7 +857,7 @@ function resetRun(){TIMERS.length=0;P.push=0;if(typeof hideRivals!=='undefined')
   if(dinoG)dinoG.visible=false;if(blobD)blobD.visible=false;
   $('track').classList.remove('on')}
 function scoopsGot(){return scoops.filter(s=>s.got).length}
-function beginPlay(){$('b-inv').hidden=false;resetRun();T.said=false;G.knocked=0;G.falls=0;G.fallSaid=false;HUB.portals.forEach(p=>p.hit=0);HUB.coastHit=0;buildRivals();if(LV.mode!=='city')placeRivals();G.phase='play';$('overlay').hidden=true;$('card').innerHTML='';
+function beginPlay(){$('b-inv').hidden=false;$('sc-hud').hidden=false;scHud(0);resetRun();T.said=false;G.knocked=0;G.falls=0;G.fallSaid=false;HUB.portals.forEach(p=>p.hit=0);HUB.coastHit=0;buildRivals();if(LV.mode!=='city')placeRivals();G.phase='play';$('overlay').hidden=true;$('card').innerHTML='';
   setQuest(LV.quest,LV.id===0?HUB.found.size:(LV.id===4&&Q.hasKey?1:(LV.id===5?0:0)));if(LV.id!==5)$('cd').hidden=true;HUB.atollHit=0;$('quest').hidden=false;
   say('e',LV.intro,3.4);
   later(3.5,()=>{if(G.phase==='play')say('v',LV.vendor,4.8)})}
@@ -876,7 +905,7 @@ function respawn(){G.tries++;P.push=0;placeRivals();iceTower.visible=false;P.av.
   dinoG.userData.x=P.x-48;dinoG.userData.z=-22;
   cones.forEach(c=>{if(c.x>P.x){c.hit=0;c.o.visible=true;c.o.position.set(c.x,1.3,c.z);c.o.rotation.set(0,0,0);c.o.scale.setScalar(1)}});
   toast('Noch mal!',1400)}
-function win(){G.phase='win';SFX.win();burst(P.x,4,P.z,120);burst(P.x+6,6,P.z,80);
+function win(){G.phase='win';SFX.win();{const m={1:'rennen',2:'galaxie',3:'nacht'}[LV.id];if(m)auComplete(m)}burst(P.x,4,P.z,120);burst(P.x+6,6,P.z,80);
   say('e',LV.win,5);
   const bk=LV.id===1?'kq-best':'kq-best2';let best=null;try{best=parseFloat(localStorage.getItem(bk))||null;if(!best||G.time<best){localStorage.setItem(bk,String(G.time.toFixed(1)));best=G.time}}catch(e){best=G.best=G.best&&G.best<G.time?G.best:G.time}
   const secs=G.time.toFixed(0);$('overlay').hidden=false;
@@ -1066,7 +1095,7 @@ function stepPlayer(dt){
     if(Math.abs(P.x-c.x)<1.2&&Math.abs(P.z-c.z)<1.2&&P.y<2.4){c.hit=1.1;c.vx=Math.cos(P.h)*P.speed*1.2;c.vz=Math.sin(P.h)*P.speed*.8+(Math.random()-.5)*4;c.vy=8;P.speed*=.55;SFX.thud();G.shake=Math.max(G.shake,.25);
       if(!G.coneSay){G.coneSay=true;say('e','Ein Hütchen. Es hat dir nichts getan. Du ihm schon.',3)}}}
   // Eiskugeln
-  if(G.phase==='play')for(const s of scoops){if(!s.got&&Math.hypot(P.x-s.x,P.z-s.z)<4.6&&P.y<7){s.got=true;const n=scoopsGot();burst(s.x,4,s.z,46);SFX.collect(n);
+  if(G.phase==='play')for(const s of scoops){if(!s.got&&Math.hypot(P.x-s.x,P.z-s.z)<4.6&&P.y<7){s.got=true;const n=scoopsGot();burst(s.x,4,s.z,46);SFX.collect(n);scAdd(1,'Eiskugel');if(LV.id===1&&n>=5)auComplete('sammeln');
       s.g.visible=s.beam.visible=s.pad.visible=false;setQuest(LV.quest,n);toast(n+' / 5',900);
       const lines=LV.lines;
       say('e',lines[n-1],3);if(n===5)later(1.3,()=>{if(G.phase==='play')startChase()})}}
@@ -1454,6 +1483,33 @@ const ITEM_DEFS=[
  {id:'usb',name:'USB-Stick',type:3,place:'Büro',col:'#4cc3ff',desc:'Beschriftet mit PATROUILLE. Hängt etwas Klebriges dran.',use:'Atoll: Patrouillen-Log lesen'},
  {id:'handbuch',name:'Wartungs-Handbuch',type:0,place:'Wohnhaus',col:'#47c2a5',desc:'Seite 12 ist abgerissen. Dort stand die Werks-PIN.',use:'Atoll: Kamera mit Werks-PIN'},
  {id:'losung',name:'Möwen-Bon',type:4,place:'Burger-Laden',col:'#ff5fa8',desc:'Auf der Rückseite steht: "Frag nach dem Möwen-Menü."',use:'Atoll: geheime Schmuggler-Losung (Bonus)',bonus:true}];
+/* ================= Scoops, Aufträge, Rarepod ================= */
+/* Scoops sind die Währung. Nicht kaufbar. Start mit 30. Verdienen: Eiskugeln (+1) und Aufträge. Ausgeben: Reisen durch Portale (5). */
+const SCK='kq-scoops',AUK='kq-auftr',SC_START=30,PORTAL_COST=5;
+const SC={n:SC_START,log:[['Startguthaben',SC_START]],au:{},tab:'inv'};
+try{const s=JSON.parse(localStorage.getItem(SCK)||'null');if(s&&typeof s.n==='number'){SC.n=s.n;SC.log=s.log||[]}}catch(e){}
+try{SC.au=JSON.parse(localStorage.getItem(AUK)||'{}')||{}}catch(e){}
+function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log.slice(0,12)}));localStorage.setItem(AUK,JSON.stringify(SC.au))}catch(e){}}
+const AUFTRAEGE=[
+ {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
+ {id:'rennen',ziel:'Ankommen',titel:'Küsten-Rennen',text:'Erreiche das Ziel-Portal, bevor dich der Dino schnappt.',ort:'Welt 1 · Küste',reward:10},
+ {id:'galaxie',ziel:'Ankommen',titel:'Eis-Galaxie',text:'Sammle die Kugeln und erreiche den Eiswagen.',ort:'Welt 2 · Portal in der Stadt',reward:10},
+ {id:'nacht',ziel:'Ankommen',titel:'Nacht-Stadt',text:'Spring über die Dächer zum Eiswagen.',ort:'Welt 3 · Portal in der Stadt',reward:10},
+ {id:'atoll',ziel:'Rätsel',titel:'Rette die Insel',text:'Vier Rätsel, zehn Minuten. Dafür brauchst du Gegenstände aus der Stadt.',ort:'Atoll · Labor in der Stadt',reward:20}];
+const AU_REPEAT=2;
+function scHud(d){const n=document.getElementById('sc-n');if(n)n.textContent=SC.n;const h=document.getElementById('sc-hud');
+  if(d&&h){h.classList.remove('pulse');void h.offsetWidth;h.classList.add('pulse');const p=document.getElementById('sc-d');if(p){p.textContent=(d>0?'+':'−')+Math.abs(d);p.className=d>0?'up':'dn';p.classList.remove('on');void p.offsetWidth;p.classList.add('on')}}}
+function scAdd(d,why){SC.n=Math.max(0,SC.n+d);SC.log.unshift([why,d]);if(SC.log.length>12)SC.log.length=12;scSave();scHud(d);rpRender()}
+function scCan(c){return SC.n>=c}
+function auComplete(id){const a=AUFTRAEGE.find(x=>x.id===id);if(!a)return 0;const first=!SC.au[id],r=first?a.reward:AU_REPEAT;SC.au[id]=(SC.au[id]||0)+1;scAdd(r,'Auftrag: '+a.titel);toast('Auftrag erfüllt: +'+r+' Scoops',1900);return r}
+function rpTab(t){SC.tab=t;rpRender()}
+function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
+  [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
+  ['inv','auf','sco','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
+  const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
+  const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
+  const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
+  const mus=document.getElementById('rp-mus');if(mus)mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div><p class="sub">Mit M schaltest du den Ton aus. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`}
 const INV={open:false,items:new Set()};
 try{JSON.parse(localStorage.getItem('kq-items')||'[]').forEach(id=>{if(ITEM_DEFS.some(d=>d.id===id))INV.items.add(id)})}catch(e){}
 function invSave(){try{localStorage.setItem('kq-items',JSON.stringify([...INV.items]))}catch(e){}}
@@ -1472,9 +1528,10 @@ function invRender(){const grid=$('inv-grid');if(!grid)return;
    ?`<div class="slot-i got"><div class="ic"><img src="${ITEM_ICONS[d.id]}" alt=""></div><b>${d.name}</b><span>${d.desc}</span><em>${d.use}</em>${itemExtra(d.id)?'<span class="dg">'+itemExtra(d.id)+'</span>':''}</div>`
    :`<div class="slot-i"><div class="ic q">?</div><b>Noch nicht gefunden</b><span>Hinweis: ${d.place==='Büro'?'im Büroviertel':d.place==='Café'?'beim Café':d.place==='Laden'?'bei einem Laden':d.place==='Wohnhaus'?'bei einem Wohnhaus':'beim Burger-Laden'}${d.bonus?' (Bonus)':''}</span></div>`).join('');
   grid.insertAdjacentHTML('beforeend',questSlotsHTML());
-  const n=$('inv-n');if(n)n.textContent=invCount()+'/'+ITEM_DEFS.length;const bn=$('b-inv-n');if(bn)bn.textContent=invCount()+'/'+ITEM_DEFS.length}
+  const n=$('inv-n');if(n)n.textContent=invCount()+'/'+ITEM_DEFS.length;const bn=$('b-inv-n');if(bn)bn.textContent=invCount()+'/'+ITEM_DEFS.length;rpRender()}
 function invToggle(on){if(G.phase==='title')return;INV.open=on===undefined?!INV.open:on;$('inv').hidden=!INV.open;$('b-inv').setAttribute('aria-pressed',String(INV.open));
   if(INV.open){K.up=K.down=K.left=K.right=0;invRender();$('inv-close').focus({preventScroll:true})}}
+document.querySelectorAll('#rp-tabs button').forEach(b=>b.onclick=()=>rpTab(b.dataset.t));
 $('b-inv').onclick=()=>invToggle();$('inv-close').onclick=()=>invToggle(false);
 $('inv-reset').onclick=()=>{questReset();INV.items.clear();invSave();HUB.items.forEach(it=>{it.got=false;it.g.visible=true;it.ring.visible=true});invRender();toast('Inventar zurückgesetzt',900)};
 addEventListener('keydown',e=>{if(e.code==='KeyI'&&!e.repeat){e.preventDefault();invToggle()}else if(e.code==='Escape'&&INV.open){e.preventDefault();invToggle(false)}});
@@ -1698,7 +1755,8 @@ function resolveCity(){for(const c of curCols()){
   if(dot<0){const tx=hx-dot*nx,tz=hz-dot*nz;if(Math.hypot(tx,tz)>.15)P.h=Math.atan2(tz,tx);P.speed*=.93;
     if(-dot>.6&&P.speed>2.5&&G.t-(P.lastBump||0)>.4){SFX.thud();G.shake=Math.max(G.shake,.15);P.lastBump=G.t}}}}
 function startCoastRace(){HUB.coastHit=1;SFX.win();burst(P.x,P.y+3,P.z,90);toast('Das Rennen beginnt!',1300);later(.5,()=>{applyLevel(1);beginPlay()})}
-function enterPortal(p){HUB.found.add(p.world);SFX.win();burst(P.x,P.y+3,P.z,90);toast('Portal zu Welt '+p.world+'!',1200);
+function enterPortal(p){if(!scCan(PORTAL_COST)){p.hit=1;p.blocked=1;SFX.thud&&SFX.thud();toast('Zu wenig Scoops. Reise: '+PORTAL_COST,1800);return}
+  scAdd(-PORTAL_COST,'Reise zu Welt '+p.world);HUB.found.add(p.world);SFX.win();burst(P.x,P.y+3,P.z,90);toast('Portal zu Welt '+p.world+'!',1200);
   later(.5,()=>{applyLevel(p.world);beginPlay()})}
 function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
@@ -1710,7 +1768,7 @@ function stepCity(dt){
   P.vy-=LV.grav*dt;P.y+=P.vy*dt;if(P.y<=1.3){P.y=1.3;if(P.vy<0)P.vy=0}P.coy=P.y<=1.35?0:P.coy+dt;
   for(const c of cones){if(c.hit){c.o.position.x+=c.vx*dt;c.o.position.y+=c.vy*dt;c.o.position.z+=c.vz*dt;c.vy-=18*dt;c.o.rotation.x+=7*dt;c.o.rotation.z+=5*dt;c.hit-=dt;if(c.hit<=0)c.o.visible=false;continue}
     if(Math.abs(P.x-c.x)<1.3&&Math.abs(P.z-c.z)<1.3&&P.y<2.4){c.hit=1.1;c.vx=Math.cos(P.h)*P.speed*1.2;c.vz=Math.sin(P.h)*P.speed*.8+(Math.random()-.5)*4;c.vy=8;P.speed*=.6;SFX.thud();G.shake=Math.max(G.shake,.2)}}
-  if(LV.id===0)for(const p of HUB.portals){if(Math.hypot(P.x-p.x,P.z-p.z)<5.2&&G.phase==='play'&&!p.hit){p.hit=1;enterPortal(p)}}
+  if(LV.id===0)for(const p of HUB.portals){if(p.blocked&&Math.hypot(P.x-p.x,P.z-p.z)>9){p.blocked=0;p.hit=0}if(Math.hypot(P.x-p.x,P.z-p.z)<5.2&&G.phase==='play'&&!p.hit){p.hit=1;enterPortal(p)}}
   if(LV.id===0)for(const it of HUB.items){if(!it.got&&G.phase==='play'&&Math.hypot(P.x-it.x,P.z-it.z)<3.6&&P.y<5.5)collectItem(it)}
   if(LV.id===0&&P.x<-150&&G.phase==='play'&&!HUB.coastHit)startCoastRace()}
 function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it.beam.material.opacity=0;INV.items.add(it.def.id);invSave();invRender();SFX.collect(INV.items.size);burst(it.x,4.5,it.z,60);
@@ -2013,7 +2071,7 @@ function islandActs(a){
     if(!INV.items.has('losung'))return dlgStart('Möwen-Imbiss',['Wir haben geschlossen. Außer für Leute mit der Losung. Frag mich nicht, welche.']);
     dlgStart('Möwen-Imbiss',['"Frag nach dem Möwen-Menü"? Du kennst die Losung! Hier, frisch aus der Fritteuse. Das gibt Kraft.'],()=>{ISL.bonus=true;ISL.t+=60;SFX.collect(4);toast('+60 Sekunden!',1400);burst(P.x,P.y+2,P.z,50)})}});
   a.push({x:80,z:-36,r:8,label:ISL.gate?'Boot besteigen':'Das Boot (hinter dem Tor)',fn:()=>{if(!ISL.gate)return say('e','Das Boot liegt hinter dem Tor. Erst die vier Systeme lösen.',3);islandWin()}})}
-function islandWin(){G.phase='win';SFX.win();burst(P.x,P.y+3,P.z,140);const left=Math.max(0,Math.round(ISL.t));$('cd').hidden=true;
+function islandWin(){G.phase='win';SFX.win();auComplete('atoll');burst(P.x,P.y+3,P.z,140);const left=Math.max(0,Math.round(ISL.t));$('cd').hidden=true;
   $('overlay').hidden=false;$('card').innerHTML=`<h1>Insel gerettet!</h1><p class="sub">Das Tor ist offen, der Reaktor grün, und der Techniker winkt vom Steg. Das letzte Boot legt mit dir ab.</p>
    <div class="stats"><div><div class="n">${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</div><div class="l">Zeit übrig</div></div><div><div class="n">${ISL.bonus?'Ja':'Nein'}</div><div class="l">Möwen-Menü</div></div><div><div class="n">4/4</div><div class="l">Systeme</div></div></div>
    <div class="badge"><i>★</i><span>Erfolg: Inselretter:in. Du hast vier Systeme mit Köpfchen gelöst: Verschlüsselung, Logik, Passwörter und Muster.</span></div>
@@ -2158,7 +2216,7 @@ function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0
   HUB.gl={A,B,gl,st,t:0}}
 function stepXmas(dt){const l=HUB.gl;if(!l||!W0||!W0.visible)return;l.t+=dt;const ph=Math.floor(l.t/.6)%2;l.A.visible=ph===0;l.B.visible=ph===1;l.st.material.opacity=.7+.25*Math.sin(l.t*3);l.gl.material.opacity=.42+.1*Math.sin(l.t*1.7)}
 
-window.__qa={stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

@@ -64,7 +64,7 @@ function islandActs(a){
     if(!INV.items.has('losung'))return dlgStart('Möwen-Imbiss',['Wir haben geschlossen. Außer für Leute mit der Losung. Frag mich nicht, welche.']);
     dlgStart('Möwen-Imbiss',['"Frag nach dem Möwen-Menü"? Du kennst die Losung! Hier, frisch aus der Fritteuse. Das gibt Kraft.'],()=>{ISL.bonus=true;ISL.t+=60;SFX.collect(4);toast('+60 Sekunden!',1400);burst(P.x,P.y+2,P.z,50)})}});
   a.push({x:80,z:-36,r:8,label:ISL.gate?'Boot besteigen':'Das Boot (hinter dem Tor)',fn:()=>{if(!ISL.gate)return say('e','Das Boot liegt hinter dem Tor. Erst die vier Systeme lösen.',3);islandWin()}})}
-function islandWin(){G.phase='win';SFX.win();burst(P.x,P.y+3,P.z,140);const left=Math.max(0,Math.round(ISL.t));$('cd').hidden=true;
+function islandWin(){G.phase='win';SFX.win();auComplete('atoll');burst(P.x,P.y+3,P.z,140);const left=Math.max(0,Math.round(ISL.t));$('cd').hidden=true;
   $('overlay').hidden=false;$('card').innerHTML=`<h1>Insel gerettet!</h1><p class="sub">Das Tor ist offen, der Reaktor grün, und der Techniker winkt vom Steg. Das letzte Boot legt mit dir ab.</p>
    <div class="stats"><div><div class="n">${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</div><div class="l">Zeit übrig</div></div><div><div class="n">${ISL.bonus?'Ja':'Nein'}</div><div class="l">Möwen-Menü</div></div><div><div class="n">4/4</div><div class="l">Systeme</div></div></div>
    <div class="badge"><i>★</i><span>Erfolg: Inselretter:in. Du hast vier Systeme mit Köpfchen gelöst: Verschlüsselung, Logik, Passwörter und Muster.</span></div>
