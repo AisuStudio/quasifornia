@@ -168,11 +168,14 @@ function skylineCanvas(seed,far,w=512,h=256){
   return c}
 const SKYTEX=[0,1,2,3,4,5].map(i=>{const t=new THREE.CanvasTexture(skylineCanvas(i,false));t.colorSpace=THREE.SRGBColorSpace;return t});
 const SKYTEXF=[0,1,2,3].map(i=>{const t=new THREE.CanvasTexture(skylineCanvas(i+9,true));t.colorSpace=THREE.SRGBColorSpace;return t});
-function skySprite(tex,w,h,fog){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,fog}));s.scale.set(w,h,1);s.userData.noBake=true;return s}
+/* Hintergrund-Sprites (fog:false) bekommen ihren Dunst selbst: Mix zur Nebelfarbe, damit zwischen Spielfeld und Kulisse kein Sprung entsteht */
+function hazeMat(mat,k){const u={value:k};mat.fog=false;mat.onBeforeCompile=sh=>{sh.uniforms.hzC=OUTFOG.fc;sh.uniforms.hzK=u;sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec3 hzC;uniform float hzK;\nvoid main() {').replace('#include <colorspace_fragment>','gl_FragColor.rgb=mix(gl_FragColor.rgb,hzC,hzK);\n#include <colorspace_fragment>')};mat.customProgramCacheKey=()=>'hz';return mat}
+const hazeK=r=>Math.min(.92,.45+.5*Math.max(0,(r-150)/190));
+function skySprite(tex,w,h,fog,k){const s=new THREE.Sprite(k!=null?hazeMat(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}),k):new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,fog}));s.scale.set(w,h,1);s.userData.noBake=true;return s}
 /* nah: hinter den Villen, über der Lagune. Mit Dunst, wirkt ferner */
-for(let i=0;i<7;i++){const s=skySprite(SKYTEX[i%6],190,95,true);s.position.set(-150+i*50,47-1,175+(i%2)*14);sc.add(s)}
+for(let i=0;i<7;i++){const s=skySprite(SKYTEX[i%6],190,95,false,hazeK(180));s.position.set(-150+i*50,47-1,175+(i%2)*14);sc.add(s)}
 /* fern: Ring am Horizont, folgt der Kamera, zeigt immer gleich */
-for(let i=0;i<12;i++){const s=skySprite(SKYTEXF[i%4],300,150,false);const az=i/12*Math.PI*2;s.position.set(Math.cos(az)*330,75-22,Math.sin(az)*330);skyLayer.add(s)}
+for(let i=0;i<12;i++){const s=skySprite(SKYTEXF[i%4],300,150,false,hazeK(330));const az=i/12*Math.PI*2;s.position.set(Math.cos(az)*330,75-22,Math.sin(az)*330);skyLayer.add(s)}
 addVictorians(skyLayer,[[10,282,190,76,30,.34,.18,40],[9,226,170,68,23,.12,.55,80]]);
 
 /* ---------- 2D-Victorians: gezeichnete Painted-Ladies-Reihen als Staffelung vor der Skyline ---------- */
@@ -195,7 +198,7 @@ function victCanvas(seed,haze,w=640,h=256){
   return c}
 function addVictorians(parent,rings){let n=0;rings.forEach(([count,r,w,hh,yc,haze,az0,seed0])=>{
   for(let i=0;i<count;i++){const t=new THREE.CanvasTexture(victCanvas(seed0+i,haze));t.colorSpace=THREE.SRGBColorSpace;
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,fog:false}));s.scale.set(w,hh,1);
+    const s=new THREE.Sprite(hazeMat(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}),hazeK(r)));s.scale.set(w,hh,1);
     const az=az0+i/count*Math.PI*2;s.position.set(Math.cos(az)*r,yc,Math.sin(az)*r);s.userData.noBake=true;parent.add(s);n++}});return n}
 function stepClouds(dt){const t=G.t;
   midClouds.forEach(s=>{s.userData.fr&&(s.material.map=s.userData.fr[Math.floor(t*2+s.userData.off)%4]);s.position.x+=s.userData.drift*dt;if(s.position.x>170)s.position.x=-170;s.position.y+=Math.sin(t*.4+s.userData.off)*.01});
@@ -1108,7 +1111,7 @@ function buildLevel0(){
   buildAtollQuestObjects();buildGingerLights();
   /* Himmel: Skyline-Ring, Wolken (folgen / stehen) */
   const skyG=new THREE.Group();skyG.userData.noBake=true;W0.add(skyG);HUB.sky=skyG;
-  for(let i=0;i<12;i++){const s=skySprite(SKYTEXF[i%4],320,160,false);const az=i/12*Math.PI*2;s.position.set(Math.cos(az)*340,75-24,Math.sin(az)*340);skyG.add(s)}
+  for(let i=0;i<12;i++){const s=skySprite(SKYTEXF[i%4],320,160,false,hazeK(340));const az=i/12*Math.PI*2;s.position.set(Math.cos(az)*340,75-24,Math.sin(az)*340);skyG.add(s)}
   addVictorians(skyG,[[10,292,190,76,30,.4,.1,120],[9,240,170,68,23,.16,.5,160]]);
   [[-120,48,-130],[40,56,-170],[150,44,-100],[-160,52,60],[90,50,160],[-30,60,150]].forEach(([x,y,z])=>{const c=makeCloud(x,y,z,90,Math.floor(Math.abs(x))%4,0);sc.remove(c);W0.add(c)});
   /* Start */
