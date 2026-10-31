@@ -793,7 +793,7 @@ let AC=null;
 /* Soundtrack: Datei "em-ocean.m4a" liegt neben der Seite (nicht im Repo). Fehlt sie, bleibt es still. */
 const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=.7;MUS.src='em-ocean.m4a';MUS.started=false;
 function musGo(){if(MUS.started||MUS.dead)return;MUS.started=true;MUS.muted=G.muted;MUS.play().catch(()=>{MUS.started=false})}
-MUS.addEventListener('error',()=>{MUS.dead=true});
+MUS.addEventListener('error',()=>{if(!MUS.alt){MUS.alt=1;MUS.src='em-ocean.mp3';if(MUS.started){MUS.started=false;musGo()}}else MUS.dead=true});
 MUS.addEventListener('playing',()=>{const n=$('np');if(!n||MUS.credited)return;MUS.credited=true;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),9000)});
 function ac(){musGo();if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=false}}if(AC&&AC.state==='suspended')AC.resume();return AC}
 function tone(f,d=.15,type='square',vol=.06,slide=0,delay=0){if(G.muted)return;const A=ac();if(!A)return;const t=A.currentTime+delay,o=A.createOscillator(),g=A.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(A.destination);o.start(t);o.stop(t+d+.02)}
