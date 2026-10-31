@@ -101,6 +101,38 @@ Die Figur hat einen eigenen Player mit Lieblingssongs, es werden nach und nach m
 - Rechte: Öffentliches Repo und öffentliche Seite, daher pro Track Zustimmung der Urheber nötig, Credit im Spiel. Ein Track pro Freund bedeutet Auswahl und Kuratierung.
 - Offen: Eigene Musik von Nutzern hochladen? (Widerspricht "kein Upload" und wirft Rechte- und Moderationsfragen auf, daher vorerst nein.) Läuft Musik weiter beim Weltwechsel? Mit anderen geteilter Player (Crew hört mit)?
 
+### Notiz-Ideen des Nutzers (2026-11-01, nur aufgenommen, nicht priorisiert)
+Orte und Fortbewegung:
+- U-Bahn nach Downtown (kostet Scoops); Schiffe und Boote; Transportation Builder.
+- Straßennamen in der Stadt.
+- Wolken eher im Stil von Eizin Suzuki.
+- Sticker-Gag: "Nett hier, aber waren Sie schon mal auf Andromeda?"
+
+Währung und Wirtschaft:
+- Scoops (Eiskugeln) sind nicht mit echtem Geld kaufbar. Es gibt wöchentlich einen festen Betrag, mehr verdient man mit Quests. Verwendung: Reisen und Portale, Aussehen, neue Spiele und Level (Wunsch des Sohnes).
+- Casino (mathematisch): Rätsel-verpackte Mathe-Games, man verdient Scoops.
+- Rarepod: das spielinterne Smartphone (Musik, Fotos, Karten, Blogs, Nachrichten, Quest-News/Jobs, Scoop-Konto als Bezahlsystem).
+- E-Mail-Adresse mit Spielername.
+- Es gibt Levels.
+
+Bauen und Gestalten:
+- Graffiti: An großen Wänden kann man sprühen, dafür braucht man Dosen (gegen Scoops im Laden). Gesprüht wird in einem 2D-Paint-Editor, teilbar. Graffiti bleibt, bis jemand drübersprüht; mit Likes bleibt es länger geschützt.
+- Avatar-Builder für das Bau-Team.
+- Weihnachtsquest: Krippe aus Fundstücken im Haus zusammenstellen. Das Haus hat einen riesigen Keller mit Schneelandschaft und Mini-Dinos. Ist die Krippe fertig, teilt man sie und braucht mindestens 5 Likes.
+
+Lernziel und Easter Egg:
+- Kinder sollen systemisches Denken lernen.
+- Easter Egg: Keller mit Hausmeister, in dem man den Tech-Stack besichtigen kann (Datenbank usw.). Wie man an den Schlüssel kommt, ist offen.
+
+Offene Fragen aus der Notiz:
+- Was braucht ein Multiplayer-Test? Wie lässt sich das Spiel technisch verschlanken, ohne visuell zu verlieren (alles 2D)? Was braucht es für eine eigene Domain?
+- Name klären (Quasifornia).
+- Geschäftsmodell trotz Freemium und freier Software (Merch-Shop?); Business-Plan.
+- Wie meldet man sich als Contributor an und fügt Welten hinzu? Sinnvoll: ein Worldpack zum Herunterladen, auf das der Browser zugreift?
+- Multiplayer als offene Welt mit Orten auf Planeten.
+- Kollaborationsvertrag für Artist- und Konstruktions-Collabs.
+- Musik: Ansatz wie GTA-Radio, aber Indie; weitere Artist-Collabos geplant; Rechte-Go pro Song noch einzuholen (Stand: Packed Rich hat mündlich zugesagt).
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels
