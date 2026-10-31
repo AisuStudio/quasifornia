@@ -251,6 +251,27 @@ Rechte und Recht (vor weiteren Musik-Zusagen klären):
 - Stand Musik: "em'ocean" (Packed Rich feat. you_see, ndfloat, timekilla0118; DJ/Cuts punch_float; Album The High End Theory, 2023) ist im Spiel eingebunden. Packed Rich hat mündlich per WhatsApp zugesagt, schriftliche Freigabe und weitere Rechteinhaber offen. Weitere Tracks erst nach Freigabe.
 - Kinder als Zielgruppe: DSGVO und Jugendschutz (Einwilligung der Eltern, Moderation) früh einplanen.
 
+## Auftragssystem (Vorschlag, Stand 2026-11-01)
+Gerüst für Spielinhalt und Spielzeit: Alles, was man tut, ist ein Auftrag mit fester Form. Passt zu Antons Antwort ("Jemand gibt mir einen Auftrag") und zum Rarepod (Quest-News und Jobs).
+
+Ein Auftrag besteht aus fünf Teilen:
+1. Ziel: sammeln, ankommen, ausliefern, Rätsel lösen, Tricks-Punkte, beschützen oder verfolgen.
+2. Ort: Welt und Bereich (zum Beispiel Küste, Nacht-Stadt).
+3. Regel: Variante, zum Beispiel Zeitlimit, nur mit Hilfsblock, rutschiger Boden, Verfolger.
+4. Team: 1 bis 4 Spieler, mit verteilten Rollen.
+5. Belohnung: Scoops, gelegentlich Gegenstand oder Aussehen.
+
+Folgen:
+- Inhalt wächst durch Kombination (6 Ziele, 5 Welten, 5 Regeln ergeben viele Aufträge).
+- Zielgröße: ein Auftrag dauert 3 bis 5 Minuten, eine Sitzung hat 6 bis 8. Das Auftragsbrett am Rarepod bietet jeweils ein paar an. So tragen die ersten 30 Minuten.
+- Modulare Autorenschaft: Neue Aufträge als einfache Datei, ohne Engine-Wissen (Freunde mit D&D- und Brawler-Erfahrung, Artists in ihren Welten, Collab-Bewerber). Passt zu Worldpack und Fork-Idee.
+- Multiplayer: Ein Auftrag kennt von Anfang an die Teamgröße.
+- Das Atoll ist ein Kampagnen-Auftrag (Kette aus Aufträgen mit Story). Die Sci-Fi-Rahmenstory kann dort ansetzen.
+- Entdecken und Bauen bleiben frei. Aufträge sind das Gerüst, nicht der ganze Inhalt.
+
+Start (Vorschlag): drei Ziele, die schon fast vorhanden sind: sammeln (Eiskugeln), ankommen (Rennen), Rätsel (Atoll). Lieber wenige gut gebaute Ziele als viele halbe.
+Offen: Dateiformat der Aufträge, Auftragsbrett (Rarepod-Oberfläche), Scoops-Preise (zum Beispiel Reise ins nächste Portal), ob Scoops in allen Welten verdient werden.
+
 ## MVP-Skizze (vorläufig)
 - Zwei prozedurale Welten, verbunden durch ein Portal
 - Mehrere Avatare gleichzeitig
