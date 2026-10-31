@@ -22,5 +22,7 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 06 Lebkuchenhaus (Aktion am Schild)
 - 07 Scoops, Aufträge, Rarepod
 - 08 Laden (Skins)
+- 09 Geisterfahrer
+- 10 Neue Aufträge (Blitz-Eis, Kickflip-Serie)
 
 Screenshots landen im Temp-Ordner des Systems.

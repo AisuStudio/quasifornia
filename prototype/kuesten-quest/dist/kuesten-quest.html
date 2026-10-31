@@ -254,7 +254,7 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
     <div class="card">
       <h1>Rarepod <small id="inv-n">0/5</small></h1>
       <div id="rp-tabs"><button type="button" data-t="inv" aria-pressed="true">Inventar</button><button type="button" data-t="auf" aria-pressed="false">Aufträge</button><button type="button" data-t="sco" aria-pressed="false">Scoops</button><button type="button" data-t="lad" aria-pressed="false">Laden</button><button type="button" data-t="mus" aria-pressed="false">Musik</button></div>
-      <div id="rp-inv"><p class="sub">Diese Gegenstände findest du in der Stadt. Du brauchst sie im Atoll.</p>
+      <div id="rp-inv"><p class="sub">Diese Gegenstände findest du in Port Lupo. Du brauchst sie im Atoll.</p>
       <div id="inv-grid"></div></div>
       <div id="rp-auf" hidden></div><div id="rp-sco" hidden></div><div id="rp-lad" hidden></div><div id="rp-mus" hidden></div>
       <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Inventar zurücksetzen</button></div>
@@ -858,7 +858,7 @@ function resetRun(){TIMERS.length=0;P.push=0;if(typeof hideRivals!=='undefined')
   if(dinoG)dinoG.visible=false;if(blobD)blobD.visible=false;
   $('track').classList.remove('on')}
 function scoopsGot(){return scoops.filter(s=>s.got).length}
-function beginPlay(){$('b-inv').hidden=false;$('sc-hud').hidden=false;scHud(0);resetRun();T.said=false;G.knocked=0;G.falls=0;G.fallSaid=false;HUB.portals.forEach(p=>p.hit=0);HUB.coastHit=0;buildRivals();if(LV.mode!=='city')placeRivals();G.phase='play';$('overlay').hidden=true;$('card').innerHTML='';
+function beginPlay(){$('b-inv').hidden=false;$('sc-hud').hidden=false;scHud(0);resetRun();ghostStart();T.said=false;G.knocked=0;G.falls=0;G.fallSaid=false;HUB.portals.forEach(p=>p.hit=0);HUB.coastHit=0;buildRivals();if(LV.mode!=='city')placeRivals();G.phase='play';$('overlay').hidden=true;$('card').innerHTML='';
   setQuest(LV.quest,LV.id===0?HUB.found.size:(LV.id===4&&Q.hasKey?1:(LV.id===5?0:0)));if(LV.id!==5)$('cd').hidden=true;HUB.atollHit=0;$('quest').hidden=false;
   say('e',LV.intro,3.4);
   later(3.5,()=>{if(G.phase==='play')say('v',LV.vendor,4.8)})}
@@ -908,7 +908,7 @@ function respawn(){G.tries++;P.push=0;placeRivals();iceTower.visible=false;P.av.
   toast('Noch mal!',1400)}
 function win(){G.phase='win';SFX.win();{const m={1:'rennen',2:'galaxie',3:'nacht'}[LV.id];if(m)auComplete(m)}burst(P.x,4,P.z,120);burst(P.x+6,6,P.z,80);
   say('e',LV.win,5);
-  const bk=LV.id===1?'kq-best':'kq-best2';let best=null;try{best=parseFloat(localStorage.getItem(bk))||null;if(!best||G.time<best){localStorage.setItem(bk,String(G.time.toFixed(1)));best=G.time}}catch(e){best=G.best=G.best&&G.best<G.time?G.best:G.time}
+  const bk=LV.id===1?'kq-best':'kq-best2';let best=null;try{best=parseFloat(localStorage.getItem(bk))||null;if(!best||G.time<best){localStorage.setItem(bk,String(G.time.toFixed(1)));best=G.time;ghostSave()}}catch(e){best=G.best=G.best&&G.best<G.time?G.best:G.time}
   const secs=G.time.toFixed(0);$('overlay').hidden=false;
   const hasNext=!!LEVELS[LV.id+1],nn=LV.id+1;
   $('card').innerHTML=`<h1>${LV.id===1?'Geschafft!':'Welt '+LV.id+' geschafft!'}</h1><p class="sub">${LV.winSub}</p>
@@ -951,7 +951,7 @@ function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',
 function showTitle(){INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
   $('card').innerHTML=`<h1>Küsten-Quest</h1>
-   <p class="sub">Du startest in der Stadt. An der Küste im Westen beginnt das Rennen: fünf Eiskugeln sammeln und vor etwas Großem davonrennen. Die Portale zu den anderen Welten sind in der Stadt versteckt. Vorsicht, andere Skater schubsen dich.</p>
+   <p class="sub">Du startest in Port Lupo, der Hafenstadt. An der Küste im Westen beginnt das Rennen: fünf Eiskugeln sammeln und vor etwas Großem davonrennen. Die Portale zu den anderen Welten sind in der Stadt versteckt. Vorsicht, andere Skater schubsen dich.</p>
    <h2>Dein Avatar</h2>
    <div id="car" role="group" aria-roledescription="Karussell" aria-label="Avatar auswählen">
      <button class="cb" id="cprev" type="button" aria-label="Vorheriger Avatar">◀</button>
@@ -1032,7 +1032,7 @@ function stepTrick(dt){
   if(Tk.active&&bg){Tk.t+=dt;const u=Math.min(1,Tk.t/Tk.dur),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2,a=e*Math.PI*2;
     bg.rotation.z=a;bg.position.set(.17*Math.sin(a),.17-.17*Math.cos(a),0);if(u>=1){Tk.done=true;bg.rotation.z=0;bg.position.set(0,0,0)}
     if(!air&&Tk.t>.12){const ok=Tk.done||Tk.t>=Tk.dur*.75;Tk.active=false;bg.rotation.set(0,0,0);bg.position.set(0,0,0);
-      if(ok){G.tricks=(G.tricks||0)+1;Tk.clap=2.4;SFX.clap();burst(P.x,P.y+2,P.z,50);toast('KICKFLIP!'+(G.tricks>1?' ×'+G.tricks:''),1300);G.shake=Math.max(G.shake,.25);
+      if(ok){G.tricks=(G.tricks||0)+1;if(G.tricks===5)auComplete('tricks');Tk.clap=2.4;SFX.clap();burst(P.x,P.y+2,P.z,50);toast('KICKFLIP!'+(G.tricks>1?' ×'+G.tricks:''),1300);G.shake=Math.max(G.shake,.25);
         if(!Tk.said){Tk.said=true;say('e','Kickflip. Das Publikum versteht den Trick nicht, klatscht aber trotzdem.',3.2)}}
       else{P.speed*=.8;toast('Wackelig …',800)}}}
   if(!air){Tk.usedAir=false}
@@ -1096,7 +1096,7 @@ function stepPlayer(dt){
     if(Math.abs(P.x-c.x)<1.2&&Math.abs(P.z-c.z)<1.2&&P.y<2.4){c.hit=1.1;c.vx=Math.cos(P.h)*P.speed*1.2;c.vz=Math.sin(P.h)*P.speed*.8+(Math.random()-.5)*4;c.vy=8;P.speed*=.55;SFX.thud();G.shake=Math.max(G.shake,.25);
       if(!G.coneSay){G.coneSay=true;say('e','Ein Hütchen. Es hat dir nichts getan. Du ihm schon.',3)}}}
   // Eiskugeln
-  if(G.phase==='play')for(const s of scoops){if(!s.got&&Math.hypot(P.x-s.x,P.z-s.z)<4.6&&P.y<7){s.got=true;const n=scoopsGot();burst(s.x,4,s.z,46);SFX.collect(n);scAdd(1,'Eiskugel');if(LV.id===1&&n>=5)auComplete('sammeln');
+  if(G.phase==='play')for(const s of scoops){if(!s.got&&Math.hypot(P.x-s.x,P.z-s.z)<4.6&&P.y<7){s.got=true;const n=scoopsGot();burst(s.x,4,s.z,46);SFX.collect(n);scAdd(1,'Eiskugel');if(LV.id===1&&n>=5){auComplete('sammeln');if(G.time<=60)auComplete('blitz')}
       s.g.visible=s.beam.visible=s.pad.visible=false;setQuest(LV.quest,n);toast(n+' / 5',900);
       const lines=LV.lines;
       say('e',lines[n-1],3);if(n===5)later(1.3,()=>{if(G.phase==='play')startChase()})}}
@@ -1125,7 +1125,7 @@ function step(dt){
   scoops.forEach(s=>{if(s.got)return;s.t+=dt;s.g.rotation.y+=dt*2.2;s.g.position.y=3.0+Math.sin(s.t*2.4)*.45;s.beam.material.opacity=.16+.07*Math.sin(s.t*3);s.pad.scale.setScalar(1+.12*Math.sin(s.t*4))});
   goalPortal.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});
   if(G.phase==='play'||G.phase==='chase'){G.time+=dt;if(LV.mode==='city')stepCity(dt);else{stepPlayer(dt);stepRivals(dt)}}
-  stepBoard(dt);
+  stepBoard(dt);stepGhost();
   if(G.phase==='play'||G.phase==='chase'||G.phase==='win')stepTrick(dt);
   if(G.phase==='chase'){G.chaseT+=dt;gapNow=stepDino(dt);updateTrack(gapNow);
     if(P.x>=WIN_X)win()}
@@ -1493,10 +1493,12 @@ try{SC.au=JSON.parse(localStorage.getItem(AUK)||'{}')||{}}catch(e){}
 function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log.slice(0,12)}));localStorage.setItem(AUK,JSON.stringify(SC.au))}catch(e){}}
 const AUFTRAEGE=[
  {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
+ {id:'blitz',ziel:'Sammeln',titel:'Blitz-Eis',text:'Alle 5 Eiskugeln an der Küste in 60 Sekunden.',ort:'Welt 1 · Küste',reward:8},
+ {id:'tricks',ziel:'Tricks',titel:'Kickflip-Serie',text:'Schaffe 5 Kickflips in einem Lauf (Shift).',ort:'Im Rennen, jede Welt',reward:8},
  {id:'rennen',ziel:'Ankommen',titel:'Küsten-Rennen',text:'Erreiche das Ziel-Portal, bevor dich der Dino schnappt.',ort:'Welt 1 · Küste',reward:10},
- {id:'galaxie',ziel:'Ankommen',titel:'Eis-Galaxie',text:'Sammle die Kugeln und erreiche den Eiswagen.',ort:'Welt 2 · Portal in der Stadt',reward:10},
- {id:'nacht',ziel:'Ankommen',titel:'Nacht-Stadt',text:'Spring über die Dächer zum Eiswagen.',ort:'Welt 3 · Portal in der Stadt',reward:10},
- {id:'atoll',ziel:'Rätsel',titel:'Rette die Insel',text:'Vier Rätsel, zehn Minuten. Dafür brauchst du Gegenstände aus der Stadt.',ort:'Atoll · Labor in der Stadt',reward:20}];
+ {id:'galaxie',ziel:'Ankommen',titel:'Eis-Galaxie',text:'Sammle die Kugeln und erreiche den Eiswagen.',ort:'Welt 2 · Portal in Port Lupo',reward:10},
+ {id:'nacht',ziel:'Ankommen',titel:'Nacht-Stadt',text:'Spring über die Dächer zum Eiswagen.',ort:'Welt 3 · Portal in Port Lupo',reward:10},
+ {id:'atoll',ziel:'Rätsel',titel:'Rette die Insel',text:'Vier Rätsel, zehn Minuten. Dafür brauchst du Gegenstände aus der Stadt.',ort:'Atoll · Labor in Port Lupo',reward:20}];
 const AU_REPEAT=2;
 function scHud(d){const n=document.getElementById('sc-n');if(n)n.textContent=SC.n;const h=document.getElementById('sc-hud');
   if(d&&h){h.classList.remove('pulse');void h.offsetWidth;h.classList.add('pulse');const p=document.getElementById('sc-d');if(p){p.textContent=(d>0?'+':'−')+Math.abs(d);p.className=d>0?'up':'dn';p.classList.remove('on');void p.offsetWidth;p.classList.add('on')}}}
@@ -1511,6 +1513,21 @@ function skSave(){try{localStorage.setItem(SKK,JSON.stringify([...SKOWN]))}catch
 function skBuy(k){const pr=SKIN_PRICE[k];if(SKOWN.has(k)||!pr)return false;if(!scCan(pr)){toast('Zu wenig Scoops: '+pr+' nötig',1500);return false}
   SKOWN.add(k);skSave();const nm=SKIN_LIST.find(s=>s[0]===k)[1];scAdd(-pr,'Skin: '+nm);toast(nm+' freigeschaltet',1400);return true}
 function skWear(k){if(!SKOWN.has(k))return;P.preset=PRESETS[k];buildPlayer();P.av.scale.setScalar(1.35);try{localStorage.setItem('kq-skin',k)}catch(e){}rpRender()}
+/* ---------- Geisterfahrer: deine beste Küstenrennen-Fahrt fährt halbtransparent mit ---------- */
+const GH={rec:[],trace:null,av:null,key:'kq-ghost1',dt:.1};
+function ghostLoad(){GH.trace=null;try{const t=JSON.parse(localStorage.getItem(GH.key)||'null');if(Array.isArray(t)&&t.length>5)GH.trace=t}catch(e){}}
+function ghostSave(){if(LV.id!==1||GH.rec.length<6)return;try{localStorage.setItem(GH.key,JSON.stringify(GH.rec.map(a=>a.map(v=>Math.round(v*10)/10))))}catch(e){}}
+function ghostStart(){GH.rec=[];ghostLoad();
+  if(GH.av){GH.av.visible=false}
+  if(LV.id!==1||!GH.trace)return;
+  if(!GH.av||GH.av.userData.col!==P.preset){if(GH.av)sc.remove(GH.av);const a=skater(P.x,1.3,P.z,Math.PI/2,P.preset,1.35);a.userData.col=P.preset;
+    a.traverse(o=>{if(o.isMesh&&o.material){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.4;o.material.depthWrite=false;o.castShadow=false}});dynOf(a);GH.av=a;a.rotation.order='YZX'}
+  GH.av.visible=true;toast('Dein Geist fährt mit',1500)}
+function stepGhost(){if(LV.id!==1)return;
+  if(G.phase==='play'||G.phase==='chase'){const k=Math.floor(G.time/GH.dt);while(GH.rec.length<=k)GH.rec.push([P.x,P.y,P.z,P.h])}
+  const a=GH.av;if(!a||!a.visible||!GH.trace)return;
+  const f=G.time/GH.dt,i=Math.floor(f);if(i>=GH.trace.length-1){a.visible=false;return}
+  const u=f-i,p=GH.trace[i],q=GH.trace[i+1];a.position.set(p[0]+(q[0]-p[0])*u,p[1]+(q[1]-p[1])*u,p[2]+(q[2]-p[2])*u);a.rotation.y=Math.PI/2-(p[3]+(q[3]-p[3])*u)}
 function rpTab(t){SC.tab=t;rpRender()}
 function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
   [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
@@ -1551,7 +1568,7 @@ addEventListener('keydown',e=>{if(e.code==='KeyI'&&!e.repeat){e.preventDefault()
 /* ================= Welt 0: Die Stadt (Labyrinth, 5×5 Blöcke) ================= */
 LEVELS[0]={id:0,mode:'city',pips:2,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Portal',
   quest:'Zur Küste: Rennen. Portale finden',goalQuest:'',
-  intro:'Willkommen in der Stadt. Im Westen liegt die Küste: Wer sie erreicht, startet das Rennen.',
+  intro:'Willkommen in Port Lupo. Im Westen liegt die Küste: Wer sie erreicht, startet das Rennen.',
   vendor:'Stadtfunk: Zwei Portale zu anderen Welten sind in der Stadt versteckt. Sie funkeln erst, wenn du nah dran bist. Sackgassen sind ein guter Anfang.',
   lines:[],chase:'',eat:'',win:'',winSub:'',badge:''};
 const HUB={sx:0,sz:0,sh:0,found:new Set(),portals:[],items:[],colliders:[],clappers:[],cones:[],maze:null,built:false,mm:null,mmT:0,rd:0};
@@ -1694,6 +1711,10 @@ function buildLevel0(){
    const POLE=MT('#8a8aa0');
    for(let j=0;j<N;j++)for(let i=0;i<N;i++){const nd=nodeXZ(j*N+i);cur={x:nd.x+7.4,z:nd.z+7.4};cyl(POLE,.14,7.4,0,0,0);
      [[ROWN[j],0],[ROWN[j],Math.PI],[COLN[i],Math.PI/2],[COLN[i],-Math.PI/2]].forEach(([t,ry],k)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(6.2,1.24),stTex(t));const off=.16;m.position.set(cur.x+(k===2?off:k===3?-off:0),Y0+6.6-(k>1?1.4:0),cur.z+(k===0?off:k===1?-off:0));m.rotation.y=ry;m.userData.noBake=true;W0.add(m)});
+     if(i===2&&j===3){const wt=(()=>{const c=document.createElement('canvas');c.width=1024;c.height=200;const x=c.getContext('2d');x.fillStyle='#ee7cb8';x.fillRect(0,0,1024,200);x.strokeStyle='#fff';x.lineWidth=10;x.strokeRect(10,10,1004,180);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#7a1650';x.shadowBlur=0;x.shadowOffsetY=6;
+       x.font='800 56px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('Willkommen in',512,58);x.font='800 98px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('PORT LUPO',512,142);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})})();
+       const ws=new THREE.Mesh(new THREE.PlaneGeometry(10,1.95),wt);ws.position.set(nd.x+7.4-.16,Y0+10.4,nd.z-7.4);ws.rotation.y=-Math.PI/2;ws.userData.noBake=true;W0.add(ws);
+       cur={x:nd.x+7.4,z:nd.z-7.4};cyl(POLE,.16,9.6,0,0,0);cur={x:nd.x+7.4,z:nd.z+7.4}}
      if(i===2&&j===3){const s=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.5),stickerTex());s.position.set(cur.x-.17,Y0+2.6,cur.z);s.rotation.y=-Math.PI/2;s.userData.noBake=true;W0.add(s)}}}
   /* ---- Laternen und Fahrbahnmarkierung (instanziert) ---- */
   {const NL=N*N*4,post=new THREE.InstancedMesh(new THREE.CylinderGeometry(.14,.14,6,6),new THREE.MeshStandardMaterial({color:'#5a4a8a'}),NL),head=new THREE.InstancedMesh(new THREE.SphereGeometry(.55,8,6),new THREE.MeshBasicMaterial({color:'#fff0b0'}),NL),m4=new THREE.Matrix4();let n=0;
@@ -2240,7 +2261,7 @@ function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0
   HUB.gl={A,B,gl,st,t:0}}
 function stepXmas(dt){const l=HUB.gl;if(!l||!W0||!W0.visible)return;l.t+=dt;const ph=Math.floor(l.t/.6)%2;l.A.visible=ph===0;l.B.visible=ph===1;l.st.material.opacity=.7+.25*Math.sin(l.t*3);l.gl.material.opacity=.42+.1*Math.sin(l.t*1.7)}
 
-window.__qa={SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
