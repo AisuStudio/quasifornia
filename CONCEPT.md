@@ -226,6 +226,31 @@ Hinweis: Mittelwerte aus vielen Bildern sind gedämpft. Für ein UI die gesätti
 - Skript-Sandbox: Lua (wasmoon) oder QuickJS
 - Nicht geeignet: Vercel (Serverless, keine dauerhaften WebSockets)
 
+## Roadmap und Geschäftsmodell (Stand 2026-11-01)
+Ziel des Nutzers: Studio-Standbein für AisuStudio. Ressourcen in den nächsten 6 bis 12 Monaten: regelmäßig Zeit, kleines Budget.
+
+Roadmap (Plan des Nutzers):
+1. Spiel als einfachen Multiplayer, Invite-only, stabilisieren. Spielspaß zuerst. Nächster Test: Raum per Einladungslink, Avatare sehen sich, ein Rennen.
+2. Mit befreundeten Artists Musik-Deals schließen (Songs im Spiel nutzen dürfen; fließt Geld, bekommen sie einen Anteil).
+3. Freunde einbinden: Game-Erfahrene (D&D, Brawler) für Quests, Balance und Kampfgefühl; ein Sound-Engineer für Mix, Effekte und Radio. Vorher klären, ob bezahlt, mit Anteil oder ehrenamtlich, schriftlich (siehe Kollaborationsvertrag).
+4. Werbung als Billboards in den Straßen, nur Branding, erst wenn der Spielspaß steht und eventuell ab etwa 1000 Nutzern.
+
+Geschäftsmodell-Ideen (Vorschlag, nicht entschieden):
+- Jetzt: Welten als Auftrag (Collab-Welten für Artists, Marken, Museen, Schulen), Förderprogramme (Games, Kultur, Bildung; aktuelle Programme noch recherchieren), Merch und Sticker.
+- In 6 bis 12 Monaten: Schul- und Workshop-Pakete (Quests als Lerneinheiten, Ziel "systemisches Denken").
+- Später mit Reichweite: Familien-Abo für Eltern (Sicherheit und Komfort, keine Spielvorteile), gehostete Welten für Creator und Schulen.
+- Tabus: Banner und Popups im Spiel, Echtgeld für Scoops. Datenverkauf und geschlossener Code offen: Wie offen das System sein soll, ist noch nicht entschieden (Idee: Bewerbung für Collabs, dann bekommt man einen Fork).
+- Billboards: bei etwa 1000 Nutzern kaum Einnahmen, eher Festpreis-Sponsoring. Früh nutzbar als Gegenleistung für Artists (Album oder Konzert bewerben). Klar kennzeichnen, keine Kaufaufforderungen an Kinder, kein Tracking.
+- Realistische Rechnung: 10 000 aktive Spieler, 3 % zahlen 4 Euro im Monat ergeben etwa 1200 Euro im Monat. Das Spiel allein trägt kein Studio, daher Aufträge und Förderung.
+- Offen: Lizenzmodell (Code offen, Marke und Assets wie Musik eigen?).
+
+Rechte und Recht (vor weiteren Musik-Zusagen klären):
+- GEMA: Sind Artists GEMA-Mitglieder, haben sie ihre Rechte meist abgetreten und dürfen nicht frei lizenzieren. Nachfragen: GEMA-Mitglied, Label (Blockopera?), Verlag?
+- Masterrechte (Aufnahme) und Verlagsrechte (Komposition) können verschiedenen Personen gehören.
+- Vertrag mindestens: Umfang (nur im Spiel), Credit, Definition des Anteils (Prozent wovon), Laufzeit, Entfernen auf Wunsch. Anwalt oder Vorlage nutzen.
+- Stand Musik: "em'ocean" (Packed Rich feat. you_see, ndfloat, timekilla0118; DJ/Cuts punch_float; Album The High End Theory, 2023) ist im Spiel eingebunden. Packed Rich hat mündlich per WhatsApp zugesagt, schriftliche Freigabe und weitere Rechteinhaber offen. Weitere Tracks erst nach Freigabe.
+- Kinder als Zielgruppe: DSGVO und Jugendschutz (Einwilligung der Eltern, Moderation) früh einplanen.
+
 ## MVP-Skizze (vorläufig)
 - Zwei prozedurale Welten, verbunden durch ein Portal
 - Mehrere Avatare gleichzeitig
