@@ -96,9 +96,9 @@ blobP=mkBlob(3.4,3.8);
 /* ---------- Bake: statische Meshes pro Material zusammenfassen ---------- */
 const OUTM={};const outRes=new THREE.Vector2(1,1);
 function outMat(tier){if(OUTM[tier])return OUTM[tier];
-  return OUTM[tier]=new THREE.ShaderMaterial({side:THREE.BackSide,fog:false,uniforms:{px:{value:2},res:{value:outRes},col:{value:new THREE.Color('#1a1626')}},
-   vertexShader:'uniform float px;uniform vec2 res;void main(){vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);vec3 n=normalize(normalMatrix*normal);vec2 d=(projectionMatrix*vec4(n,0.)).xy;float l=length(d);if(l>1e-4)d/=l;p.xy+=d*px*2./res*p.w;gl_Position=p;}',
-   fragmentShader:'uniform vec3 col;void main(){gl_FragColor=vec4(col,1.);}'})}
+  return OUTM[tier]=new THREE.ShaderMaterial({side:THREE.BackSide,fog:false,uniforms:{px:{value:2},res:{value:outRes},col:{value:new THREE.Color('#1a1626')},fc:OUTFOG.fc,fn:OUTFOG.fn,ff:OUTFOG.ff},
+   vertexShader:'uniform float px;uniform vec2 res;varying float vz;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vec4 p=projectionMatrix*mv;vz=-mv.z;vec3 n=normalize(normalMatrix*normal);vec2 d=(projectionMatrix*vec4(n,0.)).xy;float l=length(d);if(l>1e-4)d/=l;p.xy+=d*px*2./res*p.w;gl_Position=p;}',
+   fragmentShader:'uniform vec3 col;uniform vec3 fc;uniform float fn;uniform float ff;varying float vz;void main(){gl_FragColor=vec4(mix(col,fc,smoothstep(fn,ff,vz)),1.);}'})}
 const TIERPX={stage:.45,prop:1,actor:1.35};
 function setOutlinePx(base){Object.keys(TIERPX).forEach(t=>{outMat(t).uniforms.px.value=base*TIERPX[t]})}
 function addOutlines(root,tier){root.traverse(o=>{if(o.isMesh&&!o.isInstancedMesh&&!o.userData.hasOl&&!o.userData.outline&&!o.userData.noOutline&&o.material&&o.material.isMeshStandardMaterial&&!o.material.transparent){const q=new THREE.Mesh(o.geometry,outMat(tier));q.userData.outline=true;o.userData.hasOl=true;o.add(q)}})}
@@ -742,7 +742,7 @@ function applyLevel(n){
   const EV={0:{h:['#ffd9f0','#7a5aa0',1],s:['#ffb870',2.3],f:['#8e7bff',1.0],a:'#3a2a8a',b:'#ff9a78'},1:{h:['#ffffff','#e8a6c8',1],s:['#ffd9a0',2.6],f:['#ff9fd0',1.1],a:'#0f86d6',b:'#f7d3e4'},2:{h:['#b8a8ff','#ff7cc4',.95],s:['#ffe0f5',2.0],f:['#4cc3ff',1.3],a:'#060214',b:'#5a2480'},3:{h:['#7a86ff','#3a1a6a',.85],s:['#b8c8ff',1.5],f:['#ff5fa8',1.5],a:'#02000c',b:'#2a0f55'},4:{h:['#d8ecff','#5a7a8a',1.2],s:['#ffffff',1.1],f:['#7ff0ff',.9],a:'#0a1020',b:'#1a2a3a'},5:{h:['#fff0e0','#6fb8c8',1.05],s:['#ffc890',2.3],f:['#ff9fd0',.9],a:'#2a7fd0',b:'#ffb89a'}}[n];
   hemi.color.set(EV.h[0]);hemi.groundColor.set(EV.h[1]);hemi.intensity=EV.h[2];sun.color.set(EV.s[0]);sun.intensity=EV.s[1];fill.color.set(EV.f[0]);fill.intensity=EV.f[1];
   sky.material.uniforms.a.value.set(EV.a);sky.material.uniforms.b.value.set(EV.b);
-  sc.fog=n===5?new THREE.Fog('#ffc9a8',150,520):n===4?new THREE.Fog('#1a2a3a',90,260):n===0?new THREE.Fog('#d98aa8',130,480):n===1?FOG1:n===2?new THREE.Fog('#3a1660',300,900):new THREE.Fog('#1a0a3a',170,640);
+  {const FG={0:[60,430],1:[50,320],2:[110,800],3:[80,520],4:[70,240],5:[70,420]}[n];sc.fog=n===1?FOG1:new THREE.Fog(EV.b,FG[0],FG[1]);if(n===1){FOG1.near=FG[0];FOG1.far=FG[1]}OUTFOG.fc.value.set(EV.b);OUTFOG.fn.value=FG[0];OUTFOG.ff.value=FG[1]}
   const arr={0:[[],HUB.cones,[],[],HUB.clappers,[]],1:[SC1,CN1,K1,PK1,CL1,[]],2:[L2.scoops,L2.cones,L2.kickers,[],L2.clappers,[]],3:[L3.scoops,L3.cones,L3.kickers,[],L3.clappers,L3.gaps],4:[[],[],[],[],[],[]],5:[[],[],[],[],[],[]]}[n];
   [scoops,cones,KICKERS,PARKED,CLAPPERS,GAPS]=arr;
   if(!iceTower.userData.m1){iceTower.userData.m1=[1,2,3].map(i=>iceTower.children[i].material);iceTower.userData.m2=[galMat(5,0),galMat(6,1),galMat(7,2)];
