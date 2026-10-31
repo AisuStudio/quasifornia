@@ -81,8 +81,16 @@ Der Zugang zum Atoll ist eine Quest in der Stadt (Hub), keine einfache Portal-Su
 - **Sperrzeit:** 60 Sekunden mit sichtbarem Countdown.
 - **Schlüsselsuche:** Der Schlüssel liegt im Labor in einem verschraubten Schaltkasten, dafür braucht man den Schraubendreher aus der Stadt. Der Möwen-Bon (Bonus) verweist auf ein Möwen-Poster neben dem richtigen Kasten. Zwei Attrappen (Spind, Schreibtisch) sind leer.
 - **Atoll:** Hinter dem Portal liegt die Insel mit den vier Rätselsystemen der Escape-Quest. Das Labor ist der Eingang; der Reaktor ersetzt den Atomtest-Countdown nicht zwingend, die Dringlichkeit bleibt offen.
-**Stand 2026-11-01: A, B und C im Prototyp umgesetzt** (siehe `prototype/kuesten-quest/README.md`). **Bauplan:** A Konzept, B Stadt-Teil (Labor-Gebäude, Mann mit Dialog, Code-Eingabe mit Sperre, Eiswagen), C Labor-Innenraum mit Schlüsselsuche, Befreiung und Portal. Das Atoll selbst ist noch nicht gebaut (Portal führt vorerst zu einem Hinweis).
+**Stand 2026-11-01: A, B und C im Prototyp umgesetzt** (siehe `prototype/kuesten-quest/README.md`). **Atoll gebaut (2026-11-01):** Insel mit vier Systemen (Funkhütte: Caesar-Code mit Verschiebungsregler, Alarmkasten: Logikgatter UND/ODER/NICHT, Kamera-Mast: Werks-PIN 4711 mit 3 Versuchen und 30 s Sperre, Wachhaus: patrouille.log und Muster erkennen), Hauptgate mit vier Lampen, Reaktor (rot, nach dem Öffnen grün), 10-Minuten-Countdown, Boot am Steg, Möwen-Imbiss (Bon gibt +60 s). Schraubendreher und USB-Stick sind Pflicht, Funkzettel und Handbuch geben die Hinweise. Scheitern setzt die Insel zurück (kein Permadeath).
+**Bauplan:** A Konzept, B Stadt-Teil (Labor-Gebäude, Mann mit Dialog, Code-Eingabe mit Sperre, Eiswagen), C Labor-Innenraum mit Schlüsselsuche, Befreiung und Portal. Das Atoll selbst ist noch nicht gebaut (Portal führt vorerst zu einem Hinweis).
 **Offen:** Dauer und Schwierigkeit der Sperre, ob Kriminelle als Gegner auftauchen, Ton für Kinder (Reaktor, Kriminelle), ob der Mann ein wiederkehrender Charakter wird.
+
+### Weihnachtsspiel im Lebkuchenhaus (Idee vom Nutzer, 2026-11-01)
+In der Stadt steht ein **Lebkuchenhaus mit Weihnachtsbeleuchtung**. Dahinter liegt ein eigenes **Weihnachtsspiel**. Vor dem Haus steht **Santa Claus**, dem man ein paar **Fragen beantworten** muss, um hineinzukommen.
+- **Zeitplan:** Das Haus ist schon gebaut, mit einem Schild "Öffnet am ersten Advent". Das Weihnachtsspiel und Santa folgen später (erster Advent 2026: 29. November).
+- **Passt zu:** Küstenstadt als Hub (jedes Gebäude ein Zugang zu einer Quest), saisonale Inhalte, Quiz-Dialoge wie beim gefesselten Mann.
+- **Offen:** Welche Fragen (Weihnachtswissen, Rätsel, Rechnen?), wie viele Fehler erlaubt sind, ob Santa Items verlangt, wie das Weihnachtsspiel aussieht (Wichtelwerkstatt, Schlittenrennen?), ob das Haus nur im Advent zugänglich ist (Datum prüfen) oder dauerhaft.
+- **Hinweis:** Haus nur aus Grundformen mit Zuckerguss, Gumdrops, Zuckerstangen und blinkenden Lichterketten.
 
 ### Musik-Player der Figur (Idee vom Nutzer, 2026-10-31)
 Die Figur hat einen eigenen Player mit Lieblingssongs, es werden nach und nach mehr. Erster Track: "EM'OCEAN" (Freunde des Nutzers aus Tokyo und München, 3:57), Coverart vom Nutzer. Quelle liegt lokal in `sound/` (WAV bleibt per .gitignore außerhalb des Repos), Web-Fassung `sound/em-ocean.m4a` (AAC 160 kbit/s, 4,7 MB).

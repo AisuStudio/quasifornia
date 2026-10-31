@@ -160,6 +160,33 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #pad.shake .card{animation:padshake .35s}
 @keyframes padshake{0%,100%{transform:none}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
 .slot-i .dg{color:var(--gold)!important;font-weight:500}
+#cd{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 14px}
+#cd[hidden]{display:none!important}
+#cd .k{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--haze)}
+#cd b{font:800 24px/1 var(--mono);color:var(--gold);font-variant-numeric:tabular-nums}
+#cd.low b{color:var(--pink)}
+#puz{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:auto;background:rgba(26,22,38,.8);padding:16px;overflow:auto;z-index:6}
+#puz[hidden]{display:none!important}
+#puz .card{width:min(520px,100%);max-height:100%;overflow:auto}#puz h1{font-size:clamp(28px,6vw,40px)}
+#puz-b{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.cipher{font:800 clamp(20px,5vw,28px)/1.3 var(--mono);letter-spacing:.06em;background:#0e0b18;border:2px solid #444764;border-radius:10px;padding:12px 14px;color:var(--haze);word-break:break-word}
+.cipher.plain{color:var(--gold);border-color:var(--gold)}
+.shift{display:flex;align-items:center;justify-content:center;gap:14px;font:500 14px/1 var(--mono);color:var(--paper)}
+.shift button{width:46px;height:46px;border-radius:50%;border:3px solid #0e0b18;background:var(--pink);color:#fff;font:800 22px/1 var(--display);cursor:pointer;box-shadow:0 4px 0 #7a1650}
+.shift b{color:var(--gold);font-size:20px}
+.tip{margin:0;font:400 12px/1.5 var(--mono);color:var(--haze)}.tip .bad,.bad{color:var(--pink)}
+.logic{font:800 clamp(16px,4vw,20px)/1.4 var(--mono);color:var(--cyan);background:#0e0b18;border-radius:10px;padding:12px 14px;text-align:center}
+.sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sw button{font:800 16px/1 var(--mono);padding:16px 6px;border-radius:12px;border:3px solid #0e0b18;background:#444764;color:var(--paper);cursor:pointer;box-shadow:0 4px 0 #0e0b18}
+.sw button.on{background:var(--gold);color:#0e0b18}
+.alarm{font:800 20px/1 var(--mono);text-align:center;padding:10px;border-radius:10px}.alarm.bad{background:#5a1230;color:#ff9fb8}.alarm.good{background:#124a32;color:#7be0a0}
+.cam{font:500 12px/1 var(--mono);color:var(--haze);text-align:center;letter-spacing:.1em;text-transform:uppercase}
+.pinD{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.pinD i{height:54px;border-radius:10px;background:#0e0b18;border:2px solid #444764;display:grid;place-items:center;font:800 28px/1 var(--mono);color:var(--gold);font-style:normal}
+.keys3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keys3 button{font:800 22px/1 var(--display);padding:14px 0;border-radius:12px;border:3px solid #0e0b18;background:var(--ink-2);color:var(--paper);cursor:pointer;box-shadow:0 4px 0 #0e0b18}.keys3 button:disabled{opacity:.4}
+.logb{font:400 12px/1.6 var(--mono);background:#0e0b18;border-radius:10px;padding:10px 14px;color:var(--haze)}.logb .pz{color:var(--gold)}.logb .q{color:var(--pink);font-weight:800}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.opts button{font:800 20px/1 var(--mono);padding:14px 0;border-radius:12px;border:3px solid #0e0b18;background:var(--pink);color:#fff;cursor:pointer;box-shadow:0 4px 0 #7a1650}
 @media (pointer:coarse){#act{bottom:calc(160px + env(safe-area-inset-bottom,0px))}}
 @media (prefers-reduced-motion:reduce){#cview .main.pop{animation:none}}
 @media (prefers-reduced-motion:reduce){#pips i,#toast{transition:none}}
@@ -201,6 +228,8 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
   </div>
   <div id="act" hidden><span></span><kbd>Enter</kbd></div>
   <div id="dlg" hidden role="dialog" aria-label="Gespräch"><div class="panel"><span class="who" id="dlg-who"></span><p id="dlg-text"></p><button class="btn" id="dlg-next" type="button">Weiter ▶</button></div></div>
+  <div id="cd" class="panel" hidden><span class="k">Letztes Boot in</span><b id="cd-t">10:00</b></div>
+  <div id="puz" hidden role="dialog" aria-label="Rätsel"><div class="card"><h1 id="puz-t"></h1><p class="sub" id="puz-sub"></p><div id="puz-b"></div><button class="btn sec" id="puz-close" type="button">Schließen · Esc</button></div></div>
   <div id="pad" hidden role="dialog" aria-label="Code-Eingabe"><div class="card">
     <h1>Labor-Tür</h1><p class="sub">Zehn Ziffern. Nach drei Fehlern sperrt die Tür.</p>
     <div id="pad-disp"></div><p id="pad-info"></p><div id="pad-keys"></div><p id="pad-note" class="note"></p>
@@ -779,14 +808,14 @@ const WIN_X=124,ZMIN=-12.0,ZMAX=-3.2,XMAX=136,XMIN=-138;
 const SPEED_MAX=8.8,SPEED_CRUISE=4.5;
 let respawnX=0;
 function resetRun(){TIMERS.length=0;P.push=0;if(typeof hideRivals!=='undefined')hideRivals();G.tricks=0;if(typeof resetTrick!=='undefined')resetTrick();T.state='ready';T.cd=0;if(typeof flyBoard!=='undefined'){flyBoard.visible=false;boardPlayerOn(true)}if(dinoG)dinoG.userData.slow=0;P.x=-134;P.z=-8;P.y=1.3;P.vy=0;P.h=0;P.speed=SPEED_CRUISE;P.turn=0;P.boost=0;G.time=0;G.tries=0;G.front=0;G.chaseT=0;G.warned=false;G.coneSay=false;G.rampSay=false;
-  if(LV.mode==='city'){if(LV.id===4){P.x=L4.start.x;P.z=L4.start.z;P.h=L4.start.h}else if(HUB.built){const sp=HUB.spawnAt;P.x=sp?sp.x:HUB.sx;P.z=sp?sp.z:HUB.sz;P.h=sp?sp.h:HUB.sh;HUB.spawnAt=null}}
+  if(LV.mode==='city'){if(LV.id===4){P.x=L4.start.x;P.z=L4.start.z;P.h=L4.start.h}else if(LV.id===5){P.x=L5.start.x;P.z=L5.start.z;P.h=L5.start.h;islandReset()}else if(HUB.built){const sp=HUB.spawnAt;P.x=sp?sp.x:HUB.sx;P.z=sp?sp.z:HUB.sz;P.h=sp?sp.h:HUB.sh;HUB.spawnAt=null}}
   scoops.forEach(s=>{s.got=false;s.g.visible=s.beam.visible=s.pad.visible=true;s.g.scale.setScalar(.9)});
   cones.forEach(c=>{c.hit=0;c.o.visible=true;c.o.position.set(c.x,1.3,c.z);c.o.rotation.set(0,0,0);c.o.scale.setScalar(1)});
   if(dinoG)dinoG.visible=false;if(blobD)blobD.visible=false;
   $('track').classList.remove('on')}
 function scoopsGot(){return scoops.filter(s=>s.got).length}
 function beginPlay(){$('b-inv').hidden=false;resetRun();T.said=false;G.knocked=0;G.falls=0;G.fallSaid=false;HUB.portals.forEach(p=>p.hit=0);HUB.coastHit=0;buildRivals();if(LV.mode!=='city')placeRivals();G.phase='play';$('overlay').hidden=true;$('card').innerHTML='';
-  setQuest(LV.quest,LV.id===0?HUB.found.size:(LV.id===4&&Q.hasKey?1:0));$('quest').hidden=false;
+  setQuest(LV.quest,LV.id===0?HUB.found.size:(LV.id===4&&Q.hasKey?1:(LV.id===5?0:0)));if(LV.id!==5)$('cd').hidden=true;HUB.atollHit=0;$('quest').hidden=false;
   say('e',LV.intro,3.4);
   later(3.5,()=>{if(G.phase==='play')say('v',LV.vendor,4.8)})}
 function startChase(){G.phase='chase';G.chaseT=0;ensureDino();
@@ -1045,7 +1074,7 @@ function updateTrack(gap){const f=x=>Math.max(0,Math.min(1,(x+134)/260))*100+'%'
 /* ---------- Hauptschritt ---------- */
 const camPos=new V3(-148,6,-8),camLook=new V3(-134,3,-8);let gapNow=60;
 function step(dt){
-  if(INV.open||DLG.open||PAD.open)return;
+  if(INV.open||DLG.open||PAD.open||PUZ.open)return;
   G.t+=dt;for(let i=TIMERS.length-1;i>=0;i--){TIMERS[i].t-=dt;if(TIMERS[i].t<=0){const f=TIMERS[i].fn;TIMERS.splice(i,1);f()}}
   if(narr.active){narr.shown=Math.min(narr.full.length,narr.shown+dt*46);narr.text.textContent=narr.full.slice(0,Math.floor(narr.shown));if(narr.shown>=narr.full.length){narr.hold-=dt;if(narr.hold<=0){narr.active=false;narr.el.classList.remove('on')}}}
   stepConfetti(dt);stepClouds(dt);stepLevel2(dt);stepLevel3(dt);stepLevel0(dt);stepAtoll(dt);
@@ -1249,17 +1278,17 @@ function applyLevel(n){
   LV=LEVELS[n];
   if(!SC_INIT){const KEEP=new Set([P.av,blobP,flyBoard,iceTower,cfPts,sky]);
     SC1=scoops;CN1=cones;K1=KICKERS;PK1=PARKED;CL1=CLAPPERS;L1ITEMS=sc.children.filter(o=>!o.isLight&&!KEEP.has(o)&&o!==sun.target);SC_INIT=true}
-  if(n===0)buildLevel0();if(n===2)buildLevel2();if(n===3)buildLevel3();if(n===4)buildLevel4();
-  L1ITEMS.forEach(o=>o.visible=n===1);if(W2)W2.visible=n===2;if(W3)W3.visible=n===3;if(W0)W0.visible=n===0;if(W4)W4.visible=n===4;{const mi=$('mini'),ra=$('radar');if(n!==0){if(mi)mi.classList.remove('on');if(ra)ra.classList.remove('on')}}
-  const EV={0:{h:['#ffd9f0','#7a5aa0',1],s:['#ffb870',2.3],f:['#8e7bff',1.0],a:'#3a2a8a',b:'#ff9a78'},1:{h:['#ffffff','#e8a6c8',1],s:['#ffd9a0',2.6],f:['#ff9fd0',1.1],a:'#0f86d6',b:'#f7d3e4'},2:{h:['#b8a8ff','#ff7cc4',.95],s:['#ffe0f5',2.0],f:['#4cc3ff',1.3],a:'#060214',b:'#5a2480'},3:{h:['#7a86ff','#3a1a6a',.85],s:['#b8c8ff',1.5],f:['#ff5fa8',1.5],a:'#02000c',b:'#2a0f55'},4:{h:['#d8ecff','#5a7a8a',1.2],s:['#ffffff',1.1],f:['#7ff0ff',.9],a:'#0a1020',b:'#1a2a3a'}}[n];
+  if(n===0)buildLevel0();if(n===2)buildLevel2();if(n===3)buildLevel3();if(n===4)buildLevel4();if(n===5)buildLevel5();
+  L1ITEMS.forEach(o=>o.visible=n===1);if(W2)W2.visible=n===2;if(W3)W3.visible=n===3;if(W0)W0.visible=n===0;if(W4)W4.visible=n===4;if(W5)W5.visible=n===5;{const mi=$('mini'),ra=$('radar');if(n!==0){if(mi)mi.classList.remove('on');if(ra)ra.classList.remove('on')}}
+  const EV={0:{h:['#ffd9f0','#7a5aa0',1],s:['#ffb870',2.3],f:['#8e7bff',1.0],a:'#3a2a8a',b:'#ff9a78'},1:{h:['#ffffff','#e8a6c8',1],s:['#ffd9a0',2.6],f:['#ff9fd0',1.1],a:'#0f86d6',b:'#f7d3e4'},2:{h:['#b8a8ff','#ff7cc4',.95],s:['#ffe0f5',2.0],f:['#4cc3ff',1.3],a:'#060214',b:'#5a2480'},3:{h:['#7a86ff','#3a1a6a',.85],s:['#b8c8ff',1.5],f:['#ff5fa8',1.5],a:'#02000c',b:'#2a0f55'},4:{h:['#d8ecff','#5a7a8a',1.2],s:['#ffffff',1.1],f:['#7ff0ff',.9],a:'#0a1020',b:'#1a2a3a'},5:{h:['#fff0e0','#6fb8c8',1.05],s:['#ffc890',2.3],f:['#ff9fd0',.9],a:'#2a7fd0',b:'#ffb89a'}}[n];
   hemi.color.set(EV.h[0]);hemi.groundColor.set(EV.h[1]);hemi.intensity=EV.h[2];sun.color.set(EV.s[0]);sun.intensity=EV.s[1];fill.color.set(EV.f[0]);fill.intensity=EV.f[1];
   sky.material.uniforms.a.value.set(EV.a);sky.material.uniforms.b.value.set(EV.b);
-  sc.fog=n===4?new THREE.Fog('#1a2a3a',90,260):n===0?new THREE.Fog('#d98aa8',130,480):n===1?FOG1:n===2?new THREE.Fog('#3a1660',300,900):new THREE.Fog('#1a0a3a',170,640);
-  const arr={0:[[],HUB.cones,[],[],HUB.clappers,[]],1:[SC1,CN1,K1,PK1,CL1,[]],2:[L2.scoops,L2.cones,L2.kickers,[],L2.clappers,[]],3:[L3.scoops,L3.cones,L3.kickers,[],L3.clappers,L3.gaps],4:[[],[],[],[],[],[]]}[n];
+  sc.fog=n===5?new THREE.Fog('#ffc9a8',150,520):n===4?new THREE.Fog('#1a2a3a',90,260):n===0?new THREE.Fog('#d98aa8',130,480):n===1?FOG1:n===2?new THREE.Fog('#3a1660',300,900):new THREE.Fog('#1a0a3a',170,640);
+  const arr={0:[[],HUB.cones,[],[],HUB.clappers,[]],1:[SC1,CN1,K1,PK1,CL1,[]],2:[L2.scoops,L2.cones,L2.kickers,[],L2.clappers,[]],3:[L3.scoops,L3.cones,L3.kickers,[],L3.clappers,L3.gaps],4:[[],[],[],[],[],[]],5:[[],[],[],[],[],[]]}[n];
   [scoops,cones,KICKERS,PARKED,CLAPPERS,GAPS]=arr;
   if(!iceTower.userData.m1){iceTower.userData.m1=[1,2,3].map(i=>iceTower.children[i].material);iceTower.userData.m2=[galMat(5,0),galMat(6,1),galMat(7,2)];
     iceTower.userData.m3=['#ff5fa8','#4cc3ff','#ffe066'].map(c=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.6,roughness:.4}))}
-  [1,2,3].forEach(i=>iceTower.children[i].material=iceTower.userData['m'+(n===0||n===4?1:n)][i-1]);
+  [1,2,3].forEach(i=>iceTower.children[i].material=iceTower.userData['m'+(n===0||n===4||n===5?1:n)][i-1]);
   const lbl=$('track').querySelector('.lbl');if(lbl)lbl.lastElementChild.textContent=LV.goal}
 
 /* ================= Welt 3: Nacht-Stadt ================= */
@@ -1476,7 +1505,7 @@ function bakeGroup(root){const groups=new Map(),rm=[];
 let W0=null;
 function buildLevel0(){
   if(W0)return;W0=new THREE.Group();W0.userData.noBake=true;W0.visible=false;sc.add(W0);
-  const R=mulberry(777),maze=genMaze(31),N=6;HUB.maze=maze;HUB.lab=pickLabBlock(maze);
+  const R=mulberry(777),maze=genMaze(31),N=6;HUB.maze=maze;HUB.lab=pickLabBlock(maze);HUB.gb=pickGingerBlock(maze,HUB.lab);
   const PAST=['#f1a7c8','#a9e6d2','#f6df73','#a9d8f0','#f6c3a8','#e7b8e8','#c9f0b8'];
   const GLASS=MT('#7fb8d8','#7fb8d8',.25),LIT=MT('#ffe9a0','#ffe9a0',.9),GLASSW=MT('#bfe8f4','#ffe9b8',.4),TRIM=MT('#f6efe6'),DARK=MT('#2a2040'),WOOD=MT('#7a4a2a'),GREEN=MT('#4fa874');
   const Y0=1.6;let cur={x:0,z:0};
@@ -1526,13 +1555,13 @@ function buildLevel0(){
     const by=h+.6;sph(MT('#e0a050'),4.4,1.6,4.4,0,by+.9,0);cyl(MT('#5b3a1e'),4.5,1.1,0,by+1.6,0);bx(MT('#ffd23a'),9,.35,9,0,by+2.7,0);cyl(MT('#6fcf93'),4.8,.5,0,by+3.05,0);cyl(MT('#e5383b'),4.3,.45,0,by+3.5,0);
     sph(MT('#e8a85a'),4.4,2.6,4.4,0,by+5.2,0);for(let k=0;k<12;k++){const a=k*2.4,r=1+k*.28;sph(MT('#fff3d0'),.35,.2,.55,Math.cos(a)*r,by+7.6-r*.12,Math.sin(a)*r,false)}
     sign('BURGER','#ffd23a',0,6.2,-d/2-.12,8,2,Math.PI,'#3a0a10');sign('24H','#ff5fa8',-w/2-.12,3.6,0,3,1,-Math.PI/2,'#10183a')}
-  HUB.h={bx,cyl,sph,sign,MT,Y0};
+  HUB.h={bx,cyl,sph,sign,MT,Y0,cur:()=>cur,add:o=>W0.add(o)};
   const TYPES=[resi,shop,cafe,office,burger],TNAMES=['Wohnhaus','Laden','Café','Büro','Burger'],TCOL=['#f1a7c8','#ffb347','#8a5a3a','#4cc3ff','#e5383b'];
   /* ---- Boden, Bürgersteige, Mauer ---- */
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(420,420),new THREE.MeshStandardMaterial({color:'#4a3f66',roughness:.95}));ground.rotation.x=-Math.PI/2;ground.position.set(0,1.3,0);ground.receiveShadow=true;ground.userData.noBake=true;W0.add(ground);
   HUB.blockType=[];const blockSeed=[];
   for(let j=0;j<5;j++)for(let i=0;i<5;i++){cur={x:(i-2)*50,z:(j-2)*50};const t=(i+2*j)%5;HUB.blockType.push(t);
-    bx(MT('#cfc4e0'),36,.3,36,0,-.3,0);(HUB.lab&&i===HUB.lab.i&&j===HUB.lab.j)?buildLabBlock():TYPES[t](i+j);
+    bx(MT('#cfc4e0'),36,.3,36,0,-.3,0);(HUB.lab&&i===HUB.lab.i&&j===HUB.lab.j)?buildLabBlock():(HUB.gb&&i===HUB.gb.i&&j===HUB.gb.j)?buildGingerBlock():TYPES[t](i+j);
     HUB.colliders.push({x0:cur.x-18,x1:cur.x+18,z0:cur.z-18,z1:cur.z+18,top:999})}
   /* ---- Pflanzen aus Regeln + Seed (wie in Welt 1): Welt-Farbe Rosa, kräftig, 6 pro Block ---- */
   {const oldFSP=FSP,oldH=FW.h,oldA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
@@ -1601,7 +1630,7 @@ function buildLevel0(){
        const a=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.5,4,8),gm);a.position.y=-.36;A.add(a);const h=new THREE.Mesh(new THREE.SphereGeometry(.11,8,6),hm);h.position.y=-.72;A.add(h);const idle=up?s*2.5:s*.35;A.rotation.z=idle;A.userData.noBake=true;W0.add(A);HUB.clappers.push({A,s,idle,x:px,face,ph:R()*6.28,up})})}}
   /* ---- Items (für die Atoll-Quest): je ein Gegenstand vor einem passenden Gebäude ---- */
   {const RI=mulberry(4242);
-   ITEM_DEFS.forEach((d,k)=>{const blocks=[];for(let j=0;j<5;j++)for(let i=0;i<5;i++)if((i+2*j)%5===d.type&&!(HUB.lab&&i===HUB.lab.i&&j===HUB.lab.j))blocks.push([i,j]);
+   ITEM_DEFS.forEach((d,k)=>{const blocks=[];for(let j=0;j<5;j++)for(let i=0;i<5;i++)if((i+2*j)%5===d.type&&!(HUB.lab&&i===HUB.lab.i&&j===HUB.lab.j)&&!(HUB.gb&&i===HUB.gb.i&&j===HUB.gb.j))blocks.push([i,j]);
      const far=blocks.filter(([i,j])=>Math.hypot((i-2)*50-HUB.sx,(j-2)*50-HUB.sz)>60);const pool=far.length?far:blocks;const [bi,bj]=pool[Math.floor(RI()*pool.length)];
      const ix=(bi-2)*50+(k%2?7:-7),iz=(bj-2)*50-22;
      const g=new THREE.Group();const mt=(c,e)=>new THREE.MeshStandardMaterial({color:c,roughness:.5,emissive:e||'#000000',emissiveIntensity:e?.35:0});
@@ -1617,7 +1646,7 @@ function buildLevel0(){
      const got=INV.items.has(d.id);g.visible=!got;ring.visible=!got;
      HUB.items.push({def:d,g,ring,beam,x:ix,z:iz,got,ph:k*1.3})})}
   bakeGroup(W0);
-  buildAtollQuestObjects();
+  buildAtollQuestObjects();buildGingerLights();
   /* Himmel: Skyline-Ring, Wolken (folgen / stehen) */
   const skyG=new THREE.Group();skyG.userData.noBake=true;W0.add(skyG);HUB.sky=skyG;
   for(let i=0;i<12;i++){const s=skySprite(SKYTEXF[i%4],320,160,false);const az=i/12*Math.PI*2;s.position.set(Math.cos(az)*340,75-24,Math.sin(az)*340);skyG.add(s)}
@@ -1632,6 +1661,7 @@ function buildLevel0(){
   for(let j=0;j<5;j++)for(let i=0;i<5;i++){const [x,z]=pxz((i-2)*50-18,(j-2)*50-18);g.fillStyle=TCOL[HUB.blockType[j*5+i]];g.globalAlpha=.55;g.fillRect(x,z,36*S,36*S);g.globalAlpha=1}
   g.strokeStyle='#fff0b0';g.lineWidth=14*S;g.lineCap='butt';
   maze.all.forEach(([a,b])=>{if(!maze.open.has(maze.key(a,b)))return;const A=nodeXZ(a),B=nodeXZ(b),[x1,z1]=pxz(A.x,A.z),[x2,z2]=pxz(B.x,B.z);g.beginPath();g.moveTo(x1,z1);g.lineTo(x2,z2);g.stroke()});
+  {const [gx,gz]=pxz(HUB.gb.cx,HUB.gb.cz);g.fillStyle='#c98a4a';g.globalAlpha=.95;g.fillRect(gx-36*S/2,gz-36*S/2,36*S,36*S);g.globalAlpha=1;g.fillStyle='#fff6ea';g.font='700 10px sans-serif';g.textAlign='center';g.fillText('W',gx,gz+3.5)}
   {const [lx,lz]=pxz(HUB.lab.cx,HUB.lab.cz);g.fillStyle='#7ff0ff';g.globalAlpha=.9;g.fillRect(lx-36*S/2,lz-36*S/2,36*S,36*S);g.globalAlpha=1;g.fillStyle='#10183a';g.font='700 10px sans-serif';g.textAlign='center';g.fillText('L',lx,lz+3.5)}
   for(let n=0;n<N*N;n++){const A=nodeXZ(n),[x,z]=pxz(A.x,A.z);g.fillStyle='#fff0b0';g.fillRect(x-7*S,z-7*S,14*S,14*S)}
   g.fillStyle='#1cafd1';g.fillRect(0,0,pxz(-143,0)[0],150);g.fillStyle='#f4d89a';g.fillRect(pxz(-150,0)[0],0,5,150);
@@ -1639,7 +1669,7 @@ function buildLevel0(){
   const ex=document.createElement('canvas');ex.width=ex.height=150;HUB.mm={map:mc,ex,exg:ex.getContext('2d'),tmp:document.createElement('canvas'),S,pxz};HUB.mm.tmp.width=HUB.mm.tmp.height=150;
   HUB.built=true}
 
-function curCols(){return LV.id===4?L4.colliders:HUB.colliders}
+function curCols(){return LV.id===4?L4.colliders:LV.id===5?L5.colliders:HUB.colliders}
 function camClamp(from,to){let tmin=1;const dx=to.x-from.x,dz=to.z-from.z;
   for(const c of curCols()){const x0=c.x0-.6,x1=c.x1+.6,z0=c.z0-.6,z1=c.z1+.6;let t0=0,t1=1;
     for(const [o,d,a,b] of [[from.x,dx,x0,x1],[from.z,dz,z0,z1]]){if(Math.abs(d)<1e-6){if(o<a||o>b){t0=2;break}}else{let ta=(a-o)/d,tb=(b-o)/d;if(ta>tb){const q=ta;ta=tb;tb=q}t0=Math.max(t0,ta);t1=Math.min(t1,tb);if(t0>t1){t0=2;break}}}
@@ -1660,7 +1690,8 @@ function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
   const sf=.45+.55*Math.min(1,P.speed/5);P.h+=P.turn*dt*2.3*sf;
   const target=K.up?SPEED_MAX:(K.down?1.8:SPEED_CRUISE);P.speed+=(target-P.speed)*Math.min(1,dt*(K.up?1.5:1.1));
-  P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;{const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
+  P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;if(LV.id===5){const dk=Math.abs(P.z+36)<4.2&&P.x>40&&ISL.gate,ax=dk?96:78,k=(P.x*P.x)/(ax*ax)+(dk?0:(P.z*P.z)/(52*52));if(!dk&&k>1){const s=.995/Math.sqrt(k);P.x*=s;P.z*=s}else if(dk&&P.x>ax){P.x=ax}}
+  {const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
   resolveCity();P.h=((P.h+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   P.vy-=LV.grav*dt;P.y+=P.vy*dt;if(P.y<=1.3){P.y=1.3;if(P.vy<0)P.vy=0}P.coy=P.y<=1.35?0:P.coy+dt;
   for(const c of cones){if(c.hit){c.o.position.x+=c.vx*dt;c.o.position.y+=c.vy*dt;c.o.position.z+=c.vz*dt;c.vy-=18*dt;c.o.rotation.x+=7*dt;c.o.rotation.z+=5*dt;c.hit-=dt;if(c.hit<=0)c.o.visible=false;continue}
@@ -1698,7 +1729,7 @@ const DW=['Null','Eins','Zwei','Drei','Vier','Fünf','Sechs','Sieben','Acht','Ne
 const ITEM_POS={funk:6,schraube:7,usb:8,handbuch:9};
 const codeStr=()=>CODE.join('');
 function itemExtra(id){const p=ITEM_POS[id];
-  if(p!==undefined){const t={funk:'Entzifferte Geheimschrift',schraube:'Am Schaft eingeritzt',usb:'Aus patrouille.log',handbuch:'Auf die Rückseite gekritzelt'}[id];return `${t}: ${p+1}. Ziffer = <b>${CODE[p]}</b>`}
+  if(p!==undefined){const t={funk:'Entzifferte Geheimschrift',schraube:'Am Schaft eingeritzt',usb:'Aus patrouille.log',handbuch:'Auf die Rückseite gekritzelt'}[id];const more={funk:'<br>Außerdem: "Die Banditen schieben jeden Buchstaben um 3 weiter."',schraube:'<br>Passt in den Alarmkasten auf dem Atoll.',usb:'<br>Enthält patrouille.log für das Wachhaus-Terminal.',handbuch:'<br>Seite 13: Kamera Q-7, Werks-PIN <b>4711</b>.'}[id]||'';return `${t}: ${p+1}. Ziffer = <b>${CODE[p]}</b>${more}`}
   if(id==='losung')return 'Notiz dazu: "Der Schlüssel liegt hinter dem Möwen-Poster."';return ''}
 function codeSheet(){const a=[];for(let i=0;i<10;i++){let c='_';if(i<6&&Q.dictated)c=String(Q.corrected&&i===MIS?CODE[i]:DICT[i]);else if(i>=6){const id=Object.keys(ITEM_POS).find(k=>ITEM_POS[k]===i);if(INV.items.has(id))c=String(CODE[i])}a.push(c)}return a}
 function questSlotsHTML(){let h='';
@@ -1741,7 +1772,7 @@ setInterval(()=>{if(PAD.open)padRefresh()},500);
 
 /* ---------- Interaktionen ---------- */
 const ACT={cur:null};
-function actGo(){if(ACT.cur&&G.phase==='play'&&!INV.open&&!DLG.open&&!PAD.open){ac();ACT.cur.fn()}}
+function actGo(){if(ACT.cur&&G.phase==='play'&&!INV.open&&!DLG.open&&!PAD.open&&!PUZ.open){ac();ACT.cur.fn()}}
 $('act').onclick=()=>actGo();
 addEventListener('keydown',e=>{
   if(DLG.open){e.stopImmediatePropagation();if(e.code==='Enter'||e.code==='Space'||e.code==='KeyE'){e.preventDefault();dlgNext()}return}
@@ -1767,9 +1798,7 @@ function vanUse(){if(Q.ice)return say('e','Du hast schon ein Eis. Mehr passt nic
 
 function enterLab(){LEVELS[4].vendor=INV.items.has('losung')?'Auf dem Möwen-Bon steht: "Frag nach dem Möwen-Menü." Vielleicht hängt hier irgendwo ein Möwen-Poster.':'Such den Schlüssel für die Handschellen. Schaltkästen sind meistens verschraubt.';HUB.spawnAt=null;applyLevel(4);beginPlay()}
 function leaveLab(){const L=HUB.lab;HUB.spawnAt={x:L.cx-1,z:L.cz-21,h:-Math.PI/2};applyLevel(0);beginPlay()}
-function atollEnter(){HUB.atollHit=1;G.phase='win';SFX.win();burst(P.x,P.y+3,P.z,120);
-  $('overlay').hidden=false;$('card').innerHTML=`<h1>Das Atoll</h1><p class="sub">Das Portal summt. Dahinter liegt die Insel mit dem Reaktor und den vier gesicherten Systemen. Sie ist noch nicht gebaut: Hier endet der Prototyp.</p><div class="badge"><i>★</i><span>Erfolg: Labor-Retter:in. Der Techniker lebt, die Insel noch nicht ganz.</span></div><button class="btn" id="a-city" type="button">Zurück zur Stadt</button><p class="note">Nächster Schritt: das Atoll mit den vier Rätseln (Funkspruch, Alarm, Kamera, Patrouillen-Log).</p>`;
-  $('a-city').onclick=()=>{ac();HUB.atollHit=0;applyLevel(0);beginPlay()};$('a-city').focus({preventScroll:true})}
+function atollEnter(){HUB.atollHit=1;SFX.win();burst(P.x,P.y+3,P.z,120);toast('Das Atoll!',1400);later(.7,()=>{applyLevel(5);beginPlay()})}
 
 /* ---------- Labor-Gebäude (außen) ---------- */
 function pickLabBlock(maze){const R=mulberry(555),c=[];
@@ -1822,7 +1851,9 @@ function curActs(){const a=[],L=HUB.lab;
     if(m&&!Q.freed)a.push({x:L.manX,z:L.manZ,r:6.5,label:Q.hasKey?'Mann befreien (Schlüssel)':(Q.ice&&Q.dictated&&!Q.corrected)?'Dem Mann das Eis geben':'Mit dem Mann sprechen',fn:manTalk});
     else if(m&&Q.freed&&m.state==='stand')a.push({x:m.x,z:m.z,r:6,label:'Mit dem Mann sprechen',fn:manTalk});
     a.push({x:L.doorX,z:L.doorZ,r:9,label:!Q.dictated?'Labor-Tür (verriegelt)':(Q.doorOpen||Q.hasKey)?'Labor betreten':'Code eingeben',fn:doorUse});
+    if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})}
+  else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});
     a.push({x:-34,z:-23,r:7,label:Q.hasKey?'Schaltkasten (leer)':'Schaltkasten untersuchen',fn:()=>{if(Q.hasKey)return dlgStart('',['Leer. Nur noch ein bisschen Staub und ein ordentlicher Kabelsalat.']);
@@ -1832,7 +1863,8 @@ function curActs(){const a=[],L=HUB.lab;
     a.push({x:32,z:17,r:7,label:'Schreibtisch untersuchen',fn:()=>dlgStart('',['Eine Kaffeetasse, ein Notizzettel: "Reaktor NICHT anfassen!" und darunter jemand mit Kuli: "Zu spät." Kein Schlüssel.'])})}
   return a}
 function stepAtoll(dt){
-  const ui=INV.open||DLG.open||PAD.open;
+  stepXmas(dt);
+  const ui=INV.open||DLG.open||PAD.open||PUZ.open;
   const m=HUB.man;
   if(m&&LV.id===0){
     m.bl.visible=true;m.bl.position.set(m.x,1.34,m.z);
@@ -1845,9 +1877,9 @@ function stepAtoll(dt){
   else if(m)m.bl.visible=false;
   /* Aktion in der Nähe */
   let best=null,bd=1e9;
-  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
+  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
   ACT.cur=best;const el=$('act');if(best){el.hidden=false;el.firstElementChild.textContent=best.label}else el.hidden=true;
-  if(LV.id===4)stepLevel4(dt)}
+  if(LV.id===4)stepLevel4(dt);if(LV.id===5)stepIsland(dt)}
 
 /* ---------- Labor-Innenraum (Level 4) ---------- */
 LEVELS[4]={id:4,mode:'city',pips:1,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Schlüssel',
@@ -1901,7 +1933,218 @@ function buildLevel4(){
 function stepLevel4(dt){if(!W4||!W4.visible)return;const t=G.t;if(L4.core)L4.core.scale.setScalar(2.6*(1+.06*Math.sin(t*3)));L4.alarms.forEach((a,i)=>{a.material.emissiveIntensity=.2+.8*Math.max(0,Math.sin(t*5+i*1.6))})}
 invRender();
 
-window.__qa={Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+/* ================= Atoll: vier gesicherte Systeme, Countdown, Boot ================= */
+LEVELS[5]={id:5,mode:'city',pips:4,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Boot',
+  quest:'Rette die Insel: vier Systeme',goalQuest:'',
+  intro:'Das Atoll. Hinter dem Tor liegt das letzte Boot, und in zehn Minuten legt es ab. Vier Systeme halten das Tor zu. Lös sie mit Köpfchen.',
+  vendor:'Funk: Funkhütte im Westen, Alarmkasten im Osten, Kamera in der Mitte, Wachhaus im Norden. Alle vier brauchen etwas aus der Stadt.',
+  lines:[],chase:'',eat:'',win:'',winSub:'',badge:''};
+const ISL={s:[false,false,false,false],t:600,bonus:false,gate:false,pinTries:3,pinLock:0,failing:false,alarm:true};
+const L5={colliders:[],start:{x:0,z:42,h:-Math.PI/2},core:null,lamps:[],gateDoor:null,gateCol:null,boat:null,alarms:[],sign:null};
+const SECRET='STEG IM NORDEN';
+function caesar(t,k){return t.replace(/[A-ZÄÖÜ]/g,c=>{const a='ABCDEFGHIJKLMNOPQRSTUVWXYZ',i=a.indexOf(c);return i<0?c:a[((i+k)%26+26)%26]})}
+const PIN_OK='4711';
+const LOGLINES=['07:10 Wache A: Tor','07:25 Wache A: Steg','07:40 PAUSE (beide Wachen weg)','08:10 Wache A: Tor','08:25 Wache A: Steg','08:40 PAUSE (beide Wachen weg)','09:10 Wache A: Tor','09:25 Wache A: Steg','09:40 PAUSE (beide Wachen weg)','10:10 Wache A: Tor','10:25 Wache A: Steg'];
+const isl=n=>ISL.s.filter(Boolean).length;
+function islandReset(){ISL.s=[false,false,false,false];ISL.t=600;ISL.bonus=false;ISL.gate=false;ISL.pinTries=3;ISL.pinLock=0;ISL.failing=false;ISL.alarm=true;islandVisuals();$('cd').hidden=false}
+function islandVisuals(){if(!W5)return;L5.lamps.forEach((l,i)=>{const on=ISL.s[i];l.material.color.set(on?'#7be0a0':'#ff5f5f');l.material.emissive.set(on?'#7be0a0':'#ff5f5f')});
+  if(L5.gateDoor)L5.gateDoor.visible=!ISL.gate;if(L5.gateCol)L5.gateCol.x0=ISL.gate?9999:-8;
+  if(L5.core){const c=ISL.gate?'#7fffc8':'#ff4a4a';L5.core.material.color.set(c);L5.core.material.emissive.set(c)}}
+function islandSolved(i,say1){ISL.s[i]=true;islandVisuals();setQuest(LV.quest,isl());SFX.win();burst(P.x,P.y+3,P.z,70);toast(['Funkspruch gelesen','Alarm aus','Kamera blind','Log gelesen'][i]+'!  '+isl()+' / 4',1500);if(say1)say('e',say1,5);
+  if(isl()===4)later(1.2,()=>say('e','Alle vier Lampen leuchten grün. Das Tor lässt sich jetzt öffnen.',4))}
+
+/* ---------- Puzzle-Fenster ---------- */
+const PUZ={open:false,kind:0};
+function puzClose(){PUZ.open=false;$('puz').hidden=true}
+function puzHTML(h,title,sub){$('puz-t').textContent=title;$('puz-sub').textContent=sub||'';$('puz-b').innerHTML=h;PUZ.open=true;$('puz').hidden=false;K.up=K.down=K.left=K.right=0}
+$('puz-close').onclick=()=>puzClose();
+function puz1(){let sh=0;const cipher=caesar(SECRET,3),has=INV.items.has('funk');
+  puzHTML(`<div class="cipher" id="p1-c">${cipher}</div><div class="shift"><button type="button" id="p1-m" aria-label="weniger">−</button><span>Verschiebung <b id="p1-n">0</b></span><button type="button" id="p1-p" aria-label="mehr">+</button></div><div class="cipher plain" id="p1-r">${cipher}</div><p class="tip">${has?'Auf dem Funkzettel steht: "Die Banditen schieben jeden Buchstaben um 3 weiter."':'Tipp: Schieb die Buchstaben zurück, bis ein Satz entsteht. Es gibt nur 25 Möglichkeiten. Ein Funkzettel aus der Stadt würde die Zahl verraten.'}</p><button class="btn" id="p1-go" type="button">Funkspruch lesen</button>`,'Funkhütte','Der abgefangene Funkspruch ist verschlüsselt.');
+  const upd=()=>{$('p1-n').textContent=sh;$('p1-r').textContent=caesar(cipher,-sh)};
+  $('p1-m').onclick=()=>{sh=(sh+25)%26;upd();tone(300,.05,'square',.03)};$('p1-p').onclick=()=>{sh=(sh+1)%26;upd();tone(380,.05,'square',.03)};
+  $('p1-go').onclick=()=>{if(caesar(cipher,-sh)===SECRET){puzClose();islandSolved(0,'Der Funkspruch lautet: "'+SECRET+'". Caesar-Codes sind schwach: Es gibt nur 25 Schlüssel, jeder kann sie durchprobieren.')}else{toast('Das ergibt keinen Satz',900);SFX.thud()}}}
+function puz2(){
+  if(!INV.items.has('schraube')){dlgStart('',['Die Abdeckung des Alarmkastens ist verschraubt. Du brauchst einen Schraubendreher. In der Stadt gibt es einen bei einem Laden.']);return}
+  const st={A:1,B:1,C:0};
+  puzHTML(`<div class="logic">ALARM = (A UND B) ODER (NICHT C)</div><div class="sw" id="p2-sw"><button type="button" data-k="A">A</button><button type="button" data-k="B">B</button><button type="button" data-k="C">C</button></div><div class="alarm" id="p2-o"></div><p class="tip">UND ist nur wahr, wenn beides wahr ist. ODER ist wahr, wenn mindestens eins wahr ist. NICHT dreht um. Schalte so, dass der Alarm AUS ist.</p><button class="btn" id="p2-go" type="button">Bestätigen</button>`,'Alarmkasten','Du hast die Schrauben gelöst. Drei Schalter, ein Alarm.');
+  const out=()=>((st.A&&st.B)||!st.C)?1:0;
+  const upd=()=>{[...$('p2-sw').children].forEach(b=>{b.className=st[b.dataset.k]?'on':'';b.textContent=b.dataset.k+': '+(st[b.dataset.k]?'AN':'AUS')});$('p2-o').textContent='Alarm: '+(out()?'AN':'AUS');$('p2-o').className='alarm '+(out()?'bad':'good')};
+  $('p2-sw').onclick=e=>{const b=e.target.closest('button');if(!b)return;st[b.dataset.k]^=1;upd();tone(440,.05,'square',.03)};upd();
+  $('p2-go').onclick=()=>{if(!out()){puzClose();ISL.alarm=false;islandSolved(1,'Der Alarm schweigt. Logikgatter sind Ja-Nein-Entscheider: Mit A=AUS oder B=AUS und C=AN ist die Formel falsch.')}else{toast('Der Alarm heult noch',900);SFX.thud()}}}
+function lockPin(){return Math.max(0,Math.ceil((ISL.pinLock-Date.now())/1000))}
+function puz3(){let buf='';const has=INV.items.has('handbuch');
+  puzHTML(`<div class="cam">Kamera-Modell Q-7 · Verwaltung</div><div class="pinD" id="p3-d"></div><p id="p3-i" class="tip"></p><div class="keys3" id="p3-k"></div><p class="tip">${has?'Handbuch, Seite 13: "Kamera Q-7, Werks-PIN: 4711. Bitte nach dem Einbau ändern!"':'Das Handbuch eines Wartungstechnikers könnte Werks-PINs verraten. In der Stadt liegt eins in einem Wohnhaus.'}</p>`,'Kamera-Mast','Vier Ziffern. Nach drei Fehlern sperrt die Anmeldung.');
+  const upd=()=>{const lk=lockPin();if(lk&&!ISL.pinLock)ISL.pinLock=0;if(!lk&&ISL.pinLock){ISL.pinLock=0;ISL.pinTries=3}
+    $('p3-d').innerHTML=Array.from({length:4},(_,i)=>`<i>${buf[i]||''}</i>`).join('');
+    $('p3-i').innerHTML=lk?`<b class="bad">Gesperrt: ${lk} s</b>`:'Versuche: '+'●'.repeat(ISL.pinTries)+'○'.repeat(3-ISL.pinTries);[...$('p3-k').children].forEach(b=>b.disabled=!!lk)};
+  $('p3-k').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button type="button" data-d="${n}">${n}</button>`).join('')+'<button type="button" data-a="del">←</button><button type="button" data-d="0">0</button><button type="button" data-a="ok">OK</button>';
+  $('p3-k').onclick=e=>{const b=e.target.closest('button');if(!b||lockPin())return;if(b.dataset.d!==undefined){if(buf.length<4){buf+=b.dataset.d;tone(420,.05,'square',.03)}}else if(b.dataset.a==='del')buf=buf.slice(0,-1);else if(buf.length===4){
+      if(buf===PIN_OK){puzClose();islandSolved(2,'Die Kamera ist blind. Standard-Passwörter sind die häufigste echte Sicherheitslücke: Immer ändern, nie lassen.')}
+      else{ISL.pinTries--;buf='';SFX.thud();if(ISL.pinTries<=0){ISL.pinLock=Date.now()+30000;toast('Gesperrt für 30 Sekunden',1300)}}}
+    upd()};upd();window.__p3tick=setInterval(()=>{if(!PUZ.open||!$('p3-d')){clearInterval(window.__p3tick);return}upd()},500)}
+function puz4(){
+  if(!INV.items.has('usb')){dlgStart('',['Das Terminal wartet auf einen Datenträger. Auf dem USB-Stick aus dem Büroviertel steht PATROUILLE. Den brauchst du.']);return}
+  puzHTML(`<div class="logb">${LOGLINES.map(l=>`<div class="${l.includes('PAUSE')?'pz':''}">${l}</div>`).join('')}<div class="q">?</div></div><p class="tip">Die Wachen halten einen Rhythmus ein. Wann beginnt die nächste Pause?</p><div class="opts" id="p4-o">${['10:30','10:40','10:55','11:10'].map(o=>`<button type="button" data-o="${o}">${o}</button>`).join('')}</div>`,'Wachhaus','patrouille.log vom USB-Stick:');
+  $('p4-o').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.o==='10:40'){puzClose();islandSolved(3,'Jede Stunde um :10 Tor, :25 Steg, :40 Pause. Logs verraten Muster. Wer Muster liest, findet Lücken, bevor es jemand anderes tut.')}else{toast('Das passt nicht ins Muster',900);SFX.thud()}}}
+addEventListener('keydown',e=>{if(!PUZ.open)return;e.stopImmediatePropagation();if(e.code==='Escape'){e.preventDefault();puzClose()}},true);
+
+/* ---------- Aktionen auf der Insel ---------- */
+function islandActs(a){
+  a.push({x:-42,z:12,r:8,label:ISL.s[0]?'Funkgerät (erledigt)':'Funkgerät benutzen',fn:()=>ISL.s[0]?say('e','Das Funkgerät rauscht zufrieden.',2.4):puz1()});
+  a.push({x:43,z:12,r:8,label:ISL.s[1]?'Alarmkasten (erledigt)':'Alarmkasten öffnen',fn:()=>ISL.s[1]?say('e','Der Kasten ist still.',2.4):puz2()});
+  a.push({x:0,z:21,r:8,label:ISL.s[2]?'Kamera (erledigt)':'Kamera-Mast bedienen',fn:()=>ISL.s[2]?say('e','Die Kamera schaut ins Leere.',2.4):puz3()});
+  a.push({x:-30,z:-12,r:8,label:ISL.s[3]?'Terminal (erledigt)':'Wachhaus-Terminal',fn:()=>ISL.s[3]?say('e','Das Terminal zeigt nur noch den Bildschirmschoner.',2.4):puz4()});
+  a.push({x:0,z:-20,r:9,label:ISL.gate?'Tor (offen)':isl()===4?'Tor öffnen':'Tor (gesperrt: '+isl()+'/4)',fn:()=>{if(ISL.gate)return;if(isl()<4)return say('e','Das Tor bleibt zu. Es fehlen noch '+(4-isl())+' Lampen.',3);ISL.gate=true;islandVisuals();SFX.win();burst(P.x,P.y+3,P.z,80);say('e','Das Tor schwingt auf. Der Reaktor färbt sich grün. Jetzt schnell zum Boot.',4.6)}});
+  a.push({x:22,z:33,r:7,label:ISL.bonus?'Möwen-Imbiss (Menü gegessen)':INV.items.has('losung')?'Möwen-Menü bestellen':'Möwen-Imbiss',fn:()=>{if(ISL.bonus)return say('e','Du hast das Möwen-Menü schon gegessen. Eine Möwe schaut vorwurfsvoll.',3);
+    if(!INV.items.has('losung'))return dlgStart('Möwen-Imbiss',['Wir haben geschlossen. Außer für Leute mit der Losung. Frag mich nicht, welche.']);
+    dlgStart('Möwen-Imbiss',['"Frag nach dem Möwen-Menü"? Du kennst die Losung! Hier, frisch aus der Fritteuse. Das gibt Kraft.'],()=>{ISL.bonus=true;ISL.t+=60;SFX.collect(4);toast('+60 Sekunden!',1400);burst(P.x,P.y+2,P.z,50)})}});
+  a.push({x:80,z:-36,r:8,label:ISL.gate?'Boot besteigen':'Das Boot (hinter dem Tor)',fn:()=>{if(!ISL.gate)return say('e','Das Boot liegt hinter dem Tor. Erst die vier Systeme lösen.',3);islandWin()}})}
+function islandWin(){G.phase='win';SFX.win();burst(P.x,P.y+3,P.z,140);const left=Math.max(0,Math.round(ISL.t));$('cd').hidden=true;
+  $('overlay').hidden=false;$('card').innerHTML=`<h1>Insel gerettet!</h1><p class="sub">Das Tor ist offen, der Reaktor grün, und der Techniker winkt vom Steg. Das letzte Boot legt mit dir ab.</p>
+   <div class="stats"><div><div class="n">${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}</div><div class="l">Zeit übrig</div></div><div><div class="n">${ISL.bonus?'Ja':'Nein'}</div><div class="l">Möwen-Menü</div></div><div><div class="n">4/4</div><div class="l">Systeme</div></div></div>
+   <div class="badge"><i>★</i><span>Erfolg: Inselretter:in. Du hast vier Systeme mit Köpfchen gelöst: Verschlüsselung, Logik, Passwörter und Muster.</span></div>
+   <button class="btn" id="i-city" type="button">Zurück zur Stadt</button><button class="btn sec" id="i-again" type="button">Atoll noch einmal</button>`;
+  $('i-city').onclick=()=>{ac();applyLevel(0);beginPlay()};$('i-again').onclick=()=>{ac();applyLevel(5);beginPlay()};$('i-city').focus({preventScroll:true})}
+function islandFail(){if(ISL.failing)return;ISL.failing=true;SFX.siren();dlgStart('Funk',['Das letzte Boot legt ab. Ohne dich.','Die Insel startet neu. Dir ist nichts passiert, nur der Countdown hat gewonnen. Versuch es noch einmal.'],()=>{applyLevel(5);beginPlay()})}
+function stepIsland(dt){
+  if(LV.id!==5||!W5||!W5.visible)return;const t=G.t;
+  if(G.phase==='play'&&!ISL.failing&&!(INV.open||DLG.open||PAD.open||PUZ.open)){ISL.t-=dt;if(ISL.t<=0){ISL.t=0;islandFail()}}
+  const s=Math.max(0,Math.ceil(ISL.t));$('cd-t').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');$('cd').classList.toggle('low',s<60);
+  if(L5.core)L5.core.scale.setScalar(4.2*(1+.05*Math.sin(t*3)));
+  L5.alarms.forEach((a,i)=>{a.visible=ISL.alarm&&Math.sin(t*6+i)>-.2});
+  if(L5.boat)L5.boat.position.y=1.2+Math.sin(t*1.4)*.25,L5.boat.rotation.z=Math.sin(t*1.1)*.04;
+  if(L5.sign)L5.sign.rotation.y=Math.sin(t*.8)*.1}
+
+/* ---------- Insel bauen ---------- */
+let W5=null;
+function buildLevel5(){
+  if(W5)return;W5=new THREE.Group();W5.userData.noBake=true;W5.visible=false;sc.add(W5);
+  const Y=1.3,add=o=>{W5.add(o);return o};
+  const box=(w,h,d,x,y,z,col,em,ei,cast=true)=>{const m=new THREE.Mesh(BX,MT(col,em,ei));m.scale.set(w,h,d);m.position.set(x,Y+y+h/2,z);m.castShadow=cast;m.receiveShadow=true;return add(m)};
+  const cylm=(r,h,x,y,z,col,em,ei)=>{const m=new THREE.Mesh(CY,MT(col,em,ei));m.scale.set(r,h,r);m.position.set(x,Y+y+h/2,z);m.castShadow=true;return add(m)};
+  const sphm=(rx,ry,rz,x,y,z,col,em,ei)=>{const m=new THREE.Mesh(SP,MT(col,em,ei));m.scale.set(rx,ry,rz);m.position.set(x,Y+y,z);return add(m)};
+  const col=(x0,x1,z0,z1)=>{const c={x0,x1,z0,z1,top:999};L5.colliders.push(c);return c};
+  /* Meer, Strand, Gras */
+  const sea=new THREE.Mesh(new THREE.PlaneGeometry(900,900),new THREE.MeshStandardMaterial({color:'#1cafd1',roughness:.25,metalness:.1}));sea.rotation.x=-Math.PI/2;sea.position.set(0,1.0,0);sea.userData.noBake=true;add(sea);
+  const ell=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(1,64),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.scale.set(a,b,1);m.rotation.x=-Math.PI/2;m.position.set(0,y,0);m.receiveShadow=true;m.userData.noBake=true;return add(m)};
+  ell(96,68,1.12,'#bff3ea');ell(88,62,1.25,'#f4d89a');ell(74,48,1.28,'#86dba0');ell(30,20,1.3,'#76cf90');
+  /* Funkhütte */
+  box(9,5.4,7,-48,0,8,'#e5383b');box(10,.6,8,-48,5.4,8,'#ffffff');box(2.2,3.2,.3,-43.4,0,8,'#7a4a2a');box(3,1.6,.2,-51,2.4,4.4,'#7fd0f0','#7fd0f0',.4,false);
+  cylm(.25,10,-52,5.4,12,'#cfcfe0');{const d=new THREE.Mesh(new THREE.SphereGeometry(1,16,10,0,Math.PI*2,0,Math.PI/2),MT('#ffffff'));d.scale.set(2.6,1,2.6);d.position.set(-52,Y+15.6,12);d.rotation.x=-.8;d.castShadow=true;add(d)}
+  col(-53,-43,4,12);
+  /* Alarmgelände */
+  box(14,.3,14,46,0,10,'#cfc4e0');box(.4,2.4,14,39,0,10,'#8a96a4');box(14,2.4,.4,46,0,3,'#8a96a4');box(14,2.4,.4,46,0,17,'#8a96a4');
+  box(5,6,2.6,52,0,10,'#7a8794');box(4.2,1.6,.2,52,3.8,8.6,'#ff2a4a','#ff2a4a',.8,false);col(48.8,55.4,7.4,12.6);col(38.6,39.4,3,17);col(39,53,2.8,3.2);col(39,53,16.8,17.2);
+  for(let q=0;q<4;q++)sphm(.22,.22,.22,50.6+(q%2)*2.8,1.4+(q>1?2.4:0),8.6,'#cfcfe0');
+  /* Kamera-Mast */
+  cylm(.5,12,0,0,18,'#8a96a4');box(2.6,1.2,1.6,0,12,18,'#2a3a52');sphm(.6,.6,.6,0,12.6,19.3,'#7ff0ff','#7ff0ff',.9);box(3.2,1.6,.2,0,3.4,16.9,'#ffd23a','#ffd23a',.5,false);col(-1,1,17,19);
+  /* Wachhaus (Container) */
+  box(10,5,5,-30,0,-16,'#2a3a52');box(4,2,.2,-30,2.2,-13.4,'#0a1a2a','#7be0a0',.9,false);box(1.6,3.2,.3,-26.4,0,-13.4,'#8a5a3a');box(10.4,.5,5.4,-30,5,-16,'#4a5a72');col(-35.2,-24.8,-18.6,-13.4);
+  /* Hauptgate */
+  box(64,5.4,.8,-40,0,-26,'#8a96a4');box(64,5.4,.8,40,0,-26,'#8a96a4');col(-72,-8,-26.6,-25.4);col(8,72,-26.6,-25.4);
+  for(let k=0;k<20;k++){const x=-70+k*3.4;if(Math.abs(x)>8)box(.2,1.4,1,x,5.4,-26,'#ffd23a','#ffd23a',.3,false)}
+  [-8.8,8.8].forEach(x=>box(1.6,9,1.6,x,0,-26,'#ff8a2a'));box(19,1.4,1.6,0,9,-26,'#ff8a2a');
+  L5.gateDoor=box(16,5.6,.5,0,0,-26,'#5a6a8a','#ff5f5f',.25);L5.gateDoor.userData.noBake=true;L5.gateCol=col(-8,8,-26.5,-25.5);
+  [-6,-2,2,6].forEach((x,i)=>{const m=new THREE.Mesh(SP,new THREE.MeshStandardMaterial({color:'#ff5f5f',emissive:'#ff5f5f',emissiveIntensity:1}));m.scale.set(.7,.7,.7);m.position.set(x,Y+8.4,-24.9);m.userData.noBake=true;add(m);L5.lamps.push(m)});
+  /* Reaktor hinter dem Tor */
+  cylm(10,2,0,0,-44,'#7a8794');cylm(8,10,0,2,-44,'#cfd6dd');sphm(7.6,5.4,7.6,0,12,-44,'#9fffd8','#40ffb0',.5);box(16,4,10,0,0,-34,'#b7c3cf');col(-8.6,8.6,-39,-29);col(-11,11,-55,-33);
+  [-20,20].forEach(x=>{cylm(3.2,14,x,0,-40,'#cfd6dd');cylm(3.3,.7,x,12,-40,'#ff5f5f','#ff5f5f',.7)});col(-23.4,-16.6,-43.4,-36.6);col(16.6,23.4,-43.4,-36.6);
+  /* Dock und Boot */
+  box(30,.5,5,70,-.2,-36,'#a66b28');for(let k=0;k<10;k++)box(.4,1,.4,56+k*3,-.9,-33.6,'#7a4a1f');
+  /* Möwen-Imbiss */
+  box(8,4.4,5,22,0,40,'#ff8a2a');box(9,.5,6,22,4.4,40,'#ffffff');for(let k=0;k<6;k++)box(1.5,.2,2.4,18.3+k*1.5,3.2,36.8,k%2?'#ffffff':'#e5383b');col(17.5,26.5,37.2,42.8);
+  /* Kisten der Kriminellen */
+  [[-14,-22],[-10,-22.6],[12,-22.4],[16,-22]].forEach(([x,z],k)=>box(2.6,2.6,2.6,x,0,z,['#a66b28','#8a5a3a'][k%2]));[[-6,-22.6],[6,-22.6]].forEach(([x,z])=>cylm(.9,2,x,0,z,'#e5383b'));
+  col(-15.5,-8.5,-24,-21);col(10.5,17.5,-24,-21);
+  /* Palmen und Bäume aus Formeln */
+  {const oS=FSP,oH=FW.h,oL=FW.lb,oB=FW.sb;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.40;FW.lb=0;FW.sb=0;
+   [[-70,30],[-60,38],[-36,44],[-14,48],[14,50],[38,44],[58,36],[70,24],[74,8],[-74,12],[-72,-6],[-66,-18],[66,-10],[72,-22],[-40,-34],[40,-30],[-60,-30],[60,-32],[-8,30],[10,28],[-24,30]].forEach(([x,z],k)=>{const R3=mulberry(500+k),kind=k%4===3?'balloon':'palm',gp=FLORA[kind](R3,1.05);gp.position.set(x,Y+.02,z);gp.rotation.y=R3()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)});
+   FSP=oS;FCYL=10;FW.h=oH;FW.lb=oL;FW.sb=oB}
+  bakeGroup(W5);
+  /* dynamische Teile */
+  L5.core=sphm(4.2,4.2,4.2,0,12,-44,'#ff4a4a','#ff4a4a',1.1);L5.core.userData.noBake=true;
+  L5.alarms=[[-52,2.2,16],[52,6.6,12],[-30,5.8,-13]].map(([x,y,z])=>{const m=sphm(.6,.6,.6,x,y,z,'#ff2a4a','#ff2a4a',1.1);m.userData.noBake=true;return m});
+  const boat=new THREE.Group();const hull=new THREE.Mesh(SP,MT('#ffffff'));hull.scale.set(7.5,2.2,3.2);hull.castShadow=true;boat.add(hull);
+  const stripe=new THREE.Mesh(SP,MT('#e5383b'));stripe.scale.set(7.6,.5,3.3);stripe.position.y=.8;boat.add(stripe);
+  const cab=new THREE.Mesh(BX,MT('#ffd23a'));cab.scale.set(3,2.4,2.4);cab.position.set(-1,2.4,0);cab.castShadow=true;boat.add(cab);
+  const flag=new THREE.Mesh(BX,MT('#ff5fa8','#ff5fa8',.6));flag.scale.set(.2,.2,1.4);flag.position.set(-1,4.7,.8);boat.add(flag);const mast=new THREE.Mesh(CY,MT('#cfcfe0'));mast.scale.set(.15,3.2,.15);mast.position.set(-1,4.2,0);boat.add(mast);
+  boat.position.set(90,1.2,-36);boat.userData.noBake=true;add(boat);L5.boat=boat;
+  /* Kiosk-Schild */
+  {const sg=new THREE.Mesh(new THREE.PlaneGeometry(7,1.75),signMat('MÖWEN-IMBISS','#ffe066','#3a1a10'));sg.position.set(22,Y+6.5,37);sg.rotation.y=Math.PI;sg.userData.noBake=true;add(sg);L5.sign=sg}
+  {const sg=new THREE.Mesh(new THREE.PlaneGeometry(8,2),signMat('REAKTOR','#ff5f5f','#3a0a10'));sg.position.set(0,Y+5,-28.8);sg.rotation.y=Math.PI;sg.userData.noBake=true;add(sg)}
+  islandVisuals()}
+
+/* ================= Lebkuchenhaus (Weihnachtsspiel kommt später) ================= */
+function pickGingerBlock(maze,lab){const R=mulberry(2112),c=[];
+  for(let j=0;j<5;j++)for(let i=1;i<5;i++){if(lab&&i===lab.i&&j===lab.j)continue;const a=maze.id(i,j),b=maze.id(i+1,j);
+    if(maze.open.has(maze.key(a,b))&&maze.dist[a]>=2&&maze.dist[a]<=5&&a!==maze.coast&&b!==maze.coast)c.push([i,j])}
+  if(!c.length){for(let j=0;j<5;j++)for(let i=1;i<5;i++)if(!(lab&&i===lab.i&&j===lab.j))c.push([i,j])}
+  const [i,j]=c[Math.floor(R()*c.length)];return {i,j,cx:(i-2)*50,cz:(j-2)*50}}
+function adventSignMat(){const c=document.createElement('canvas');c.width=512;c.height=256;const g=c.getContext('2d');
+  g.fillStyle='#7a4a2a';g.fillRect(0,0,512,256);g.fillStyle='#8a5a34';for(let i=0;i<8;i++)g.fillRect(0,i*32+4,512,3);
+  g.strokeStyle='#fff6ea';g.lineWidth=10;g.lineJoin='round';g.strokeRect(14,14,484,228);
+  g.fillStyle='#fff6ea';g.textAlign='center';g.textBaseline='middle';g.font='800 56px "Baloo 2","Trebuchet MS",sans-serif';g.fillText('ÖFFNET AM',256,96);g.font='800 50px "Baloo 2","Trebuchet MS",sans-serif';g.fillText('ERSTEN ADVENT',256,172);
+  [[40,40],[472,40],[40,216],[472,216]].forEach(([x,y],k)=>{g.fillStyle=['#e5383b','#2fd66b','#ffd23a','#4cc3ff'][k];g.beginPath();g.arc(x,y,12,0,7);g.fill()});
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide})}
+function buildGingerBlock(){const H=HUB.h,bx=H.bx,cyl=H.cyl,sph=H.sph,MT=H.MT,cur=H.cur(),W=24,D=20,Hh=8;
+  const ginger=MT('#9a5a2a'),ginger2=MT('#b0703a'),icing=MT('#fff6ea'),snow=MT('#f4f8ff');
+  /* Schneedecke auf dem Block */
+  bx(snow,35,.12,35,0,-.28,0,false);
+  /* Hauswand mit Zuckerguss */
+  bx(ginger,W,Hh,D,0,0,0);bx(icing,W+.6,.7,D+.6,0,0,0);bx(icing,W+.6,.7,D+.6,0,Hh-.7,0);
+  [-W/2,W/2].forEach(x=>bx(icing,.7,Hh,.7,x,0,-D/2));[-W/2,W/2].forEach(x=>bx(icing,.7,Hh,.7,x,0,D/2));
+  for(let k=0;k<7;k++)bx(ginger2,3,2.2,.2,-10.2+k*3.4,2.6,-D/2-.12,false);
+  /* Tür mit Zuckerguss und Kranz */
+  bx(MT('#5a3418'),4.6,6,.5,0,0,-D/2-.3);bx(icing,5.6,.7,.6,0,6,-D/2-.3);[-2.6,2.6].forEach(x=>bx(icing,.6,6,.6,x,0,-D/2-.3));
+  sph(MT('#2fa84a'),1.5,1.5,.4,0,3.6,-D/2-.7);[-1,1].forEach(s=>sph(MT('#e5383b'),.45,.45,.4,s*.9,2.5,-D/2-.9));
+  /* Fenster mit warmem Licht */
+  [-7.5,7.5].forEach(x=>{bx(icing,4.4,3.8,.4,x,2.6,-D/2-.2);bx(MT('#ffe9a0','#ffcf70',1),3.6,3,.2,x,3,-D/2-.4,false);bx(icing,.3,3,.25,x,3,-D/2-.5,false);bx(icing,3.6,.3,.25,x,4.5,-D/2-.5,false)});
+  /* Zuckerstangen am Eingang */
+  [-3.6,3.6].forEach((x,k)=>{for(let q=0;q<8;q++)cyl(MT(q%2?'#ffffff':'#e5383b'),.42,.9,x,q*.9,-D/2-1.2);sph(MT('#e5383b'),.55,.55,.55,x+(k?-.5:.5),7.4,-D/2-1.2);cyl(MT(k?'#ffffff':'#e5383b'),.36,.9,x+(k?-.3:.3),7.4,-D/2-1.2)});
+  /* Dach: Lebkuchenplatten, Schnee, Zuckerguss */
+  const L=15.7,th=.8,ang=40*Math.PI/180;
+  [-1,1].forEach(s=>{const m=new THREE.Mesh(BX,ginger2);m.scale.set(L,th,D+2.4);m.position.set(cur.x+s*6.2,H.Y0+Hh+5.1,cur.z);m.rotation.z=-s*ang;m.castShadow=true;m.receiveShadow=true;H.add(m);
+    const sn=new THREE.Mesh(BX,snow);sn.scale.set(L*.82,.55,D+2.6);sn.position.set(cur.x+s*5.2+s*.45,H.Y0+Hh+5.9,cur.z);sn.rotation.z=-s*ang;sn.castShadow=true;H.add(sn);
+    const ic=new THREE.Mesh(BX,icing);ic.scale.set(.5,.5,D+2.6);ic.position.set(cur.x+s*(W/2+.1),H.Y0+Hh-.1,cur.z);ic.castShadow=true;H.add(ic)});
+  bx(icing,1.2,.6,D+2.8,0,Hh+10.1,0);
+  /* Giebeldreieck vorn und hinten */
+  const shp=new THREE.Shape();shp.moveTo(-12,0);shp.lineTo(12,0);shp.lineTo(0,10);shp.closePath();
+  [-1,1].forEach(s=>{const g=new THREE.ExtrudeGeometry(shp,{depth:.6,bevelEnabled:false});const m=new THREE.Mesh(g,ginger);m.position.set(cur.x,H.Y0+Hh,cur.z+s*(D/2+.05)-(s>0?0:.6));m.castShadow=true;H.add(m)});
+  /* Gumdrops auf dem Dach */
+  [[-9,.5],[-7,2.4],[-5,4.1],[-3,5.8],[-1.2,7.2],[9,.5],[7,2.4],[5,4.1],[3,5.8],[1.2,7.2]].forEach(([x,y],k)=>{const s=Math.sign(x)||1;[-8,-2,5,9].forEach((z,q)=>{if((k+q)%2===0)sph(MT(['#e5383b','#2fd66b','#ffd23a','#4cc3ff','#ff5fa8'][(k+q)%5]),.55,.45,.55,x+s*.1,Hh+y*.95+.7,z)})});
+  /* Schornstein mit Schnee */
+  bx(ginger,2.4,4.4,2.4,-5,Hh+4.2,4);bx(snow,2.8,.7,2.8,-5,Hh+8.5,4);bx(icing,2.8,.5,2.8,-5,Hh+7.7,4);
+  /* Goldener Stern auf dem Giebel */
+  sph(MT('#ffd23a','#ffd23a',1),.9,.9,.9,0,Hh+11.6,0);
+  /* Lebkuchen-Zaun, Lollipops, Schneemänner */
+  for(let k=0;k<12;k++){const x=-16.5+k*3;if(Math.abs(x)>4)bx(ginger2,1.6,2,.4,x,0,-D/2-6.6);bx(icing,1.6,.35,.5,x,2.1,-D/2-6.6,false)}
+  [[-15,-14],[15,-14],[-15,13],[15,13]].forEach(([x,z],k)=>{cyl(MT('#fff6ea'),.3,4.6,x,0,z);sph(MT(['#e5383b','#2fd66b','#ffd23a','#ff5fa8'][k]),1.9,1.9,.5,x,5.6,z);sph(MT('#ffffff'),1,1,.55,x,5.6,z-.15)});
+  [[-12,-14],[12,-14]].forEach(([x,z])=>{sph(MT('#ffffff'),1.7,1.5,1.7,x,1.4,z);sph(MT('#ffffff'),1.3,1.2,1.3,x,3.6,z);sph(MT('#ffffff'),.95,.9,.95,x,5.2,z);cyl(MT('#2a2a33'),.9,.9,x,6.0,z);cyl(MT('#2a2a33'),.5,.6,x,6.8,z);sph(MT('#ff8a2a'),.18,.18,.6,x,5.2,z-.9)});
+  /* Schild vor dem Haus */
+  [-3.2,3.2].forEach(x=>cyl(MT('#5a3418'),.28,3.4,x,0,-D/2-9.5));
+  const sg=new THREE.Mesh(new THREE.PlaneGeometry(8.4,4.2),adventSignMat());sg.position.set(cur.x,H.Y0+4.6,cur.z-D/2-9.8);sg.rotation.y=Math.PI;sg.userData.noBake=true;H.add(sg);HUB.advSign=sg;
+  HUB.gbBuilt=true}
+/* Blinkende Lichterketten (nach bakeGroup anlegen, damit sie dynamisch bleiben) */
+function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0=HUB.h.Y0;const P=[];
+  const add=(x,y,z)=>P.push([g.cx+x,y0+y,g.cz+z]);
+  for(let x=-12;x<=12.01;x+=1.5)add(x,Hh+.1,-D/2-.5);
+  for(let z=-10;z<=10.01;z+=1.5){add(-W/2-.5,Hh+.1,z);add(W/2+.5,Hh+.1,z)}
+  for(let k=0;k<=10;k++){const t=k/10;add(-12+12*t,Hh+10*t+.1,-D/2-1);add(12-12*t,Hh+10*t+.1,-D/2-1)}
+  for(let k=0;k<=10;k++){const a=Math.PI*k/10;add(Math.cos(a)*3.1,6.2+Math.sin(a)*1.4,-D/2-.9)}
+  [-7.5,7.5].forEach(x=>{for(let k=-2;k<=2;k++){add(x+k*.9,4.8,-D/2-.7);if(Math.abs(k)===2)add(x+k*.9,2,-D/2-.7)}});
+  for(let q=0;q<10;q++)add(-14.5+q*3.2,.9,-D/2-6.7);
+  const cols=['#ff3b3b','#2fd66b','#ffd23a','#4cc3ff','#ff5fa8'],geo=new THREE.SphereGeometry(.34,7,5),m4=new THREE.Matrix4();
+  const mk=()=>{const mat=new THREE.MeshBasicMaterial({color:'#ffffff',fog:false}),n=Math.ceil(P.length/2),im=new THREE.InstancedMesh(geo,mat,n);im.userData.noBake=true;im.userData.noOutline=true;im.frustumCulled=false;return im};
+  const A=mk(),B=mk();let ia=0,ib=0;
+  P.forEach((p,k)=>{const im=k%2?B:A,i=k%2?ib++:ia++;m4.makeTranslation(p[0],p[1],p[2]);im.setMatrixAt(i,m4);im.setColorAt(i,new THREE.Color(cols[(k*2+Math.floor(k/9))%5]))});
+  A.count=ia;B.count=ib;[A,B].forEach(im=>{im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;HUB.h.add(im)});
+  /* weicher Schein hinter dem Haus */
+  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('255,190,110'),transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));gl.scale.set(46,30,1);gl.position.set(g.cx,y0+8,g.cz-12);gl.userData.noBake=true;HUB.h.add(gl);
+  const st=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('255,230,120'),transparent:true,opacity:.9,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));st.scale.set(7,7,1);st.position.set(g.cx,y0+Hh+11.6,g.cz);st.userData.noBake=true;HUB.h.add(st);
+  HUB.gl={A,B,gl,st,t:0}}
+function stepXmas(dt){const l=HUB.gl;if(!l||!W0||!W0.visible)return;l.t+=dt;const ph=Math.floor(l.t/.6)%2;l.A.visible=ph===0;l.B.visible=ph===1;l.st.material.opacity=.7+.25*Math.sin(l.t*3);l.gl.material.opacity=.42+.1*Math.sin(l.t*1.7)}
+
+window.__qa={stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

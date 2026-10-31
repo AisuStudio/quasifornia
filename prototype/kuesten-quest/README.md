@@ -12,6 +12,8 @@ Veröffentlichte Version: Artifact `https://claude.ai/artifact/CydYVrahez1Fq5JDY
 ## Stand
 - Start ist die Stadt (Welt 0, Labyrinth). An der Küste im Westen beginnt das Rennen (Welt 1); zwei versteckte Portale in der Stadt führen in Welt 2 (Eis-Galaxie) und Welt 3 (Nacht-Stadt).
 - Atoll-Einstieg: Labor in der Stadt (Enter = Aktion): gefesselter Mann diktiert Code-Ziffern 1 bis 6 (eine ist falsch), Ziffern 7 bis 10 stehen auf den Stadt-Items; 10-stelliges Code-Feld mit 3 Versuchen und 60 s Sperre; Eis vom Eiswagen korrigiert die falsche Ziffer; im Labor-Innenraum (Level 4) liegt der Schlüssel in einem verschraubten Schaltkasten (Schraubendreher nötig); danach bringt der Mann zum Atoll-Portal (Atoll selbst noch nicht gebaut).
+- Atoll (Welt 5, Portal nach der Befreiung des Mannes): vier Rätsel (Caesar-Code, Logikgatter, Werks-PIN, Log-Muster), 10-Minuten-Countdown, Boot. `src/island.js`.
+- Lebkuchenhaus in der Stadt (Block mit Weihnachtsbeleuchtung, Schild "Öffnet am ersten Advent"). Santa und das Weihnachtsspiel folgen später. `src/xmas.js`.
 - Inventar (Taste I): fünf Items in der Stadt für die geplante Atoll-Quest, im Browser gespeichert.
 - Mechanik: Skateboard-Wurf (Klick oder F), Kickflip (Shift), schubsende Skater, Boss-Flucht, Eis-Fressen, Avatar-Karussell, Pixel-Modus (P).
 - Flora aus Regeln plus Seed. Keine Mehrspieler-Funktion (kommt erst mit Cloudflare).
