@@ -32,6 +32,12 @@
       <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Zurücksetzen</button></div>
     </div>
   </div>
+  <div id="act" hidden><span></span><kbd>Enter</kbd></div>
+  <div id="dlg" hidden role="dialog" aria-label="Gespräch"><div class="panel"><span class="who" id="dlg-who"></span><p id="dlg-text"></p><button class="btn" id="dlg-next" type="button">Weiter ▶</button></div></div>
+  <div id="pad" hidden role="dialog" aria-label="Code-Eingabe"><div class="card">
+    <h1>Labor-Tür</h1><p class="sub">Zehn Ziffern. Nach drei Fehlern sperrt die Tür.</p>
+    <div id="pad-disp"></div><p id="pad-info"></p><div id="pad-keys"></div><p id="pad-note" class="note"></p>
+    <button class="btn sec" id="pad-close" type="button">Schließen · Esc</button></div></div>
   <div id="overlay">
     <div class="card" id="card"></div>
   </div>
