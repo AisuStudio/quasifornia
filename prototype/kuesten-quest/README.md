@@ -22,3 +22,6 @@ Veröffentlichte Version: Artifact `https://claude.ai/artifact/CydYVrahez1Fq5JDY
 - Der Prototyp lief nur im Headless-Browser getestet, nicht auf Handys.
 - Testskripte (Playwright) liegen nicht im Repo.
 - Der Snapshot-Branch `snapshot-vor-sohnemann-2026-10-30` zeigt den Stand vorher.
+
+## Musik
+`dist/em-ocean.m4a`: em'ocean von Packed Rich feat. you_see, ndfloat, timekilla0118. DJ/Cuts: punch_float. Engineered/mastered by @_yasu2000. Album: The High End Theory (2023). Cover: Aisu.Studio. Genutzt mit Zustimmung von Packed Rich; weitere Tracks erst nach Freigabe.
