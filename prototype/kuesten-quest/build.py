@@ -74,6 +74,7 @@ flora=flora.replace("let FSP=","let FCYL=10;let FSP=",1)
 chunks=[flora,villas,sidecar,dino,avatar,bal,decals]
 chunks=[sm(c) for c in chunks]
 setup=open('src/setup.js').read();game=open('src/game.js').read()
+game=game.replace('window.__qa={',open('src/atoll.js').read()+'\nwindow.__qa={',1)
 js=setup+'\n'+'\n'.join(chunks)+'\n'+game
 head=open('src/head.html').read();body=open('src/body.html').read()
 def build(prod):
