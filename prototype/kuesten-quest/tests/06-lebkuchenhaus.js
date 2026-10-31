@@ -10,7 +10,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.click('#go');
  const info=await p.evaluate(()=>JSON.stringify({gb:__qa.HUB.gb,lab:[__qa.HUB.lab.i,__qa.HUB.lab.j],items:__qa.HUB.items.map(i=>[i.def.id,Math.round(i.x),Math.round(i.z)]),dist:__qa.HUB.maze.dist[__qa.HUB.maze.id(__qa.HUB.gb.i,__qa.HUB.gb.j)],gl:!!__qa.HUB.gl,bulbs:__qa.HUB.gl&&[__qa.HUB.gl.A.count,__qa.HUB.gl.B.count]}));
  console.log(info);const gb=JSON.parse(info).gb;
- const view=async(n,pos,look,fov=60)=>{await p.evaluate(([pos,look,fov])=>{document.getElementById('ui').style.display='none';const q=__qa;q.P.x=pos[0];q.P.z=pos[2]+14;q.P.h=-Math.PI/2;q.step(.03);q.cam.position.set(...pos);q.cam.lookAt(...look);q.cam.fov=fov;q.cam.updateProjectionMatrix();q.render()},[pos,look,fov]);await p.screenshot({path:`t_x_${n}.png`})};
+ const view=async(n,pos,look,fov=60)=>{await p.evaluate(([pos,look,fov])=>{document.getElementById('ui').style.display='none';const q=__qa;q.P.x=pos[0];q.P.z=pos[2]+14;q.P.h=-Math.PI/2;q.step(.03);q.cam.position.set(...pos);q.cam.lookAt(...look);q.cam.fov=fov;q.cam.updateProjectionMatrix();q.render()},[pos,look,fov]);await p.screenshot({path:require("os").tmpdir()+`/t_x_${n}.png`})};
  await view('front',[gb.cx+16,10,gb.cz-40],[gb.cx,6,gb.cz-8],62);
  await p.evaluate(()=>{for(let i=0;i<14;i++)__qa.step(.05)});await view('front2',[gb.cx+16,10,gb.cz-40],[gb.cx,6,gb.cz-8],62);
  await view('street',[gb.cx-40,5,gb.cz-34],[gb.cx,5,gb.cz-12],75);

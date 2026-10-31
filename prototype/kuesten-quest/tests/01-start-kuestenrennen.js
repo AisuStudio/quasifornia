@@ -7,7 +7,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  p.on('pageerror',e=>console.log('ERR',e.message));p.on('console',m=>{const t=m.text();if(!/GPU stall|Font|fonts.g|Failed to load/.test(t))console.log('LOG',t.slice(0,300))});
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
  await p.goto('http://localhost:8801/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
- const shot=async n=>{await p.evaluate('__qa.render()');await p.screenshot({path:`t_${n}.png`})};
+ const shot=async n=>{await p.evaluate('__qa.render()');await p.screenshot({path:require("os").tmpdir()+`/t_${n}.png`})};
  await p.evaluate(()=>{
   window.pathTo=(target)=>{const H=__qa.HUB,m=H.maze,N=6,start=m.id(2,3);const prev={};const q=[start];prev[start]=-1;for(let h=0;h<q.length;h++){const u=q[h];m.adj[u].forEach(v=>{if(prev[v]===undefined){prev[v]=u;q.push(v)}})}
     const path=[];for(let n=target;n!==-1;n=prev[n])path.unshift(n);return path.map(n=>[(n%N-2.5)*50,(Math.floor(n/N)-2.5)*50])};

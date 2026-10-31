@@ -17,6 +17,6 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.keyboard.press('Escape').catch(()=>{});
  await p.evaluate(()=>{document.getElementById('overlay').hidden=true});
  await p.keyboard.press('i');await p.waitForTimeout(300);await p.screenshot({path:require('os').tmpdir()+'/rp_inv.png'});
- for(const t of ['auf','sco','mus']){await p.click(`#rp-tabs button[data-t=${t}]`);await p.waitForTimeout(200);await p.screenshot({path:`rp_${t}.png`})}
+ for(const t of ['auf','sco','mus']){await p.click(`#rp-tabs button[data-t=${t}]`);await p.waitForTimeout(200);await p.screenshot({path:require("os").tmpdir()+`/rp_${t}.png`})}
  console.log('persist',await p.evaluate(()=>localStorage.getItem('kq-scoops')));
  await b.close();srv.close()})
