@@ -693,7 +693,11 @@ function setQuest(title,count){[...$('pips').children].forEach((p,i)=>p.style.di
 
 /* ---------- Ton ---------- */
 let AC=null;
-function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=false}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+/* Soundtrack: Datei "em-ocean.m4a" liegt neben der Seite (nicht im Repo). Fehlt sie, bleibt es still. */
+const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=.7;MUS.src='em-ocean.m4a';MUS.started=false;
+function musGo(){if(MUS.started||MUS.dead)return;MUS.started=true;MUS.muted=G.muted;MUS.play().catch(()=>{MUS.started=false})}
+MUS.addEventListener('error',()=>{MUS.dead=true});
+function ac(){musGo();if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=false}}if(AC&&AC.state==='suspended')AC.resume();return AC}
 function tone(f,d=.15,type='square',vol=.06,slide=0,delay=0){if(G.muted)return;const A=ac();if(!A)return;const t=A.currentTime+delay,o=A.createOscillator(),g=A.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(A.destination);o.start(t);o.stop(t+d+.02)}
 const SFX={collect(n){[0,4,7,12].forEach((s,i)=>tone(440*Math.pow(2,(s+n*2)/12),.12,'square',.05,0,i*.06))},jump(){tone(260,.14,'square',.05,320)},boost(){tone(180,.4,'sawtooth',.05,700)},thud(){tone(120,.2,'sine',.14,-80)},
   stomp(v){tone(58,.28,'sine',Math.min(.3,.05+v*.25),-26)},siren(){[0,.35,.7,1.05].forEach((d,i)=>tone(i%2?330:440,.3,'sawtooth',.06,0,d))},boing(){tone(520,.5,'sine',.1,-420)},win(){[0,4,7,12,16].forEach((s,i)=>tone(392*Math.pow(2,s/12),.22,'square',.06,0,i*.1))}};
@@ -923,7 +927,7 @@ addEventListener('keydown',e=>{if(G.phase==='title'&&(e.code==='ArrowLeft'||e.co
 addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
 function jump(){if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
-function toggleSnd(){G.muted=!G.muted;$('b-snd').setAttribute('aria-pressed',String(!G.muted))}
+function toggleSnd(){G.muted=!G.muted;MUS.muted=G.muted;$('b-snd').setAttribute('aria-pressed',String(!G.muted))}
 addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick()});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
