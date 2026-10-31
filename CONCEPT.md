@@ -65,6 +65,25 @@ Die Figur hat ein Inventar. Fortbewegungsmittel wie das Skateboard verschwinden 
 
 - **Stand im Prototyp (2026-10-31):** Das Inventar gibt es als erste Fassung. Fünf Gegenstände liegen in der Stadt, je einer vor einem passenden Gebäude (Café, Laden, Büro, Wohnhaus, Burger-Laden): Funkzettel, Schraubendreher, USB-Stick, Wartungs-Handbuch und als Bonus der Möwen-Bon (geheime Schmuggler-Losung). Sie sind für die Atoll-Quest gedacht (Funkspruch, Alarm, Patrouillen-Log, Kamera-PIN, Bonus). Das Fenster ("I" oder Knopf) pausiert das Spiel und zeigt gefundene Items mit Beschreibung und Verwendung, ungefundene als "?" mit Ortshinweis. Gespeichert wird im Browser (localStorage), Skateboard steht als fester Eintrag drin. Entscheidung: Hub-Items reisen zwischen Stadt und Quest mit, sind also nicht "lokal je Welt". Offen: Atoll-Welt selbst, Einlösen der Items, Wegwerfen, Server-Speicherung (Supabase).
 
+### Atoll-Einstieg: Labor, gefesselter Mann, 10-stelliger Code (Idee vom Nutzer, 2026-11-01)
+Der Zugang zum Atoll ist eine Quest in der Stadt (Hub), keine einfache Portal-Suche.
+**Ablauf:**
+1. **Gefesselter Mann:** Vor einem besonderen Labor-Gebäude in der Stadt liegt ein gefesselter Mann. Er erzählt, dass Kriminelle den Reaktor übernommen haben und die Insel gerettet werden muss. Er diktiert einen 10-stelligen Code, der die Labor-Tür öffnet.
+2. **Code-Eingabe:** 3 Versuche, danach sperrt die Tür für eine Zeit (Brute-Force-Schutz, passend zur Security-Literacy der Escape-Quest).
+3. **Eis:** Während der Sperre kann man dem Mann ein Eis bringen. Er trägt Handschellen, der Schlüssel liegt im Labor.
+4. **Im Labor:** Den Schlüssel suchen, damit der Mann befreit werden kann.
+5. **Danach:** Der befreite Mann bringt einen zum Atoll-Portal.
+**Festlegungen (Vorschläge, vom Nutzer mit "Genau" angenommen):**
+- **Code zusammengesetzt:** Der Mann diktiert die Ziffern 1 bis 6, die Ziffern 7 bis 10 stehen auf den Stadt-Items (Funkzettel, Schraubendreher, USB-Stick, Wartungs-Handbuch). Die Items haben damit einen echten Zweck.
+- **Hörfehler:** Eine der diktierten Ziffern ist falsch (der Mann ist erschöpft). Das Eis macht ihn gesprächig, und er korrigiert sie. So entsteht aus Sperre und Eis ein sinnvoller Kreis (probieren, scheitern, helfen, richtig weiterkommen).
+- **Notizen:** Die bekannten Ziffern stehen in einer Code-Notiz im Inventar, damit man nichts auswendig lernen muss.
+- **Eis-Quelle:** Ein Eiswagen in der Stadt.
+- **Sperrzeit:** 60 Sekunden mit sichtbarem Countdown.
+- **Schlüsselsuche:** Der Schlüssel liegt im Labor in einem verschraubten Schaltkasten, dafür braucht man den Schraubendreher aus der Stadt. Der Möwen-Bon (Bonus) verweist auf ein Möwen-Poster neben dem richtigen Kasten. Zwei Attrappen (Spind, Schreibtisch) sind leer.
+- **Atoll:** Hinter dem Portal liegt die Insel mit den vier Rätselsystemen der Escape-Quest. Das Labor ist der Eingang; der Reaktor ersetzt den Atomtest-Countdown nicht zwingend, die Dringlichkeit bleibt offen.
+**Bauplan:** A Konzept, B Stadt-Teil (Labor-Gebäude, Mann mit Dialog, Code-Eingabe mit Sperre, Eiswagen), C Labor-Innenraum mit Schlüsselsuche, Befreiung und Portal. Das Atoll selbst ist noch nicht gebaut (Portal führt vorerst zu einem Hinweis).
+**Offen:** Dauer und Schwierigkeit der Sperre, ob Kriminelle als Gegner auftauchen, Ton für Kinder (Reaktor, Kriminelle), ob der Mann ein wiederkehrender Charakter wird.
+
 ### Musik-Player der Figur (Idee vom Nutzer, 2026-10-31)
 Die Figur hat einen eigenen Player mit Lieblingssongs, es werden nach und nach mehr. Erster Track: "EM'OCEAN" (Freunde des Nutzers aus Tokyo und München, 3:57), Coverart vom Nutzer. Quelle liegt lokal in `sound/` (WAV bleibt per .gitignore außerhalb des Repos), Web-Fassung `sound/em-ocean.m4a` (AAC 160 kbit/s, 4,7 MB).
 - Hintergrund (Blog `https://www.aisu.studio/home-blog/the-high-end-theory`, Juli 2023): Die EP "The High End Theory" entstand als Fernprojekt zwischen dem Münchner Beatmaker Packed Rich und fünf Musikern aus Japan (Jazzy Hip Hop und Lo-Fi), Cover von Aisu.Studio (Nutzer), vermittelt über Alex Föll (WSG, Blockopera). Credits dort: Packed Rich (Produzent), you_see, ndfloat, timekilla0118 (MCs), punch_float (DJ/Cuts), @_yasu2000 (Engineering/Mastering). Ob "EM'OCEAN" auf dieser EP liegt, steht im Blog nicht; Zuordnung und Credits pro Track beim Nutzer erfragen.
