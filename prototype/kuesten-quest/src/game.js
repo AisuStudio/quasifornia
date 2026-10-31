@@ -273,7 +273,7 @@ function resetRun(){TIMERS.length=0;P.push=0;if(typeof hideRivals!=='undefined')
   if(dinoG)dinoG.visible=false;if(blobD)blobD.visible=false;
   $('track').classList.remove('on')}
 function scoopsGot(){return scoops.filter(s=>s.got).length}
-function beginPlay(){resetRun();T.said=false;G.knocked=0;G.falls=0;G.fallSaid=false;HUB.portals.forEach(p=>p.hit=0);buildRivals();if(LV.mode!=='city')placeRivals();G.phase='play';$('overlay').hidden=true;$('card').innerHTML='';
+function beginPlay(){resetRun();T.said=false;G.knocked=0;G.falls=0;G.fallSaid=false;HUB.portals.forEach(p=>p.hit=0);HUB.coastHit=0;buildRivals();if(LV.mode!=='city')placeRivals();G.phase='play';$('overlay').hidden=true;$('card').innerHTML='';
   setQuest(LV.quest,LV.id===0?HUB.found.size:0);$('quest').hidden=false;
   say('e',LV.intro,3.4);
   later(3.5,()=>{if(G.phase==='play')say('v',LV.vendor,4.8)})}
@@ -366,7 +366,7 @@ function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',
 function showTitle(){try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
   $('card').innerHTML=`<h1>Küsten-Quest</h1>
-   <p class="sub">Drei Welten, je etwa eine Minute: Sammle fünf Eiskugeln und renn vor etwas Großem davon. Vorsicht, andere Skater schubsen dich.</p>
+   <p class="sub">Du startest in der Stadt. An der Küste im Westen beginnt das Rennen: fünf Eiskugeln sammeln und vor etwas Großem davonrennen. Die Portale zu den anderen Welten sind in der Stadt versteckt. Vorsicht, andere Skater schubsen dich.</p>
    <h2>Dein Avatar</h2>
    <div id="car" role="group" aria-roledescription="Karussell" aria-label="Avatar auswählen">
      <button class="cb" id="cprev" type="button" aria-label="Vorheriger Avatar">◀</button>
@@ -377,13 +377,13 @@ function showTitle(){try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS
    <div id="cdots">${SKIN_LIST.map(([k,n],i)=>`<button type="button" data-i="${i}" aria-label="${n}"></button>`).join('')}</div>
    <h2>Steuerung</h2>
    <div class="keys"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen, Rampen geben Schub</span><kbd>Shift</kbd><span>Kickflip, das Publikum klatscht</span><kbd>Linksklick · F</kbd><span>Skateboard auf Skater oder Boss werfen (2 s Pause)</span><kbd>P · M</kbd><span>Pixel-Look · Ton</span></div>
-   <button class="btn" id="go" type="button">Los geht’s</button><button class="btn sec" id="go0" type="button">Stadt erkunden: Portale finden</button><button class="btn sec" id="go2" type="button">Direkt zu Welt 2: Eis-Galaxie</button><button class="btn sec" id="go3" type="button">Direkt zu Welt 3: Nacht-Stadt</button>`;
+   <button class="btn" id="go" type="button">Los geht’s: Start in der Stadt</button><button class="btn sec" id="go1" type="button">Direkt zum Küsten-Rennen (Welt 1)</button><button class="btn sec" id="go2" type="button">Direkt zu Welt 2: Eis-Galaxie</button><button class="btn sec" id="go3" type="button">Direkt zu Welt 3: Nacht-Stadt</button>`;
   const cur=Math.max(0,SKIN_LIST.findIndex(s=>PRESETS[s[0]]===P.preset));setCarousel(cur,true);
   $('cprev').onclick=()=>stepCarousel(-1);$('cnext').onclick=()=>stepCarousel(1);
   [...$('cdots').children].forEach(b=>b.onclick=()=>setCarousel(+b.dataset.i));
   const cv=$('cview');let sx=null;cv.onpointerdown=e=>{sx=e.clientX};cv.onpointerup=e=>{if(sx!==null&&Math.abs(e.clientX-sx)>28)stepCarousel(e.clientX<sx?1:-1);sx=null};cv.onpointercancel=()=>{sx=null};
   makeThumbs();
-  $('go').onclick=()=>{ac();beginPlay()};$('go0').onclick=()=>{ac();applyLevel(0);beginPlay()};$('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
+  $('go').onclick=()=>{ac();applyLevel(0);beginPlay()};$('go1').onclick=()=>{ac();applyLevel(1);beginPlay()};$('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
 
 
 /* ---------- Skateboard-Wurf ---------- */
@@ -891,10 +891,10 @@ function fallRespawn(){G.falls=(G.falls||0)+1;const gp=GAPS.find(g=>P.x<g[1]+6)|
   if(!G.fallSaid){G.fallSaid=true;say('e','Lücke. Du hast sie gesehen, sie dich auch. Zum Glück gibt es Neustarts.',3.4)}}
 
 /* ================= Welt 0: Die Stadt (Labyrinth, 5×5 Blöcke) ================= */
-LEVELS[0]={id:0,mode:'city',pips:3,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Portal',
-  quest:'Finde die versteckten Portale',goalQuest:'',
-  intro:'Willkommen in der Stadt. Alle Straßen führen irgendwohin. Nur die Portale hat jemand sehr gut versteckt.',
-  vendor:'Stadtfunk: Portale funkeln erst, wenn du nah dran bist. Sperren sind Sperren, und Sackgassen sind ein guter Anfang.',
+LEVELS[0]={id:0,mode:'city',pips:2,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Portal',
+  quest:'Zur Küste: Rennen. Portale finden',goalQuest:'',
+  intro:'Willkommen in der Stadt. Im Westen liegt die Küste: Wer sie erreicht, startet das Rennen.',
+  vendor:'Stadtfunk: Zwei Portale zu anderen Welten sind in der Stadt versteckt. Sie funkeln erst, wenn du nah dran bist. Sackgassen sind ein guter Anfang.',
   lines:[],chase:'',eat:'',win:'',winSub:'',badge:''};
 const HUB={sx:0,sz:0,sh:0,found:new Set(),portals:[],colliders:[],clappers:[],cones:[],maze:null,built:false,mm:null,mmT:0,rd:0};
 const NODE=i=>(i-2.5)*50;
@@ -905,10 +905,11 @@ function genMaze(seed){const R=mulberry(seed),N=6,id=(i,j)=>j*N+i,key=(a,b)=>a<b
   const closed=all.filter(([a,b])=>!open.has(key(a,b)));for(let k=0;k<7&&closed.length;k++){const q=closed.splice(Math.floor(R()*closed.length),1)[0];open.add(key(q[0],q[1]))}
   const deg=new Array(N*N).fill(0),adj=Array.from({length:N*N},()=>[]);all.forEach(([a,b])=>{if(open.has(key(a,b))){deg[a]++;deg[b]++;adj[a].push(b);adj[b].push(a)}});
   const dist=new Array(N*N).fill(-1),q=[id(2,3)];dist[q[0]]=0;for(let h=0;h<q.length;h++){const u=q[h];adj[u].forEach(v=>{if(dist[v]<0){dist[v]=dist[u]+1;q.push(v)}})}
-  const cand=[];deg.forEach((d,n)=>{if(n!==id(2,3)&&dist[n]>=5)cand.push(n)});cand.sort((a,b)=>(dist[b]+(deg[b]===1?4:0))-(dist[a]+(deg[a]===1?4:0)));
-  const pick=[];cand.forEach(n=>{if(pick.length<3&&pick.every(m=>Math.abs((m%N)-(n%N))+Math.abs(Math.floor(m/N)-Math.floor(n/N))>=4))pick.push(n)});
-  cand.forEach(n=>{if(pick.length<3&&!pick.includes(n))pick.push(n)});
-  return {N,id,key,open,all,deg,adj,dist,pick}}
+  let coast=-1;for(let j=0;j<N;j++){const n=id(0,j);if(dist[n]>=3&&(coast<0||dist[n]<dist[coast]))coast=n}if(coast<0)coast=id(0,3);
+  const cand=[];deg.forEach((d,n)=>{if(n!==id(2,3)&&n!==coast&&dist[n]>=5)cand.push(n)});cand.sort((a,b)=>(dist[b]+(deg[b]===1?4:0))-(dist[a]+(deg[a]===1?4:0)));
+  const pick=[];cand.forEach(n=>{if(pick.length<2&&pick.every(m=>Math.abs((m%N)-(n%N))+Math.abs(Math.floor(m/N)-Math.floor(n/N))>=4))pick.push(n)});
+  cand.forEach(n=>{if(pick.length<2&&!pick.includes(n))pick.push(n)});
+  return {N,id,key,open,all,deg,adj,dist,pick,coast}}
 
 function shopTex(txt,fg,bg){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,128);g.strokeStyle=fg;g.lineWidth=8;g.shadowColor=fg;g.shadowBlur=18;g.strokeRect(8,8,496,112);
   g.fillStyle='#fff';g.shadowBlur=22;g.font='800 66px "Baloo 2","Trebuchet MS",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,256,68);
@@ -996,12 +997,29 @@ function buildLevel0(){
        const R2=mulberry(i*131+j*17+k*5+3),kind=KS[Math.floor(R2()*KS.length)],sc2=SC0[kind]*(k>=4?.8:1);
        const gp=FLORA[kind](R2,sc2);gp.position.set((i-2)*50+tx,1.6,(j-2)*50+tz);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});W0.add(gp);HUB.flora.push(kind)})}
    CTX='stage';FCYL=10;FSP=oldFSP;FW.h=oldH;FW.acc=oldA;FW.lb=0;FW.sb=0}
-  const wallM=MT('#7a5aa0');[[0,-143,300,2],[0,143,300,2],[-143,0,2,300],[143,0,2,300]].forEach(([x,z,w,d])=>{cur={x:0,z:0};const m=bx(wallM,w,9,d,x,0,z);bx(MT('#ff5fa8','#ff5fa8',.9),w>d?w:.5,.4,w>d?.5:d,x,9,z)});
+  const zc=NODE(Math.floor(maze.coast/N));HUB.coastZ=zc;
+  const wallM=MT('#7a5aa0'),wallN=MT('#ff5fa8','#ff5fa8',.9);
+  [[0,-143,300,2],[0,143,300,2],[143,0,2,300]].forEach(([x,z,w,d])=>{cur={x:0,z:0};bx(wallM,w,9,d,x,0,z);bx(wallN,w>d?w:.5,.4,w>d?.5:d,x,9,z)});
+  [[-143,(-143+zc-10)/2,zc-10+143],[-143,(zc+10+143)/2,143-zc-10]].forEach(([x,z,len])=>{cur={x:0,z:0};bx(wallM,2,9,len,x,0,z);bx(wallN,.5,.4,len,x,9,z)});
+  /* ---- Küste im Westen: Tor, Startlinie, Strand, Meer ---- */
+  cur={x:0,z:0};
+  [-1,1].forEach(s=>{bx(MT('#ff5fa8'),2.2,13,2.2,-144.5,0,zc+s*10.6);bx(MT('#fff0b0','#fff0b0',.8),2.8,.6,2.8,-144.5,13,zc+s*10.6)});
+  bx(MT('#2a2040'),3.4,2.6,24,-144.5,13.4,zc);bx(MT('#ffe066','#ffe066',.9),.3,.5,22,-142.6,16.1,zc);
+  sign('KÜSTEN-RENNEN','#ffe066',-142.6,14.7,zc,10.4,2.6,Math.PI/2,'#1a1030');
+  for(let k=0;k<9;k++)for(let q=0;q<2;q++)bx(MT((k+q)%2?'#ffffff':'#141416'),1.4,.06,2,-146.2+q*1.4,0,zc-8+k*2);
+  {const sand=new THREE.Mesh(new THREE.PlaneGeometry(30,300),new THREE.MeshStandardMaterial({color:'#f4d89a',roughness:1}));sand.rotation.x=-Math.PI/2;sand.position.set(-158,1.34,0);sand.receiveShadow=true;sand.userData.noBake=true;W0.add(sand);
+   const shal=new THREE.Mesh(new THREE.PlaneGeometry(26,300),new THREE.MeshStandardMaterial({color:'#7fe0e0',roughness:.4}));shal.rotation.x=-Math.PI/2;shal.position.set(-186,1.355,0);shal.userData.noBake=true;W0.add(shal);
+   const sea=new THREE.Mesh(new THREE.PlaneGeometry(900,900),new THREE.MeshStandardMaterial({color:'#1cafd1',roughness:.25,metalness:.1}));sea.rotation.x=-Math.PI/2;sea.position.set(-649,1.37,0);sea.userData.noBake=true;W0.add(sea);
+   const cb=new THREE.Mesh(new THREE.CylinderGeometry(4,4,120,16,1,true),BM('#7ff0ff',{transparent:true,opacity:.26,side:THREE.DoubleSide,depthWrite:false,fog:false}));cb.position.set(-150,60,zc);cb.userData.noBake=true;cb.userData.noOutline=true;W0.add(cb);HUB.coastBeam=cb;
+   const oS=FSP,oH=FW.h,oL=FW.lb,oB=FW.sb;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.40;FW.lb=0;FW.sb=0;
+   [[-150,-15],[-153,17],[-151,-27],[-155,30],[-149,-39],[-152,40],[-156,-52],[-154,54]].forEach(([px,pz],k)=>{const R3=mulberry(900+k),gp=FLORA.palm(R3,1.05);gp.position.set(px,1.36,zc+pz);gp.rotation.y=R3()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});W0.add(gp)});
+   FSP=oS;FCYL=10;FW.h=oH;FW.lb=oL;FW.sb=oB}
   /* ---- Sperren (geschlossene Straßen) ---- */
   const nodeXZ=n=>({x:NODE(n%N),z:NODE(Math.floor(n/N))});
   HUB.barricades=[];
   maze.all.forEach(([a,b])=>{if(maze.open.has(maze.key(a,b)))return;const A=nodeXZ(a),B=nodeXZ(b),mx=(A.x+B.x)/2,mz=(A.z+B.z)/2,horiz=A.z===B.z;cur={x:mx,z:mz};HUB.barricades.push({x:mx,z:mz,horiz});
     const lw=horiz?.6:13.6,ld=horiz?13.6:.6;bx(MT('#6a5a9a'),lw,5,ld,0,-.3,0);
+    {const e=Math.abs(horiz?mz:mx)>=120;if(e){const sg=Math.sign(horiz?mz:mx);if(horiz){bx(MT('#6a5a9a'),.6,5,11.2,0,-.3,sg*12.4);HUB.colliders.push({x0:mx-.9,x1:mx+.9,z0:Math.min(mz+sg*6.8,mz+sg*18),z1:Math.max(mz+sg*6.8,mz+sg*18),top:999})}else{bx(MT('#6a5a9a'),11.2,5,.6,sg*12.4,-.3,0);HUB.colliders.push({x0:Math.min(mx+sg*6.8,mx+sg*18),x1:Math.max(mx+sg*6.8,mx+sg*18),z0:mz-.9,z1:mz+.9,top:999})}}}
     for(let k=0;k<3;k++){const off=(k-1)*4.4,sx=horiz?1.2:3.6,sz=horiz?3.6:1.2;bx(MT('#ffffff'),sx,.9,sz,horiz?-.9:off,.6,horiz?off:-.9);bx(MT('#ff8a2a'),sx,.9,sz*.5,horiz?-.9:off,1.5,horiz?off:-.9);}
     [-5.5,5.5].forEach(o=>{sph(MT('#ff2a4a','#ff2a4a',1),.45,.45,.45,horiz?0:o,5.4,horiz?o:0,false)});
     sign('GESPERRT','#ff5f5f',horiz?-.45:0,3.2,horiz?0:-.45,6,1.5,horiz?-Math.PI/2:Math.PI,'#3a0a10');sign('GESPERRT','#ff5f5f',horiz?.45:0,3.2,horiz?0:.45,6,1.5,horiz?Math.PI/2:0,'#3a0a10');
@@ -1014,11 +1032,11 @@ function buildLevel0(){
    const dm=new THREE.InstancedMesh(new THREE.BoxGeometry(2.2,.04,.35),new THREE.MeshStandardMaterial({color:'#fff0b0',emissive:'#fff0b0',emissiveIntensity:.5}),cnt.length),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),sv=new THREE.Vector3(1,1,1);
    cnt.forEach(([x,z,h],i)=>{q.setFromEuler(new THREE.Euler(0,h?0:Math.PI/2,0));m4.compose(new V3(x,1.33,z),q,sv);dm.setMatrixAt(i,m4)});dm.userData.noBake=true;W0.add(dm)}
   /* ---- Portale (versteckt in Sackgassen) ---- */
-  const WCOL=[{ring:'#d54291',d:['#1cafd1','#f0cf36','#ffffff']},{ring:'#8e5bd6',d:['#4cc3ff','#ff5fa8','#ffffff']},{ring:'#ffe066',d:['#ff5fa8','#4cc3ff','#ffffff']}];
+  const WCOL=[{ring:'#8e5bd6',d:['#4cc3ff','#ff5fa8','#ffffff']},{ring:'#d54291',d:['#ffe066','#4cc3ff','#ffffff']},{ring:'#ffe066',d:['#ff5fa8','#4cc3ff','#ffffff']}];
   maze.pick.forEach((nd,k)=>{const P0=nodeXZ(nd),nb=maze.adj[nd][0],NB=nodeXZ(nb),alongX=NB.z===P0.z,g=portal(P0.x,8,P0.z);sc.remove(g);g.rotation.y=alongX?Math.PI/2:0;
     g.children[0].material.color.set(WCOL[k].ring);g.children[0].material.emissive.set(WCOL[k].ring);[1,2,3].forEach(i=>g.children[i].material.color.set(WCOL[k].d[i-1]));g.userData.noBake=true;W0.add(g);
     const beam=new THREE.Mesh(new THREE.CylinderGeometry(3,3,90,16,1,true),BM(WCOL[k].ring,{transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,fog:false}));beam.position.set(P0.x,45,P0.z);beam.userData.noBake=true;beam.userData.noOutline=true;W0.add(beam);
-    HUB.portals.push({x:P0.x,z:P0.z,world:k+1,g,beam,node:nd,col:WCOL[k].ring})});
+    HUB.portals.push({x:P0.x,z:P0.z,world:k+2,g,beam,node:nd,col:WCOL[k].ring})});
   /* ---- Pylonen auf den Straßen ---- */
   {const edges=maze.all.filter(([a,b])=>maze.open.has(maze.key(a,b)));for(let k=0;k<22;k++){const [a,b]=edges[Math.floor(R()*edges.length)],A=nodeXZ(a),B=nodeXZ(b),t=.25+R()*.5,x=A.x+(B.x-A.x)*t+(A.z===B.z?0:(R()-.5)*8),z=A.z+(B.z-A.z)*t+(A.z===B.z?(R()-.5)*8:0);
     const o=makeCone(x,z);sc.remove(o);W0.add(o);o.userData.noBake=true;HUB.cones.push({o,x,z,hit:0,vx:0,vy:0,vz:0})}}
@@ -1050,6 +1068,7 @@ function buildLevel0(){
   g.strokeStyle='#fff0b0';g.lineWidth=14*S;g.lineCap='butt';
   maze.all.forEach(([a,b])=>{if(!maze.open.has(maze.key(a,b)))return;const A=nodeXZ(a),B=nodeXZ(b),[x1,z1]=pxz(A.x,A.z),[x2,z2]=pxz(B.x,B.z);g.beginPath();g.moveTo(x1,z1);g.lineTo(x2,z2);g.stroke()});
   for(let n=0;n<N*N;n++){const A=nodeXZ(n),[x,z]=pxz(A.x,A.z);g.fillStyle='#fff0b0';g.fillRect(x-7*S,z-7*S,14*S,14*S)}
+  g.fillStyle='#1cafd1';g.fillRect(0,0,pxz(-143,0)[0],150);g.fillStyle='#f4d89a';g.fillRect(pxz(-150,0)[0],0,5,150);
   g.fillStyle='#ff5f5f';HUB.barricades.forEach(b=>{const [x,z]=pxz(b.x,b.z);g.fillRect(x-(b.horiz?1.2:7)*S,z-(b.horiz?7:1.2)*S,(b.horiz?2.4:14)*S,(b.horiz?14:2.4)*S)});
   const ex=document.createElement('canvas');ex.width=ex.height=150;HUB.mm={map:mc,ex,exg:ex.getContext('2d'),tmp:document.createElement('canvas'),S,pxz};HUB.mm.tmp.width=HUB.mm.tmp.height=150;
   HUB.built=true}
@@ -1067,19 +1086,21 @@ function resolveCity(){for(const c of HUB.colliders){
   const hx=Math.cos(P.h),hz=Math.sin(P.h),dot=hx*nx+hz*nz;
   if(dot<0){const tx=hx-dot*nx,tz=hz-dot*nz;if(Math.hypot(tx,tz)>.15)P.h=Math.atan2(tz,tx);P.speed*=.93;
     if(-dot>.6&&P.speed>2.5&&G.t-(P.lastBump||0)>.4){SFX.thud();G.shake=Math.max(G.shake,.15);P.lastBump=G.t}}}}
+function startCoastRace(){HUB.coastHit=1;SFX.win();burst(P.x,P.y+3,P.z,90);toast('Das Rennen beginnt!',1300);later(.5,()=>{applyLevel(1);beginPlay()})}
 function enterPortal(p){HUB.found.add(p.world);SFX.win();burst(P.x,P.y+3,P.z,90);toast('Portal zu Welt '+p.world+'!',1200);
   later(.5,()=>{applyLevel(p.world);beginPlay()})}
 function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
   const sf=.45+.55*Math.min(1,P.speed/5);P.h+=P.turn*dt*2.3*sf;
   const target=K.up?SPEED_MAX:(K.down?1.8:SPEED_CRUISE);P.speed+=(target-P.speed)*Math.min(1,dt*(K.up?1.5:1.1));
-  P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;P.x=Math.max(-139,Math.min(139,P.x));P.z=Math.max(-139,Math.min(139,P.z));
+  P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;{const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
   resolveCity();P.h=((P.h+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   P.vy-=LV.grav*dt;P.y+=P.vy*dt;if(P.y<=1.3){P.y=1.3;if(P.vy<0)P.vy=0}P.coy=P.y<=1.35?0:P.coy+dt;
   for(const c of cones){if(c.hit){c.o.position.x+=c.vx*dt;c.o.position.y+=c.vy*dt;c.o.position.z+=c.vz*dt;c.vy-=18*dt;c.o.rotation.x+=7*dt;c.o.rotation.z+=5*dt;c.hit-=dt;if(c.hit<=0)c.o.visible=false;continue}
     if(Math.abs(P.x-c.x)<1.3&&Math.abs(P.z-c.z)<1.3&&P.y<2.4){c.hit=1.1;c.vx=Math.cos(P.h)*P.speed*1.2;c.vz=Math.sin(P.h)*P.speed*.8+(Math.random()-.5)*4;c.vy=8;P.speed*=.6;SFX.thud();G.shake=Math.max(G.shake,.2)}}
-  for(const p of HUB.portals){if(Math.hypot(P.x-p.x,P.z-p.z)<5.2&&G.phase==='play'&&!p.hit){p.hit=1;enterPortal(p)}}}
-function stepLevel0(dt){if(!W0||!W0.visible)return;HUB.sky.position.copy(cam.position);
+  for(const p of HUB.portals){if(Math.hypot(P.x-p.x,P.z-p.z)<5.2&&G.phase==='play'&&!p.hit){p.hit=1;enterPortal(p)}}
+  if(P.x<-150&&G.phase==='play'&&!HUB.coastHit)startCoastRace()}
+function stepLevel0(dt){if(!W0||!W0.visible)return;HUB.sky.position.copy(cam.position);if(HUB.coastBeam)HUB.coastBeam.material.opacity=.2+.08*Math.sin(G.t*2.4);
   let nd=1e9;HUB.portals.forEach(p=>{const d=Math.hypot(P.x-p.x,P.z-p.z);p.beam.material.opacity=Math.max(0,Math.min(.45,(105-d)/75*.45));p.g.visible=d<78||HUB.found.has(p.world);p.g.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});if(!HUB.found.has(p.world)&&d<nd)nd=d});
   const r=$('radar');if(r){const open=nd<1e8;r.classList.toggle('on',G.phase==='play'&&open);if(open){const w=nd<30?'heiß!':nd<65?'warm':nd<115?'lauwarm':'kalt';$('radar-s').textContent=w;$('radar-s').dataset.t=w[0];$('radar-bar').style.setProperty('--p',Math.max(.04,Math.min(1,1-nd/190)))}}
   /* Minikarte */
@@ -1088,6 +1109,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;HUB.sky.position.copy(cam.pos
   t.globalCompositeOperation='source-over';t.clearRect(0,0,150,150);t.drawImage(mm.map,0,0);t.globalCompositeOperation='destination-in';t.drawImage(mm.ex,0,0);
   g.clearRect(0,0,150,150);g.fillStyle='#1a1626';g.fillRect(0,0,150,150);g.drawImage(mm.tmp,0,0);
   HUB.portals.forEach(p=>{if(HUB.found.has(p.world)){const [x,z]=mm.pxz(p.x,p.z);g.fillStyle=p.col;g.beginPath();g.arc(x,z,5,0,7);g.fill();g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText(p.world,x,z+3)}});
+  {const [gx,gz]=mm.pxz(-143,HUB.coastZ);g.fillStyle='#ffe066';g.fillRect(gx-1,gz-8*mm.S*1.6,5,16*mm.S*1.6);g.fillStyle='#1a1626';g.font='700 9px sans-serif';g.textAlign='left';g.fillText('K',gx+7,gz+3);g.fillStyle='#ffe066';g.fillText('K',gx+6,gz+3)}
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 

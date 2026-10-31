@@ -10,7 +10,7 @@ Veröffentlichte Version: Artifact `https://claude.ai/artifact/CydYVrahez1Fq5JDY
 - `build.py`: setzt alles zusammen. `python3 build.py` baut `dist/kuesten-quest.html`; `--dev` baut `dist/dev.html` mit lokalem three (`node_modules/three@0.160.0` nötig).
 
 ## Stand
-- Welten: 0 Stadt (Labyrinth, versteckte Portale), 1 Küste, 2 Eis-Galaxie, 3 Nacht-Stadt.
+- Start ist die Stadt (Welt 0, Labyrinth). An der Küste im Westen beginnt das Rennen (Welt 1); zwei versteckte Portale in der Stadt führen in Welt 2 (Eis-Galaxie) und Welt 3 (Nacht-Stadt).
 - Mechanik: Skateboard-Wurf (Klick oder F), Kickflip (Shift), schubsende Skater, Boss-Flucht, Eis-Fressen, Avatar-Karussell, Pixel-Modus (P).
 - Flora aus Regeln plus Seed. Keine Mehrspieler-Funktion (kommt erst mit Cloudflare).
 
