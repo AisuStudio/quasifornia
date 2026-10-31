@@ -63,6 +63,15 @@ Die Figur hat ein Inventar. Fortbewegungsmittel wie das Skateboard verschwinden 
 - Passt zu: Sierra-Rätseln (Fundstück benutzen), Escape-Quest (USB-Stick, Schlüssel, Tools), Gebäude als Quest-Portale (Schlüssel öffnet ein Gebäude), Emotes/Belohnungen.
 - Offen: Welche Items sind global (Identität, "unantastbar") und welche gehören zum lokalen Weltzustand und können verloren gehen? Empfehlung: Fortbewegungsmittel und Erfolge global, Quest-Items lokal je Welt. Wie groß (feste Slots oder Liste)? Bedienung auf Mobil (Antippen statt Hotbar)?
 
+### Musik-Player der Figur (Idee vom Nutzer, 2026-10-31)
+Die Figur hat einen eigenen Player mit Lieblingssongs, es werden nach und nach mehr. Erster Track: "EM'OCEAN" (Freunde des Nutzers aus Tokyo und München, 3:57), Coverart vom Nutzer. Quelle liegt lokal in `sound/` (WAV bleibt per .gitignore außerhalb des Repos), Web-Fassung `sound/em-ocean.m4a` (AAC 160 kbit/s, 4,7 MB).
+- Hintergrund (Blog `https://www.aisu.studio/home-blog/the-high-end-theory`, Juli 2023): Die EP "The High End Theory" entstand als Fernprojekt zwischen dem Münchner Beatmaker Packed Rich und fünf Musikern aus Japan (Jazzy Hip Hop und Lo-Fi), Cover von Aisu.Studio (Nutzer), vermittelt über Alex Föll (WSG, Blockopera). Credits dort: Packed Rich (Produzent), you_see, ndfloat, timekilla0118 (MCs), punch_float (DJ/Cuts), @_yasu2000 (Engineering/Mastering). Ob "EM'OCEAN" auf dieser EP liegt, steht im Blog nicht; Zuordnung und Credits pro Track beim Nutzer erfragen.
+- Der Player ist ein Inventar-Item (siehe Inventar): Songs können wie Fundstücke freigeschaltet werden (Belohnung für Quests, Fund in der Stadt).
+- Tracks als Daten, nicht im Code: Playlist-Liste mit Titel, Künstler, Cover, Datei, Lizenz/Credit. Playlist pro Figur, Welten können zusätzlich einen eigenen Soundtrack im Manifest haben.
+- Technik: Browser starten Ton erst nach einer Geste (Start-Button), Schalter für Musik an/aus, AAC statt WAV wegen Größe. Streaming je Titel statt alles vorab laden.
+- Rechte: Öffentliches Repo und öffentliche Seite, daher pro Track Zustimmung der Urheber nötig, Credit im Spiel. Ein Track pro Freund bedeutet Auswahl und Kuratierung.
+- Offen: Eigene Musik von Nutzern hochladen? (Widerspricht "kein Upload" und wirft Rechte- und Moderationsfragen auf, daher vorerst nein.) Läuft Musik weiter beim Weltwechsel? Mit anderen geteilter Player (Crew hört mit)?
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels
