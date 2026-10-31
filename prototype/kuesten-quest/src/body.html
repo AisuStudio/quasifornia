@@ -1,0 +1,30 @@
+<div id="stage"></div>
+<div id="ui">
+  <div id="quest" class="panel" hidden>
+    <div class="k">Quest</div>
+    <div class="t" id="q-title">Sammle die Eiskugeln</div>
+    <div id="pips"><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <div id="track" aria-hidden="true">
+    <div class="bar"><b id="mk-g">⚑</b><b id="mk-d">D</b><b id="mk-p">Du</b></div>
+    <div class="lbl"><span>Start</span><span id="gap">Abstand</span><span>Portal</span></div>
+  </div>
+  <div id="modes">
+    <button id="b-pix" type="button" aria-pressed="false">Pixel-Look · P</button>
+    <button id="b-snd" type="button" aria-pressed="true">Ton · M</button>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="narr" class="panel" aria-live="polite"><span class="who" id="narr-who">Erzähler</span><p id="narr-text"></p></div>
+  <div id="throw" class="panel" aria-live="polite"><span class="k">Skateboard</span><b id="throw-s">bereit</b><i id="throw-bar"></i></div>
+  <div id="radar" class="panel"><span class="k">Portal-Radar</span><b id="radar-s">kalt</b><i id="radar-bar"></i></div>
+  <canvas id="mini" width="150" height="150" aria-label="Karte"></canvas>
+  <div id="touch">
+    <div class="grp"><button id="t-left" type="button" aria-label="Links">◀</button><button id="t-right" type="button" aria-label="Rechts">▶</button></div>
+    <div class="grp"><button id="t-trick" type="button" aria-label="Kickflip">✦</button><button id="t-throw" type="button" aria-label="Skateboard werfen">⤴</button><button id="t-jump" type="button" aria-label="Sprung">▲</button><button id="t-gas" type="button" aria-label="Gas">GO</button></div>
+  </div>
+  <div id="boom"><div class="big" id="boom-big">SCHLURP!</div><div class="small" id="boom-small"></div></div>
+  <div id="overlay">
+    <div class="card" id="card"></div>
+  </div>
+</div>
+<div id="loading">Welt wird aufgeblasen …</div>
