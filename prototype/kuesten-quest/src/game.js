@@ -357,7 +357,7 @@ function setCarousel(i,first){const n=SKIN_LIST.length;carIdx=((i%n)+n)%n;const 
   $('cname').textContent=(SKIN_INFO[k]||[name])[0];$('ctag').textContent=(SKIN_INFO[k]||['',''])[1];
   [...$('cdots').children].forEach((b,j)=>b.setAttribute('aria-current',String(j===carIdx)));
   const sl=$('cm');if(!first&&!matchMedia('(prefers-reduced-motion:reduce)').matches){sl.classList.remove('pop');void sl.offsetWidth;sl.classList.add('pop')}}
-function stepCarousel(d){ac();setCarousel(carIdx+d);tone(520+d*60,.08,'triangle',.04)}
+function stepCarousel(d){ac();{const n=SKIN_LIST.length;let i=carIdx+d,c=0;while(!SKOWN.has(SKIN_LIST[((i%n)+n)%n][0])&&c++<n)i+=d;setCarousel(i)}tone(520+d*60,.08,'triangle',.04)}
 function makeThumbs(){const my=++thumbJob;const todo=SKIN_LIST.map(s=>s[0]).filter(k=>!THUMBS[k]);if(!todo.length)return;
   const W=200,H=260,rt=new THREE.WebGLRenderTarget(W,H,{samples:0});rt.texture.colorSpace=THREE.SRGBColorSpace;
   const cc=document.createElement('canvas');cc.width=W;cc.height=H;const cx=cc.getContext('2d'),buf=new Uint8Array(W*H*4),cm=new THREE.PerspectiveCamera(27,W/H,.5,500);
@@ -383,13 +383,13 @@ function showTitle(){INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;
      <button class="cb" id="cnext" type="button" aria-label="Nächster Avatar">▶</button>
    </div>
    <div id="cinfo" aria-live="polite"><b id="cname"></b><span id="ctag"></span></div>
-   <div id="cdots">${SKIN_LIST.map(([k,n],i)=>`<button type="button" data-i="${i}" aria-label="${n}"></button>`).join('')}</div>
+   <div id="cdots">${SKIN_LIST.map(([k,n],i)=>`<button type="button" data-i="${i}" aria-label="${n}"${SKOWN.has(k)?'':' disabled title="Im Rarepod-Laden freischalten"'}></button>`).join('')}</div>
    <h2>Steuerung</h2>
    <div class="keys"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen, Rampen geben Schub</span><kbd>Shift</kbd><span>Kickflip, das Publikum klatscht</span><kbd>Linksklick · F</kbd><span>Skateboard auf Skater oder Boss werfen (2 s Pause)</span><kbd>I</kbd><span>Inventar öffnen (Spiel pausiert)</span><kbd>P · M</kbd><span>Pixel-Look · Ton</span></div>
    <button class="btn" id="go" type="button">Los geht’s: Start in der Stadt</button><button class="btn sec" id="go1" type="button">Direkt zum Küsten-Rennen (Welt 1)</button><button class="btn sec" id="go2" type="button">Direkt zu Welt 2: Eis-Galaxie</button><button class="btn sec" id="go3" type="button">Direkt zu Welt 3: Nacht-Stadt</button>`;
   const cur=Math.max(0,SKIN_LIST.findIndex(s=>PRESETS[s[0]]===P.preset));setCarousel(cur,true);
   $('cprev').onclick=()=>stepCarousel(-1);$('cnext').onclick=()=>stepCarousel(1);
-  [...$('cdots').children].forEach(b=>b.onclick=()=>setCarousel(+b.dataset.i));
+  [...$('cdots').children].forEach(b=>b.onclick=()=>{if(SKOWN.has(SKIN_LIST[+b.dataset.i][0]))setCarousel(+b.dataset.i)});
   const cv=$('cview');let sx=null;cv.onpointerdown=e=>{sx=e.clientX};cv.onpointerup=e=>{if(sx!==null&&Math.abs(e.clientX-sx)>28)stepCarousel(e.clientX<sx?1:-1);sx=null};cv.onpointercancel=()=>{sx=null};
   makeThumbs();
   $('go').onclick=()=>{ac();applyLevel(0);beginPlay()};$('go1').onclick=()=>{ac();applyLevel(1);beginPlay()};$('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
@@ -927,13 +927,24 @@ function scHud(d){const n=document.getElementById('sc-n');if(n)n.textContent=SC.
 function scAdd(d,why){SC.n=Math.max(0,SC.n+d);SC.log.unshift([why,d]);if(SC.log.length>12)SC.log.length=12;scSave();scHud(d);rpRender()}
 function scCan(c){return SC.n>=c}
 function auComplete(id){const a=AUFTRAEGE.find(x=>x.id===id);if(!a)return 0;const first=!SC.au[id],r=first?a.reward:AU_REPEAT;SC.au[id]=(SC.au[id]||0)+1;scAdd(r,'Auftrag: '+a.titel);toast('Auftrag erfüllt: +'+r+' Scoops',1900);return r}
+/* Laden: Skins gegen Scoops. Sechs sind frei, fünf kosten Scoops. */
+const SKIN_PRICE={gold:15,sky:10,purple:10,black:8,snow:8},SKK='kq-skins';
+const SKOWN=new Set(SKIN_LIST.filter(s=>!SKIN_PRICE[s[0]]).map(s=>s[0]));
+try{JSON.parse(localStorage.getItem(SKK)||'[]').forEach(k=>{if(PRESETS[k])SKOWN.add(k)})}catch(e){}
+function skSave(){try{localStorage.setItem(SKK,JSON.stringify([...SKOWN]))}catch(e){}}
+function skBuy(k){const pr=SKIN_PRICE[k];if(SKOWN.has(k)||!pr)return false;if(!scCan(pr)){toast('Zu wenig Scoops: '+pr+' nötig',1500);return false}
+  SKOWN.add(k);skSave();const nm=SKIN_LIST.find(s=>s[0]===k)[1];scAdd(-pr,'Skin: '+nm);toast(nm+' freigeschaltet',1400);return true}
+function skWear(k){if(!SKOWN.has(k))return;P.preset=PRESETS[k];buildPlayer();P.av.scale.setScalar(1.35);try{localStorage.setItem('kq-skin',k)}catch(e){}rpRender()}
 function rpTab(t){SC.tab=t;rpRender()}
 function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
   [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
-  ['inv','auf','sco','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
+  ['inv','auf','sco','lad','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
   const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
   const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
+  const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">Neue Looks für deine Figur. Dein Guthaben: <b>'+SC.n+' Scoops</b>.</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
+    return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
+    lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)})}
   const mus=document.getElementById('rp-mus');if(mus)mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div><p class="sub">Mit M schaltest du den Ton aus. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`}
 const INV={open:false,items:new Set()};
 try{JSON.parse(localStorage.getItem('kq-items')||'[]').forEach(id=>{if(ITEM_DEFS.some(d=>d.id===id))INV.items.add(id)})}catch(e){}
@@ -1096,6 +1107,18 @@ function buildLevel0(){
     [-5.5,5.5].forEach(o=>{sph(MT('#ff2a4a','#ff2a4a',1),.45,.45,.45,horiz?0:o,5.4,horiz?o:0,false)});
     sign('GESPERRT','#ff5f5f',horiz?-.45:0,3.2,horiz?0:-.45,6,1.5,horiz?-Math.PI/2:Math.PI,'#3a0a10');sign('GESPERRT','#ff5f5f',horiz?.45:0,3.2,horiz?0:.45,6,1.5,horiz?Math.PI/2:0,'#3a0a10');
     HUB.colliders.push({x0:mx-(horiz?.9:7.2),x1:mx+(horiz?.9:7.2),z0:mz-(horiz?7.2:.9),z1:mz+(horiz?7.2:.9),top:999})});
+  /* ---- Straßennamen an den Kreuzungen, dazu ein Sticker am Start ---- */
+  {const COLN=['Waffelweg','Sorbetstraße','Karamellallee','Pistazienweg','Minzgasse','Schokoring'],ROWN=['Möwenstraße','Palmenallee','Skate-Boulevard','Sonnenweg','Korallenweg','Dinoweg'];
+   const stTex=(t)=>{const c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#1d5fa8';x.fillRect(0,0,640,128);x.strokeStyle='#fff';x.lineWidth=7;x.strokeRect(8,8,624,112);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';
+     let fs=70;x.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif';while(x.measureText(t).width>560&&fs>20){fs-=3;x.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif'}x.fillText(t,320,68);
+     const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})};
+   const stickerTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#ffe066';x.beginPath();x.arc(128,128,122,0,7);x.fill();x.strokeStyle='#1a1626';x.lineWidth=8;x.stroke();x.fillStyle='#1a1626';x.textAlign='center';x.textBaseline='middle';x.font='800 27px "Baloo 2","Trebuchet MS",sans-serif';
+     ['Nett hier, aber','waren Sie schon mal','auf Andromeda?'].forEach((l,i)=>x.fillText(l,128,84+i*34));x.font='800 22px sans-serif';x.fillText('★ ✦ ★',128,200);
+     const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx,transparent:true})};
+   const POLE=MT('#8a8aa0');
+   for(let j=0;j<N;j++)for(let i=0;i<N;i++){const nd=nodeXZ(j*N+i);cur={x:nd.x+7.4,z:nd.z+7.4};cyl(POLE,.14,7.4,0,0,0);
+     [[ROWN[j],0],[ROWN[j],Math.PI],[COLN[i],Math.PI/2],[COLN[i],-Math.PI/2]].forEach(([t,ry],k)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(6.2,1.24),stTex(t));const off=.16;m.position.set(cur.x+(k===2?off:k===3?-off:0),Y0+6.6-(k>1?1.4:0),cur.z+(k===0?off:k===1?-off:0));m.rotation.y=ry;m.userData.noBake=true;W0.add(m)});
+     if(i===2&&j===3){const s=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.5),stickerTex());s.position.set(cur.x-.17,Y0+2.6,cur.z);s.rotation.y=-Math.PI/2;s.userData.noBake=true;W0.add(s)}}}
   /* ---- Laternen und Fahrbahnmarkierung (instanziert) ---- */
   {const NL=N*N*4,post=new THREE.InstancedMesh(new THREE.CylinderGeometry(.14,.14,6,6),new THREE.MeshStandardMaterial({color:'#5a4a8a'}),NL),head=new THREE.InstancedMesh(new THREE.SphereGeometry(.55,8,6),new THREE.MeshBasicMaterial({color:'#fff0b0'}),NL),m4=new THREE.Matrix4();let n=0;
    for(let j=0;j<N;j++)for(let i=0;i<N;i++)for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const x=NODE(i)+sx*6.4,z=NODE(j)+sz*6.4;m4.makeTranslation(x,1.6+3,z);post.setMatrixAt(n,m4);m4.makeTranslation(x,1.6+6.2,z);head.setMatrixAt(n,m4);n++}
@@ -1215,7 +1238,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;HUB.items.forEach(it=>{if(it.
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
