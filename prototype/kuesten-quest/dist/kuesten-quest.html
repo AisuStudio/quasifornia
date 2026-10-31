@@ -49,6 +49,9 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #narr p{margin:0;font:400 15px/1.45 var(--mono);color:var(--paper);min-height:1.45em}
 #toast{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);font-weight:800;font-size:clamp(34px,7vw,76px);line-height:1;text-align:center;color:var(--gold);text-shadow:0 4px 0 #0e0b18,0 0 0 #0e0b18;-webkit-text-stroke:2px #0e0b18;paint-order:stroke fill;opacity:0;transition:opacity .25s;pointer-events:none;text-wrap:balance;max-width:90vw}
 #toast.on{opacity:1}
+#np{position:absolute;right:16px;top:72px;text-align:right;max-width:min(92vw,460px);padding:8px 12px;border-radius:12px;background:rgba(14,11,24,.8);color:#fff;font-size:12px;line-height:1.4;opacity:0;transition:opacity .6s;pointer-events:none}
+#np.on{opacity:1}
+#np b{color:var(--gold);font-size:14px}
 #touch{position:absolute;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:none;justify-content:space-between;padding:0 max(14px,env(safe-area-inset-left,0px));pointer-events:none}
 #touch.on{display:flex}
 #touch .grp{display:flex;gap:12px;pointer-events:auto}
@@ -189,7 +192,7 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 .opts button{font:800 20px/1 var(--mono);padding:14px 0;border-radius:12px;border:3px solid #0e0b18;background:var(--pink);color:#fff;cursor:pointer;box-shadow:0 4px 0 #7a1650}
 @media (pointer:coarse){#act{bottom:calc(160px + env(safe-area-inset-bottom,0px))}}
 @media (prefers-reduced-motion:reduce){#cview .main.pop{animation:none}}
-@media (prefers-reduced-motion:reduce){#pips i,#toast{transition:none}}
+@media (prefers-reduced-motion:reduce){#pips i,#toast,#np{transition:none}}
 @media (max-width:560px){#quest{min-width:0;max-width:44vw}#quest .t{font-size:17px}#track{top:72px;width:min(70vw,380px)}.card{padding:18px 18px 20px}}
 </style>
 <div id="stage"></div>
@@ -209,6 +212,7 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
     <button id="b-snd" type="button" aria-pressed="true">Ton · M</button>
   </div>
   <div id="toast" role="status" aria-live="polite"></div>
+  <div id="np" role="status" aria-live="polite"><b>♪ em'ocean</b><br>Packed Rich feat. you_see, ndfloat, timekilla0118<br>DJ/Cuts: punch_float · Album: The High End Theory (2023)</div>
   <div id="narr" class="panel" aria-live="polite"><span class="who" id="narr-who">Erzähler</span><p id="narr-text"></p></div>
   <div id="throw" class="panel" aria-live="polite"><span class="k">Skateboard</span><b id="throw-s">bereit</b><i id="throw-bar"></i></div>
   <div id="radar" class="panel"><span class="k">Portal-Radar</span><b id="radar-s">kalt</b><i id="radar-bar"></i></div>
@@ -790,6 +794,7 @@ let AC=null;
 const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=.7;MUS.src='em-ocean.m4a';MUS.started=false;
 function musGo(){if(MUS.started||MUS.dead)return;MUS.started=true;MUS.muted=G.muted;MUS.play().catch(()=>{MUS.started=false})}
 MUS.addEventListener('error',()=>{MUS.dead=true});
+MUS.addEventListener('playing',()=>{const n=$('np');if(!n||MUS.credited)return;MUS.credited=true;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),9000)});
 function ac(){musGo();if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=false}}if(AC&&AC.state==='suspended')AC.resume();return AC}
 function tone(f,d=.15,type='square',vol=.06,slide=0,delay=0){if(G.muted)return;const A=ac();if(!A)return;const t=A.currentTime+delay,o=A.createOscillator(),g=A.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(A.destination);o.start(t);o.stop(t+d+.02)}
 const SFX={collect(n){[0,4,7,12].forEach((s,i)=>tone(440*Math.pow(2,(s+n*2)/12),.12,'square',.05,0,i*.06))},jump(){tone(260,.14,'square',.05,320)},boost(){tone(180,.4,'sawtooth',.05,700)},thud(){tone(120,.2,'sine',.14,-80)},

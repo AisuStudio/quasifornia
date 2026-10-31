@@ -49,6 +49,9 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #narr p{margin:0;font:400 15px/1.45 var(--mono);color:var(--paper);min-height:1.45em}
 #toast{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);font-weight:800;font-size:clamp(34px,7vw,76px);line-height:1;text-align:center;color:var(--gold);text-shadow:0 4px 0 #0e0b18,0 0 0 #0e0b18;-webkit-text-stroke:2px #0e0b18;paint-order:stroke fill;opacity:0;transition:opacity .25s;pointer-events:none;text-wrap:balance;max-width:90vw}
 #toast.on{opacity:1}
+#np{position:absolute;right:16px;top:72px;text-align:right;max-width:min(92vw,460px);padding:8px 12px;border-radius:12px;background:rgba(14,11,24,.8);color:#fff;font-size:12px;line-height:1.4;opacity:0;transition:opacity .6s;pointer-events:none}
+#np.on{opacity:1}
+#np b{color:var(--gold);font-size:14px}
 #touch{position:absolute;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:none;justify-content:space-between;padding:0 max(14px,env(safe-area-inset-left,0px));pointer-events:none}
 #touch.on{display:flex}
 #touch .grp{display:flex;gap:12px;pointer-events:auto}
@@ -189,6 +192,6 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 .opts button{font:800 20px/1 var(--mono);padding:14px 0;border-radius:12px;border:3px solid #0e0b18;background:var(--pink);color:#fff;cursor:pointer;box-shadow:0 4px 0 #7a1650}
 @media (pointer:coarse){#act{bottom:calc(160px + env(safe-area-inset-bottom,0px))}}
 @media (prefers-reduced-motion:reduce){#cview .main.pop{animation:none}}
-@media (prefers-reduced-motion:reduce){#pips i,#toast{transition:none}}
+@media (prefers-reduced-motion:reduce){#pips i,#toast,#np{transition:none}}
 @media (max-width:560px){#quest{min-width:0;max-width:44vw}#quest .t{font-size:17px}#track{top:72px;width:min(70vw,380px)}.card{padding:18px 18px 20px}}
 </style>
