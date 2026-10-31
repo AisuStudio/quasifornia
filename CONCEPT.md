@@ -226,6 +226,26 @@ Hinweis: Mittelwerte aus vielen Bildern sind gedämpft. Für ein UI die gesätti
 - Skript-Sandbox: Lua (wasmoon) oder QuickJS
 - Nicht geeignet: Vercel (Serverless, keine dauerhaften WebSockets)
 
+## Name (Stand 2026-11-01, noch offen)
+Entschieden: **Port Lupo** ist der Hub, die Hauptstadt im Spiel. Ein Ort, keine Figur und an keine Person gebunden. Der Stadtname darf im Spiel stehen.
+Offen bleibt der **Projektname**. Er wird nicht fest in Code, UI oder Texte geschrieben, bis er entschieden ist.
+
+Kriterien (nach Anton und seinen Freunden testen: aufschreiben und aussprechen lassen):
+- Kurz und lautgetreu, damit Kinder ihn richtig schreiben. Möglichst ein Wort oder zwei kurze.
+- Er sollte die Kernhandlung beschreiben (wie Minecraft: mine und craft, Fortnite: Fort und Nite im ursprünglichen Modus). Unser Kern: Quests und Entdecken, dazu Reisen, Meer, Portale.
+- Gut auffindbar und schützbar. Vor der Entscheidung bei EUIPO und DPMA sowie bei der Domain prüfen. Das ist noch nicht geschehen.
+
+Kandidaten mit Einschätzung:
+- Port Quest: beschreibt das Spiel am direktesten, aber sehr allgemein. Favorit-Richtung, zusammen mit Port Lupo als Hub.
+- Port Lupo: einzigartig, leicht zu schreiben, klingt gut; als Stadtname gesetzt. Als Projektname sagt es nichts über das Spiel (Lupo heißt Wolf; VW Lupo ist ein Auto).
+- Port Luna: schön, aber Amazon Luna ist ein Cloud-Gaming-Dienst, Verwechslungsrisiko. Rückt zudem gedanklich an Fortnite (Nacht).
+- Q Port: kurz, behält das Q von Quasifornia. Aussprache "Kju" offen.
+- Port Lane, Port Hill, Port West, Pacific West: sehr allgemein, schwer schützbar oder auffindbar.
+- Port Vanilla: eigenständig, aber zu lang und Schreibweise (Doppel-L) für Kinder schwierig.
+- Port Ventura (PortAventura, Freizeitpark) und Port Sierra (Sierra Entertainment): wegen bestehender Namen gestrichen.
+- Ähnlichkeit zu Fortnite: "Port" und "Fort" liegen einen Buchstaben auseinander. Kein Hindernis, aber Namen mit "Night" oder "Nite" vermeiden.
+- "Port" bleibt: steht für Portal, Meer und Reisen. Nachteil: allein nicht schützbar, bei Entwicklern auch "Netzwerkanschluss". Alternative zum Hafen-Gedanken (nur falls nötig): Bay, Dock.
+
 ## Roadmap und Geschäftsmodell (Stand 2026-11-01)
 Ziel des Nutzers: Studio-Standbein für AisuStudio. Ressourcen in den nächsten 6 bis 12 Monaten: regelmäßig Zeit, kleines Budget.
 
