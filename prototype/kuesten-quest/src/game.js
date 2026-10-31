@@ -142,8 +142,12 @@ function cloudCanvas(seed,frame,w=256,h=128){
   g.globalCompositeOperation='source-atop';g.fillStyle=gr;g.fillRect(0,0,w,h);
   return c}
 const CLOUDTEX=[0,1,2,3].map(s=>[0,1,2,3].map(f=>{const t=new THREE.CanvasTexture(cloudCanvas(s,f));t.colorSpace=THREE.SRGBColorSpace;return t}));
+/* Wolken: Dunst nach Kameradistanz, gleiche Kurve wie der Nebel */
+function hazeMatD(mat,kmax){const u={value:kmax};mat.fog=false;mat.onBeforeCompile=sh=>{sh.uniforms.hzC=OUTFOG.fc;sh.uniforms.hzN=OUTFOG.fn;sh.uniforms.hzF=OUTFOG.ff;sh.uniforms.hzK=u;
+  sh.vertexShader=sh.vertexShader.replace('void main() {','varying float vHd;\nvoid main() {').replace('mvPosition.xy += rotatedPosition;','vHd=length(mvPosition.xyz);\n\tmvPosition.xy += rotatedPosition;');
+  sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec3 hzC;uniform float hzN;uniform float hzF;uniform float hzK;varying float vHd;\nvoid main() {').replace('#include <colorspace_fragment>','gl_FragColor.rgb=mix(gl_FragColor.rgb,hzC,hzK*smoothstep(hzN,hzF,vHd));\n#include <colorspace_fragment>')};mat.customProgramCacheKey=()=>'hzd';return mat}
 function makeCloud(x,y,z,w,v,drift){const fr=CLOUDTEX[v%4];
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:fr[0],transparent:true,depthWrite:false,fog:false}));
+  const s=new THREE.Sprite(hazeMatD(new THREE.SpriteMaterial({map:fr[0],transparent:true,depthWrite:false}),.9));
   s.scale.set(w,w/2,1);s.position.set(x,y,z);s.userData={fr,off:Math.random()*8,drift,noBake:true,cloud:true};sc.add(s);return s}
 const midClouds=[[-130,34,-95,70,0,.5],[-55,44,-120,90,1,.35],[20,36,-105,64,2,.6],[85,46,-130,100,3,.3],[140,32,-90,60,1,.55],[-95,50,95,80,2,.3],[0,56,110,110,0,.25],[95,42,100,70,3,.4]].map(a=>makeCloud(...a));
 const skyLayer=new THREE.Group();skyLayer.userData.noBake=true;sc.add(skyLayer);
