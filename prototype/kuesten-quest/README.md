@@ -11,6 +11,7 @@ Veröffentlichte Version: Artifact `https://claude.ai/artifact/CydYVrahez1Fq5JDY
 
 ## Stand
 - Start ist die Stadt (Welt 0, Labyrinth). An der Küste im Westen beginnt das Rennen (Welt 1); zwei versteckte Portale in der Stadt führen in Welt 2 (Eis-Galaxie) und Welt 3 (Nacht-Stadt).
+- Inventar (Taste I): fünf Items in der Stadt für die geplante Atoll-Quest, im Browser gespeichert.
 - Mechanik: Skateboard-Wurf (Klick oder F), Kickflip (Shift), schubsende Skater, Boss-Flucht, Eis-Fressen, Avatar-Karussell, Pixel-Modus (P).
 - Flora aus Regeln plus Seed. Keine Mehrspieler-Funktion (kommt erst mit Cloudflare).
 
