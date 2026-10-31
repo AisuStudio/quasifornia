@@ -142,10 +142,6 @@ function cloudCanvas(seed,frame,w=256,h=128){
   g.globalCompositeOperation='source-atop';g.fillStyle=gr;g.fillRect(0,0,w,h);
   return c}
 const CLOUDTEX=[0,1,2,3].map(s=>[0,1,2,3].map(f=>{const t=new THREE.CanvasTexture(cloudCanvas(s,f));t.colorSpace=THREE.SRGBColorSpace;return t}));
-/* Wolken: Dunst nach Kameradistanz, gleiche Kurve wie der Nebel */
-function hazeMatD(mat,kmax){const u={value:kmax};mat.fog=false;mat.onBeforeCompile=sh=>{sh.uniforms.hzC=OUTFOG.fc;sh.uniforms.hzN=OUTFOG.fn;sh.uniforms.hzF=OUTFOG.ff;sh.uniforms.hzK=u;
-  sh.vertexShader=sh.vertexShader.replace('void main() {','varying float vHd;\nvoid main() {').replace('mvPosition.xy += rotatedPosition;','vHd=length(mvPosition.xyz);\n\tmvPosition.xy += rotatedPosition;');
-  sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec3 hzC;uniform float hzN;uniform float hzF;uniform float hzK;varying float vHd;\nvoid main() {').replace('#include <colorspace_fragment>','gl_FragColor.rgb=mix(gl_FragColor.rgb,hzC,hzK*smoothstep(hzN,hzF,vHd));\n#include <colorspace_fragment>')};mat.customProgramCacheKey=()=>'hzd';return mat}
 function makeCloud(x,y,z,w,v,drift){const fr=CLOUDTEX[v%4];
   const s=new THREE.Sprite(hazeMatD(new THREE.SpriteMaterial({map:fr[0],transparent:true,depthWrite:false}),.9));
   s.scale.set(w,w/2,1);s.position.set(x,y,z);s.userData={fr,off:Math.random()*8,drift,noBake:true,cloud:true};sc.add(s);return s}
@@ -172,8 +168,13 @@ function skylineCanvas(seed,far,w=512,h=256){
   return c}
 const SKYTEX=[0,1,2,3,4,5].map(i=>{const t=new THREE.CanvasTexture(skylineCanvas(i,false));t.colorSpace=THREE.SRGBColorSpace;return t});
 const SKYTEXF=[0,1,2,3].map(i=>{const t=new THREE.CanvasTexture(skylineCanvas(i+9,true));t.colorSpace=THREE.SRGBColorSpace;return t});
-/* Hintergrund-Sprites (fog:false) bekommen ihren Dunst selbst: Mix zur Nebelfarbe, damit zwischen Spielfeld und Kulisse kein Sprung entsteht */
-function hazeMat(mat,k){const u={value:k};mat.fog=false;mat.onBeforeCompile=sh=>{sh.uniforms.hzC=OUTFOG.fc;sh.uniforms.hzK=u;sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec3 hzC;uniform float hzK;\nvoid main() {').replace('#include <colorspace_fragment>','gl_FragColor.rgb=mix(gl_FragColor.rgb,hzC,hzK);\n#include <colorspace_fragment>')};mat.customProgramCacheKey=()=>'hz';return mat}
+/* Dunst für Sprites (fog:false): Mix in die Himmelsfarbe auf der Höhe des Pixels (gleicher Verlauf wie der Himmel), damit zwischen Spielfeld, Kulisse und Himmel kein Sprung entsteht.
+   byDist=true: Stärke wächst mit der Kameradistanz wie der Nebel (Wolken); sonst feste Stärke k (Kulisse) */
+function hazeMatX(mat,k,byDist){const u={value:k};mat.fog=false;mat.onBeforeCompile=sh=>{sh.uniforms.hzC=OUTFOG.fc;sh.uniforms.hzA=sky.material.uniforms.a;sh.uniforms.hzN=OUTFOG.fn;sh.uniforms.hzF=OUTFOG.ff;sh.uniforms.hzK=u;sh.uniforms.hzD={value:byDist?1:0};
+  sh.vertexShader=sh.vertexShader.replace('void main() {','varying float vHd;varying float vHy;\nvoid main() {').replace('mvPosition.xy += rotatedPosition;','mvPosition.xy += rotatedPosition;\n\tvHd=length(mvPosition.xyz);vHy=normalize(transpose(mat3(viewMatrix))*mvPosition.xyz).y;');
+  sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec3 hzC;uniform vec3 hzA;uniform float hzN;uniform float hzF;uniform float hzK;uniform float hzD;varying float vHd;varying float vHy;\nvoid main() {').replace('#include <colorspace_fragment>','vec3 hzS=mix(hzC,hzA,smoothstep(-.05,.55,vHy));float hzW=hzK*mix(1.,smoothstep(hzN,hzF,vHd),hzD);gl_FragColor.rgb=mix(gl_FragColor.rgb,hzS,hzW);\n#include <colorspace_fragment>')};mat.customProgramCacheKey=()=>'hzx'+(byDist?'d':'s');return mat}
+function hazeMat(m,k){return hazeMatX(m,k,false)}
+function hazeMatD(m,k){return hazeMatX(m,k,true)}
 const hazeK=r=>Math.min(.92,.45+.5*Math.max(0,(r-150)/190));
 function skySprite(tex,w,h,fog,k){const s=new THREE.Sprite(k!=null?hazeMat(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}),k):new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,fog}));s.scale.set(w,h,1);s.userData.noBake=true;return s}
 /* nah: hinter den Villen, über der Lagune. Mit Dunst, wirkt ferner */
