@@ -9,7 +9,7 @@ const DW=['Null','Eins','Zwei','Drei','Vier','Fünf','Sechs','Sieben','Acht','Ne
 const ITEM_POS={funk:6,schraube:7,usb:8,handbuch:9};
 const codeStr=()=>CODE.join('');
 function itemExtra(id){const p=ITEM_POS[id];
-  if(p!==undefined){const t={funk:'Entzifferte Geheimschrift',schraube:'Am Schaft eingeritzt',usb:'Aus patrouille.log',handbuch:'Auf die Rückseite gekritzelt'}[id];return `${t}: ${p+1}. Ziffer = <b>${CODE[p]}</b>`}
+  if(p!==undefined){const t={funk:'Entzifferte Geheimschrift',schraube:'Am Schaft eingeritzt',usb:'Aus patrouille.log',handbuch:'Auf die Rückseite gekritzelt'}[id];const more={funk:'<br>Außerdem: "Die Banditen schieben jeden Buchstaben um 3 weiter."',schraube:'<br>Passt in den Alarmkasten auf dem Atoll.',usb:'<br>Enthält patrouille.log für das Wachhaus-Terminal.',handbuch:'<br>Seite 13: Kamera Q-7, Werks-PIN <b>4711</b>.'}[id]||'';return `${t}: ${p+1}. Ziffer = <b>${CODE[p]}</b>${more}`}
   if(id==='losung')return 'Notiz dazu: "Der Schlüssel liegt hinter dem Möwen-Poster."';return ''}
 function codeSheet(){const a=[];for(let i=0;i<10;i++){let c='_';if(i<6&&Q.dictated)c=String(Q.corrected&&i===MIS?CODE[i]:DICT[i]);else if(i>=6){const id=Object.keys(ITEM_POS).find(k=>ITEM_POS[k]===i);if(INV.items.has(id))c=String(CODE[i])}a.push(c)}return a}
 function questSlotsHTML(){let h='';
@@ -52,7 +52,7 @@ setInterval(()=>{if(PAD.open)padRefresh()},500);
 
 /* ---------- Interaktionen ---------- */
 const ACT={cur:null};
-function actGo(){if(ACT.cur&&G.phase==='play'&&!INV.open&&!DLG.open&&!PAD.open){ac();ACT.cur.fn()}}
+function actGo(){if(ACT.cur&&G.phase==='play'&&!INV.open&&!DLG.open&&!PAD.open&&!PUZ.open){ac();ACT.cur.fn()}}
 $('act').onclick=()=>actGo();
 addEventListener('keydown',e=>{
   if(DLG.open){e.stopImmediatePropagation();if(e.code==='Enter'||e.code==='Space'||e.code==='KeyE'){e.preventDefault();dlgNext()}return}
@@ -78,9 +78,7 @@ function vanUse(){if(Q.ice)return say('e','Du hast schon ein Eis. Mehr passt nic
 
 function enterLab(){LEVELS[4].vendor=INV.items.has('losung')?'Auf dem Möwen-Bon steht: "Frag nach dem Möwen-Menü." Vielleicht hängt hier irgendwo ein Möwen-Poster.':'Such den Schlüssel für die Handschellen. Schaltkästen sind meistens verschraubt.';HUB.spawnAt=null;applyLevel(4);beginPlay()}
 function leaveLab(){const L=HUB.lab;HUB.spawnAt={x:L.cx-1,z:L.cz-21,h:-Math.PI/2};applyLevel(0);beginPlay()}
-function atollEnter(){HUB.atollHit=1;G.phase='win';SFX.win();burst(P.x,P.y+3,P.z,120);
-  $('overlay').hidden=false;$('card').innerHTML=`<h1>Das Atoll</h1><p class="sub">Das Portal summt. Dahinter liegt die Insel mit dem Reaktor und den vier gesicherten Systemen. Sie ist noch nicht gebaut: Hier endet der Prototyp.</p><div class="badge"><i>★</i><span>Erfolg: Labor-Retter:in. Der Techniker lebt, die Insel noch nicht ganz.</span></div><button class="btn" id="a-city" type="button">Zurück zur Stadt</button><p class="note">Nächster Schritt: das Atoll mit den vier Rätseln (Funkspruch, Alarm, Kamera, Patrouillen-Log).</p>`;
-  $('a-city').onclick=()=>{ac();HUB.atollHit=0;applyLevel(0);beginPlay()};$('a-city').focus({preventScroll:true})}
+function atollEnter(){HUB.atollHit=1;SFX.win();burst(P.x,P.y+3,P.z,120);toast('Das Atoll!',1400);later(.7,()=>{applyLevel(5);beginPlay()})}
 
 /* ---------- Labor-Gebäude (außen) ---------- */
 function pickLabBlock(maze){const R=mulberry(555),c=[];
@@ -133,7 +131,9 @@ function curActs(){const a=[],L=HUB.lab;
     if(m&&!Q.freed)a.push({x:L.manX,z:L.manZ,r:6.5,label:Q.hasKey?'Mann befreien (Schlüssel)':(Q.ice&&Q.dictated&&!Q.corrected)?'Dem Mann das Eis geben':'Mit dem Mann sprechen',fn:manTalk});
     else if(m&&Q.freed&&m.state==='stand')a.push({x:m.x,z:m.z,r:6,label:'Mit dem Mann sprechen',fn:manTalk});
     a.push({x:L.doorX,z:L.doorZ,r:9,label:!Q.dictated?'Labor-Tür (verriegelt)':(Q.doorOpen||Q.hasKey)?'Labor betreten':'Code eingeben',fn:doorUse});
+    if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})}
+  else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});
     a.push({x:-34,z:-23,r:7,label:Q.hasKey?'Schaltkasten (leer)':'Schaltkasten untersuchen',fn:()=>{if(Q.hasKey)return dlgStart('',['Leer. Nur noch ein bisschen Staub und ein ordentlicher Kabelsalat.']);
@@ -143,7 +143,8 @@ function curActs(){const a=[],L=HUB.lab;
     a.push({x:32,z:17,r:7,label:'Schreibtisch untersuchen',fn:()=>dlgStart('',['Eine Kaffeetasse, ein Notizzettel: "Reaktor NICHT anfassen!" und darunter jemand mit Kuli: "Zu spät." Kein Schlüssel.'])})}
   return a}
 function stepAtoll(dt){
-  const ui=INV.open||DLG.open||PAD.open;
+  stepXmas(dt);
+  const ui=INV.open||DLG.open||PAD.open||PUZ.open;
   const m=HUB.man;
   if(m&&LV.id===0){
     m.bl.visible=true;m.bl.position.set(m.x,1.34,m.z);
@@ -156,9 +157,9 @@ function stepAtoll(dt){
   else if(m)m.bl.visible=false;
   /* Aktion in der Nähe */
   let best=null,bd=1e9;
-  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
+  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
   ACT.cur=best;const el=$('act');if(best){el.hidden=false;el.firstElementChild.textContent=best.label}else el.hidden=true;
-  if(LV.id===4)stepLevel4(dt)}
+  if(LV.id===4)stepLevel4(dt);if(LV.id===5)stepIsland(dt)}
 
 /* ---------- Labor-Innenraum (Level 4) ---------- */
 LEVELS[4]={id:4,mode:'city',pips:1,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Schlüssel',
