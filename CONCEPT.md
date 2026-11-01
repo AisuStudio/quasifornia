@@ -154,6 +154,15 @@ Die Basis bleibt kostenlos, später gibt es eventuell einen Marktplatz für beza
 - Scoops bleiben unverkäuflich. Bezahlt wird in Euro, Packs haben eine eigene Lizenz, damit der freie Teil frei bleibt.
 - Vorschlag zum Testen: erst ein oder zwei kuratierte Packs mit Freunden und Artists einzeln verkaufen, bevor ein Marktplatz gebaut wird.
 
+### Quest: Serafin und sein Geist (Idee vom Nutzer, 2026-11-01, im Prototyp gebaut)
+Serafin, ein Bettler, sitzt an der Kanalbrücke in Port Lupo.
+- Gibt man ihm mindestens 3 Scoops, bedankt er sich, gibt einen Releaser (Gegenstand im Rarepod) und ein Gedicht mit dem Tipp zum Eingang der Unterwelt:
+  "Tief im Busch, da musst du suchen, / zwischen Gumpern, zwischen Buchen, / hinab, hinauf zum Tarxarox, / meinen Geist zur Freiheit lockst."
+- Gumper sind hüpfende Ballonpflanzen. Das Gebüsch mit der Leiter steht zwischen zwei Gumpern und zwei Buchen (Südwest-Ecke).
+- Tarxarox ist ein hoher Turm in der Unterwelt (Südost-Ecke). Man fährt zum Aufzug am Fuß ("hinab, hinauf"), oben schwebt der gefangene Geist, der Gegenpart von Serafin.
+- Mit dem Releaser lässt man den Geist frei. Belohnung: 30 Scoops (Auftrag "Serafin und sein Geist", einmalig). Danach sagt Serafin, er fühle sich leichter.
+- Offen: Serafins Hintergrundgeschichte, weitere Quests mit ihm, ob der Geist später als Begleiter zurückkehrt.
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels

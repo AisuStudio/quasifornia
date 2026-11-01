@@ -33,6 +33,7 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 17 Hügel: Bodenhöhe, Bergauf, Gegenstände
 - 18 Hochbahn: Strecke und Zug
 - 19 Unterwelt: Leiter, Kopfstand, fester Pixel-Look, Rückweg
+- 20 Serafin-Quest: Bettler, Releaser, Gedicht, Turm Tarxarox, Geist freilassen
 
 Screenshots landen im Temp-Ordner des Systems.
 

@@ -1090,7 +1090,7 @@ HILL.hb=Array.from({length:5},(_,j)=>Array.from({length:5},(_,i)=>{const d=Math.
 function hillCell(u){if(u<=-82)return [0,0,0];const s=(u+82)/50,k=Math.min(4,Math.floor(s)),f=s-k;if(k>=4)return [4,4,0];if(f<.28){const t=f/.28;return [k,k+1,t*t*(3-2*t)]}return [k+1,k+1,0]}
 function hillG(x,z){if(HILL.off)return 0;const [kx,kx1,wx]=hillCell(x),[kz,kz1,wz]=hillCell(z),B=HILL.hb;
   return (1-wz)*((1-wx)*B[kz][kx]+wx*B[kz][kx1])+wz*((1-wx)*B[kz1][kx]+wx*B[kz1][kx1])}
-function cityGround(x,z){const h=hillG(x,z);for(const c of HUB.colliders){if(c.walk&&x>=c.x0&&x<=c.x1&&z>=c.z0&&z<=c.z1)return c.walk+h}return 1.3+h}
+function cityGround(x,z){const h=hillG(x,z);for(const c of HUB.colliders){if(c.uw&&!G.under)continue;if(c.walk&&x>=c.x0&&x<=c.x1&&z>=c.z0&&z<=c.z1)return c.walk+h}return 1.3+h}
 function groundAt(x,z){return LV.id===0?cityGround(x,z):gapAt(x)?-999:rampAt(x,z)}
 function stepPlayer(dt){
   const flip=G.front>.5?-1:1;
@@ -1515,6 +1515,7 @@ try{SC.au=JSON.parse(localStorage.getItem(AUK)||'{}')||{}}catch(e){}
 function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log.slice(0,12)}));localStorage.setItem(AUK,JSON.stringify(SC.au))}catch(e){}}
 const AUFTRAEGE=[
  {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
+ {id:'bettler',ziel:'Rätsel',titel:'Serafin und sein Geist',text:'Hilf Serafin, dem Bettler an der Kanalbrücke. Er hat ein Gedicht für dich. Lass seinen Geist in der Unterwelt frei.',ort:'Port Lupo und Unterwelt',reward:30},
  {id:'blitz',ziel:'Sammeln',titel:'Blitz-Eis',text:'Alle 5 Eiskugeln an der Küste in 60 Sekunden.',ort:'Welt 1 · Küste',reward:8},
  {id:'tricks',ziel:'Tricks',titel:'Trick-Serie',text:'Lande 5 Tricks in einem Lauf: Kickflip (Shift), Pop Shove-it (Q), 360 Flip (R) oder Curb Grind.',ort:'Überall',reward:8},
  {id:'vielfalt',ziel:'Tricks',titel:'Trick-Mix',text:'Kickflip, Pop Shove-it, 360 Flip und ein Curb Grind in einem Lauf. Das Grinden geht nur in Port Lupo.',ort:'Port Lupo',reward:12},
@@ -1855,6 +1856,19 @@ function buildLevel0(){
    [-.5,.5].forEach(s=>mesh(BX,MT('#7a4a2a'),EX+s,.6,BZ+3.1,-.25,0,0,.14,2.8,.14));
    for(let k=0;k<4;k++)mesh(BX,MT('#8a5a3a'),EX,-.05+k*.62,BZ+3.3-k*.17,-.25,0,0,1.1,.1,.1);
    HUB.uw={bx:EX,bz:BZ};
+   /* Gumper (Ballonpflanzen) und Buchen rund um das Gebüsch, so wie das Gedicht es beschreibt */
+   {const oF=FSP,oH=FW.h,oA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
+    [[EX,BZ-9],[EX,BZ+10]].forEach(([x,z],k)=>{const R2=mulberry(500+k),gp=FLORA.balloon(R2,1.7);gp.position.set(x,1.6,z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});W0.add(gp)});
+    CTX='stage';FCYL=10;FSP=oF;FW.h=oH;FW.acc=oA;FW.lb=0;FW.sb=0}
+   [[EX-5.2,BZ-.5,1],[EX+6.8,BZ-.5,-1]].forEach(([x,z],k)=>{cyl(MT('#7a5a3a'),.6,5.2,x,-.3,z);mesh(SP,MT(k?'#6fa84a':'#5a8f3a'),x,5.4,z,0,0,0,3.3,2.6,3.3);mesh(SP,MT('#8fb04a'),x+(k?-.8:.8),7.4,z+.4,0,0,0,2.3,1.9,2.3);mesh(SP,MT('#4f7f3a'),x+(k?1:-1),4.6,z-.6,0,0,0,2.1,1.6,2.1)});
+   /* Der Bettler sitzt an der Kanalbrücke */
+   {const bx0=29.5,bz0=-71.4,gy=1.3+hillG(bx0,bz0),bg=new THREE.Group();bg.position.set(bx0,gy,bz0);bg.rotation.y=-Math.PI*.8;bg.userData.noBake=true;
+    const bm=(geo,col,x,y,z,sx=1,sy=1,sz=1,rx=0)=>{const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,roughness:.85}));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.x=rx;m.castShadow=true;bg.add(m);return m};
+    bm(new THREE.CapsuleGeometry(.4,.65,4,10),'#6a5a4a',0,.85,0);bm(SP,'#e0a98a',0,1.6,.03,.3,.3,.3);bm(new THREE.SphereGeometry(1,12,7,0,Math.PI*2,0,Math.PI/2),'#4a3d33',0,1.64,0,.37,.34,.37);
+    bm(new THREE.TorusGeometry(.36,.09,6,14),'#12c8c0',0,1.3,.03,1,1,1,Math.PI/2);[-1,1].forEach(s=>{bm(BX,'#4a3d33',s*.28,.32,.5,.22,.18,.8);bm(SP,'#e0a98a',s*.45,.8,.45,.12,.12,.12)});
+    bm(CY,'#cfcfe0',.3,.14,.95,.2,.26,.2);bm(SP,'#12c8c0',.3,.3,.95,.07,.05,.07);
+    const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.7,.55),signMat('Bitte Scoops','#ffe066','#2a1a10'));sg.position.set(-.55,.65,1.15);sg.rotation.y=.25;bg.add(sg);
+    W0.add(bg);addOutlines(bg,'actor');HUB.beggar={x:bx0,z:bz0,g:bg};HUB.colliders.push({x0:bx0-.8,x1:bx0+.8,z0:bz0-.8,z1:bz0+.8,top:999})}
    /* Unterwelt-Deko (nur sichtbar, wenn man unten ist): Gräber, Kürbisse, Kabel, Code-Regen */
    {const UWg=new THREE.Group();UWg.visible=false;UWg.userData.noBake=true;W0.add(UWg);const R3=mulberry(31337);
     const SMt=(c,em,ei)=>new THREE.MeshStandardMaterial({color:c,roughness:.8,emissive:em||'#000000',emissiveIntensity:em?(ei||.8):0});
@@ -1878,6 +1892,22 @@ function buildLevel0(){
     /* Code-Regen */
     const NR=520,pos=new Float32Array(NR*3);for(let q=0;q<NR;q++){pos[q*3]=(R3()-.5)*330;pos[q*3+1]=2+R3()*70;pos[q*3+2]=(R3()-.5)*330}
     const rg=new THREE.BufferGeometry();rg.setAttribute('position',new THREE.BufferAttribute(pos,3));const rain=new THREE.Points(rg,new THREE.PointsMaterial({color:'#2de0d0',size:2.6,sizeAttenuation:false,transparent:true,opacity:.85,depthWrite:false,fog:false}));rain.frustumCulled=false;UWg.add(rain);
+    /* Turm Tarxarox in der Südost-Ecke, oben der gefangene Geist (Gegenpart des Bettlers) */
+    {const TX=128,TZ=128,TOP=36,TG=hillG(TX,TZ),tw=SMt('#0b3a44','#0b3a44',.25),ring=SMt('#2de0d0','#2de0d0',1),orange=SMt('#ff7a1a','#ff5a00',.9),purple=SMt('#2a1450','#4b1f8a',.35);
+     add(new THREE.CylinderGeometry(3.4,4.6,TOP-1.3,14),tw,TX,1.3+TG+(TOP-1.3)/2,TZ);
+     for(let k=0;k<7;k++)add(new THREE.TorusGeometry(1,.16,6,24),ring,TX,5+k*4.6+TG,TZ,Math.PI/2,0,0,3.9-k*.1,3.9-k*.1,3.9-k*.1);
+     add(new THREE.CylinderGeometry(8,6,1,16),purple,TX,TOP+TG-.3,TZ);
+     for(let k=0;k<10;k++){const a=k/10*Math.PI*2;add(SP,orange,TX+Math.cos(a)*7.4,TOP+TG+.5,TZ+Math.sin(a)*7.4,0,0,0,.55,.5,.55)}
+     for(let k=0;k<6;k++){const a=k/6*Math.PI*2;add(BX,ring,TX+Math.cos(a)*2.3,TOP+TG+2.4,TZ+Math.sin(a)*2.3,0,-a,0,.12,4.6,.12)}
+     add(new THREE.TorusGeometry(1,.1,6,24),ring,TX,TOP+TG+4.8,TZ,Math.PI/2,0,0,2.3,2.3,2.3);add(new THREE.TorusGeometry(1,.1,6,24),ring,TX,TOP+TG+.2,TZ,Math.PI/2,0,0,2.3,2.3,2.3);
+     add(new THREE.TorusGeometry(1,.14,6,22),orange,TX,1.3+TG+.12,TZ-9,Math.PI/2,0,0,3,3,3);
+     const sgn=new THREE.Mesh(new THREE.PlaneGeometry(9,2.2),signMat('TARXAROX','#2de0d0','#07070d'));sgn.position.set(TX,1.3+TG+7,TZ-4.7);sgn.rotation.y=Math.PI;UWg.add(sgn);
+     const gh=new THREE.Group();gh.position.set(TX,TOP+TG+2.5,TZ);UWg.add(gh);const gm=SMt('#9ff6ee','#2de0d0',.9);gm.transparent=true;gm.opacity=.8;
+     const gp2=(geo,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(geo,gm);m.position.set(x,y,z);m.scale.set(sx,sy,sz);gh.add(m)};
+     gp2(new THREE.CapsuleGeometry(.4,.9,4,10),0,0,0,1.5,1.5,1.5);gp2(new THREE.SphereGeometry(1,12,8,0,Math.PI*2,0,Math.PI/2),0,1.1,0,.75,.62,.75);gp2(new THREE.ConeGeometry(.55,1.3,10),0,-1.1,0,1.5,1.2,1.5);
+     [-1,1].forEach(s=>{const e=new THREE.Mesh(SP,SMt('#07070d'));e.position.set(s*.28,.75,.55);e.scale.set(.12,.16,.08);gh.add(e)});
+     HUB.uw.tower={x:TX,z:TZ,top:TOP+TG};HUB.uw.ghost=gh;HUB.uw.rel=0;
+     HUB.colliders.push({x0:TX-4.8,x1:TX+4.8,z0:TZ-4.8,z1:TZ+4.8,top:TOP-1,uw:1},{x0:TX-7.5,x1:TX+7.5,z0:TZ-7.5,z1:TZ+7.5,top:TOP-.4,walk:TOP,uw:1})}
     HUB.uw.g=UWg;HUB.uw.rain=rain;HUB.uw.drone=0}}
   /* ---- Straßennamen an den Kreuzungen, dazu ein Sticker am Start ---- */
   {const COLN=['Waffelweg','Sorbetstraße','Karamellallee','Pistazienweg','Minzgasse','Schokoring'],ROWN=['Möwenstraße','Palmenallee','Skate-Boulevard','Sonnenweg','Korallenweg','Dinoweg'];
@@ -1973,7 +2003,7 @@ function camClamp(from,to){let tmin=1;const dx=to.x-from.x,dz=to.z-from.z;
     for(const [o,d,a,b] of [[from.x,dx,x0,x1],[from.z,dz,z0,z1]]){if(Math.abs(d)<1e-6){if(o<a||o>b){t0=2;break}}else{let ta=(a-o)/d,tb=(b-o)/d;if(ta>tb){const q=ta;ta=tb;tb=q}t0=Math.max(t0,ta);t1=Math.min(t1,tb);if(t0>t1){t0=2;break}}}
     if(t0<=1&&t0<tmin&&t0>=0)tmin=t0}
   const t=tmin<1?Math.max(.22,tmin-.06):1;return new V3(from.x+dx*t,to.y,from.z+dz*t)}
-function resolveCity(){for(const c of curCols()){
+function resolveCity(){for(const c of curCols()){if(c.uw&&!G.under)continue;
   const cx=Math.max(c.x0,Math.min(P.x,c.x1)),cz=Math.max(c.z0,Math.min(P.z,c.z1));let dx=P.x-cx,dz=P.z-cz;const d2=dx*dx+dz*dz,Rr=1.5;
   if(d2>=Rr*Rr||P.y>c.top+(c.top<900?hillG(P.x,P.z):0))continue;let nx,nz;const d=Math.sqrt(d2);
   if(d>1e-4){nx=dx/d;nz=dz/d;P.x=cx+nx*Rr;P.z=cz+nz*Rr}
@@ -1987,7 +2017,7 @@ function enterPortal(p){if(!scCan(PORTAL_COST)){p.hit=1;p.blocked=1;SFX.thud&&SF
   later(.5,()=>{applyLevel(p.world);beginPlay()})}
 /* ---------- Curb Grind: auf der Bordsteinkante der Gehwege rutschen ---------- */
 const GR={on:false,edge:null,t:0,dir:1,spark:0,best:0,lastEnd:0,edges:null};
-function grindEdges(){if(GR.edges)return GR.edges;GR.edges=[];for(const c of HUB.colliders)if(c.walk){GR.edges.push({ax:'x',co:c.z0,lo:c.x0,hi:c.x1},{ax:'x',co:c.z1,lo:c.x0,hi:c.x1},{ax:'z',co:c.x0,lo:c.z0,hi:c.z1},{ax:'z',co:c.x1,lo:c.z0,hi:c.z1})}return GR.edges}
+function grindEdges(){if(GR.edges)return GR.edges;GR.edges=[];for(const c of HUB.colliders)if(c.walk&&!c.uw){GR.edges.push({ax:'x',co:c.z0,lo:c.x0,hi:c.x1},{ax:'x',co:c.z1,lo:c.x0,hi:c.x1},{ax:'z',co:c.x0,lo:c.z0,hi:c.z1},{ax:'z',co:c.x1,lo:c.z0,hi:c.z1})}return GR.edges}
 function grindTry(){if(GR.on||LV.id!==0||G.phase!=='play'||P.speed<3.2||P.y-hillG(P.x,P.z)<1.62||P.y-hillG(P.x,P.z)>2.35||P.vy>3||G.t-GR.lastEnd<.35)return;
   const hx=Math.cos(P.h),hz=Math.sin(P.h);
   for(const e of grindEdges()){const along=e.ax==='x'?P.x:P.z,across=e.ax==='x'?P.z:P.x;if(along<e.lo+1||along>e.hi-1||Math.abs(across-e.co)>.95)continue;
@@ -2030,12 +2060,13 @@ function underApply(on){if(!!G.under===on)return;G.under=on;
   HUB.items.forEach(it=>{const v=!on&&!it.got;it.g.visible=v;it.ring.visible=v;it.beam.visible=v});
   if(HUB.man)HUB.man.g.visible=!on;if(HUB.atoll){HUB.atoll.g.visible=false;HUB.atoll.beam.visible=false}
   if(!on&&typeof atollRefresh==='function')atollRefresh();
-  if(HUB.uw&&HUB.uw.g)HUB.uw.g.visible=on;
+  if(HUB.uw&&HUB.uw.g)HUB.uw.g.visible=on;if(HUB.beggar)HUB.beggar.g.visible=!on;
   applyLevel(0);G.pix=on;pixPass.uniforms.uUW.value=on?1:0;resize();r.domElement.style.transform=on?'scaleY(-1)':''}
 function underReset(){if(!G.under)return;G.under=false;pixPass.uniforms.uUW.value=0;G.pix=false;resize();r.domElement.style.transform='';if(HUB.uw&&HUB.uw.g)HUB.uw.g.visible=false}
 function underEnter(){if(G.under||!HUB.uw)return;toast('Leiter hinab …',1100);tone(220,.5,'sawtooth',.06,-170);later(.55,()=>{underApply(true);P.x=HUB.uw.bx;P.z=HUB.uw.bz+7;P.h=-Math.PI/2;P.speed=3;P.y=1.3;say('e','Hier unten steht alles kopf. Die Stadt sieht aus wie oben, nur dunkler, und irgendetwas leuchtet türkis. Die Leiter zurück ist dort, wo du gelandet bist.',5.5)})}
 function underExit(){if(!G.under||!HUB.uw)return;toast('Leiter hinauf …',1100);tone(160,.5,'sawtooth',.06,200);later(.55,()=>{underApply(false);P.x=HUB.uw.bx;P.z=HUB.uw.bz+7;P.h=-Math.PI/2;P.speed=3;P.y=1.3})}
-function stepUnder(dt){const U=HUB.uw;if(!U||!U.rain)return;const pa=U.rain.geometry.attributes.position,a=pa.array;for(let q=0;q<a.length;q+=3){a[q+1]-=(10+(q%7))*dt;if(a[q+1]<1.8)a[q+1]=70}pa.needsUpdate=true;
+function stepUnder(dt){const U=HUB.uw;if(!U||!U.rain)return;
+  if(U.ghost){const gh=U.ghost,base=U.tower.top+2.5;if(U.rel>0&&typeof BQ!=='undefined'&&BQ.released){U.rel+=dt;gh.position.y=base+(U.rel-1)*6;gh.children.forEach(m=>{if(m.material&&m.material.opacity!==undefined&&m.material.transparent)m.material.opacity=Math.max(0,.8-(U.rel-1)*.4)});if(U.rel>3.2)gh.visible=false}else if(typeof BQ!=='undefined'&&BQ.released&&U.rel===0)gh.visible=false;else gh.position.y=base+Math.sin(G.t*1.6)*.35}const pa=U.rain.geometry.attributes.position,a=pa.array;for(let q=0;q<a.length;q+=3){a[q+1]-=(10+(q%7))*dt;if(a[q+1]<1.8)a[q+1]=70}pa.needsUpdate=true;
   U.drone-=dt;if(U.drone<=0){U.drone=2.6;tone(46,1.3,'sine',.07,-6);tone(69,1.1,'triangle',.025,0,.3)}}
 function stepTrain(dt){const T=HUB.train;if(!T)return;
   if(T.state==='wait'){T.cd-=dt;if(T.cd<=0){T.state='run';T.s=0;T.g.visible=true;T.snd=0}return}
@@ -2076,8 +2107,8 @@ function questSlotsHTML(){let h='';
   if(Q.dictated){const s=codeSheet();h+=`<div class="slot-i got"><div class="ic q" style="font-size:22px;letter-spacing:.06em">${s.slice(0,6).join(' ')} <span style="opacity:.5">|</span> ${s.slice(6).join(' ')}</div><b>Code-Notizen</b><span>Diktat des Mannes (Ziffern 1 bis 6, eine könnte falsch sein) und gefundene Ziffern 7 bis 10. Unten: "_" = noch unbekannt.</span></div>`}
   if(Q.ice)h+=`<div class="slot-i got"><div class="ic"><span style="font:800 38px/1 var(--display)">&#9660;</span></div><b>Eis</b><span>Schmilzt zum Glück nicht. Bring es dem gefesselten Mann.</span></div>`;
   if(Q.hasKey)h+=`<div class="slot-i got"><div class="ic"><span style="font:800 34px/1 var(--display);color:var(--gold)">&#9919;</span></div><b>Handschellen-Schlüssel</b><span>Klein, kalt und aus einem Schaltkasten.</span><em>Passt beim Mann vor dem Labor</em></div>`;
-  return h}
-function questReset(){Object.assign(Q,{talked:false,dictated:false,corrected:false,doorOpen:false,hasKey:false,freed:false,ice:false,tries:3,lockUntil:0});qSave();if(HUB.man)atollRefresh();if(typeof invRender==='function')invRender()}
+  return h+(()=>{try{return bqSlotsHTML()}catch(e){return ''}})()}
+function questReset(){if(typeof bqReset==='function')bqReset();Object.assign(Q,{talked:false,dictated:false,corrected:false,doorOpen:false,hasKey:false,freed:false,ice:false,tries:3,lockUntil:0});qSave();if(HUB.man)atollRefresh();if(typeof invRender==='function')invRender()}
 
 /* ---------- Dialog ---------- */
 const DLG={open:false,lines:[],i:0,done:null,shown:0};
@@ -2187,6 +2218,7 @@ function manWalk(){const m=HUB.man,L=HUB.lab,A=HUB.atoll;A.g.visible=true;A.beam
 /* ---------- Schritt pro Frame ---------- */
 function curActs(){const a=[],L=HUB.lab;
   if(LV.id===0&&HUB.built&&G.under&&HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:6,label:'Leiter hinaufsteigen',fn:underExit});
+  if(LV.id===0&&HUB.built&&G.under)bettlerActs(a);
   else if(LV.id===0&&HUB.built&&L){
     const m=HUB.man;
     if(m&&!Q.freed)a.push({x:L.manX,z:L.manZ,r:6.5,label:Q.hasKey?'Mann befreien (Schlüssel)':(Q.ice&&Q.dictated&&!Q.corrected)?'Dem Mann das Eis geben':'Mit dem Mann sprechen',fn:manTalk});
@@ -2194,7 +2226,8 @@ function curActs(){const a=[],L=HUB.lab;
     a.push({x:L.doorX,z:L.doorZ,r:9,label:!Q.dictated?'Labor-Tür (verriegelt)':(Q.doorOpen||Q.hasKey)?'Labor betreten':'Code eingeben',fn:doorUse});
     if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
-    if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})}
+    if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
+    bettlerActs(a)}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});
@@ -2486,7 +2519,41 @@ function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0
   HUB.gl={A,B,gl,st,t:0}}
 function stepXmas(dt){const l=HUB.gl;if(!l||!W0||!W0.visible)return;l.t+=dt;const ph=Math.floor(l.t/.6)%2;l.A.visible=ph===0;l.B.visible=ph===1;l.st.material.opacity=.7+.25*Math.sin(l.t*3);l.gl.material.opacity=.42+.1*Math.sin(l.t*1.7)}
 
-window.__qa={underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+/* ================= Der Bettler und sein Geist (Quest) ================= */
+/* Ablauf: Bettler an der Kanalbrücke, mindestens 3 Scoops geben, danach bekommt man den Releaser und ein Gedicht mit einem Tipp zum Gebüsch.
+   In der Unterwelt steht der Turm Tarxarox. Oben wartet der Gegenpart (Geist) des Bettlers. Mit dem Releaser lässt man ihn frei: 30 Scoops. */
+const BQK='kq-bettler',BQ={gave:false,released:false,up:false};
+try{const s=JSON.parse(localStorage.getItem(BQK)||'null');if(s){BQ.gave=!!s.gave;BQ.released=!!s.released}}catch(e){}
+function bqSave(){try{localStorage.setItem(BQK,JSON.stringify({gave:BQ.gave,released:BQ.released}))}catch(e){}}
+function bqHasReleaser(){return BQ.gave&&!BQ.released}
+const BQ_POEM=['Tief im Busch, da musst du suchen,','zwischen Gumpern, zwischen Buchen,','hinab, hinauf zum Tarxarox,','meinen Geist zur Freiheit lockst.'];
+function beggarTalk(){
+  if(!BQ.gave){
+    if(SC.n<3)return dlgStart('Serafin',['Ein paar Scoops für einen alten Bettler? Ich bin Serafin.','Mindestens drei. Nicht weniger, sonst klingt es nach nichts. Komm wieder, wenn du welche hast.']);
+    return dlgStart('Serafin',['Ein paar Scoops für einen alten Bettler? Ich bin Serafin.','Mindestens drei. Du siehst aus, als hättest du drei übrig.'],()=>{
+      if(SC.n<3)return;scAdd(-3,'Serafin');BQ.gave=true;bqSave();invRender();SFX.win();burst(P.x,P.y+3,P.z,40);toast('Releaser und Gedicht erhalten',1900);
+      dlgStart('Serafin',['Danke. Das war mehr als Geld. Das war ein Anfang.','Hier, nimm den Releaser. Er ist klein, aber er löst, was fest sitzt.','Und hör gut zu, ich sage dir ein Gedicht auf:',BQ_POEM[0]+' '+BQ_POEM[1],BQ_POEM[2]+' '+BQ_POEM[3],'Mehr verrate ich nicht. Ich habe da unten jemanden, der mir fehlt. Meinen Gegenpart. Lass ihn frei.'])})}
+  if(!BQ.released)return dlgStart('Serafin',['Du hast den Releaser. Tief im Busch, wo Gumper und Buchen stehen, gibt es eine Leiter.','Unten, im Turm Tarxarox, wartet mein Gegenpart. Lass ihn frei.']);
+  dlgStart('Serafin',['Ich fühle mich leichter. Als hätte jemand eine Tür in mir aufgemacht.','Danke, Skater.'])}
+function towerUp(){const T=HUB.uw&&HUB.uw.tower;if(!T)return;toast('Aufzug hinauf …',1000);tone(260,.5,'triangle',.06,260);later(.5,()=>{P.x=T.x;P.z=T.z+5.5;P.y=T.top+4;P.vy=0;P.speed=0;BQ.up=true})}
+function towerDown(){const T=HUB.uw&&HUB.uw.tower;if(!T)return;toast('Aufzug hinab …',1000);tone(260,.5,'triangle',.06,-200);later(.5,()=>{P.x=T.x;P.z=T.z-9;P.y=2;P.vy=0;P.speed=0;BQ.up=false})}
+function releaseTry(){const U=HUB.uw;
+  if(BQ.released)return dlgStart('',['Der Käfig ist leer. Es duftet nach Kürbis und Freiheit.']);
+  if(!bqHasReleaser())return dlgStart('',['Ein Geist schwebt in einem türkisen Lichtkäfig. Er sieht Serafin ähnlich, nur kopfüber und leuchtend.','"Löse mich", flüstert er. Aber du hast nichts, womit du den Käfig öffnen könntest. Vielleicht gibt dir jemand oben etwas dafür.']);
+  dlgStart('',['Du hältst den Releaser an den Käfig. Er summt, klickt, und das Licht wird heller.','Der Geist atmet aus. "Danke. Sag ihm, ich bin jetzt frei."'],()=>{
+    BQ.released=true;bqSave();U.rel=1;SFX.win();burst(P.x,P.y+3,P.z,120);invRender();auComplete('bettler');say('e','Der Geist steigt auf und löst sich in türkisem Licht auf. Auf dem Boden liegen 30 Scoops. Du steckst sie ein.',5)})}
+function bettlerActs(a){
+  if(G.under&&HUB.uw&&HUB.uw.tower){const T=HUB.uw.tower;
+    if(P.y>20){a.push({x:T.x,z:T.z+1,r:9.5,label:BQ.released?'Leerer Käfig':(bqHasReleaser()?'Geist freilassen (Releaser)':'Gefangener Geist'),fn:releaseTry});a.push({x:T.x-4.8,z:T.z+5.6,r:4.5,label:'Aufzug hinab',fn:towerDown})}
+    else a.push({x:T.x,z:T.z-9,r:6.5,label:'Aufzug hinauf (Tarxarox)',fn:towerUp})}
+  else if(HUB.beggar)a.push({x:HUB.beggar.x,z:HUB.beggar.z+1.5,r:6.5,label:!BQ.gave?'Serafin Scoops geben (3)':'Mit Serafin sprechen',fn:beggarTalk})}
+function bqSlotsHTML(){let h='';
+  if(bqHasReleaser())h+=`<div class="slot-i got"><div class="ic"><span style="font:800 34px/1 var(--display);color:#2de0d0">&#9670;</span></div><b>Releaser</b><span>Klein und summend. Löst, was fest sitzt.</span><em>Unterwelt: Turm Tarxarox</em></div>`;
+  if(BQ.gave)h+=`<div class="slot-i got"><div class="ic q" style="font-size:12px;line-height:1.3;padding:4px;text-align:center">${BQ_POEM.join('<br>')}</div><b>Serafins Gedicht</b><span>Ein Tipp, wo die Leiter in die Unterwelt ist.</span></div>`;
+  return h}
+function bqReset(){BQ.gave=false;BQ.released=false;BQ.up=false;bqSave();if(HUB.uw&&HUB.uw.ghost){HUB.uw.ghost.visible=true;HUB.uw.rel=0}}
+
+window.__qa={get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

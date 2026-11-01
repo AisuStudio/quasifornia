@@ -16,8 +16,8 @@ function questSlotsHTML(){let h='';
   if(Q.dictated){const s=codeSheet();h+=`<div class="slot-i got"><div class="ic q" style="font-size:22px;letter-spacing:.06em">${s.slice(0,6).join(' ')} <span style="opacity:.5">|</span> ${s.slice(6).join(' ')}</div><b>Code-Notizen</b><span>Diktat des Mannes (Ziffern 1 bis 6, eine könnte falsch sein) und gefundene Ziffern 7 bis 10. Unten: "_" = noch unbekannt.</span></div>`}
   if(Q.ice)h+=`<div class="slot-i got"><div class="ic"><span style="font:800 38px/1 var(--display)">&#9660;</span></div><b>Eis</b><span>Schmilzt zum Glück nicht. Bring es dem gefesselten Mann.</span></div>`;
   if(Q.hasKey)h+=`<div class="slot-i got"><div class="ic"><span style="font:800 34px/1 var(--display);color:var(--gold)">&#9919;</span></div><b>Handschellen-Schlüssel</b><span>Klein, kalt und aus einem Schaltkasten.</span><em>Passt beim Mann vor dem Labor</em></div>`;
-  return h}
-function questReset(){Object.assign(Q,{talked:false,dictated:false,corrected:false,doorOpen:false,hasKey:false,freed:false,ice:false,tries:3,lockUntil:0});qSave();if(HUB.man)atollRefresh();if(typeof invRender==='function')invRender()}
+  return h+(()=>{try{return bqSlotsHTML()}catch(e){return ''}})()}
+function questReset(){if(typeof bqReset==='function')bqReset();Object.assign(Q,{talked:false,dictated:false,corrected:false,doorOpen:false,hasKey:false,freed:false,ice:false,tries:3,lockUntil:0});qSave();if(HUB.man)atollRefresh();if(typeof invRender==='function')invRender()}
 
 /* ---------- Dialog ---------- */
 const DLG={open:false,lines:[],i:0,done:null,shown:0};
@@ -127,6 +127,7 @@ function manWalk(){const m=HUB.man,L=HUB.lab,A=HUB.atoll;A.g.visible=true;A.beam
 /* ---------- Schritt pro Frame ---------- */
 function curActs(){const a=[],L=HUB.lab;
   if(LV.id===0&&HUB.built&&G.under&&HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:6,label:'Leiter hinaufsteigen',fn:underExit});
+  if(LV.id===0&&HUB.built&&G.under)bettlerActs(a);
   else if(LV.id===0&&HUB.built&&L){
     const m=HUB.man;
     if(m&&!Q.freed)a.push({x:L.manX,z:L.manZ,r:6.5,label:Q.hasKey?'Mann befreien (Schlüssel)':(Q.ice&&Q.dictated&&!Q.corrected)?'Dem Mann das Eis geben':'Mit dem Mann sprechen',fn:manTalk});
@@ -134,7 +135,8 @@ function curActs(){const a=[],L=HUB.lab;
     a.push({x:L.doorX,z:L.doorZ,r:9,label:!Q.dictated?'Labor-Tür (verriegelt)':(Q.doorOpen||Q.hasKey)?'Labor betreten':'Code eingeben',fn:doorUse});
     if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
-    if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})}
+    if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
+    bettlerActs(a)}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});
