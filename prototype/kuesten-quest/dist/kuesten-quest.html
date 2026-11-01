@@ -82,8 +82,8 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #np b{color:var(--gold);font-size:14px}
 #touch{position:absolute;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:none;justify-content:space-between;padding:0 max(14px,env(safe-area-inset-left,0px));pointer-events:none}
 #touch.on{display:flex}
-#touch .grp{display:flex;gap:12px;pointer-events:auto}
-#touch button{width:62px;height:62px;border-radius:50%;border:3px solid #0e0b18;background:rgba(26,22,38,.7);color:var(--paper);font:800 22px/1 var(--display);box-shadow:0 4px 0 #0e0b18;touch-action:none}
+#touch .grp{display:flex;gap:8px;pointer-events:auto}
+#touch button{width:54px;height:54px;border-radius:50%;border:3px solid #0e0b18;background:rgba(26,22,38,.7);color:var(--paper);font:800 22px/1 var(--display);box-shadow:0 4px 0 #0e0b18;touch-action:none}
 #touch button.on{background:var(--pink)}
 #overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:auto;background:radial-gradient(ellipse at center,rgba(26,22,38,.35),rgba(26,22,38,.86));overflow:auto;padding:18px}
 #overlay[hidden]{display:none!important}
@@ -248,7 +248,7 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
   <canvas id="mini" width="150" height="150" aria-label="Karte"></canvas>
   <div id="touch">
     <div class="grp"><button id="t-left" type="button" aria-label="Links">◀</button><button id="t-right" type="button" aria-label="Rechts">▶</button></div>
-    <div class="grp"><button id="t-trick" type="button" aria-label="Kickflip">✦</button><button id="t-throw" type="button" aria-label="Skateboard werfen">⤴</button><button id="t-jump" type="button" aria-label="Sprung">▲</button><button id="t-gas" type="button" aria-label="Gas">GO</button></div>
+    <div class="grp"><button id="t-trick" type="button" aria-label="Kickflip">✦</button><button id="t-shove" type="button" aria-label="Pop Shove-it">⟳</button><button id="t-tre" type="button" aria-label="360 Flip">✺</button><button id="t-throw" type="button" aria-label="Skateboard werfen">⤴</button><button id="t-jump" type="button" aria-label="Sprung">▲</button><button id="t-gas" type="button" aria-label="Gas">GO</button></div>
   </div>
   <div id="boom"><div class="big" id="boom-big">SCHLURP!</div><div class="small" id="boom-small"></div></div>
   <div id="inv" hidden role="dialog" aria-label="Inventar">
@@ -853,7 +853,7 @@ const TIMERS=[];function later(sec,fn){TIMERS.push({t:sec,fn})}
 const WIN_X=124,ZMIN=-12.0,ZMAX=-3.2,XMAX=136,XMIN=-138;
 const SPEED_MAX=8.8,SPEED_CRUISE=4.5;
 let respawnX=0;
-function resetRun(){TIMERS.length=0;P.push=0;if(typeof hideRivals!=='undefined')hideRivals();G.tricks=0;if(typeof resetTrick!=='undefined')resetTrick();T.state='ready';T.cd=0;if(typeof flyBoard!=='undefined'){flyBoard.visible=false;boardPlayerOn(true)}if(dinoG)dinoG.userData.slow=0;P.x=-134;P.z=-8;P.y=1.3;P.vy=0;P.h=0;P.speed=SPEED_CRUISE;P.turn=0;P.boost=0;G.time=0;G.tries=0;G.front=0;G.chaseT=0;G.warned=false;G.coneSay=false;G.rampSay=false;
+function resetRun(){TIMERS.length=0;P.push=0;if(typeof hideRivals!=='undefined')hideRivals();G.tricks=0;G.kinds=new Set();GR.on=false;if(typeof resetTrick!=='undefined')resetTrick();T.state='ready';T.cd=0;if(typeof flyBoard!=='undefined'){flyBoard.visible=false;boardPlayerOn(true)}if(dinoG)dinoG.userData.slow=0;P.x=-134;P.z=-8;P.y=1.3;P.vy=0;P.h=0;P.speed=SPEED_CRUISE;P.turn=0;P.boost=0;G.time=0;G.tries=0;G.front=0;G.chaseT=0;G.warned=false;G.coneSay=false;G.rampSay=false;
   if(LV.mode==='city'){if(LV.id===4){P.x=L4.start.x;P.z=L4.start.z;P.h=L4.start.h}else if(LV.id===5){P.x=L5.start.x;P.z=L5.start.z;P.h=L5.start.h;islandReset()}else if(HUB.built){const sp=HUB.spawnAt;P.x=sp?sp.x:HUB.sx;P.z=sp?sp.z:HUB.sz;P.h=sp?sp.h:HUB.sh;HUB.spawnAt=null}}
   scoops.forEach(s=>{s.got=false;s.g.visible=s.beam.visible=s.pad.visible=true;s.g.scale.setScalar(.9)});
   cones.forEach(c=>{c.hit=0;c.o.visible=true;c.o.position.set(c.x,1.3,c.z);c.o.rotation.set(0,0,0);c.o.scale.setScalar(1)});
@@ -963,7 +963,7 @@ function showTitle(){INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;
    <div id="cinfo" aria-live="polite"><b id="cname"></b><span id="ctag"></span></div>
    <div id="cdots">${SKIN_LIST.map(([k,n],i)=>`<button type="button" data-i="${i}" aria-label="${n}"${SKOWN.has(k)?'':' disabled title="Im Rarepod-Laden freischalten"'}></button>`).join('')}</div>
    <h2>Steuerung</h2>
-   <div class="keys"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen, Rampen geben Schub</span><kbd>Shift</kbd><span>Kickflip, das Publikum klatscht</span><kbd>Linksklick · F</kbd><span>Skateboard auf Skater oder Boss werfen (2 s Pause)</span><kbd>I</kbd><span>Inventar öffnen (Spiel pausiert)</span><kbd>P · M</kbd><span>Pixel-Look · Ton</span></div>
+   <div class="keys"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen, Rampen geben Schub</span><kbd>Shift</kbd><span>Kickflip, das Publikum klatscht</span><kbd>Q</kbd><span>Pop Shove-it</span><kbd>R</kbd><span>360 Flip (Tre Flip)</span><kbd>Bordstein</kbd><span>Mit Ollie auf die Kante springen: Curb Grind. Leertaste springt wieder ab.</span><kbd>Linksklick · F</kbd><span>Skateboard auf Skater oder Boss werfen (2 s Pause)</span><kbd>I</kbd><span>Inventar öffnen (Spiel pausiert)</span><kbd>P · M</kbd><span>Pixel-Look · Ton</span></div>
    <button class="btn" id="go" type="button">Los geht’s: Start in der Stadt</button><button class="btn sec" id="go1" type="button">Direkt zum Küsten-Rennen (Welt 1)</button><button class="btn sec" id="go2" type="button">Direkt zu Welt 2: Eis-Galaxie</button><button class="btn sec" id="go3" type="button">Direkt zu Welt 3: Nacht-Stadt</button>`;
   const cur=Math.max(0,SKIN_LIST.findIndex(s=>PRESETS[s[0]]===P.preset));setCarousel(cur,true);
   $('cprev').onclick=()=>stepCarousel(-1);$('cnext').onclick=()=>stepCarousel(1);
@@ -1022,20 +1022,26 @@ function stepBoard(dt){
 /* ---------- Kickflip + Applaus ---------- */
 const Tk={active:false,t:0,dur:.55,done:false,usedAir:false,clap:0,said:false};
 function grounded(){return P.y<=groundAt(P.x,P.z)+.06}
-function doTrick(){
+const TRICKS={kickflip:{name:'KICKFLIP!',dur:.55,say:'Kickflip. Das Publikum versteht den Trick nicht, klatscht aber trotzdem.'},shove:{name:'POP SHOVE-IT!',dur:.5,say:'Pop Shove-it: Das Brett dreht sich flach unter dir weg. Du bleibst oben. Meistens.'},tre:{name:'360 FLIP!',dur:.8,say:'360 Flip, auch Tre Flip genannt. Das Brett dreht sich und flippt gleichzeitig. Respekt.'}};
+function doTrick(kind='kickflip'){
   if(G.phase!=='play'&&G.phase!=='chase')return;
-  if(T.state!=='ready'){toast('Ohne Board kein Kickflip',900);return}
+  if(T.state!=='ready'){toast('Ohne Board keine Tricks',900);return}
   const gnd=grounded()||P.coy<.14;if(Tk.active||(!gnd&&Tk.usedAir))return;
   if(gnd){P.vy=7.8;P.coy=1;SFX.jump()}
-  Tk.active=true;Tk.t=0;Tk.done=false;Tk.usedAir=true;SFX.whoosh()}
+  Tk.kind=TRICKS[kind]?kind:'kickflip';Tk.dur=TRICKS[Tk.kind].dur;Tk.active=true;Tk.t=0;Tk.done=false;Tk.usedAir=true;SFX.whoosh()}
+function trickScored(key,label){G.tricks=(G.tricks||0)+1;(G.kinds||(G.kinds=new Set())).add(key);if(G.tricks===5)auComplete('tricks');if(G.kinds.size>=4)auComplete('vielfalt');Tk.clap=2.4;SFX.clap();G.shake=Math.max(G.shake,.25);toast(label+(G.tricks>1?' ×'+G.tricks:''),1300)}
 function resetTrick(){Tk.active=false;Tk.usedAir=false;Tk.done=false;Tk.clap=0;const bg=P.av&&P.av.userData.board;if(bg){bg.rotation.set(0,0,0);bg.position.set(0,0,0)}}
 function stepTrick(dt){
   const bg=P.av.userData.board;const air=!grounded();
-  if(Tk.active&&bg){Tk.t+=dt;const u=Math.min(1,Tk.t/Tk.dur),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2,a=e*Math.PI*2;
-    bg.rotation.z=a;bg.position.set(.17*Math.sin(a),.17-.17*Math.cos(a),0);if(u>=1){Tk.done=true;bg.rotation.z=0;bg.position.set(0,0,0)}
+  if(Tk.active&&bg){Tk.t+=dt;const kd=Tk.kind||'kickflip',u=Math.min(1,Tk.t/Tk.dur),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2,a=e*Math.PI*2;
+    bg.rotation.set(0,0,0);
+    if(kd==='kickflip'){bg.rotation.z=a;bg.position.set(.17*Math.sin(a),.17-.17*Math.cos(a),0)}
+    else if(kd==='shove'){bg.rotation.y=e*Math.PI;bg.position.set(0,.14*Math.sin(Math.PI*u),0)}
+    else{bg.rotation.y=a;bg.rotation.z=a;bg.position.set(.17*Math.sin(a),.17-.17*Math.cos(a)+.06,0)}
+    if(u>=1){Tk.done=true;bg.rotation.set(0,0,0);bg.position.set(0,0,0)}
     if(!air&&Tk.t>.12){const ok=Tk.done||Tk.t>=Tk.dur*.75;Tk.active=false;bg.rotation.set(0,0,0);bg.position.set(0,0,0);
-      if(ok){G.tricks=(G.tricks||0)+1;if(G.tricks===5)auComplete('tricks');Tk.clap=2.4;SFX.clap();burst(P.x,P.y+2,P.z,50);toast('KICKFLIP!'+(G.tricks>1?' ×'+G.tricks:''),1300);G.shake=Math.max(G.shake,.25);
-        if(!Tk.said){Tk.said=true;say('e','Kickflip. Das Publikum versteht den Trick nicht, klatscht aber trotzdem.',3.2)}}
+      if(ok){trickScored(kd,TRICKS[kd].name);burst(P.x,P.y+2,P.z,50);
+        if(!(Tk.saidK||(Tk.saidK={}))[kd]){Tk.saidK[kd]=1;say('e',TRICKS[kd].say,3.4)}}
       else{P.speed*=.8;toast('Wackelig …',800)}}}
   if(!air){Tk.usedAir=false}
   /* Publikum */
@@ -1050,17 +1056,19 @@ const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'lef
 addEventListener('keydown',e=>{if(G.phase==='title'&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD')&&$('cm')){e.preventDefault();stepCarousel(e.code==='ArrowLeft'||e.code==='KeyA'?-1:1);return}
   const k=KEYMAP[e.code];if(k){K[k]=1;e.preventDefault()}
   if(e.code==='Space'){e.preventDefault();jump()}
-  if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!e.repeat){e.preventDefault();doTrick()}
+  if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!e.repeat){e.preventDefault();doTrick('kickflip')}
+  if(e.code==='KeyQ'&&!e.repeat){e.preventDefault();doTrick('shove')}
+  if(e.code==='KeyR'&&!e.repeat){e.preventDefault();doTrick('tre')}
   if(e.code==='KeyF'||e.code==='KeyE')throwBoard();
   if(e.code==='KeyP')setPix(!G.pix);
   if(e.code==='KeyM')toggleSnd();
   if(e.code==='Enter'&&G.phase==='title'){ac();beginPlay()}});
 addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
-function jump(){if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
+function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
 function toggleSnd(){G.muted=!G.muted;MUS.muted=G.muted;$('b-snd').setAttribute('aria-pressed',String(!G.muted))}
 addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
-$('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick()});
+$('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
 $('b-pix').onclick=()=>setPix(!G.pix);$('b-snd').onclick=toggleSnd;
 [['t-left','left'],['t-right','right'],['t-gas','up']].forEach(([id,k])=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();K[k]=1;b.classList.add('on');ac()});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>{K[k]=0;b.classList.remove('on')}))});
@@ -1497,7 +1505,8 @@ function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log
 const AUFTRAEGE=[
  {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
  {id:'blitz',ziel:'Sammeln',titel:'Blitz-Eis',text:'Alle 5 Eiskugeln an der Küste in 60 Sekunden.',ort:'Welt 1 · Küste',reward:8},
- {id:'tricks',ziel:'Tricks',titel:'Kickflip-Serie',text:'Schaffe 5 Kickflips in einem Lauf (Shift).',ort:'Im Rennen, jede Welt',reward:8},
+ {id:'tricks',ziel:'Tricks',titel:'Trick-Serie',text:'Lande 5 Tricks in einem Lauf: Kickflip (Shift), Pop Shove-it (Q), 360 Flip (R) oder Curb Grind.',ort:'Überall',reward:8},
+ {id:'vielfalt',ziel:'Tricks',titel:'Trick-Mix',text:'Kickflip, Pop Shove-it, 360 Flip und ein Curb Grind in einem Lauf. Das Grinden geht nur in Port Lupo.',ort:'Port Lupo',reward:12},
  {id:'rennen',ziel:'Ankommen',titel:'Küsten-Rennen',text:'Erreiche das Ziel-Portal, bevor dich der Dino schnappt.',ort:'Welt 1 · Küste',reward:10},
  {id:'galaxie',ziel:'Ankommen',titel:'Eis-Galaxie',text:'Sammle die Kugeln und erreiche den Eiswagen.',ort:'Welt 2 · Portal in Port Lupo',reward:10},
  {id:'nacht',ziel:'Ankommen',titel:'Nacht-Stadt',text:'Spring über die Dächer zum Eiswagen.',ort:'Welt 3 · Portal in Port Lupo',reward:10},
@@ -1879,6 +1888,26 @@ function startCoastRace(){HUB.coastHit=1;SFX.win();burst(P.x,P.y+3,P.z,90);toast
 function enterPortal(p){if(!scCan(PORTAL_COST)){p.hit=1;p.blocked=1;SFX.thud&&SFX.thud();toast('Zu wenig Scoops. Reise: '+PORTAL_COST,1800);return}
   scAdd(-PORTAL_COST,'Reise zu Welt '+p.world);HUB.found.add(p.world);SFX.win();burst(P.x,P.y+3,P.z,90);toast('Portal zu Welt '+p.world+'!',1200);
   later(.5,()=>{applyLevel(p.world);beginPlay()})}
+/* ---------- Curb Grind: auf der Bordsteinkante der Gehwege rutschen ---------- */
+const GR={on:false,edge:null,t:0,dir:1,spark:0,best:0,lastEnd:0,edges:null};
+function grindEdges(){if(GR.edges)return GR.edges;GR.edges=[];for(const c of HUB.colliders)if(c.walk){GR.edges.push({ax:'x',co:c.z0,lo:c.x0,hi:c.x1},{ax:'x',co:c.z1,lo:c.x0,hi:c.x1},{ax:'z',co:c.x0,lo:c.z0,hi:c.z1},{ax:'z',co:c.x1,lo:c.z0,hi:c.z1})}return GR.edges}
+function grindTry(){if(GR.on||LV.id!==0||G.phase!=='play'||P.speed<3.2||P.y<1.62||P.y>2.35||P.vy>3||G.t-GR.lastEnd<.35)return;
+  const hx=Math.cos(P.h),hz=Math.sin(P.h);
+  for(const e of grindEdges()){const along=e.ax==='x'?P.x:P.z,across=e.ax==='x'?P.z:P.x;if(along<e.lo+1||along>e.hi-1||Math.abs(across-e.co)>.95)continue;
+    const dx=e.ax==='x'?1:0,dz=e.ax==='x'?0:1,dot=hx*dx+hz*dz;if(Math.abs(dot)<.8)continue;
+    GR.on=true;GR.edge=e;GR.dir=Math.sign(dot)||1;GR.t=0;GR.spark=0;SFX.whoosh();toast('CURB GRIND!',700);return}}
+function grindEnd(jumpOff){if(!GR.on)return;const sec=GR.t;GR.on=false;GR.lastEnd=G.t;
+  if(jumpOff){P.vy=7.4;P.coy=1;SFX.jump()}
+  if(sec>=.6){trickScored('grind','CURB GRIND '+sec.toFixed(1)+' s!');burst(P.x,P.y+1.5,P.z,40);if(!Tk.saidG){Tk.saidG=1;say('e','Curb Grind: Du rutschst auf der Bordsteinkante. Die Kante ist nicht begeistert.',3.2)}}}
+function stepGrind(dt){
+  if(!GR.on){grindTry();return}
+  const e=GR.edge,dx=e.ax==='x'?GR.dir:0,dz=e.ax==='x'?0:GR.dir;GR.t+=dt;
+  if(e.ax==='x')P.z=e.co;else P.x=e.co;
+  let d=Math.atan2(dz,dx)-P.h;d=Math.atan2(Math.sin(d),Math.cos(d));P.h+=d*Math.min(1,dt*12);
+  P.y=1.66;P.vy=0;P.coy=0;P.speed*=Math.pow(.985,dt*60);
+  GR.spark-=dt;if(GR.spark<=0){GR.spark=.09;burst(P.x,1.8,P.z,5);tone(200+Math.random()*60,.09,'sawtooth',.03)}
+  const along=e.ax==='x'?P.x:P.z;
+  if(along<e.lo+.5||along>e.hi-.5||P.speed<2.2||(K.left||K.right)&&GR.t>.25)grindEnd(false)}
 function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
   const sf=.45+.55*Math.min(1,P.speed/5);P.h+=P.turn*dt*2.3*sf;
@@ -1886,7 +1915,7 @@ function stepCity(dt){
   P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;if(LV.id===5){const dk=Math.abs(P.z+36)<4.2&&P.x>40&&ISL.gate,ax=dk?96:78,k=(P.x*P.x)/(ax*ax)+(dk?0:(P.z*P.z)/(52*52));if(!dk&&k>1){const s=.995/Math.sqrt(k);P.x*=s;P.z*=s}else if(dk&&P.x>ax){P.x=ax}}
   {const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
   resolveCity();P.h=((P.h+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
-  const gy=LV.id===0?cityGround(P.x,P.z):1.3;P.vy-=LV.grav*dt;P.y+=P.vy*dt;if(P.y<=gy){P.y=gy;if(P.vy<0)P.vy=0}P.coy=P.y<=gy+.05?0:P.coy+dt;
+  const gy=LV.id===0?cityGround(P.x,P.z):1.3;P.vy-=LV.grav*dt;P.y+=P.vy*dt;if(P.y<=gy){P.y=gy;if(P.vy<0)P.vy=0}P.coy=P.y<=gy+.05?0:P.coy+dt;if(LV.id===0)stepGrind(dt);
   for(const c of cones){if(c.hit){c.o.position.x+=c.vx*dt;c.o.position.y+=c.vy*dt;c.o.position.z+=c.vz*dt;c.vy-=18*dt;c.o.rotation.x+=7*dt;c.o.rotation.z+=5*dt;c.hit-=dt;if(c.hit<=0)c.o.visible=false;continue}
     if(Math.abs(P.x-c.x)<1.3&&Math.abs(P.z-c.z)<1.3&&P.y<2.4){c.hit=1.1;c.vx=Math.cos(P.h)*P.speed*1.2;c.vz=Math.sin(P.h)*P.speed*.8+(Math.random()-.5)*4;c.vy=8;P.speed*=.6;SFX.thud();G.shake=Math.max(G.shake,.2)}}
   if(LV.id===0)for(const p of HUB.portals){if(p.blocked&&Math.hypot(P.x-p.x,P.z-p.z)>9){p.blocked=0;p.hit=0}if(Math.hypot(P.x-p.x,P.z-p.z)<5.2&&G.phase==='play'&&!p.hit){p.hit=1;enterPortal(p)}}
@@ -2337,7 +2366,7 @@ function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0
   HUB.gl={A,B,gl,st,t:0}}
 function stepXmas(dt){const l=HUB.gl;if(!l||!W0||!W0.visible)return;l.t+=dt;const ph=Math.floor(l.t/.6)%2;l.A.visible=ph===0;l.B.visible=ph===1;l.st.material.opacity=.7+.25*Math.sin(l.t*3);l.gl.material.opacity=.42+.1*Math.sin(l.t*1.7)}
 
-window.__qa={edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
