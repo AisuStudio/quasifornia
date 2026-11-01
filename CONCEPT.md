@@ -134,8 +134,8 @@ Offene Fragen aus der Notiz:
 - Musik: Ansatz wie GTA-Radio, aber Indie; weitere Artist-Collabos geplant; Rechte-Go pro Song noch einzuholen (Stand: Packed Rich hat mündlich zugesagt).
 
 ### Hochbahn an der Mauer (Idee vom Nutzer, 2026-11-01)
-Eine Hochbahn-Strecke (S-Bahn) läuft auf Stützen an der langen Mauer entlang, immer wieder fährt ein Zug vorbei.
-- Stufe 1 (gebaut im Prototyp): Trasse an Nord-, Ost- und Südmauer, etwa 870 m lang, mit Rundungen an den Ecken. Die Stützen stehen an der Mauerseite und tragen die Trasse über einen Ausleger, darunter ist die Fahrspur frei (man kann unter der Bahn durchfahren). Ein Zug mit vier bunten Wagen und beleuchteten Fenstern kommt alle 30 bis 50 Sekunden vorbei, mit tiefem Grollen und leichtem Beben in der Nähe.
+Eine Hochbahn-Strecke (S-Bahn) läuft auf Stützen durch die Stadt, immer wieder fährt ein Zug vorbei.
+- Stufe 1 (gebaut im Prototyp): Die Trasse kommt von Süden, läuft gerade über die Straße bei x=25 durch die Stadt (über die Kanalbrücke), biegt vor der Nordmauer in einer Kurve nach rechts (Nordost) ab und verlässt die Stadt. Etwa 620 m lang. Die Stützen stehen auf dem Gehweg hinter dem Bordstein (nicht auf der Straße) und tragen die Trasse über einen langen Ausleger, darunter ist die Straße frei (man fährt durch). Wo kein Gehweg ist (äußere Ringstraße), gibt es keine Stützen, die Trasse spannt weiter. Ein Zug mit vier bunten Wagen und beleuchteten Fenstern kommt alle 30 bis 50 Sekunden vorbei, mit tiefem Grollen und leichtem Beben in der Nähe. (Erste Fassung lief an der Mauer entlang, geändert nach Skizze des Nutzers.)
 - Stufe 2 (später): Eine Station in einem anderen Bezirk, über die man mitfahren und reisen kann (Scoops). Außerdem die Möglichkeit, den Zug zu besprühen (siehe Graffiti: Dosen gegen Scoops, 2D-Paint-Editor).
 - Stufe 3 (Multiplayer): Ist jeder Wagen voll besprüht, wird der Zug automatisch gereinigt, damit wieder Platz ist.
 - Offen: Fahrplan und Haltestellen, ob man auf dem Zug mitfahren darf, Moderation der Sprühbilder.
