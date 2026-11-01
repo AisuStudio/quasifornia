@@ -193,6 +193,10 @@ Aus der Notiz des Nutzers: Man sprüht an die große Wand, braucht dafür Dosen 
 Datei `prototype/kuesten-quest/src/logo/port36_logo.svg`: weißer Schriftzug "PORT 36" in kantiger, leicht gewellter Schrift (575 × 200, nur ein Pfad pro Zeichen, 2 KB). Wird beim Bauen inline in die HTML-Datei gesetzt und steht auf dem Startbildschirm über "Küsten-Quest" mit rosa Schatten.
 - Die 36 passt zum Raster von Port Lupo: 6 × 6 Kreuzungen. Ob "Port 36" der Projektname wird, ist noch nicht entschieden (Marken- und Domainprüfung offen, siehe Abschnitt Name).
 
+### Unterwelt-Minikarte und P-Mart (2026-11-01, gebaut)
+- Unten sind die Straßennamen kopfüber und kaum lesbar. Deshalb zeigt die Minikarte dort den Weg: die Leiter als türkises L (immer) und, sobald man Serafin die 3 Scoops gegeben hat, den Turm Tarxarox als orangenes T mit gestrichelter Linie vom Spieler. Die Umgebung des Turms ist auf der Karte aufgedeckt. Oben gezeigte Marker (Läden, Portale, Gegenstände, Küste) sind unten ausgeblendet. Nach dem Befreien des Geistes verschwindet das T.
+- P-Mart: Die fünf Läden in Port Lupo sind Convenience-Stores im japanischen Stil mit blauer Banderole (rosa Streifen) rundherum, Schiebetür, Geldautomaten, Fahrrad und Standschild. Kaufen (Skins, Teile, Farben, Sprühdosen) geht nur im Laden ("P-Mart betreten"), im Rarepod kann man alles ansehen. Auf der Minikarte zeigt ein blaues P die Läden.
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels

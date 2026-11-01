@@ -1597,14 +1597,24 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   let nd=1e9;HUB.portals.forEach(p=>{const d=Math.hypot(P.x-p.x,P.z-p.z);p.beam.material.opacity=Math.max(0,Math.min(.45,(105-d)/75*.45));p.g.visible=!G.under&&(d<78||HUB.found.has(p.world));p.g.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});if(!HUB.found.has(p.world)&&d<nd)nd=d});
   const r=$('radar');if(r){const open=nd<1e8;r.classList.toggle('on',G.phase==='play'&&open&&!G.under);if(open){const w=nd<30?'heiß!':nd<65?'warm':nd<115?'lauwarm':'kalt';$('radar-s').textContent=w;$('radar-s').dataset.t=w[0];$('radar-bar').style.setProperty('--p',Math.max(.04,Math.min(1,1-nd/190)))}}
   /* Minikarte */
-  const mm=HUB.mm;if(!mm)return;mm.exg.fillStyle='#fff';mm.exg.beginPath();const [ex,ez]=mm.pxz(P.x,P.z);mm.exg.arc(ex,ez,52*mm.S,0,7);mm.exg.fill();
+  const mm=HUB.mm;if(!mm)return;mm.exg.fillStyle='#fff';mm.exg.beginPath();const [ex,ez]=mm.pxz(P.x,P.z);mm.exg.arc(ex,ez,52*mm.S,0,7);mm.exg.fill();if(G.under&&HUB.uw&&HUB.uw.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const [tx,tz]=mm.pxz(HUB.uw.tower.x,HUB.uw.tower.z);mm.exg.beginPath();mm.exg.arc(tx,tz,26*mm.S,0,7);mm.exg.fill()}
   HUB.mmT+=dt;if(HUB.mmT<.12)return;HUB.mmT=0;const cv=$('mini');if(!cv)return;cv.classList.toggle('on',G.phase==='play');const g=cv.getContext('2d'),t=mm.tmp.getContext('2d');
   t.globalCompositeOperation='source-over';t.clearRect(0,0,150,150);t.drawImage(mm.map,0,0);t.globalCompositeOperation='destination-in';t.drawImage(mm.ex,0,0);
   g.clearRect(0,0,150,150);g.fillStyle='#1a1626';g.fillRect(0,0,150,150);g.drawImage(mm.tmp,0,0);
+  if(!G.under){
   (HUB.shops||[]).forEach(s=>{const [x,z]=mm.pxz(s.x,s.z);g.fillStyle='#2b5fcf';g.strokeStyle='#f4f7ff';g.lineWidth=1.5;g.fillRect(x-5,z-5,10,10);g.strokeRect(x-5,z-5,10,10);g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText('P',x,z+3)});
   HUB.portals.forEach(p=>{if(HUB.found.has(p.world)){const [x,z]=mm.pxz(p.x,p.z);g.fillStyle=p.col;g.beginPath();g.arc(x,z,5,0,7);g.fill();g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText(p.world,x,z+3)}});
-  {const [gx,gz]=mm.pxz(-143,HUB.coastZ);g.fillStyle='#ffe066';g.fillRect(gx-1,gz-8*mm.S*1.6,5,16*mm.S*1.6);g.fillStyle='#1a1626';g.font='700 9px sans-serif';g.textAlign='left';g.fillText('K',gx+7,gz+3);g.fillStyle='#ffe066';g.fillText('K',gx+6,gz+3)}
-  HUB.items.forEach(it=>{if(it.got){const [x,z]=mm.pxz(it.x,it.z);g.fillStyle=it.def.col;g.strokeStyle='#1a1626';g.lineWidth=1;g.beginPath();g.moveTo(x,z-4);g.lineTo(x+4,z);g.lineTo(x,z+4);g.lineTo(x-4,z);g.closePath();g.fill();g.stroke()}});
+  }else{
+  /* Unterwelt: Straßennamen sind kopfüber, deshalb zeigt die Karte den Weg. Leiter (Ausgang) immer, Turm Tarxarox sobald Serafin die Scoops bekommen hat. */
+  const U=HUB.uw,pulse=.5+.5*Math.sin(G.t*4);
+  const lab=(txt,x,z,col)=>{g.font='700 9px sans-serif';g.textAlign='center';g.lineWidth=3;g.strokeStyle='#07070d';g.strokeText(txt,x,z+3);g.fillStyle=col;g.fillText(txt,x,z+3)};
+  if(U){const [lx,lz]=mm.pxz(U.bx,U.bz);g.fillStyle='#2de0d0';g.strokeStyle='#07070d';g.lineWidth=2;g.beginPath();g.arc(lx,lz,6,0,7);g.fill();g.stroke();lab('L',lx,lz,'#07070d');
+   if(U.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const [tx,tz]=mm.pxz(U.tower.x,U.tower.z);
+    g.setLineDash([4,4]);g.strokeStyle='rgba(255,122,26,.85)';g.lineWidth=2;g.beginPath();g.moveTo(ex,ez);g.lineTo(tx,tz);g.stroke();g.setLineDash([]);
+    g.fillStyle='rgba(255,122,26,'+(.35+.35*pulse)+')';g.beginPath();g.arc(tx,tz,8+4*pulse,0,7);g.fill();
+    g.fillStyle='#ff7a1a';g.strokeStyle='#07070d';g.lineWidth=2;g.beginPath();g.arc(tx,tz,6,0,7);g.fill();g.stroke();lab('T',tx,tz,'#07070d')}}}
+  if(!G.under){const [gx,gz]=mm.pxz(-143,HUB.coastZ);g.fillStyle='#ffe066';g.fillRect(gx-1,gz-8*mm.S*1.6,5,16*mm.S*1.6);g.fillStyle='#1a1626';g.font='700 9px sans-serif';g.textAlign='left';g.fillText('K',gx+7,gz+3);g.fillStyle='#ffe066';g.fillText('K',gx+6,gz+3)}
+  if(!G.under)HUB.items.forEach(it=>{if(it.got){const [x,z]=mm.pxz(it.x,it.z);g.fillStyle=it.def.col;g.strokeStyle='#1a1626';g.lineWidth=1;g.beginPath();g.moveTo(x,z-4);g.lineTo(x+4,z);g.lineTo(x,z+4);g.lineTo(x-4,z);g.closePath();g.fill();g.stroke()}});
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
