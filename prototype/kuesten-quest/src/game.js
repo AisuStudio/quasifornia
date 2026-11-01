@@ -554,7 +554,7 @@ function step(dt){
   if(INV.open||DLG.open||PAD.open||PUZ.open)return;
   G.t+=dt;for(let i=TIMERS.length-1;i>=0;i--){TIMERS[i].t-=dt;if(TIMERS[i].t<=0){const f=TIMERS[i].fn;TIMERS.splice(i,1);f()}}
   if(narr.active){narr.shown=Math.min(narr.full.length,narr.shown+dt*46);narr.text.textContent=narr.full.slice(0,Math.floor(narr.shown));if(narr.shown>=narr.full.length){narr.hold-=dt;if(narr.hold<=0){narr.active=false;narr.el.classList.remove('on')}}}
-  stepConfetti(dt);stepClouds(dt);stepLevel2(dt);stepLevel3(dt);stepLevel0(dt);stepAtoll(dt);
+  stepConfetti(dt);stepClouds(dt);stepLevel2(dt);stepLevel3(dt);stepLevel0(dt);if(LV.id===0)cullCity();stepAtoll(dt);
   scoops.forEach(s=>{if(s.got)return;s.t+=dt;s.g.rotation.y+=dt*2.2;s.g.position.y=3.0+Math.sin(s.t*2.4)*.45;s.beam.material.opacity=.16+.07*Math.sin(s.t*3);s.pad.scale.setScalar(1+.12*Math.sin(s.t*4))});
   goalPortal.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});
   if(G.phase==='play'||G.phase==='chase'){G.time+=dt;if(LV.mode==='city')stepCity(dt);else{stepPlayer(dt);stepRivals(dt)}}
@@ -1167,7 +1167,9 @@ function buildLevel0(){
      const wide=bb.isEmpty()||(bb.max.x-bb.min.x)>33||(bb.max.z-bb.min.z)>33;
      if(wide)HUB.colliders.push({x0:cur.x-18,x1:cur.x+18,z0:cur.z-18,z1:cur.z+18,top:999});
      else{HUB.colliders.push({x0:cur.x-18,x1:cur.x+18,z0:cur.z-18,z1:cur.z+18,top:1.55,walk:1.6});
-       HUB.colliders.push({x0:Math.max(cur.x-18,bb.min.x-.5),x1:Math.min(cur.x+18,bb.max.x+.5),z0:Math.max(cur.z-18,bb.min.z-.5),z1:Math.min(cur.z+18,bb.max.z+.5),top:999,bld:1})}}}
+       HUB.colliders.push({x0:Math.max(cur.x-18,bb.min.x-.5),x1:Math.min(cur.x+18,bb.max.x+.5),z0:Math.max(cur.z-18,bb.min.z-.5),z1:Math.min(cur.z+18,bb.max.z+.5),top:999,bld:1})}}
+    {/* pro Block gruppieren, damit entfernte Blöcke ausgeblendet werden können */
+     const gp=new THREE.Group();gp.userData.noBake=true;gp.userData.blk={x:cur.x,z:cur.z};W0.children.slice(n0-1).forEach(o=>gp.add(o));W0.add(gp);(HUB.bgroups||(HUB.bgroups=[])).push(gp)}}
   /* ---- Pflanzen aus Regeln + Seed (wie in Welt 1): Welt-Farbe Rosa, kräftig, 6 pro Block ---- */
   {const oldFSP=FSP,oldH=FW.h,oldA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
    const KS=['balloon','balloon','spiral','vine','balloon','mushroom','spiral','palm','vine','balloon'],SC0={balloon:1,palm:1,spiral:1.1,vine:.95,mushroom:1};HUB.flora=[];
@@ -1176,7 +1178,7 @@ function buildLevel0(){
      const sides=[[17.4,-8],[-17.4,8]];
      diag.concat(sides).forEach(([tx,tz],k)=>{
        const R2=mulberry(i*131+j*17+k*5+3),kind=KS[Math.floor(R2()*KS.length)],sc2=SC0[kind]*(k>=4?.8:1);
-       const gp=FLORA[kind](R2,sc2);gp.position.set((i-2)*50+tx,1.6,(j-2)*50+tz);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});W0.add(gp);HUB.flora.push(kind)})}
+       const gp=FLORA[kind](R2,sc2);gp.position.set((i-2)*50+tx,1.6,(j-2)*50+tz);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});(HUB.bgroups&&HUB.bgroups[j*5+i]||W0).add(gp);HUB.flora.push(kind)})}
    CTX='stage';FCYL=10;FSP=oldFSP;FW.h=oldH;FW.acc=oldA;FW.lb=0;FW.sb=0}
   const zc=NODE(Math.floor(maze.coast/N));HUB.coastZ=zc;
   const wallM=MT('#7a5aa0'),wallN=MT('#ff5fa8','#ff5fa8',.9);
@@ -1268,7 +1270,7 @@ function buildLevel0(){
      const beam=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,26,12,1,true),BM(d.col,{transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,fog:false}));beam.position.set(ix,14,iz);beam.userData.noBake=true;beam.userData.noOutline=true;W0.add(beam);
      const got=INV.items.has(d.id);g.visible=!got;ring.visible=!got;
      HUB.items.push({def:d,g,ring,beam,x:ix,z:iz,got,ph:k*1.3})})}
-  bakeGroup(W0);
+  (HUB.bgroups||[]).forEach(gp=>bakeGroup(gp));bakeGroup(W0);
   buildAtollQuestObjects();buildGingerLights();
   /* Himmel: Skyline-Ring, Wolken (folgen / stehen) */
   const skyG=new THREE.Group();skyG.userData.noBake=true;W0.add(skyG);HUB.sky=skyG;
@@ -1330,6 +1332,7 @@ function stepGrind(dt){
   GR.spark-=dt;if(GR.spark<=0){GR.spark=.09;burst(P.x,1.8,P.z,5);tone(200+Math.random()*60,.09,'sawtooth',.03)}
   const along=e.ax==='x'?P.x:P.z;
   if(along<e.lo+.5||along>e.hi-.5||P.speed<2.2||(K.left||K.right)&&GR.t>.25)grindEnd(false)}
+function cullCity(){if(!HUB.bgroups)return;const on=HUB.cull!==false,R2=(HUB.cullR||190)**2;for(const gp of HUB.bgroups){const b=gp.userData.blk,dx=b.x-P.x,dz=b.z-P.z,v=!on||dx*dx+dz*dz<R2;if(gp.visible!==v)gp.visible=v}}
 function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
   const sf=.45+.55*Math.min(1,P.speed/5);P.h+=P.turn*dt*2.3*sf;
