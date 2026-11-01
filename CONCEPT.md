@@ -140,6 +140,20 @@ Eine Hochbahn-Strecke (S-Bahn) läuft auf Stützen durch die Stadt, immer wieder
 - Stufe 3 (Multiplayer): Ist jeder Wagen voll besprüht, wird der Zug automatisch gereinigt, damit wieder Platz ist.
 - Offen: Fahrplan und Haltestellen, ob man auf dem Zug mitfahren darf, Moderation der Sprühbilder.
 
+### Unterwelt: Spiegelstadt (Idee vom Nutzer, 2026-11-01)
+Ein Gebüsch in einer ruhigen Ecke von Port Lupo (Südwest) verbirgt eine Leiter nach unten. Unten liegt die Unterwelt.
+- Look: Die Stadt steht kopf (3D-Spiegelstadt), dunkel, Sci-Fi-düster mit Halloween-Anklängen (Gräber, Kürbisse, Kabel, Code-Regen). Palette: Schwarz, Türkis (nicht Matrix-Grün), Kürbis-Orange, etwas Lila. Kindgerecht gruselig, nicht blutig. Referenzen: Nether in Minecraft, Ghosts 'n Goblins.
+- Vektor und Pixel sind klar getrennt: Oben immer glatter Vektor-Look, unten immer fester Pixel-Look. Es gibt keinen Schalter (die P-Taste ist entfernt).
+- Gebaut (Stufe 1, Prototyp): Leiter im Gebüsch, Kopfstand-Ansicht (Bild senkrecht gespiegelt, Steuerung normal), fester Pixel-Look mit eigener Türkis-Lila-Orange-Palette, dunkles Licht, Gräber, Kürbisse, Kabel zwischen den Laternen, türkiser Code-Regen, tiefes Brummen. Quest-Objekte der oberen Stadt (Portale, Gegenstände, Labor) sind unten ausgeblendet. Der Zug der Hochbahn fährt auch unten.
+- Später: Quests (Auftragssystem), Gegner (Zombies, Geister, Fledermäuse, Boss), eigene Gegenstände und echtes 2D (Jump-and-Run im Stil von Ghosts 'n Goblins).
+- Name: "Upside Down" gehört zu Stranger Things und sollte nicht der Name sein. Ideen: Kopfstand-Lupo, Unter-Lupo, Spiegel-Lupo.
+
+### Marktplatz für bezahlte Worldpacks (Idee vom Nutzer, 2026-11-01, später)
+Die Basis bleibt kostenlos, später gibt es eventuell einen Marktplatz für bezahlte Worldpacks. Nicht im MVP.
+- Voraussetzungen: festes Paketformat (Manifest), Konten, sichere Skript-Umgebung (Lua oder QuickJS), Moderation (Kinder), Bezahlung (zum Beispiel Stripe), Mehrwertsteuer, Provision, klare Rechte- und Credit-Regeln (Kollaborationsvertrag).
+- Scoops bleiben unverkäuflich. Bezahlt wird in Euro, Packs haben eine eigene Lizenz, damit der freie Teil frei bleibt.
+- Vorschlag zum Testen: erst ein oder zwei kuratierte Packs mit Freunden und Artists einzeln verkaufen, bevor ein Marktplatz gebaut wird.
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels

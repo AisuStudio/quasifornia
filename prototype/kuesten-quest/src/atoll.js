@@ -126,13 +126,15 @@ function manWalk(){const m=HUB.man,L=HUB.lab,A=HUB.atoll;A.g.visible=true;A.beam
 
 /* ---------- Schritt pro Frame ---------- */
 function curActs(){const a=[],L=HUB.lab;
-  if(LV.id===0&&HUB.built&&L){
+  if(LV.id===0&&HUB.built&&G.under&&HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:6,label:'Leiter hinaufsteigen',fn:underExit});
+  else if(LV.id===0&&HUB.built&&L){
     const m=HUB.man;
     if(m&&!Q.freed)a.push({x:L.manX,z:L.manZ,r:6.5,label:Q.hasKey?'Mann befreien (Schlüssel)':(Q.ice&&Q.dictated&&!Q.corrected)?'Dem Mann das Eis geben':'Mit dem Mann sprechen',fn:manTalk});
     else if(m&&Q.freed&&m.state==='stand')a.push({x:m.x,z:m.z,r:6,label:'Mit dem Mann sprechen',fn:manTalk});
     a.push({x:L.doorX,z:L.doorZ,r:9,label:!Q.dictated?'Labor-Tür (verriegelt)':(Q.doorOpen||Q.hasKey)?'Labor betreten':'Code eingeben',fn:doorUse});
     if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
-    if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})}
+    if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
+    if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});

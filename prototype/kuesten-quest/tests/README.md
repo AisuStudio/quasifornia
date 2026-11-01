@@ -32,6 +32,7 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 16 Kanal: Wasser blockiert, Brücken passierbar
 - 17 Hügel: Bodenhöhe, Bergauf, Gegenstände
 - 18 Hochbahn: Strecke und Zug
+- 19 Unterwelt: Leiter, Kopfstand, fester Pixel-Look, Rückweg
 
 Screenshots landen im Temp-Ordner des Systems.
 
