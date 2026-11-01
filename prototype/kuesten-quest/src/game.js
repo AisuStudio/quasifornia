@@ -253,8 +253,10 @@ function setQuest(title,count){[...$('pips').children].forEach((p,i)=>p.style.di
 /* ---------- Ton ---------- */
 let AC=null;
 /* Soundtrack: Datei "em-ocean.m4a" liegt neben der Seite (nicht im Repo). Fehlt sie, bleibt es still. */
-const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=.7;MUS.src='em-ocean.m4a';MUS.started=false;
-function musGo(){if(MUS.started||MUS.dead)return;MUS.started=true;MUS.muted=G.muted;MUS.play().catch(()=>{MUS.started=false})}
+let G0sfx=false;const MUSE={paused:false,vol:.7};try{const s=JSON.parse(localStorage.getItem('kq-mus')||'null');if(s){MUSE.paused=!!s.paused;if(typeof s.vol==='number')MUSE.vol=Math.max(0,Math.min(1,s.vol));G0sfx=s.sfx===false}}catch(e){}
+function musSave(){try{localStorage.setItem('kq-mus',JSON.stringify({paused:MUSE.paused,vol:MUSE.vol,sfx:!G.muted}))}catch(e){}}
+const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=MUSE.vol;MUS.src='em-ocean.m4a';MUS.started=false;
+function musGo(){if(MUS.started||MUS.dead||MUSE.paused)return;MUS.started=true;MUS.play().catch(()=>{MUS.started=false})}
 MUS.addEventListener('error',()=>{if(!MUS.alt){MUS.alt=1;MUS.src='em-ocean.mp3';if(MUS.started){MUS.started=false;musGo()}}else MUS.dead=true});
 MUS.addEventListener('playing',()=>{const n=$('np');if(!n||MUS.credited)return;MUS.credited=true;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),9000)});
 function ac(){musGo();if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=false}}if(AC&&AC.state==='suspended')AC.resume();return AC}
@@ -415,7 +417,7 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    <div class="step" id="st3" hidden>
    <div class="st2top"><h2>Steuerung</h2><button class="back" id="back3" type="button">◀ Quest ändern</button></div>
    <p class="sub" id="st3q"></p>
-   <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, sprühen)</span><kbd>I</kbd><span>Rarepod: Inventar, Aufträge, Scoops, Laden</span><kbd>M</kbd><span>Ton an oder aus</span></div>
+   <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, sprühen)</span><kbd>I</kbd><span>Rarepod: Inventar, Aufträge, Scoops, Laden</span><kbd>M · N</kbd><span>Musik an oder aus · Effekte an oder aus</span></div>
    <div class="navrow"><button class="btn" id="start" type="button">Los geht’s ▶</button></div>
    </div>`;
   if(!TITLE.opened&&!TEST){$('card').hidden=true;$('overlay').classList.add('opening');const o=$('opener');o.querySelector('.op-logo').innerHTML=logoSvg();o.hidden=false;o.onclick=openerDone}else{$('card').hidden=false;$('opener').hidden=true;TITLE.opened=true}
@@ -523,15 +525,19 @@ addEventListener('keydown',e=>{if(G.phase==='title'&&!TITLE.opened&&!TEST&&!e.me
   if(e.code==='KeyR'&&!e.repeat){e.preventDefault();doTrick('tre')}
   if(e.code==='KeyF'||e.code==='KeyE')throwBoard();
   if(e.code==='KeyM')toggleSnd();
+  if(e.code==='KeyN')toggleSfx();
   if(e.code==='Enter'&&G.phase==='title'&&!(e.target&&e.target.closest&&e.target.closest('button'))){e.preventDefault();if(TITLE.step===1)window.__titleStep(2);else if(TITLE.step===2){TITLE.quest=0;$('go').click()}else startChosen()}});
 addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
 function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
-function toggleSnd(){G.muted=!G.muted;MUS.muted=G.muted;$('b-snd').setAttribute('aria-pressed',String(!G.muted))}
+G.muted=G0sfx;
+function musUi(){const b=$('b-snd');if(b){b.setAttribute('aria-pressed',String(!MUSE.paused));b.textContent=(MUSE.paused?'♪ Musik aus':'♪ Musik an')+' · M'}}
+function toggleSnd(){MUSE.paused=!MUSE.paused;if(MUSE.paused){MUS.pause();MUS.started=false}else{musGo()}musSave();musUi();if(typeof rpRender==='function'&&INV.open)rpRender()}
+function toggleSfx(){G.muted=!G.muted;musSave();if(typeof rpRender==='function'&&INV.open)rpRender()}
 addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GFOPEN&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
-$('b-snd').onclick=toggleSnd;
+$('b-snd').onclick=toggleSnd;musUi();
 [['t-left','left'],['t-right','right'],['t-gas','up']].forEach(([id,k])=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();K[k]=1;b.classList.add('on');ac()});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>{K[k]=0;b.classList.remove('on')}))});
 $('t-jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});
 if(matchMedia('(pointer:coarse)').matches)$('touch').classList.add('on');
@@ -1041,7 +1047,7 @@ function edPreview(){try{const W=360,H=470,rt=new THREE.WebGLRenderTarget(W,H,{s
 function rpTab(t){SC.tab=t;rpRender()}
 function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
   [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
-  ['inv','auf','sco','lad','edi','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
+  ['inv','auf','sco','lad','edi','mus','key'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
   const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text} ${(()=>{try{return uwProgText(a.id)}catch(e){return ''}})()}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
   const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
@@ -1056,7 +1062,13 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
      +ED_SLOTS.map(([sl,sn])=>`<h3 class="edh">${sn}</h3><div class="skgrid">`+ED_ITEMS.filter(x=>x.slot===sl).map(x=>{const own=ED.owned.has(x.id),on=ED.on[x.slot]===x.id;return `<div class="sk${on?' on':''}"><b>${x.name}</b><span>${own?(on?'Angelegt':'Im Besitz'):x.price+' Scoops'}</span>${own?`<button type="button" data-t="${x.id}">${on?'Ablegen':'Anlegen'}</button>`:`<button type="button" data-y="${x.id}"${scCan(x.price)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>').join('')+'</div></div>';
     edi.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>edToggle(b.dataset.t));edi.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{if(edBuy(b.dataset.y))edToggle(b.dataset.y)});
     edi.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [sl,hx]=b.dataset.c.split(':');edColor(sl,hx||null)})}
-  const mus=document.getElementById('rp-mus');if(mus)mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div><p class="sub">Mit M schaltest du den Ton aus. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`}
+  const mus=document.getElementById('rp-mus');if(mus&&SC.tab==='mus'){mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div>
+   <div class="plr"><button type="button" class="plbtn" id="pl-play" aria-label="${MUSE.paused?'Abspielen':'Pause'}">${MUSE.paused?'▶':'❚❚'}</button><div class="plvol"><label for="pl-vol">Lautstärke</label><input type="range" id="pl-vol" min="0" max="100" value="${Math.round(MUSE.vol*100)}"></div></div>
+   <div class="plr"><button type="button" class="plsfx" id="pl-sfx" aria-pressed="${!G.muted}">Effekte (Sprünge, Tricks, Sammeln): ${G.muted?'aus':'an'} · N</button></div>
+   <p class="sub">M schaltet die Musik, N die Effekte. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`;
+   mus.querySelector('#pl-play').onclick=()=>toggleSnd();mus.querySelector('#pl-sfx').onclick=()=>toggleSfx();
+   mus.querySelector('#pl-vol').oninput=e=>{MUSE.vol=+e.target.value/100;MUS.volume=MUSE.vol;musSave()}}
+  const key=document.getElementById('rp-key');if(key&&SC.tab==='key')key.innerHTML=`<div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind. Im Grind: abspringen</span><kbd>Shift</kbd><span>Kickflip</span><kbd>Q</kbd><span>Pop Shove-it</span><kbd>R</kbd><span>360 Flip</span><kbd>Klick · F · E</kbd><span>Skateboard werfen (auch auf Zombies und Geister)</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, Leiter, Aufzug, Wand besprühen)</span><kbd>I</kbd><span>Rarepod öffnen und schließen (pausiert das Spiel)</span><kbd>M</kbd><span>Musik an oder aus</span><kbd>N</kbd><span>Effekte an oder aus</span><kbd>Esc</kbd><span>Fenster schließen</span></div>`}
 let GFOPEN=false;
 const INV={open:false,items:new Set()};
 try{JSON.parse(localStorage.getItem('kq-items')||'[]').forEach(id=>{if(ITEM_DEFS.some(d=>d.id===id))INV.items.add(id)})}catch(e){}
@@ -1574,7 +1586,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

@@ -86,6 +86,7 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 .lg .up{color:var(--gold)}.lg .dn{color:#ff8fa8}
 .skgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.sk{background:var(--ink-2);border:2px solid #0e0b18;border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;font-size:13px}.sk.on{border-color:var(--gold)}.sk i{display:block;height:20px;border-radius:8px;border:2px solid #0e0b18}.sk button{font:600 12px/1 var(--mono);color:var(--paper);background:var(--pink);border:2px solid #0e0b18;border-radius:8px;padding:7px;cursor:pointer}.sk button:disabled{opacity:.45;cursor:default}
 .edwrap{display:grid;grid-template-columns:minmax(180px,250px) 1fr;gap:14px;align-items:start}.edprev{position:sticky;top:0;border-radius:14px;background:#1a1626;border:2px solid #0e0b18;overflow:hidden;text-align:center}.edprev img{display:block;width:100%;aspect-ratio:360/470;object-fit:cover}.edprev b{display:block;padding:7px;font:700 13px/1 var(--mono);color:var(--gold)}.swrow{display:flex;gap:7px;flex-wrap:wrap}.swb{position:relative;width:34px;height:34px;border-radius:50%;border:3px solid #0e0b18;cursor:pointer;color:var(--paper);font:700 14px/1 var(--mono);background:var(--ink-2);padding:0}.swb.on{outline:3px solid var(--gold);outline-offset:2px}.swb.lock{opacity:.78}.swb small{position:absolute;right:-5px;bottom:-5px;background:#0e0b18;border-radius:8px;padding:2px 4px;font-size:10px}.swb:focus-visible{outline:3px solid var(--gold);outline-offset:2px}@media (max-width:640px){.edwrap{grid-template-columns:1fr}.edprev{position:static;max-width:220px}}.edh{font:700 13px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin:12px 0 6px}
+.plr{display:flex;align-items:center;gap:14px;margin:12px 0;flex-wrap:wrap}.plbtn{width:58px;height:58px;border-radius:50%;border:3px solid #0e0b18;background:var(--pink);color:#fff;font:800 20px/1 var(--display);cursor:pointer;box-shadow:0 4px 0 #0e0b18}.plbtn:focus-visible,.plsfx:focus-visible{outline:3px solid var(--gold);outline-offset:2px}.plvol{flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;font:500 12px/1 var(--mono);color:var(--haze)}.plvol input{width:100%;accent-color:#d54291}.plsfx{font:600 13px/1.2 var(--mono);color:var(--paper);background:var(--ink-2);border:2px solid #0e0b18;border-radius:10px;padding:10px 14px;cursor:pointer}.plsfx[aria-pressed="true"]{background:#2f7a55}
 .np2{display:flex;flex-direction:column;gap:4px;background:var(--ink-2);border-radius:14px;padding:12px 14px;font-size:14px}.np2 b{color:var(--gold);font-size:17px}
 @media (prefers-reduced-motion:reduce){#sc-hud.pulse,#sc-d.on{animation:none}#sc-d.on{opacity:1}}
 
@@ -280,7 +281,7 @@ details.dev{margin-top:12px;font:400 12px/1.4 var(--mono);color:var(--haze)}deta
     <span id="sc-hud" hidden title="Scoops"><i class="sc"></i><b id="sc-n">30</b><u id="sc-d"></u></span>
     <button id="b-inv" type="button" aria-pressed="false" hidden>Rarepod · I <span id="b-inv-n">0/5</span></button>
     <button id="b-pix" type="button" aria-pressed="false" hidden>Pixel-Look</button>
-    <button id="b-snd" type="button" aria-pressed="true">Ton · M</button>
+    <button id="b-snd" type="button" aria-pressed="true">♪ Musik an · M</button>
   </div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="np" role="status" aria-live="polite"><b>♪ em'ocean</b><br>Packed Rich feat. you_see, ndfloat, timekilla0118<br>DJ/Cuts: punch_float · Album: The High End Theory (2023)</div>
@@ -296,10 +297,10 @@ details.dev{margin-top:12px;font:400 12px/1.4 var(--mono);color:var(--haze)}deta
   <div id="inv" hidden role="dialog" aria-label="Inventar">
     <div class="card">
       <h1>Rarepod <small id="inv-n">0/5</small></h1>
-      <div id="rp-tabs"><button type="button" data-t="inv" aria-pressed="true">Inventar</button><button type="button" data-t="auf" aria-pressed="false">Aufträge</button><button type="button" data-t="sco" aria-pressed="false">Scoops</button><button type="button" data-t="lad" aria-pressed="false">Laden</button><button type="button" data-t="edi" aria-pressed="false">Editor</button><button type="button" data-t="mus" aria-pressed="false">Musik</button></div>
+      <div id="rp-tabs"><button type="button" data-t="inv" aria-pressed="true">Inventar</button><button type="button" data-t="auf" aria-pressed="false">Aufträge</button><button type="button" data-t="sco" aria-pressed="false">Scoops</button><button type="button" data-t="lad" aria-pressed="false">Laden</button><button type="button" data-t="edi" aria-pressed="false">Editor</button><button type="button" data-t="mus" aria-pressed="false">Musik</button><button type="button" data-t="key" aria-pressed="false">Steuerung</button></div>
       <div id="rp-inv"><p class="sub">Diese Gegenstände findest du in Port Lupo. Du brauchst sie im Atoll.</p>
       <div id="inv-grid"></div></div>
-      <div id="rp-auf" hidden></div><div id="rp-sco" hidden></div><div id="rp-lad" hidden></div><div id="rp-edi" hidden></div><div id="rp-mus" hidden></div>
+      <div id="rp-auf" hidden></div><div id="rp-sco" hidden></div><div id="rp-lad" hidden></div><div id="rp-edi" hidden></div><div id="rp-mus" hidden></div><div id="rp-key" hidden></div>
       <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Inventar zurücksetzen</button></div>
     </div>
   </div>
@@ -881,8 +882,10 @@ function setQuest(title,count){[...$('pips').children].forEach((p,i)=>p.style.di
 /* ---------- Ton ---------- */
 let AC=null;
 /* Soundtrack: Datei "em-ocean.m4a" liegt neben der Seite (nicht im Repo). Fehlt sie, bleibt es still. */
-const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=.7;MUS.src='em-ocean.m4a';MUS.started=false;
-function musGo(){if(MUS.started||MUS.dead)return;MUS.started=true;MUS.muted=G.muted;MUS.play().catch(()=>{MUS.started=false})}
+let G0sfx=false;const MUSE={paused:false,vol:.7};try{const s=JSON.parse(localStorage.getItem('kq-mus')||'null');if(s){MUSE.paused=!!s.paused;if(typeof s.vol==='number')MUSE.vol=Math.max(0,Math.min(1,s.vol));G0sfx=s.sfx===false}}catch(e){}
+function musSave(){try{localStorage.setItem('kq-mus',JSON.stringify({paused:MUSE.paused,vol:MUSE.vol,sfx:!G.muted}))}catch(e){}}
+const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=MUSE.vol;MUS.src='em-ocean.m4a';MUS.started=false;
+function musGo(){if(MUS.started||MUS.dead||MUSE.paused)return;MUS.started=true;MUS.play().catch(()=>{MUS.started=false})}
 MUS.addEventListener('error',()=>{if(!MUS.alt){MUS.alt=1;MUS.src='em-ocean.mp3';if(MUS.started){MUS.started=false;musGo()}}else MUS.dead=true});
 MUS.addEventListener('playing',()=>{const n=$('np');if(!n||MUS.credited)return;MUS.credited=true;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),9000)});
 function ac(){musGo();if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=false}}if(AC&&AC.state==='suspended')AC.resume();return AC}
@@ -1043,7 +1046,7 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    <div class="step" id="st3" hidden>
    <div class="st2top"><h2>Steuerung</h2><button class="back" id="back3" type="button">◀ Quest ändern</button></div>
    <p class="sub" id="st3q"></p>
-   <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, sprühen)</span><kbd>I</kbd><span>Rarepod: Inventar, Aufträge, Scoops, Laden</span><kbd>M</kbd><span>Ton an oder aus</span></div>
+   <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, sprühen)</span><kbd>I</kbd><span>Rarepod: Inventar, Aufträge, Scoops, Laden</span><kbd>M · N</kbd><span>Musik an oder aus · Effekte an oder aus</span></div>
    <div class="navrow"><button class="btn" id="start" type="button">Los geht’s ▶</button></div>
    </div>`;
   if(!TITLE.opened&&!TEST){$('card').hidden=true;$('overlay').classList.add('opening');const o=$('opener');o.querySelector('.op-logo').innerHTML=logoSvg();o.hidden=false;o.onclick=openerDone}else{$('card').hidden=false;$('opener').hidden=true;TITLE.opened=true}
@@ -1151,15 +1154,19 @@ addEventListener('keydown',e=>{if(G.phase==='title'&&!TITLE.opened&&!TEST&&!e.me
   if(e.code==='KeyR'&&!e.repeat){e.preventDefault();doTrick('tre')}
   if(e.code==='KeyF'||e.code==='KeyE')throwBoard();
   if(e.code==='KeyM')toggleSnd();
+  if(e.code==='KeyN')toggleSfx();
   if(e.code==='Enter'&&G.phase==='title'&&!(e.target&&e.target.closest&&e.target.closest('button'))){e.preventDefault();if(TITLE.step===1)window.__titleStep(2);else if(TITLE.step===2){TITLE.quest=0;$('go').click()}else startChosen()}});
 addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
 function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
-function toggleSnd(){G.muted=!G.muted;MUS.muted=G.muted;$('b-snd').setAttribute('aria-pressed',String(!G.muted))}
+G.muted=G0sfx;
+function musUi(){const b=$('b-snd');if(b){b.setAttribute('aria-pressed',String(!MUSE.paused));b.textContent=(MUSE.paused?'♪ Musik aus':'♪ Musik an')+' · M'}}
+function toggleSnd(){MUSE.paused=!MUSE.paused;if(MUSE.paused){MUS.pause();MUS.started=false}else{musGo()}musSave();musUi();if(typeof rpRender==='function'&&INV.open)rpRender()}
+function toggleSfx(){G.muted=!G.muted;musSave();if(typeof rpRender==='function'&&INV.open)rpRender()}
 addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GFOPEN&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
-$('b-snd').onclick=toggleSnd;
+$('b-snd').onclick=toggleSnd;musUi();
 [['t-left','left'],['t-right','right'],['t-gas','up']].forEach(([id,k])=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();K[k]=1;b.classList.add('on');ac()});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>{K[k]=0;b.classList.remove('on')}))});
 $('t-jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});
 if(matchMedia('(pointer:coarse)').matches)$('touch').classList.add('on');
@@ -1669,7 +1676,7 @@ function edPreview(){try{const W=360,H=470,rt=new THREE.WebGLRenderTarget(W,H,{s
 function rpTab(t){SC.tab=t;rpRender()}
 function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
   [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
-  ['inv','auf','sco','lad','edi','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
+  ['inv','auf','sco','lad','edi','mus','key'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
   const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text} ${(()=>{try{return uwProgText(a.id)}catch(e){return ''}})()}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
   const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
@@ -1684,7 +1691,13 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
      +ED_SLOTS.map(([sl,sn])=>`<h3 class="edh">${sn}</h3><div class="skgrid">`+ED_ITEMS.filter(x=>x.slot===sl).map(x=>{const own=ED.owned.has(x.id),on=ED.on[x.slot]===x.id;return `<div class="sk${on?' on':''}"><b>${x.name}</b><span>${own?(on?'Angelegt':'Im Besitz'):x.price+' Scoops'}</span>${own?`<button type="button" data-t="${x.id}">${on?'Ablegen':'Anlegen'}</button>`:`<button type="button" data-y="${x.id}"${scCan(x.price)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>').join('')+'</div></div>';
     edi.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>edToggle(b.dataset.t));edi.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{if(edBuy(b.dataset.y))edToggle(b.dataset.y)});
     edi.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [sl,hx]=b.dataset.c.split(':');edColor(sl,hx||null)})}
-  const mus=document.getElementById('rp-mus');if(mus)mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div><p class="sub">Mit M schaltest du den Ton aus. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`}
+  const mus=document.getElementById('rp-mus');if(mus&&SC.tab==='mus'){mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div>
+   <div class="plr"><button type="button" class="plbtn" id="pl-play" aria-label="${MUSE.paused?'Abspielen':'Pause'}">${MUSE.paused?'▶':'❚❚'}</button><div class="plvol"><label for="pl-vol">Lautstärke</label><input type="range" id="pl-vol" min="0" max="100" value="${Math.round(MUSE.vol*100)}"></div></div>
+   <div class="plr"><button type="button" class="plsfx" id="pl-sfx" aria-pressed="${!G.muted}">Effekte (Sprünge, Tricks, Sammeln): ${G.muted?'aus':'an'} · N</button></div>
+   <p class="sub">M schaltet die Musik, N die Effekte. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`;
+   mus.querySelector('#pl-play').onclick=()=>toggleSnd();mus.querySelector('#pl-sfx').onclick=()=>toggleSfx();
+   mus.querySelector('#pl-vol').oninput=e=>{MUSE.vol=+e.target.value/100;MUS.volume=MUSE.vol;musSave()}}
+  const key=document.getElementById('rp-key');if(key&&SC.tab==='key')key.innerHTML=`<div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind. Im Grind: abspringen</span><kbd>Shift</kbd><span>Kickflip</span><kbd>Q</kbd><span>Pop Shove-it</span><kbd>R</kbd><span>360 Flip</span><kbd>Klick · F · E</kbd><span>Skateboard werfen (auch auf Zombies und Geister)</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, Leiter, Aufzug, Wand besprühen)</span><kbd>I</kbd><span>Rarepod öffnen und schließen (pausiert das Spiel)</span><kbd>M</kbd><span>Musik an oder aus</span><kbd>N</kbd><span>Effekte an oder aus</span><kbd>Esc</kbd><span>Fenster schließen</span></div>`}
 let GFOPEN=false;
 const INV={open:false,items:new Set()};
 try{JSON.parse(localStorage.getItem('kq-items')||'[]').forEach(id=>{if(ITEM_DEFS.some(d=>d.id===id))INV.items.add(id)})}catch(e){}
@@ -2761,7 +2774,7 @@ function grafSpray(x,y){const cx=$('graf-cv').getContext('2d'),c=GF.col;if((GF.c
   addEventListener('keydown',e=>{if(!GF.open)return;e.stopImmediatePropagation();if(e.code==='Escape'){e.preventDefault();grafClose(false)}else if(e.code==='KeyZ'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('graf-undo').click()}},true)})();
 function grafActs(a){if(!HUB.graf)return;for(const p of HUB.graf.panels)a.push({x:p.ax,z:p.az,r:7.5,label:'Wand besprühen',fn:()=>grafOpen(p)})}
 
-window.__qa={GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
