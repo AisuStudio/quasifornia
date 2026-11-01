@@ -379,7 +379,12 @@ function makeThumbs(){const my=++thumbJob;const todo=SKIN_LIST.map(s=>s[0]).filt
   setTimeout(one,30)}
 function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',carIdx+1]].forEach(([id,idx])=>{const kk=carHue(idx)[0],im=$(id).querySelector('img');if(THUMBS[kk]){im.src=THUMBS[kk];im.hidden=false}})}
 
-const TITLE={step:1};
+const TITLE={step:1,quest:0};
+function startChosen(){ac();const q=TITLE.quest;
+  if(q===1){applyLevel(1);beginPlay();return}
+  applyLevel(0);beginPlay();
+  if(q===5){setQuest('Rette die Insel: Gegenstände finden, dann zum Labor',null);later(.8,()=>say('e','Rette die Insel: Auf der Insel droht ein Unglück. Such in Port Lupo nach Gegenständen und sprich mit dem Mann am Labor. Von dort führt ein Portal zum Atoll.',6.5))}
+  else setQuest('Erkunde die Stadt: Gegenstände, Portale, Küste',null)}
 function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
   $('card').innerHTML=`<h1>Küsten-Quest</h1>
@@ -396,24 +401,32 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    <div class="navrow"><button class="btn" id="next1" type="button">Weiter: Steuerung und Quest ▶</button></div>
    </div>
    <div class="step" id="st2" hidden>
-   <div class="st2top"><h2>Steuerung</h2><button class="back" id="back2" type="button">◀ Avatar ändern</button></div>
-   <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>I · M · Enter</kbd><span>Rarepod · Ton · Aktion</span></div>
-   <h2>Wähle deine Quest</h2>
+   <div class="st2top"><h2>Wähle deine Quest</h2><button class="back" id="back2" type="button">◀ Avatar ändern</button></div>
    <div class="qlist">
     <button class="qbtn" id="go" type="button"><span class="qn">1</span><span class="qt"><b>Erkunde die Stadt</b><small>Port Lupo entdecken, Gegenstände finden, Portale suchen.</small></span><span class="diff l">Leicht</span></button>
     <button class="qbtn" id="go1" type="button"><span class="qn">2</span><span class="qt"><b>Skate Contest</b><small>Das Küsten-Rennen: Eiskugeln sammeln und vor dem Riesenvieh davonfahren.</small></span><span class="diff m">Mittel</span></button>
-    <button class="qbtn" id="go5" type="button"><span class="qn">3</span><span class="qt"><b>Rette die Insel</b><small>Vier Rätsel in zehn Minuten. Ohne Gegenstände aus der Stadt wird es knifflig.</small></span><span class="diff s">Schwer</span></button>
+    <button class="qbtn" id="go5" type="button"><span class="qn">3</span><span class="qt"><b>Rette die Insel</b><small>Sammle in Port Lupo Gegenstände, befreie den Mann am Labor und rette dann das Atoll: vier Rätsel in zehn Minuten.</small></span><span class="diff s">Schwer</span></button>
    </div>
    <details class="dev"><summary>Weitere Welten (zum Ausprobieren)</summary><button class="btn sec" id="go2" type="button">Welt 2: Eis-Galaxie</button> <button class="btn sec" id="go3" type="button">Welt 3: Nacht-Stadt</button></details>
+   </div>
+   <div class="step" id="st3" hidden>
+   <div class="st2top"><h2>Steuerung</h2><button class="back" id="back3" type="button">◀ Quest ändern</button></div>
+   <p class="sub" id="st3q"></p>
+   <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, sprühen)</span><kbd>I</kbd><span>Rarepod: Inventar, Aufträge, Scoops, Laden</span><kbd>M</kbd><span>Ton an oder aus</span></div>
+   <div class="navrow"><button class="btn" id="start" type="button">Los geht’s ▶</button></div>
    </div>`;
   const cur=Math.max(0,SKIN_LIST.findIndex(s=>PRESETS[s[0]]===P.preset));setCarousel(cur,true);
   $('cprev').onclick=()=>stepCarousel(-1);$('cnext').onclick=()=>stepCarousel(1);
   [...$('cdots').children].forEach(b=>b.onclick=()=>{if(SKOWN.has(SKIN_LIST[+b.dataset.i][0]))setCarousel(+b.dataset.i)});
   const cv=$('cview');let sx=null;cv.onpointerdown=e=>{sx=e.clientX};cv.onpointerup=e=>{if(sx!==null&&Math.abs(e.clientX-sx)>28)stepCarousel(e.clientX<sx?1:-1);sx=null};cv.onpointercancel=()=>{sx=null};
   makeThumbs();
-  const stepTo=n=>{$('st1').hidden=n!==1;$('st2').hidden=n!==2;TITLE.step=n;$('card').scrollTop=0;(n===1?$('next1'):$('go')).focus({preventScroll:true})};TITLE.step=1;
-  $('next1').onclick=()=>stepTo(2);$('back2').onclick=()=>stepTo(1);window.__titleStep=stepTo;
-  $('go').onclick=()=>{ac();applyLevel(0);beginPlay()};$('go1').onclick=()=>{ac();applyLevel(1);beginPlay()};$('go5').onclick=()=>{ac();applyLevel(5);beginPlay()};$('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
+  const QN={0:['Erkunde die Stadt','Entdecke Port Lupo auf eigene Faust.'],1:['Skate Contest','Sammle die fünf Eiskugeln an der Küste und fahr dem Riesenvieh davon.'],5:['Rette die Insel','Finde die Gegenstände in Port Lupo, befreie den Mann am Labor und rette dann das Atoll.']};
+  const stepTo=n=>{$('st1').hidden=n!==1;$('st2').hidden=n!==2;$('st3').hidden=n!==3;TITLE.step=n;$('card').scrollTop=0;(n===1?$('next1'):n===2?$('go'):$('start')).focus({preventScroll:true})};TITLE.step=1;TITLE.quest=0;
+  const pick=q=>{TITLE.quest=q;$('st3q').innerHTML='<b>Quest: '+QN[q][0]+'</b><br>'+QN[q][1];stepTo(3)};
+  $('next1').onclick=()=>stepTo(2);$('back2').onclick=()=>stepTo(1);$('back3').onclick=()=>stepTo(2);window.__titleStep=stepTo;
+  $('go').onclick=()=>pick(0);$('go1').onclick=()=>pick(1);$('go5').onclick=()=>pick(5);
+  $('start').onclick=()=>startChosen();
+  $('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
 
 
 /* ---------- Skateboard-Wurf ---------- */
@@ -505,7 +518,7 @@ addEventListener('keydown',e=>{if(G.phase==='title'&&TITLE.step===1&&(e.code==='
   if(e.code==='KeyR'&&!e.repeat){e.preventDefault();doTrick('tre')}
   if(e.code==='KeyF'||e.code==='KeyE')throwBoard();
   if(e.code==='KeyM')toggleSnd();
-  if(e.code==='Enter'&&G.phase==='title'&&!(e.target&&e.target.closest&&e.target.closest('button'))){e.preventDefault();if(TITLE.step===1)window.__titleStep(2);else{ac();applyLevel(0);beginPlay()}}});
+  if(e.code==='Enter'&&G.phase==='title'&&!(e.target&&e.target.closest&&e.target.closest('button'))){e.preventDefault();if(TITLE.step===1)window.__titleStep(2);else if(TITLE.step===2){TITLE.quest=0;$('go').click()}else startChosen()}});
 addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
 function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}

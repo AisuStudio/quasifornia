@@ -11,7 +11,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const T=(x,z,h=0)=>p.evaluate(([x,z,h])=>{const q=__qa;q.P.x=x;q.P.z=z;q.P.h=h;q.P.speed=0;q.P.y=1.3;for(let i=0;i<3;i++)q.step(.03)},[x,z,h]);
  const act=()=>p.evaluate(()=>__qa.curActs&&(()=>{const q=__qa;let best=null,bd=1e9;for(const a of q.curActs()){const d=Math.hypot(q.P.x-a.x,q.P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}return best?best.label:null})());
  const talk=async()=>{await p.evaluate(()=>__qa.actGo());let n=0;while(await p.evaluate(()=>__qa.DLG.open)&&n<30){await p.evaluate(()=>__qa.dlgNext());await p.evaluate(()=>__qa.dlgNext());n++}return n};
- await p.click('#next1').then(()=>p.click('#go'));
+ await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const L=await p.evaluate(()=>JSON.stringify({lab:__qa.HUB.lab,man:__qa.HUB.man&&[__qa.HUB.man.x,__qa.HUB.man.z],atoll:__qa.HUB.atoll&&[__qa.HUB.atoll.x,__qa.HUB.atoll.z],items:__qa.HUB.items.map(i=>[i.def.id,Math.round(i.x),Math.round(i.z)]),code:__qa.CODE.join(''),dict:__qa.DICT.join('')}));
  console.log('Lab',L);
  const lab=JSON.parse(L).lab;

@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:700}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8822/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go'));
+ await p.goto('http://localhost:8822/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const tori=()=>p.evaluate(()=>{let n=0;__qa.P.av.traverse(o=>{if(o.isMesh&&o.geometry.type==='TorusGeometry')n++});return n});
  const t0=await tori();console.log('Torus vorher',t0);
  console.log('Kaufen XXL-Kette',JSON.stringify(await p.evaluate(()=>{const r=__qa.edBuy('chain4');return {r,n:__qa.SC.n}})));

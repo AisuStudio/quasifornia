@@ -6,7 +6,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.goto('http://localhost:8812/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
  console.log('Titel: gesperrte Punkte',await p.evaluate(()=>[...document.querySelectorAll('#cdots button')].map(b=>b.disabled?1:0).join('')));
  console.log('Pfeil weiter x12',await p.evaluate(()=>{const o=[];for(let i=0;i<12;i++){document.getElementById('cnext').click();o.push(document.getElementById('cname').textContent)}return o.join(',')}));
- await p.click('#next1').then(()=>p.click('#go'));
+ await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const st=()=>p.evaluate(()=>({n:__qa.SC.n,own:[...__qa.SKOWN].join(',')}));
  console.log('Start',JSON.stringify(await st()));
  console.log('Kaufen Gold',JSON.stringify(await p.evaluate(()=>{const r=__qa.skBuy('gold');return {r,n:__qa.SC.n,own:__qa.SKOWN.has('gold')}})));

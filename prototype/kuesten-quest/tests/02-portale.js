@@ -17,7 +17,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
     q.step(.05);if(q.G.phase!=='play'||q.LV.id!==0)break}
    return {n,wi,total:wps.length,x:+P.x.toFixed(0),z:+P.z.toFixed(0),lv:q.LV.id,ph:q.G.phase}}});
  const st=()=>p.evaluate(()=>JSON.stringify({lv:__qa.LV.id,ph:__qa.G.phase,found:[...__qa.HUB.found],pips:[...document.querySelectorAll('#pips i.on')].length}));
- await p.click('#next1').then(()=>p.click('#go'));
+ await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  for(const world of [2,3]){
   const r=await p.evaluate(w=>{const H=__qa.HUB,pt=H.portals.find(x=>x.world===w);__qa.P.x=H.sx;__qa.P.z=H.sz;__qa.P.h=H.sh;pt.hit=0;return walk(pathTo(pt.node),5000)},world);
   console.log('Portal',world,JSON.stringify(r));
