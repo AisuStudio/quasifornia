@@ -29,6 +29,7 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 13 Skin-Editor (Teile kaufen und anlegen)
 - 14 Tricks: Kickflip, Pop Shove-it, 360 Flip, Curb Grind
 - 15 Ausblenden und Verschmelzen der Häuserblöcke (Dreiecke und Zeichenaufrufe)
+- 16 Kanal: Wasser blockiert, Brücken passierbar
 
 Screenshots landen im Temp-Ordner des Systems.
 

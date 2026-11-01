@@ -1183,7 +1183,8 @@ function buildLevel0(){
   const zc=NODE(Math.floor(maze.coast/N));HUB.coastZ=zc;
   const wallM=MT('#7a5aa0'),wallN=MT('#ff5fa8','#ff5fa8',.9);
   [[0,-143,300,2],[0,143,300,2],[143,0,2,300]].forEach(([x,z,w,d])=>{cur={x:0,z:0};bx(wallM,w,9,d,x,0,z);bx(wallN,w>d?w:.5,.4,w>d?.5:d,x,9,z)});
-  [[-143,(-143+zc-10)/2,zc-10+143],[-143,(zc+10+143)/2,143-zc-10]].forEach(([x,z,len])=>{cur={x:0,z:0};bx(wallM,2,9,len,x,0,z);bx(wallN,.5,.4,len,x,9,z)});
+  {const CAN={z0:-81,z1:-75};HUB.canal=CAN;const gaps=[[zc-10,zc+10],[CAN.z0-1,CAN.z1+1]].sort((a,b)=>a[0]-b[0]);let zs=-143;
+   [...gaps,[143,143]].forEach(([a,b])=>{if(a>zs){const len=a-zs;cur={x:0,z:0};bx(wallM,2,9,len,-143,0,zs+len/2);bx(wallN,.5,.4,len,-143,9,zs+len/2)}zs=Math.max(zs,b)})}
   /* ---- Küste im Westen: Tor, Startlinie, Strand, Meer ---- */
   cur={x:0,z:0};
   [-1,1].forEach(s=>{bx(MT('#ff5fa8'),2.2,13,2.2,-144.5,0,zc+s*10.6);bx(MT('#fff0b0','#fff0b0',.8),2.8,.6,2.8,-144.5,13,zc+s*10.6)});
@@ -1209,6 +1210,16 @@ function buildLevel0(){
        const kind=KS[Math.floor(R2()*KS.length)],gp=FLORA[kind](R2,2.1+R2()*1.1);gp.position.set(horiz?mx+v:mx+u,1.6,horiz?mz+u:mz+v);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});W0.add(gp)}
      HUB.colliders.push({x0:mx-(horiz?3.4:7.4),x1:mx+(horiz?3.4:7.4),z0:mz-(horiz?7.4:3.4),z1:mz+(horiz?7.4:3.4),top:999})});
    CTX='stage';FCYL=10;FSP=oldFSP;FW.h=oldH;FW.acc=oldA;FW.lb=0;FW.sb=0}
+  /* ---- Kanal: quer durch den Bezirk bis zum Strand, sechs Brücken an den Kreuzungen ---- */
+  {const CAN=HUB.canal,zc2=(CAN.z0+CAN.z1)/2,wd=CAN.z1-CAN.z0,stone=MT('#a9a0c8'),water=MT('#1cafd1','#0f86d6',.35),foam=MT('#eaf8ff');
+   const bxs=[0,1,2,3,4,5].map(i=>NODE(i)),segs=[[-178,bxs[0]-7],...bxs.slice(0,-1).map((x,i)=>[x+7,bxs[i+1]-7]),[bxs[5]+7,140]];
+   cur={x:0,z:0};
+   segs.forEach(([lo,hi])=>{const len=hi-lo,xc=(lo+hi)/2;
+     bx(water,len,.25,wd,xc,-.3,zc2);bx(stone,len,.6,.5,xc,-.3,CAN.z0-.25);bx(stone,len,.6,.5,xc,-.3,CAN.z1+.25);
+     for(let k=0;k<Math.floor(len/9);k++)bx(foam,2.6,.03,.35,lo+4+k*9+((k*7)%3),-.04,zc2+((k*5)%3-1)*1.3);
+     if(hi>-139)HUB.colliders.push({x0:Math.max(lo,-141),x1:hi,z0:CAN.z0,z1:CAN.z1,top:999,water:1})});
+   bxs.forEach(nx=>{[-1,1].forEach(s=>{bx(stone,.45,.8,wd+1,nx+s*6.8,-.3,zc2);bx(MT('#ee7cb8'),.5,.15,wd+1.1,nx+s*6.8,.5,zc2)})});
+   HUB.bridges=bxs}
   /* ---- Straßennamen an den Kreuzungen, dazu ein Sticker am Start ---- */
   {const COLN=['Waffelweg','Sorbetstraße','Karamellallee','Pistazienweg','Minzgasse','Schokoring'],ROWN=['Möwenstraße','Palmenallee','Skate-Boulevard','Sonnenweg','Korallenweg','Dinoweg'];
    const stTex=(t)=>{const c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#1d5fa8';x.fillRect(0,0,640,128);x.strokeStyle='#fff';x.lineWidth=7;x.strokeRect(8,8,624,112);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';
@@ -1240,11 +1251,13 @@ function buildLevel0(){
     HUB.portals.push({x:P0.x,z:P0.z,world:k+2,g,beam,node:nd,col:WCOL[k].ring})});
   /* ---- Pylonen auf den Straßen ---- */
   {const edges=maze.all.filter(([a,b])=>maze.open.has(maze.key(a,b)));for(let k=0;k<22;k++){const [a,b]=edges[Math.floor(R()*edges.length)],A=nodeXZ(a),B=nodeXZ(b),t=.25+R()*.5,x=A.x+(B.x-A.x)*t+(A.z===B.z?0:(R()-.5)*8),z=A.z+(B.z-A.z)*t+(A.z===B.z?(R()-.5)*8:0);
+    if(z>HUB.canal.z0-.5&&z<HUB.canal.z1+.5&&![0,1,2,3,4,5].some(n=>Math.abs(x-NODE(n))<7.5))continue;
     const o=makeCone(x,z);sc.remove(o);W0.add(o);o.userData.noBake=true;HUB.cones.push({o,x,z,hit:0,vx:0,vy:0,vz:0})}}
   /* ---- Publikum an den Bürgersteigen ---- */
   {const CC=['#d54291','#f0cf36','#47c2a5','#eae8e8','#2499bb','#f1a7c8'],SK=['#e0a98a','#c98e6a','#8a5a3c','#f0c8a8'];
    for(let k=0;k<40;k++){const i=Math.floor(R()*5),j=Math.floor(R()*5),side=Math.floor(R()*4),bx0=(i-2)*50,bz0=(j-2)*50,t=(R()-.5)*26;
      let px,pz,face;if(side===0){px=bx0+t;pz=bz0-19.2;face=Math.PI}else if(side===1){px=bx0+t;pz=bz0+19.2;face=0}else if(side===2){px=bx0-19.2;pz=bz0+t;face=-Math.PI/2}else{px=bx0+19.2;pz=bz0+t;face=Math.PI/2}
+     if(pz>HUB.canal.z0-1.2&&pz<HUB.canal.z1+1.2)continue;
      const kk=1.15+R()*.2,top=CC[Math.floor(R()*6)],skin=SK[Math.floor(R()*4)];const g=new THREE.Group();
      const mk=(geo,col,x,y,z,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,SM({color:col,roughness:.7}));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;g.add(m);return m};
      mk(new THREE.CapsuleGeometry(.3,.75,4,10),top,0,1.45,0);[-1,1].forEach(s=>mk(new THREE.CapsuleGeometry(.12,.7,4,8),'#312e42',s*.16,.5,0));mk(new THREE.SphereGeometry(.3,12,10),skin,0,2.3,0);
@@ -1290,6 +1303,7 @@ function buildLevel0(){
   {const [lx,lz]=pxz(HUB.lab.cx,HUB.lab.cz);g.fillStyle='#7ff0ff';g.globalAlpha=.9;g.fillRect(lx-36*S/2,lz-36*S/2,36*S,36*S);g.globalAlpha=1;g.fillStyle='#10183a';g.font='700 10px sans-serif';g.textAlign='center';g.fillText('L',lx,lz+3.5)}
   for(let n=0;n<N*N;n++){const A=nodeXZ(n),[x,z]=pxz(A.x,A.z);g.fillStyle='#fff0b0';g.fillRect(x-7*S,z-7*S,14*S,14*S)}
   g.fillStyle='#1cafd1';g.fillRect(0,0,pxz(-143,0)[0],150);g.fillStyle='#f4d89a';g.fillRect(pxz(-150,0)[0],0,5,150);
+  {g.fillStyle='#4cc3ff';const C=HUB.canal;const segs=[-140,...HUB.bridges.flatMap(x=>[x-7,x+7]),140];for(let q=0;q<segs.length;q+=2){const [ax,az]=pxz(segs[q],C.z0),[bx2,bz2]=pxz(segs[q+1],C.z1);g.fillRect(ax,az,bx2-ax,Math.max(2,bz2-az))}}
   g.fillStyle='#ff5f5f';HUB.barricades.forEach(b=>{const [x,z]=pxz(b.x,b.z);g.fillRect(x-(b.horiz?1.2:7)*S,z-(b.horiz?7:1.2)*S,(b.horiz?2.4:14)*S,(b.horiz?14:2.4)*S)});
   const ex=document.createElement('canvas');ex.width=ex.height=150;HUB.mm={map:mc,ex,exg:ex.getContext('2d'),tmp:document.createElement('canvas'),S,pxz};HUB.mm.tmp.width=HUB.mm.tmp.height=150;
   HUB.built=true}
