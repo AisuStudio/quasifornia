@@ -135,7 +135,7 @@ Offene Fragen aus der Notiz:
 
 ### Hochbahn an der Mauer (Idee vom Nutzer, 2026-11-01)
 Eine Hochbahn-Strecke (S-Bahn) läuft auf Stützen an der langen Mauer entlang, immer wieder fährt ein Zug vorbei.
-- Stufe 1 (gebaut im Prototyp): Trasse an Nord-, Ost- und Südmauer, etwa 880 m lang, mit Rundungen an den Ecken. Ein Zug mit vier bunten Wagen und beleuchteten Fenstern kommt alle 30 bis 50 Sekunden vorbei, mit tiefem Grollen und leichtem Beben in der Nähe.
+- Stufe 1 (gebaut im Prototyp): Trasse an Nord-, Ost- und Südmauer, etwa 870 m lang, mit Rundungen an den Ecken. Die Stützen stehen an der Mauerseite und tragen die Trasse über einen Ausleger, darunter ist die Fahrspur frei (man kann unter der Bahn durchfahren). Ein Zug mit vier bunten Wagen und beleuchteten Fenstern kommt alle 30 bis 50 Sekunden vorbei, mit tiefem Grollen und leichtem Beben in der Nähe.
 - Stufe 2 (später): Eine Station in einem anderen Bezirk, über die man mitfahren und reisen kann (Scoops). Außerdem die Möglichkeit, den Zug zu besprühen (siehe Graffiti: Dosen gegen Scoops, 2D-Paint-Editor).
 - Stufe 3 (Multiplayer): Ist jeder Wagen voll besprüht, wird der Zug automatisch gereinigt, damit wieder Platz ist.
 - Offen: Fahrplan und Haltestellen, ob man auf dem Zug mitfahren darf, Moderation der Sprühbilder.
