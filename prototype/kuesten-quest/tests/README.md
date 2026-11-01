@@ -37,6 +37,8 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 21 Unterwelt: Zombies, Geister, Kürbis-Laternen, drei Aufträge
 - 22 Graffiti: Dosen kaufen, Editor, Wand speichern
 - 23 Opener: Logo-Splash, Tastendruck führt zum Avatar
+- 24 Musik-Player im Rarepod
+- 25 P-Mart: Laden betreten, Kaufen nur im Laden
 
 Screenshots landen im Temp-Ordner des Systems.
 

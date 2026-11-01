@@ -1,5 +1,5 @@
 /* ================= Graffiti: Sprühdosen und 2D-Paint-Editor ================= */
-/* Dosen kauft man im Rarepod unter Laden (Scoops). Die Graffiti-Wände stehen an der Mauer. Der Editor hat eine feste Auflösung (128 x 64) und nur Dosenfarben als Palette.
+/* Dosen kauft man im P-Mart (Scoops). Die Graffiti-Wände stehen an der Mauer. Der Editor hat eine feste Auflösung (128 x 64) und nur Dosenfarben als Palette.
    Das Bild bleibt, bis man (später: jemand anderes) drüber sprüht. Es wird im Browser gespeichert. */
 const GFK='kq-cans',GFT='kq-graf-total',GF_COL=[['#2de0d0','Türkis'],['#ee7cb8','Pink'],['#ffe066','Gelb'],['#ff7a1a','Orange'],['#ffffff','Weiß'],['#1a1626','Schwarz']],GF_PRICE=2,GF_INK=2400,GF_W=128,GF_H=64;
 const GF={cans:{},total:0,cur:null,col:null,size:4,open:false,undo:[],down:false,lx:0,ly:0,dabs:0};
@@ -8,10 +8,10 @@ function grafSave(){try{localStorage.setItem(GFK,JSON.stringify(GF.cans));localS
 function grafBuy(c){if(!scCan(GF_PRICE)){toast('Zu wenig Scoops: '+GF_PRICE+' nötig',1500);return false}
   const nm=(GF_COL.find(x=>x[0]===c)||[0,'Farbe'])[1];GF.cans[c]=(GF.cans[c]||0)+GF_INK;grafSave();scAdd(-GF_PRICE,'Sprühdose '+nm);toast('Sprühdose '+nm+' gekauft',1200);return true}
 function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port Lupo (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
-  return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
+  return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)&&SHOP.in?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
 function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const im=new Image();im.onload=()=>{p.ctx.drawImage(im,0,0);p.tex.needsUpdate=true};im.src=d}catch(e){}}
 function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
-  if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im Rarepod (Taste I) gibt es unter "Laden" Sprühdosen für '+GF_PRICE+' Scoops.']);
+  if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im P-Mart (blaues Band, auf der Minikarte als P) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
   GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];
   const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
   GF.col=(GF_COL.find(([c])=>GF.cans[c]>0)||GF_COL[0])[0];$('graf').hidden=false;grafPal();$('graf-done').focus({preventScroll:true})}

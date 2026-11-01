@@ -1600,13 +1600,14 @@ const ITEM_DEFS=[
 /* ================= Scoops, Aufträge, Rarepod ================= */
 /* Scoops sind die Währung. Nicht kaufbar. Start mit 30. Verdienen: Eiskugeln (+1) und Aufträge. Ausgeben: Reisen durch Portale (5). */
 const SCK='kq-scoops',AUK='kq-auftr',SC_START=30,PORTAL_COST=5;
+const SHOP={in:false};
 const SC={n:SC_START,log:[['Startguthaben',SC_START]],au:{},tab:'inv'};
 try{const s=JSON.parse(localStorage.getItem(SCK)||'null');if(s&&typeof s.n==='number'){SC.n=s.n;SC.log=s.log||[]}}catch(e){}
 try{SC.au=JSON.parse(localStorage.getItem(AUK)||'{}')||{}}catch(e){}
 function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log.slice(0,12)}));localStorage.setItem(AUK,JSON.stringify(SC.au))}catch(e){}}
 const AUFTRAEGE=[
  {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
- {id:'graffiti',ziel:'Kreativ',titel:'Street-Artist',text:'Kaufe eine Sprühdose (Rarepod, Laden) und sprüh ein Bild an eine Graffiti-Wand an der Mauer (mindestens 400 Sprühpunkte).',ort:'Graffiti-Wände an der Mauer',reward:8},
+ {id:'graffiti',ziel:'Kreativ',titel:'Street-Artist',text:'Kaufe eine Sprühdose im P-Mart und sprüh ein Bild an eine Graffiti-Wand an der Mauer (mindestens 400 Sprühpunkte).',ort:'Graffiti-Wände an der Mauer',reward:8},
  {id:'gruft',ziel:'Kämpfen',titel:'Grabwächter',text:'Wirf in der Unterwelt dein Skateboard (Mausklick, F oder E) auf 6 Kürbis-Zombies.',ort:'Unterwelt',reward:10},
  {id:'geister',ziel:'Kämpfen',titel:'Geisterjagd',text:'Vertreibe in der Unterwelt 4 Geister mit dem Skateboard.',ort:'Unterwelt',reward:10},
  {id:'kuerbis',ziel:'Sammeln',titel:'Kürbisernte',text:'Sammle in der Unterwelt 8 leuchtende Kürbis-Laternen.',ort:'Unterwelt',reward:12},
@@ -1680,17 +1681,17 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
   const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text} ${(()=>{try{return uwProgText(a.id)}catch(e){return ''}})()}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
   const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
-  const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">Neue Looks für deine Figur. Dein Guthaben: <b>'+SC.n+' Scoops</b>.</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
-    return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
+  const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">'+(SHOP.in?'Willkommen im P-Mart! Dein Guthaben: <b>'+SC.n+' Scoops</b>.':'Kaufen kannst du im <b>P-Mart</b> (blaues Band, auf der Minikarte als P). Hier kannst du nur ansehen. Guthaben: <b>'+SC.n+' Scoops</b>.')+'</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
+    return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)&&SHOP.in?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
     lad.insertAdjacentHTML('beforeend',(()=>{try{return grafShopHTML()}catch(e){return ''}})());lad.querySelectorAll('[data-can]').forEach(b=>b.onclick=()=>{if(grafBuy(b.dataset.can))rpRender()});
     lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)})}
   const edi=document.getElementById('rp-edi');if(edi&&SC.tab==='edi'){const pv=edPreview();
     const sw=(slot,title)=>`<h3 class="edh">${title}</h3><div class="swrow">`+`<button type="button" class="swb std${ED.col[slot]?'':' on'}" data-c="${slot}:" aria-label="Standard" title="Standard des Skins">↺</button>`+ED_COLS[slot].map(h=>{const own=slot==='skin'||ED.ownC.has(slot+':'+h),on=ED.col[slot]===h;return `<button type="button" class="swb${on?' on':''}${own?'':' lock'}" style="background:${h}" data-c="${slot}:${h}" aria-label="${title} ${h}" title="${own?'Anziehen':ED_COL_PRICE+' Scoops'}">${own?'':'<small>'+ED_COL_PRICE+'</small>'}</button>`}).join('')+'</div>';
-    edi.innerHTML=`<div class="edwrap"><div class="edprev">${pv?`<img src="${pv}" alt="So sieht deine Figur aus">`:''}<b>${SC.n} Scoops</b></div><div class="edlist"><p class="sub">Farben und Teile für deine Figur. Du siehst sofort, wie sie aussieht. Hautfarbe ist gratis, Pulli- und Hosenfarben kosten ${ED_COL_PRICE} Scoops (einmal kaufen, dann immer wieder nutzen).</p>`
+    edi.innerHTML=`<div class="edwrap"><div class="edprev">${pv?`<img src="${pv}" alt="So sieht deine Figur aus">`:''}<b>${SC.n} Scoops</b></div><div class="edlist"><p class="sub">${SHOP.in?'':'Neue Teile und Farben gibt es im <b>P-Mart</b>. '}Farben und Teile für deine Figur. Du siehst sofort, wie sie aussieht. Hautfarbe ist gratis, Pulli- und Hosenfarben kosten ${ED_COL_PRICE} Scoops (einmal kaufen, dann immer wieder nutzen).</p>`
      +sw('skin','Hautfarbe')+sw('top','Pulli-Farbe')+sw('bot','Hosen-Farbe')
-     +ED_SLOTS.map(([sl,sn])=>`<h3 class="edh">${sn}</h3><div class="skgrid">`+ED_ITEMS.filter(x=>x.slot===sl).map(x=>{const own=ED.owned.has(x.id),on=ED.on[x.slot]===x.id;return `<div class="sk${on?' on':''}"><b>${x.name}</b><span>${own?(on?'Angelegt':'Im Besitz'):x.price+' Scoops'}</span>${own?`<button type="button" data-t="${x.id}">${on?'Ablegen':'Anlegen'}</button>`:`<button type="button" data-y="${x.id}"${scCan(x.price)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>').join('')+'</div></div>';
+     +ED_SLOTS.map(([sl,sn])=>`<h3 class="edh">${sn}</h3><div class="skgrid">`+ED_ITEMS.filter(x=>x.slot===sl).map(x=>{const own=ED.owned.has(x.id),on=ED.on[x.slot]===x.id;return `<div class="sk${on?' on':''}"><b>${x.name}</b><span>${own?(on?'Angelegt':'Im Besitz'):x.price+' Scoops'}</span>${own?`<button type="button" data-t="${x.id}">${on?'Ablegen':'Anlegen'}</button>`:`<button type="button" data-y="${x.id}"${scCan(x.price)&&SHOP.in?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>').join('')+'</div></div>';
     edi.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>edToggle(b.dataset.t));edi.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{if(edBuy(b.dataset.y))edToggle(b.dataset.y)});
-    edi.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [sl,hx]=b.dataset.c.split(':');edColor(sl,hx||null)})}
+    edi.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [sl,hx]=b.dataset.c.split(':');if(hx&&sl!=='skin'&&!ED.ownC.has(sl+':'+hx)&&!SHOP.in){toast('Neue Farben gibt es im P-Mart',1400);return}edColor(sl,hx||null)})}
   const mus=document.getElementById('rp-mus');if(mus&&SC.tab==='mus'){mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div>
    <div class="plr"><button type="button" class="plbtn" id="pl-play" aria-label="${MUSE.paused?'Abspielen':'Pause'}">${MUSE.paused?'▶':'❚❚'}</button><div class="plvol"><label for="pl-vol">Lautstärke</label><input type="range" id="pl-vol" min="0" max="100" value="${Math.round(MUSE.vol*100)}"></div></div>
    <div class="plr"><button type="button" class="plsfx" id="pl-sfx" aria-pressed="${!G.muted}">Effekte (Sprünge, Tricks, Sammeln): ${G.muted?'aus':'an'} · N</button></div>
@@ -1718,7 +1719,7 @@ function invRender(){const grid=$('inv-grid');if(!grid)return;
    :`<div class="slot-i"><div class="ic q">?</div><b>Noch nicht gefunden</b><span>Hinweis: ${d.place==='Büro'?'im Büroviertel':d.place==='Café'?'beim Café':d.place==='Laden'?'bei einem Laden':d.place==='Wohnhaus'?'bei einem Wohnhaus':'beim Burger-Laden'}${d.bonus?' (Bonus)':''}</span></div>`).join('');
   grid.insertAdjacentHTML('beforeend',questSlotsHTML());
   const n=$('inv-n');if(n)n.textContent=invCount()+'/'+ITEM_DEFS.length;const bn=$('b-inv-n');if(bn)bn.textContent=invCount()+'/'+ITEM_DEFS.length;rpRender()}
-function invToggle(on){if(G.phase==='title')return;INV.open=on===undefined?!INV.open:on;$('inv').hidden=!INV.open;$('b-inv').setAttribute('aria-pressed',String(INV.open));
+function invToggle(on){if(G.phase==='title')return;INV.open=on===undefined?!INV.open:on;if(!INV.open)SHOP.in=false;{const h1=document.querySelector('#inv h1');if(h1&&h1.firstChild)h1.firstChild.textContent=SHOP.in?'P-Mart ':'Rarepod '}$('inv').hidden=!INV.open;$('b-inv').setAttribute('aria-pressed',String(INV.open));
   if(INV.open){K.up=K.down=K.left=K.right=0;invRender();$('inv-close').focus({preventScroll:true})}}
 document.querySelectorAll('#rp-tabs button').forEach(b=>b.onclick=()=>rpTab(b.dataset.t));
 $('b-inv').onclick=()=>invToggle();$('inv-close').onclick=()=>invToggle(false);
@@ -1790,13 +1791,32 @@ function buildLevel0(){
     for(let k=0;k<3;k++){sph(GREEN,.9,.9,.9,-w/2+3+k*(w-6)/2,.8,-d/2-2.2);bx(MT('#a66b28'),1.1,.5,1.1,-w/2+3+k*(w-6)/2,0,-d/2-2.2)}
     sign('WOHNEN','#f1a7c8',-w*.3,2.2,-d/2-.12,3.6,.9,Math.PI,'#3a2a5a')}
   /* ---- Laden ---- */
-  function shop(i){const w=28,d=18,h=7.4,wall=MT(PAST[Math.floor(R()*PAST.length)]),aw=['#d54291','#47c2a5','#ff8a2a'][i%3],names=['MODE','KIOSK','SPIELE','BLUMEN','SCHUHE'],nm=names[i%5];
-    bx(wall,w,h,d,0,0,0);bx(TRIM,w+.8,.5,d+.8,0,h,0);bx(GLASSW,w-4,3.2,.15,0,.5,-d/2-.08,false);bx(GLASSW,.15,3.2,d-4,-w/2-.08,.5,0,false);bx(WOOD,2,2.8,.2,w*.36,0,-d/2-.1);
-    for(let k=0;k<7;k++)bx(MT(k%2?'#ffffff':aw),w/7,.3,2.6,-w/2+w/14+k*w/7,4.2,-d/2-1.3);
-    winFace('n',w,d,1,3,4.8);winFace('s',w,d,1,3,4.8);winFace('e',w,d,1,3,4.8);
-    bx(DARK,10,3.6,.5,0,h+.5,-d/2+1.5);bx(MT('#ff5fa8','#ff5fa8',.9),9.4,.25,.2,0,h+.55,-d/2+1.1);
-    sign(nm,'#ffe066',0,5.6,-d/2-1.35,9,2.2,Math.PI,'#1a1030');sign(nm,'#ffe066',0,h+2.5,-d/2+1.2,9,3,Math.PI,'#1a1030');
-    for(let k=0;k<4;k++)bx(MT(['#ff9a3d','#7be0a0','#4cc3ff','#f1a7c8'][k]),1.2,1.2,1.2,-9+k*2.4,0,-d/2-3.2);bx(MT('#6a5a9a'),3.4,.5,1.1,-w/2+4,.5,-d/2-3)}
+  /* ---- P-Mart: Convenience-Store im japanischen Stil, Banderole rundherum ---- */
+  const martTex=(txt,w=1024,h=170,fs=116)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#2b5fcf';x.fillRect(0,0,w,h);x.fillStyle='#f4f7ff';x.textAlign='center';x.textBaseline='middle';x.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif';if('letterSpacing' in x)x.letterSpacing='8px';x.fillText(txt,w/2,h/2+4);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t})};
+  const poleTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=220;const x=c.getContext('2d');x.fillStyle='#2b5fcf';x.beginPath();x.roundRect(4,4,248,212,34);x.fill();x.strokeStyle='#f4f7ff';x.lineWidth=7;x.beginPath();x.roundRect(14,14,228,192,26);x.stroke();
+    x.fillStyle='#f4f7ff';x.beginPath();x.arc(128,92,56,0,7);x.fill();x.fillStyle='#2b5fcf';x.textAlign='center';x.textBaseline='middle';x.font='800 84px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('P',128,96);x.fillStyle='#f4f7ff';x.font='800 42px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('P-MART',128,174);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return new THREE.MeshBasicMaterial({map:t,transparent:true})};
+  function shop(i){const w=26,d=16,h=6.2,WH=MT('#f4f4ee'),BLU=MT('#2b5fcf'),PNK=MT('#ee7cb8'),GLS=MT('#9fd0e8','#bfe8f4',.3),GREY=MT('#8d93a0'),DK=MT('#1c1f2b');
+    (HUB.shops||(HUB.shops=[])).push({x:cur.x,z:cur.z-d/2-2.8});
+    bx(WH,w,h,d,0,0,0);bx(MT('#d7dbe3'),w+.7,.5,d+.7,0,h,0);bx(MT('#b9bdc9'),4.4,1.3,3.2,-6,h+.5,2.5);bx(MT('#b9bdc9'),3,1,2.4,6,h+.5,3);
+    /* Banderole: blaues Band mit rosa Streifen rundherum */
+    bx(BLU,w+.35,1.6,.35,0,3.9,-d/2-.17);bx(PNK,w+.35,.26,.4,0,3.64,-d/2-.19);bx(BLU,w+.35,1.6,.35,0,3.9,d/2+.17);bx(PNK,w+.35,.26,.4,0,3.64,d/2+.19);
+    [-1,1].forEach(s=>{bx(BLU,.35,1.6,d+.35,s*(w/2+.17),3.9,0);bx(PNK,.4,.26,d+.35,s*(w/2+.19),3.64,0)});
+    /* Schaufenster, Schiebetür, Vordach */
+    bx(GLS,w-3,3.1,.2,0,.45,-d/2-.1,false);for(let k=0;k<=5;k++)bx(WH,.2,3.1,.28,-(w-3)/2+k*(w-3)/5,.45,-d/2-.14);bx(WH,w-3,.2,.28,0,3.45,-d/2-.14);bx(WH,w-3,.2,.28,0,1.5,-d/2-.14);
+    bx(MT('#cfeaf6','#9fd0e8',.25),4,3,.24,0,.3,-d/2-.16,false);bx(GREY,.14,3,.28,0,.3,-d/2-.18);bx(GREY,5.4,.22,1.6,0,3.3,-d/2-.9);
+    [-1,1].forEach(s=>bx(DK,.25,.9,.2,s*.5,1.2,-d/2-.28));
+    bx(MT('#2a2f3e'),3.4,.06,2,0,.02,-d/2-1.5);
+    winFace('e',w,d,1,3,4.7);winFace('s',w,d,1,3,4.7);bx(GLS,.2,3.1,d-5,-w/2-.1,.45,0,false);
+    /* Schriftzüge auf dem Band und Standschild */
+    {const hg=hillG(cur.x,cur.z),mk=(mat,pw,ph,x,y,z,ry)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),mat);m.position.set(cur.x+x,Y0+y+hg,cur.z+z);m.rotation.y=ry;m.userData.noBake=true;m.userData.noOutline=true;W0.add(m);return m};
+     mk(martTex('P-MART'),11,1.82,0,4.7,-d/2-.37,Math.PI);mk(martTex('P-MART'),6,1.0,w/2+.37,4.7,0,-Math.PI/2).scale.set(1,1,1);mk(martTex('P-MART'),6,1.0,-w/2-.37,4.7,0,Math.PI/2);mk(martTex('P-MART'),11,1.82,0,4.7,d/2+.37,0);
+     cyl(GREY,.2,8,-w/2-2.6,0,-d/2-3.4);mk(poleTex(),3.8,3.3,-w/2-2.6,9.2,-d/2-3.4-.06,Math.PI);mk(poleTex(),3.8,3.3,-w/2-2.6,9.2,-d/2-3.4+.06,0)}
+    /* ATM-Kästen, Kisten, Fahrrad, Pfeiler */
+    [[5.4,'#37a86a'],[6.8,'#ee7cb8'],[8.2,'#ff8a2a']].forEach(([x,c])=>{bx(BLU,1.1,2.2,.95,x,0,-d/2-1.2);bx(MT(c,c,.4),.8,.9,.1,x,1.3,-d/2-1.72)});
+    for(let k=0;k<3;k++)for(let q=0;q<2;q++)bx(MT('#2b6fd0'),1.3,.8,1.3,-w/2+1.4+k*1.4,q*.8,-d/2-1.2);
+    {const bk=new THREE.Group();const bm=(geo,mat,x,y,z,sx,sy,sz,rx=0,ry=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,0);m.castShadow=true;bk.add(m)};
+     [-.7,.7].forEach(zz=>bm(new THREE.TorusGeometry(.5,.07,6,16),DK,0,.55,zz,1,1,1,0,Math.PI/2));bm(BX,MT('#47c2a5'),0,.85,0,.12,.1,1.5);bm(BX,MT('#47c2a5'),0,1.05,-.2,.1,.5,.1,.4);bm(BX,DK,0,1.3,-.5,.1,.1,.55);bm(BX,MT('#d9a86a'),0,1.05,.85,.5,.35,.5);
+     bk.position.set(cur.x+1.5,Y0+.06+hillG(cur.x,cur.z),cur.z-d/2-3.1);bk.rotation.y=.35;bk.userData.noBake=true;W0.add(bk)}}
   /* ---- Café Pengu: Gebäude als große Kaffeekanne ---- */
   const mesh=(geo,mat,x,y,z,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,mat);m.position.set(cur.x+x,Y0+y,cur.z+z);m.rotation.set(rx,ry,rz);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;W0.add(m);return m};
   function cafe(){const d=16,W=MT('#f4f4ee'),RED=MT('#d63a2f'),BLU=MT('#2f6fd0'),GLS=MT('#2a70d8','#1a4aa8',.35),HEMI=new THREE.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2),H=20,RB=7.4,RT=5.2,rAt=y=>RB-(RB-RT)*y/H;
@@ -2181,6 +2201,7 @@ function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it
   const say1={funk:'Ein Funkzettel. Wer schreibt heute noch in Geheimschrift? Du, ab jetzt.',schraube:'Ein Schraubendreher. Er passt bestimmt irgendwo. Das tun sie immer.',usb:'Ein USB-Stick. Beschriftet mit PATROUILLE. Das klingt nach Ärger.',handbuch:'Ein Handbuch mit abgerissener Seite 12. Natürlich.',losung:'Ein Bon mit einer Geheimlosung. Das Möwen-Menü gibt es also wirklich.'}[it.def.id];
   say('e',core===4&&!it.def.bonus?'Das war der Vierte. Genug für ein Atoll. Es gibt nur noch keins.':say1,3.4)}
 /* ---------- Unterwelt: Spiegelstadt, kopfüber, dunkel, fest im Pixel-Look ---------- */
+function shopEnter(){SHOP.in=true;SC.tab='lad';invToggle(true);tone(660,.08,'square',.04);tone(880,.1,'square',.04,0,.08)}
 function underApply(on){if(!!G.under===on)return;G.under=on;if(on){setTimeout(()=>{try{uwSpawn()}catch(e){console.log('uw',e)}},0)}else if(typeof uwClear==='function')uwClear();
   HUB.portals.forEach(p=>{p.g.visible=false;p.beam.visible=!on});
   HUB.items.forEach(it=>{const v=!on&&!it.got;it.g.visible=v;it.ring.visible=v;it.beam.visible=v});
@@ -2209,6 +2230,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   HUB.mmT+=dt;if(HUB.mmT<.12)return;HUB.mmT=0;const cv=$('mini');if(!cv)return;cv.classList.toggle('on',G.phase==='play');const g=cv.getContext('2d'),t=mm.tmp.getContext('2d');
   t.globalCompositeOperation='source-over';t.clearRect(0,0,150,150);t.drawImage(mm.map,0,0);t.globalCompositeOperation='destination-in';t.drawImage(mm.ex,0,0);
   g.clearRect(0,0,150,150);g.fillStyle='#1a1626';g.fillRect(0,0,150,150);g.drawImage(mm.tmp,0,0);
+  (HUB.shops||[]).forEach(s=>{const [x,z]=mm.pxz(s.x,s.z);g.fillStyle='#2b5fcf';g.strokeStyle='#f4f7ff';g.lineWidth=1.5;g.fillRect(x-5,z-5,10,10);g.strokeRect(x-5,z-5,10,10);g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText('P',x,z+3)});
   HUB.portals.forEach(p=>{if(HUB.found.has(p.world)){const [x,z]=mm.pxz(p.x,p.z);g.fillStyle=p.col;g.beginPath();g.arc(x,z,5,0,7);g.fill();g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText(p.world,x,z+3)}});
   {const [gx,gz]=mm.pxz(-143,HUB.coastZ);g.fillStyle='#ffe066';g.fillRect(gx-1,gz-8*mm.S*1.6,5,16*mm.S*1.6);g.fillStyle='#1a1626';g.font='700 9px sans-serif';g.textAlign='left';g.fillText('K',gx+7,gz+3);g.fillStyle='#ffe066';g.fillText('K',gx+6,gz+3)}
   HUB.items.forEach(it=>{if(it.got){const [x,z]=mm.pxz(it.x,it.z);g.fillStyle=it.def.col;g.strokeStyle='#1a1626';g.lineWidth=1;g.beginPath();g.moveTo(x,z-4);g.lineTo(x+4,z);g.lineTo(x,z+4);g.lineTo(x-4,z);g.closePath();g.fill();g.stroke()}});
@@ -2353,6 +2375,7 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
+    ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:shopEnter}));
     bettlerActs(a);grafActs(a)}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
@@ -2737,7 +2760,7 @@ function uwStep(dt){if(!UWE.ready)return;UWE.stun=Math.max(0,UWE.stun-dt);
 function uwReset(){UWQ.z=0;UWQ.g=0;UWQ.k=0;UWQ.kc=[];uwSave();if(UWE.ready)uwSpawn()}
 
 /* ================= Graffiti: Sprühdosen und 2D-Paint-Editor ================= */
-/* Dosen kauft man im Rarepod unter Laden (Scoops). Die Graffiti-Wände stehen an der Mauer. Der Editor hat eine feste Auflösung (128 x 64) und nur Dosenfarben als Palette.
+/* Dosen kauft man im P-Mart (Scoops). Die Graffiti-Wände stehen an der Mauer. Der Editor hat eine feste Auflösung (128 x 64) und nur Dosenfarben als Palette.
    Das Bild bleibt, bis man (später: jemand anderes) drüber sprüht. Es wird im Browser gespeichert. */
 const GFK='kq-cans',GFT='kq-graf-total',GF_COL=[['#2de0d0','Türkis'],['#ee7cb8','Pink'],['#ffe066','Gelb'],['#ff7a1a','Orange'],['#ffffff','Weiß'],['#1a1626','Schwarz']],GF_PRICE=2,GF_INK=2400,GF_W=128,GF_H=64;
 const GF={cans:{},total:0,cur:null,col:null,size:4,open:false,undo:[],down:false,lx:0,ly:0,dabs:0};
@@ -2746,10 +2769,10 @@ function grafSave(){try{localStorage.setItem(GFK,JSON.stringify(GF.cans));localS
 function grafBuy(c){if(!scCan(GF_PRICE)){toast('Zu wenig Scoops: '+GF_PRICE+' nötig',1500);return false}
   const nm=(GF_COL.find(x=>x[0]===c)||[0,'Farbe'])[1];GF.cans[c]=(GF.cans[c]||0)+GF_INK;grafSave();scAdd(-GF_PRICE,'Sprühdose '+nm);toast('Sprühdose '+nm+' gekauft',1200);return true}
 function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port Lupo (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
-  return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
+  return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)&&SHOP.in?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
 function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const im=new Image();im.onload=()=>{p.ctx.drawImage(im,0,0);p.tex.needsUpdate=true};im.src=d}catch(e){}}
 function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
-  if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im Rarepod (Taste I) gibt es unter "Laden" Sprühdosen für '+GF_PRICE+' Scoops.']);
+  if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im P-Mart (blaues Band, auf der Minikarte als P) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
   GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];
   const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
   GF.col=(GF_COL.find(([c])=>GF.cans[c]>0)||GF_COL[0])[0];$('graf').hidden=false;grafPal();$('graf-done').focus({preventScroll:true})}
@@ -2774,7 +2797,7 @@ function grafSpray(x,y){const cx=$('graf-cv').getContext('2d'),c=GF.col;if((GF.c
   addEventListener('keydown',e=>{if(!GF.open)return;e.stopImmediatePropagation();if(e.code==='Escape'){e.preventDefault();grafClose(false)}else if(e.code==='KeyZ'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('graf-undo').click()}},true)})();
 function grafActs(a){if(!HUB.graf)return;for(const p of HUB.graf.panels)a.push({x:p.ax,z:p.az,r:7.5,label:'Wand besprühen',fn:()=>grafOpen(p)})}
 
-window.__qa={MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

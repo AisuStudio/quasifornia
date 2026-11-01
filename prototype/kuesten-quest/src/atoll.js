@@ -136,6 +136,7 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
+    ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:shopEnter}));
     bettlerActs(a);grafActs(a)}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
