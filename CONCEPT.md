@@ -291,6 +291,7 @@ Kandidaten mit Einschätzung:
 - Port Lane, Port Hill, Port West, Pacific West: sehr allgemein, schwer schützbar oder auffindbar.
 - Port Vanilla: eigenständig, aber zu lang und Schreibweise (Doppel-L) für Kinder schwierig.
 - Port Ventura (PortAventura, Freizeitpark) und Port Sierra (Sierra Entertainment): wegen bestehender Namen gestrichen.
+- Idee "Maze Quest: Port Lupo" (2026-11-01): Muster "Spielname: Weltname", wiederholbar für weitere Welten (zum Beispiel Unterwelt oder Collab-Welten). Bedenken: "Maze" (Labyrinth) passt kaum noch, weil die Stadt inzwischen ein offenes Raster ist (nur drei Pflanzenwände), und "Maze Quest" ist sehr allgemein (nicht auf Marken geprüft). Empfehlung: Muster behalten, als Spielname bleibt Port Quest die Richtung, also "Port Quest: Port Lupo".
 - Ähnlichkeit zu Fortnite: "Port" und "Fort" liegen einen Buchstaben auseinander. Kein Hindernis, aber Namen mit "Night" oder "Nite" vermeiden.
 - "Port" bleibt: steht für Portal, Meer und Reisen. Nachteil: allein nicht schützbar, bei Entwicklern auch "Netzwerkanschluss". Alternative zum Hafen-Gedanken (nur falls nötig): Bay, Dock.
 
