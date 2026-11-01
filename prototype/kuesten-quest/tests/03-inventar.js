@@ -17,7 +17,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
     q.step(.05);if(q.G.phase!=='play'||q.LV.id!==0)break}
    return {n,wi,total:wps.length,x:+P.x.toFixed(0),z:+P.z.toFixed(0)}}});
  console.log('Inventar-Knopf vor Start versteckt',await p.evaluate(()=>document.getElementById('b-inv').hidden));
- await p.click('#go');
+ await p.click('#next1').then(()=>p.click('#go'));
  console.log('Knopf im Spiel',await p.evaluate(()=>!document.getElementById('b-inv').hidden+' '+document.getElementById('b-inv-n').textContent));
  console.log('Items',await p.evaluate(()=>JSON.stringify(__qa.HUB.items.map(it=>[it.def.id,Math.round(it.x),Math.round(it.z),it.got]))));
  // Alle Items ablaufen (zur Kante passenden Seite anfahren)

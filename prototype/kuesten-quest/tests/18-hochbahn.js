@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:620}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8830/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#go');
+ await p.goto('http://localhost:8830/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go'));
  console.log('Zug',JSON.stringify(await p.evaluate(()=>{const T=__qa.HUB.train;return {laenge:Math.round(T.L),zustand:T.state,wartet:+T.cd.toFixed(1),sichtbar:T.g.visible}})));
  console.log('Lauf',JSON.stringify(await p.evaluate(()=>{const q=__qa,T=q.HUB.train;q.G.phase='play';const log=[];let sawRun=false,sawEnd=false;for(let i=0;i<3600;i++){q.step(.05);if(T.state==='run'&&!sawRun){sawRun=true;log.push(['startet bei',+(i*.05).toFixed(1)])}if(sawRun&&T.state==='wait'&&!sawEnd){sawEnd=true;log.push(['fertig bei',+(i*.05).toFixed(1),'naechster in',+T.cd.toFixed(0)]);break}}return log})));
  console.log('Strecke',JSON.stringify(await p.evaluate(()=>{const T=__qa.HUB.train;return [0,150,300,420,500,560,620,T.L-5].map(s=>{const p=T.posAt(s);return [Math.round(s),Math.round(p.x),Math.round(p.z),Math.round(p.h*180/Math.PI)]})})));

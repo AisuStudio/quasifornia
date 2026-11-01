@@ -3,7 +3,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:700}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8810/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#go');
+ await p.goto('http://localhost:8810/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go'));
  const st=()=>p.evaluate(()=>({n:__qa.SC.n,lv:__qa.LV.id,hud:document.getElementById('sc-n').textContent,vis:!document.getElementById('sc-hud').hidden,au:JSON.stringify(__qa.SC.au)}));
  console.log('Start',JSON.stringify(await st()));
  console.log('zu wenig',JSON.stringify(await p.evaluate(async()=>{const q=__qa;q.SC.n=3;q.enterPortal(q.HUB.portals[0]);await new Promise(r=>setTimeout(r,900));return {n:q.SC.n,lv:q.LV.id,blocked:q.HUB.portals[0].blocked,toast:document.getElementById('toast').textContent}})));

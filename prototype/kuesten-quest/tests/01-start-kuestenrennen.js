@@ -18,7 +18,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
     q.step(.05);if(q.G.phase!=='play'||q.LV.id!==0)break;if(n%40==0){if(Math.hypot(P.x-lx,P.z-lz)<1.5)stuck++;lx=P.x;lz=P.z}}
    return {n,wi,total:wps.length,x:+P.x.toFixed(0),z:+P.z.toFixed(0),stuck,lv:q.LV.id,ph:q.G.phase}}});
  console.log('Titel-Buttons',await p.evaluate(()=>[...document.querySelectorAll('#card button.btn')].map(b=>b.textContent).join(' | ')));
- await p.click('#go');
+ await p.click('#next1').then(()=>p.click('#go'));
  console.log('Start',await p.evaluate(()=>JSON.stringify({lv:__qa.LV.id,ph:__qa.G.phase,pos:[Math.round(__qa.P.x),Math.round(__qa.P.z)],portals:__qa.HUB.portals.map(p=>[p.world,p.node,Math.round(p.x),Math.round(p.z)]),coast:__qa.HUB.maze.coast,coastZ:__qa.HUB.coastZ,dists:[__qa.HUB.maze.dist[__qa.HUB.maze.coast],...__qa.HUB.portals.map(p=>__qa.HUB.maze.dist[p.node])],quest:document.getElementById('q-title').textContent,pips:[...document.querySelectorAll('#pips i')].filter(i=>i.style.display!=='none').length})));
  await p.evaluate(()=>{document.getElementById('ui').style.display='none';const q=__qa;for(let i=0;i<5;i++)q.step(.05);const z=q.HUB.coastZ;q.P.x=-125;q.P.z=z;q.P.h=Math.PI;q.P.speed=2;q.step(.05);q.cam.position.set(-120,10,z);q.cam.lookAt(-170,8,z);q.cam.fov=70;q.cam.updateProjectionMatrix();q.render()});
  await p.screenshot({path:require('os').tmpdir()+'/t_coast_view.png'});

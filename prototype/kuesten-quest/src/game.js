@@ -379,10 +379,12 @@ function makeThumbs(){const my=++thumbJob;const todo=SKIN_LIST.map(s=>s[0]).filt
   setTimeout(one,30)}
 function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',carIdx+1]].forEach(([id,idx])=>{const kk=carHue(idx)[0],im=$(id).querySelector('img');if(THUMBS[kk]){im.src=THUMBS[kk];im.hidden=false}})}
 
+const TITLE={step:1};
 function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
   $('card').innerHTML=`<h1>Küsten-Quest</h1>
-   <p class="sub">Du startest in Port Lupo, der Hafenstadt. An der Küste im Westen beginnt das Rennen: fünf Eiskugeln sammeln und vor etwas Großem davonrennen. Die Portale zu den anderen Welten sind in der Stadt versteckt. Vorsicht, andere Skater schubsen dich.</p>
+   <div class="step" id="st1">
+   <p class="sub">Willkommen in Port Lupo. Such dir zuerst deine Figur aus.</p>
    <h2>Dein Avatar</h2>
    <div id="car" role="group" aria-roledescription="Karussell" aria-label="Avatar auswählen">
      <button class="cb" id="cprev" type="button" aria-label="Vorheriger Avatar">◀</button>
@@ -391,15 +393,27 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    </div>
    <div id="cinfo" aria-live="polite"><b id="cname"></b><span id="ctag"></span></div>
    <div id="cdots">${SKIN_LIST.map(([k,n],i)=>`<button type="button" data-i="${i}" aria-label="${n}"${SKOWN.has(k)?'':' disabled title="Im Rarepod-Laden freischalten"'}></button>`).join('')}</div>
-   <h2>Steuerung</h2>
-   <div class="keys"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen, Rampen geben Schub</span><kbd>Shift</kbd><span>Kickflip, das Publikum klatscht</span><kbd>Q</kbd><span>Pop Shove-it</span><kbd>R</kbd><span>360 Flip (Tre Flip)</span><kbd>Bordstein</kbd><span>Mit Ollie auf die Kante springen: Curb Grind. Leertaste springt wieder ab.</span><kbd>Linksklick · F</kbd><span>Skateboard auf Skater oder Boss werfen (2 s Pause)</span><kbd>I</kbd><span>Inventar öffnen (Spiel pausiert)</span><kbd>P · M</kbd><span>Pixel-Look · Ton</span></div>
-   <button class="btn" id="go" type="button">Los geht’s: Start in der Stadt</button><button class="btn sec" id="go1" type="button">Direkt zum Küsten-Rennen (Welt 1)</button><button class="btn sec" id="go2" type="button">Direkt zu Welt 2: Eis-Galaxie</button><button class="btn sec" id="go3" type="button">Direkt zu Welt 3: Nacht-Stadt</button>`;
+   <div class="navrow"><button class="btn" id="next1" type="button">Weiter: Steuerung und Quest ▶</button></div>
+   </div>
+   <div class="step" id="st2" hidden>
+   <div class="st2top"><h2>Steuerung</h2><button class="back" id="back2" type="button">◀ Avatar ändern</button></div>
+   <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>I · M · Enter</kbd><span>Rarepod · Ton · Aktion</span></div>
+   <h2>Wähle deine Quest</h2>
+   <div class="qlist">
+    <button class="qbtn" id="go" type="button"><span class="qn">1</span><span class="qt"><b>Erkunde die Stadt</b><small>Port Lupo entdecken, Gegenstände finden, Portale suchen.</small></span><span class="diff l">Leicht</span></button>
+    <button class="qbtn" id="go1" type="button"><span class="qn">2</span><span class="qt"><b>Skate Contest</b><small>Das Küsten-Rennen: Eiskugeln sammeln und vor dem Riesenvieh davonfahren.</small></span><span class="diff m">Mittel</span></button>
+    <button class="qbtn" id="go5" type="button"><span class="qn">3</span><span class="qt"><b>Rette die Insel</b><small>Vier Rätsel in zehn Minuten. Ohne Gegenstände aus der Stadt wird es knifflig.</small></span><span class="diff s">Schwer</span></button>
+   </div>
+   <details class="dev"><summary>Weitere Welten (zum Ausprobieren)</summary><button class="btn sec" id="go2" type="button">Welt 2: Eis-Galaxie</button> <button class="btn sec" id="go3" type="button">Welt 3: Nacht-Stadt</button></details>
+   </div>`;
   const cur=Math.max(0,SKIN_LIST.findIndex(s=>PRESETS[s[0]]===P.preset));setCarousel(cur,true);
   $('cprev').onclick=()=>stepCarousel(-1);$('cnext').onclick=()=>stepCarousel(1);
   [...$('cdots').children].forEach(b=>b.onclick=()=>{if(SKOWN.has(SKIN_LIST[+b.dataset.i][0]))setCarousel(+b.dataset.i)});
   const cv=$('cview');let sx=null;cv.onpointerdown=e=>{sx=e.clientX};cv.onpointerup=e=>{if(sx!==null&&Math.abs(e.clientX-sx)>28)stepCarousel(e.clientX<sx?1:-1);sx=null};cv.onpointercancel=()=>{sx=null};
   makeThumbs();
-  $('go').onclick=()=>{ac();applyLevel(0);beginPlay()};$('go1').onclick=()=>{ac();applyLevel(1);beginPlay()};$('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
+  const stepTo=n=>{$('st1').hidden=n!==1;$('st2').hidden=n!==2;TITLE.step=n;$('card').scrollTop=0;(n===1?$('next1'):$('go')).focus({preventScroll:true})};TITLE.step=1;
+  $('next1').onclick=()=>stepTo(2);$('back2').onclick=()=>stepTo(1);window.__titleStep=stepTo;
+  $('go').onclick=()=>{ac();applyLevel(0);beginPlay()};$('go1').onclick=()=>{ac();applyLevel(1);beginPlay()};$('go5').onclick=()=>{ac();applyLevel(5);beginPlay()};$('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
 
 
 /* ---------- Skateboard-Wurf ---------- */
@@ -483,7 +497,7 @@ function stepTrick(dt){
 
 /* ---------- Eingabe ---------- */
 const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
-addEventListener('keydown',e=>{if(G.phase==='title'&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD')&&$('cm')){e.preventDefault();stepCarousel(e.code==='ArrowLeft'||e.code==='KeyA'?-1:1);return}
+addEventListener('keydown',e=>{if(G.phase==='title'&&TITLE.step===1&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD')&&$('cm')){e.preventDefault();stepCarousel(e.code==='ArrowLeft'||e.code==='KeyA'?-1:1);return}
   const k=KEYMAP[e.code];if(k){K[k]=1;e.preventDefault()}
   if(e.code==='Space'){e.preventDefault();jump()}
   if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!e.repeat){e.preventDefault();doTrick('kickflip')}
@@ -491,7 +505,7 @@ addEventListener('keydown',e=>{if(G.phase==='title'&&(e.code==='ArrowLeft'||e.co
   if(e.code==='KeyR'&&!e.repeat){e.preventDefault();doTrick('tre')}
   if(e.code==='KeyF'||e.code==='KeyE')throwBoard();
   if(e.code==='KeyM')toggleSnd();
-  if(e.code==='Enter'&&G.phase==='title'){ac();beginPlay()}});
+  if(e.code==='Enter'&&G.phase==='title'&&!(e.target&&e.target.closest&&e.target.closest('button'))){e.preventDefault();if(TITLE.step===1)window.__titleStep(2);else{ac();applyLevel(0);beginPlay()}}});
 addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
 function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}

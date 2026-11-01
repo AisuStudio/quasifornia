@@ -181,6 +181,12 @@ Aus der Notiz des Nutzers: Man sprüht an die große Wand, braucht dafür Dosen 
 - Das Bild wird im Browser gespeichert und bleibt auf der Wand. Auftrag "Street-Artist" (mindestens 400 Sprühpunkte, 8 Scoops).
 - Später: Teilen und Likes (mit Likes bleibt ein Bild länger geschützt), Überschreiben durch andere im Multiplayer, Moderation, Zug besprühen (Hochbahn-Station), automatisches Reinigen des Zuges, wenn jeder Wagen voll ist, optionale Paletten pro Welt.
 
+### Startbildschirm in zwei Schritten (Idee vom Nutzer, 2026-11-01, gebaut)
+1. Avatar auswählen (Karussell).
+2. Steuerung ansehen und eine von drei Quests wählen: 1. Erkunde die Stadt (Leicht), 2. Skate Contest (Mittel, das Küsten-Rennen), 3. Rette die Insel (Schwer, das Atoll). Weitere Welten sind unter "Weitere Welten (zum Ausprobieren)" eingeklappt.
+- Enter geht von Schritt 1 zu Schritt 2 und startet dort die Stadt. Die Karte passt in den Viewport (Höhe unter 780 Pixel wird kompakter).
+- Fehlerbehebung: Die HTML-Datei hatte keine Zeichenkodierung angegeben, dadurch erschienen Umlaute und Pfeile auf manchen Servern kaputt (zum Beispiel "GÃ¶rtel"). Jetzt steht `<meta charset="utf-8">` und ein Viewport-Tag am Anfang.
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels

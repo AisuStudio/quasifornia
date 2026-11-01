@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:620}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8835/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#go');
+ await p.goto('http://localhost:8835/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go'));
  const finish=()=>p.evaluate(()=>{const q=__qa;let n=0;while(q.DLG.open&&n++<30)q.dlgNext();return n});
  console.log('Bettler-Aktion',JSON.stringify(await p.evaluate(()=>{const q=__qa;q.G.phase='play';q.P.x=29.5;q.P.z=-68;q.P.speed=0;q.step(.03);return q.curActs().map(a=>a.label).filter(l=>/Serafin/.test(l))})));
  console.log('zu wenig',JSON.stringify(await p.evaluate(()=>{const q=__qa;q.SC.n=2;q.beggarTalk();return {dlg:q.DLG.open,gave:q.BQ.gave}})));await finish();
