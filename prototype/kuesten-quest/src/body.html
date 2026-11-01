@@ -36,6 +36,13 @@
       <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Inventar zurücksetzen</button></div>
     </div>
   </div>
+  <div id="graf" hidden role="dialog" aria-label="Graffiti-Editor"><div class="card">
+    <h1>Graffiti <small>128 × 64</small></h1>
+    <canvas id="graf-cv" width="128" height="64"></canvas>
+    <div id="graf-pal"></div>
+    <div class="grafrow"><span class="k">Größe</span><button type="button" data-sz="2">S</button><button type="button" data-sz="4" class="on">M</button><button type="button" data-sz="7">L</button><button type="button" id="graf-undo">Rückgängig</button></div>
+    <div class="invbtn"><button class="btn" id="graf-done" type="button">Fertig</button><button class="btn sec" id="graf-cancel" type="button">Abbrechen · Esc</button></div>
+  </div></div>
   <div id="act" hidden><span></span><kbd>Enter</kbd></div>
   <div id="dlg" hidden role="dialog" aria-label="Gespräch"><div class="panel"><span class="who" id="dlg-who"></span><p id="dlg-text"></p><button class="btn" id="dlg-next" type="button">Weiter ▶</button></div></div>
   <div id="cd" class="panel" hidden><span class="k">Letztes Boot in</span><b id="cd-t">10:00</b></div>

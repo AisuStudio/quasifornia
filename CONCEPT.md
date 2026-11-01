@@ -173,6 +173,14 @@ Gegner und Sammelobjekte in der Spiegelstadt, nach dem Vorbild von Ghosts 'n Gob
 - Aufträge (Rarepod): Grabwächter (6 Zombies, 10 Scoops), Geisterjagd (4 Geister, 10 Scoops), Kürbisernte (8 Laternen, 12 Scoops). Fortschritt wird gespeichert, Belohnung nur einmal.
 - Später: Boss, mehr Gegnerarten (Fledermäuse, Kabel-Schlangen), Waffen-Upgrades, echte 2D-Abschnitte.
 
+### Graffiti-Editor mit Dosen (im Prototyp gebaut, 2026-11-01)
+Aus der Notiz des Nutzers: Man sprüht an die große Wand, braucht dafür Dosen gegen Scoops, und das Graffito bleibt, bis jemand drübersprüht.
+- Dosen: Sechs Farben (Türkis, Pink, Gelb, Orange, Weiß, Schwarz), im Rarepod unter "Laden" für je 2 Scoops. Jede Dose enthält Farbe für ein großes Bild und lässt sich nachfüllen.
+- Wände: Fünf Graffiti-Wände an der Innenseite der Mauer. Aktion "Wand besprühen" in der Nähe.
+- Editor: 2D-Paint-Fenster mit fester Auflösung (128 × 64 Pixel), nur die Farben der gekauften Dosen, drei Pinselgrößen, Rückgängig, Fertig oder Abbrechen (Esc). Passt zur Vorgabe "feste Auflösung, nur Paint im Spiel, kein Bild-Upload".
+- Das Bild wird im Browser gespeichert und bleibt auf der Wand. Auftrag "Street-Artist" (mindestens 400 Sprühpunkte, 8 Scoops).
+- Später: Teilen und Likes (mit Likes bleibt ein Bild länger geschützt), Überschreiben durch andere im Multiplayer, Moderation, Zug besprühen (Hochbahn-Station), automatisches Reinigen des Zuges, wenn jeder Wagen voll ist, optionale Paletten pro Welt.
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels

@@ -495,7 +495,7 @@ addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
 function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
 function toggleSnd(){G.muted=!G.muted;MUS.muted=G.muted;$('b-snd').setAttribute('aria-pressed',String(!G.muted))}
-addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
+addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GFOPEN&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
 $('b-snd').onclick=toggleSnd;
@@ -563,7 +563,7 @@ function updateTrack(gap){const f=x=>Math.max(0,Math.min(1,(x+134)/260))*100+'%'
 /* ---------- Hauptschritt ---------- */
 const camPos=new V3(-148,6,-8),camLook=new V3(-134,3,-8);let gapNow=60;
 function step(dt){
-  if(INV.open||DLG.open||PAD.open||PUZ.open)return;
+  if(INV.open||DLG.open||PAD.open||PUZ.open||GFOPEN)return;
   G.t+=dt;for(let i=TIMERS.length-1;i>=0;i--){TIMERS[i].t-=dt;if(TIMERS[i].t<=0){const f=TIMERS[i].fn;TIMERS.splice(i,1);f()}}
   if(narr.active){narr.shown=Math.min(narr.full.length,narr.shown+dt*46);narr.text.textContent=narr.full.slice(0,Math.floor(narr.shown));if(narr.shown>=narr.full.length){narr.hold-=dt;if(narr.hold<=0){narr.active=false;narr.el.classList.remove('on')}}}
   stepConfetti(dt);stepClouds(dt);stepLevel2(dt);stepLevel3(dt);stepLevel0(dt);if(LV.id===0)cullCity();stepAtoll(dt);
@@ -938,6 +938,7 @@ try{SC.au=JSON.parse(localStorage.getItem(AUK)||'{}')||{}}catch(e){}
 function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log.slice(0,12)}));localStorage.setItem(AUK,JSON.stringify(SC.au))}catch(e){}}
 const AUFTRAEGE=[
  {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
+ {id:'graffiti',ziel:'Kreativ',titel:'Street-Artist',text:'Kaufe eine Sprühdose (Rarepod, Laden) und sprüh ein Bild an eine Graffiti-Wand an der Mauer (mindestens 400 Sprühpunkte).',ort:'Graffiti-Wände an der Mauer',reward:8},
  {id:'gruft',ziel:'Kämpfen',titel:'Grabwächter',text:'Wirf in der Unterwelt dein Skateboard (Mausklick, F oder E) auf 6 Kürbis-Zombies.',ort:'Unterwelt',reward:10},
  {id:'geister',ziel:'Kämpfen',titel:'Geisterjagd',text:'Vertreibe in der Unterwelt 4 Geister mit dem Skateboard.',ort:'Unterwelt',reward:10},
  {id:'kuerbis',ziel:'Sammeln',titel:'Kürbisernte',text:'Sammle in der Unterwelt 8 leuchtende Kürbis-Laternen.',ort:'Unterwelt',reward:12},
@@ -1013,6 +1014,7 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
   const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">Neue Looks für deine Figur. Dein Guthaben: <b>'+SC.n+' Scoops</b>.</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
     return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
+    lad.insertAdjacentHTML('beforeend',(()=>{try{return grafShopHTML()}catch(e){return ''}})());lad.querySelectorAll('[data-can]').forEach(b=>b.onclick=()=>{if(grafBuy(b.dataset.can))rpRender()});
     lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)})}
   const edi=document.getElementById('rp-edi');if(edi&&SC.tab==='edi'){const pv=edPreview();
     const sw=(slot,title)=>`<h3 class="edh">${title}</h3><div class="swrow">`+`<button type="button" class="swb std${ED.col[slot]?'':' on'}" data-c="${slot}:" aria-label="Standard" title="Standard des Skins">↺</button>`+ED_COLS[slot].map(h=>{const own=slot==='skin'||ED.ownC.has(slot+':'+h),on=ED.col[slot]===h;return `<button type="button" class="swb${on?' on':''}${own?'':' lock'}" style="background:${h}" data-c="${slot}:${h}" aria-label="${title} ${h}" title="${own?'Anziehen':ED_COL_PRICE+' Scoops'}">${own?'':'<small>'+ED_COL_PRICE+'</small>'}</button>`}).join('')+'</div>';
@@ -1022,6 +1024,7 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
     edi.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>edToggle(b.dataset.t));edi.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{if(edBuy(b.dataset.y))edToggle(b.dataset.y)});
     edi.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [sl,hx]=b.dataset.c.split(':');edColor(sl,hx||null)})}
   const mus=document.getElementById('rp-mus');if(mus)mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div><p class="sub">Mit M schaltest du den Ton aus. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`}
+let GFOPEN=false;
 const INV={open:false,items:new Set()};
 try{JSON.parse(localStorage.getItem('kq-items')||'[]').forEach(id=>{if(ITEM_DEFS.some(d=>d.id===id))INV.items.add(id)})}catch(e){}
 function invSave(){try{localStorage.setItem('kq-items',JSON.stringify([...INV.items]))}catch(e){}}
@@ -1295,6 +1298,16 @@ function buildLevel0(){
     bm(CY,'#cfcfe0',.3,.14,.95,.2,.26,.2);bm(SP,'#12c8c0',.3,.3,.95,.07,.05,.07);
     const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.7,.55),signMat('Bitte Scoops','#ffe066','#2a1a10'));sg.position.set(-.55,.65,1.15);sg.rotation.y=.25;bg.add(sg);
     W0.add(bg);addOutlines(bg,'actor');HUB.beggar={x:bx0,z:bz0,g:bg};HUB.colliders.push({x0:bx0-.8,x1:bx0+.8,z0:bz0-.8,z1:bz0+.8,top:999})}
+   /* Graffiti-Wände an der Innenseite der Mauer (feste Auflösung 128 x 64, Dosenfarben) */
+   {HUB.graf={panels:[]};
+    [['n1',-60,-142,0],['e1',142,-50,-Math.PI/2],['e2',142,50,-Math.PI/2],['s1',-60,142,Math.PI],['s2',50,142,Math.PI]].forEach(([id,x,z,ry])=>{
+     const cv=document.createElement('canvas');cv.width=128;cv.height=64;const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
+     cx.fillStyle='#2b2840';cx.fillRect(0,0,128,64);for(let q=0;q<300;q++){cx.fillStyle=q%3?'#322e4a':'#262338';cx.fillRect(Math.floor(Math.random()*128),Math.floor(Math.random()*64),2,1)}
+     cx.fillStyle='#4a4468';cx.font='700 9px sans-serif';cx.textAlign='center';cx.fillText('HIER SPRÜHEN',64,34);
+     const tex=new THREE.CanvasTexture(cv);tex.magFilter=THREE.NearestFilter;tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.colorSpace=THREE.SRGBColorSpace;
+     const G0=hillG(x,z),sx=Math.sin(ry),sz=Math.cos(ry),yc=1.3+G0+5.4,pl=new THREE.Mesh(new THREE.PlaneGeometry(16,8),new THREE.MeshBasicMaterial({map:tex})),fr=new THREE.Mesh(new THREE.PlaneGeometry(16.8,8.8),new THREE.MeshBasicMaterial({color:'#0e0b18'}));
+     pl.position.set(x+sx*.16,yc,z+sz*.16);fr.position.set(x+sx*.1,yc,z+sz*.1);pl.rotation.y=fr.rotation.y=ry;pl.userData.noBake=fr.userData.noBake=true;pl.userData.noOutline=fr.userData.noOutline=true;W0.add(fr);W0.add(pl);
+     const p={id,x,z,ry,cv,ctx:cx,tex,ax:x+sx*7.5,az:z+sz*7.5};HUB.graf.panels.push(p);grafLoadPanel(p)})}
    /* Unterwelt-Deko (nur sichtbar, wenn man unten ist): Gräber, Kürbisse, Kabel, Code-Regen */
    {const UWg=new THREE.Group();UWg.visible=false;UWg.userData.noBake=true;W0.add(UWg);const R3=mulberry(31337);
     const SMt=(c,em,ei)=>new THREE.MeshStandardMaterial({color:c,roughness:.8,emissive:em||'#000000',emissiveIntensity:em?(ei||.8):0});
@@ -1515,7 +1528,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

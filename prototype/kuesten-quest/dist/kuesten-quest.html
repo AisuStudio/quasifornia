@@ -59,6 +59,16 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #sc-d.on{animation:scd 1.1s ease forwards}
 @keyframes scd{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(14px)}}
 #inv .card{max-height:calc(100vh - 28px);overflow-y:auto}
+#graf{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:auto;background:rgba(14,11,24,.82);padding:12px;overflow:auto;z-index:5}
+#graf[hidden]{display:none!important}
+#graf .card{width:min(860px,100%);max-height:100%;overflow:auto}
+#graf h1{font-size:clamp(28px,5vw,40px)}#graf h1 small{font:500 13px/1 var(--mono);color:var(--haze);letter-spacing:.08em;margin-left:8px}
+#graf-cv{display:block;width:100%;aspect-ratio:2/1;image-rendering:pixelated;background:#2b2840;border:3px solid #0e0b18;border-radius:10px;cursor:crosshair;touch-action:none}
+#graf-pal{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 8px}
+.gpal{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid #0e0b18;background:var(--c);cursor:pointer;overflow:hidden;padding:0}
+.gpal i{position:absolute;left:0;bottom:0;height:5px;background:#0e0b18;opacity:.55}
+.gpal.on{outline:3px solid var(--gold);outline-offset:2px}.gpal.empty{opacity:.35}
+.grafrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.grafrow button{font:600 13px/1 var(--mono);color:var(--paper);background:var(--ink-2);border:2px solid #0e0b18;border-radius:8px;padding:8px 12px;cursor:pointer}.grafrow button.on{background:var(--pink)}
 #rp-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
 #rp-tabs button{font:500 12px/1 var(--mono);color:var(--paper);background:var(--ink-2);border:2px solid #0e0b18;border-radius:10px;padding:8px 11px;cursor:pointer}
 #rp-tabs button[aria-pressed="true"]{background:var(--pink)}
@@ -261,6 +271,13 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
       <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Inventar zurücksetzen</button></div>
     </div>
   </div>
+  <div id="graf" hidden role="dialog" aria-label="Graffiti-Editor"><div class="card">
+    <h1>Graffiti <small>128 × 64</small></h1>
+    <canvas id="graf-cv" width="128" height="64"></canvas>
+    <div id="graf-pal"></div>
+    <div class="grafrow"><span class="k">Größe</span><button type="button" data-sz="2">S</button><button type="button" data-sz="4" class="on">M</button><button type="button" data-sz="7">L</button><button type="button" id="graf-undo">Rückgängig</button></div>
+    <div class="invbtn"><button class="btn" id="graf-done" type="button">Fertig</button><button class="btn sec" id="graf-cancel" type="button">Abbrechen · Esc</button></div>
+  </div></div>
   <div id="act" hidden><span></span><kbd>Enter</kbd></div>
   <div id="dlg" hidden role="dialog" aria-label="Gespräch"><div class="panel"><span class="who" id="dlg-who"></span><p id="dlg-text"></p><button class="btn" id="dlg-next" type="button">Weiter ▶</button></div></div>
   <div id="cd" class="panel" hidden><span class="k">Letztes Boot in</span><b id="cd-t">10:00</b></div>
@@ -1073,7 +1090,7 @@ addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
 addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
 function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
 function toggleSnd(){G.muted=!G.muted;MUS.muted=G.muted;$('b-snd').setAttribute('aria-pressed',String(!G.muted))}
-addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
+addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GFOPEN&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
 $('b-snd').onclick=toggleSnd;
@@ -1141,7 +1158,7 @@ function updateTrack(gap){const f=x=>Math.max(0,Math.min(1,(x+134)/260))*100+'%'
 /* ---------- Hauptschritt ---------- */
 const camPos=new V3(-148,6,-8),camLook=new V3(-134,3,-8);let gapNow=60;
 function step(dt){
-  if(INV.open||DLG.open||PAD.open||PUZ.open)return;
+  if(INV.open||DLG.open||PAD.open||PUZ.open||GFOPEN)return;
   G.t+=dt;for(let i=TIMERS.length-1;i>=0;i--){TIMERS[i].t-=dt;if(TIMERS[i].t<=0){const f=TIMERS[i].fn;TIMERS.splice(i,1);f()}}
   if(narr.active){narr.shown=Math.min(narr.full.length,narr.shown+dt*46);narr.text.textContent=narr.full.slice(0,Math.floor(narr.shown));if(narr.shown>=narr.full.length){narr.hold-=dt;if(narr.hold<=0){narr.active=false;narr.el.classList.remove('on')}}}
   stepConfetti(dt);stepClouds(dt);stepLevel2(dt);stepLevel3(dt);stepLevel0(dt);if(LV.id===0)cullCity();stepAtoll(dt);
@@ -1516,6 +1533,7 @@ try{SC.au=JSON.parse(localStorage.getItem(AUK)||'{}')||{}}catch(e){}
 function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log.slice(0,12)}));localStorage.setItem(AUK,JSON.stringify(SC.au))}catch(e){}}
 const AUFTRAEGE=[
  {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
+ {id:'graffiti',ziel:'Kreativ',titel:'Street-Artist',text:'Kaufe eine Sprühdose (Rarepod, Laden) und sprüh ein Bild an eine Graffiti-Wand an der Mauer (mindestens 400 Sprühpunkte).',ort:'Graffiti-Wände an der Mauer',reward:8},
  {id:'gruft',ziel:'Kämpfen',titel:'Grabwächter',text:'Wirf in der Unterwelt dein Skateboard (Mausklick, F oder E) auf 6 Kürbis-Zombies.',ort:'Unterwelt',reward:10},
  {id:'geister',ziel:'Kämpfen',titel:'Geisterjagd',text:'Vertreibe in der Unterwelt 4 Geister mit dem Skateboard.',ort:'Unterwelt',reward:10},
  {id:'kuerbis',ziel:'Sammeln',titel:'Kürbisernte',text:'Sammle in der Unterwelt 8 leuchtende Kürbis-Laternen.',ort:'Unterwelt',reward:12},
@@ -1591,6 +1609,7 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
   const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">Neue Looks für deine Figur. Dein Guthaben: <b>'+SC.n+' Scoops</b>.</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
     return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
+    lad.insertAdjacentHTML('beforeend',(()=>{try{return grafShopHTML()}catch(e){return ''}})());lad.querySelectorAll('[data-can]').forEach(b=>b.onclick=()=>{if(grafBuy(b.dataset.can))rpRender()});
     lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)})}
   const edi=document.getElementById('rp-edi');if(edi&&SC.tab==='edi'){const pv=edPreview();
     const sw=(slot,title)=>`<h3 class="edh">${title}</h3><div class="swrow">`+`<button type="button" class="swb std${ED.col[slot]?'':' on'}" data-c="${slot}:" aria-label="Standard" title="Standard des Skins">↺</button>`+ED_COLS[slot].map(h=>{const own=slot==='skin'||ED.ownC.has(slot+':'+h),on=ED.col[slot]===h;return `<button type="button" class="swb${on?' on':''}${own?'':' lock'}" style="background:${h}" data-c="${slot}:${h}" aria-label="${title} ${h}" title="${own?'Anziehen':ED_COL_PRICE+' Scoops'}">${own?'':'<small>'+ED_COL_PRICE+'</small>'}</button>`}).join('')+'</div>';
@@ -1600,6 +1619,7 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
     edi.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>edToggle(b.dataset.t));edi.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{if(edBuy(b.dataset.y))edToggle(b.dataset.y)});
     edi.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [sl,hx]=b.dataset.c.split(':');edColor(sl,hx||null)})}
   const mus=document.getElementById('rp-mus');if(mus)mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div><p class="sub">Mit M schaltest du den Ton aus. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`}
+let GFOPEN=false;
 const INV={open:false,items:new Set()};
 try{JSON.parse(localStorage.getItem('kq-items')||'[]').forEach(id=>{if(ITEM_DEFS.some(d=>d.id===id))INV.items.add(id)})}catch(e){}
 function invSave(){try{localStorage.setItem('kq-items',JSON.stringify([...INV.items]))}catch(e){}}
@@ -1873,6 +1893,16 @@ function buildLevel0(){
     bm(CY,'#cfcfe0',.3,.14,.95,.2,.26,.2);bm(SP,'#12c8c0',.3,.3,.95,.07,.05,.07);
     const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.7,.55),signMat('Bitte Scoops','#ffe066','#2a1a10'));sg.position.set(-.55,.65,1.15);sg.rotation.y=.25;bg.add(sg);
     W0.add(bg);addOutlines(bg,'actor');HUB.beggar={x:bx0,z:bz0,g:bg};HUB.colliders.push({x0:bx0-.8,x1:bx0+.8,z0:bz0-.8,z1:bz0+.8,top:999})}
+   /* Graffiti-Wände an der Innenseite der Mauer (feste Auflösung 128 x 64, Dosenfarben) */
+   {HUB.graf={panels:[]};
+    [['n1',-60,-142,0],['e1',142,-50,-Math.PI/2],['e2',142,50,-Math.PI/2],['s1',-60,142,Math.PI],['s2',50,142,Math.PI]].forEach(([id,x,z,ry])=>{
+     const cv=document.createElement('canvas');cv.width=128;cv.height=64;const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
+     cx.fillStyle='#2b2840';cx.fillRect(0,0,128,64);for(let q=0;q<300;q++){cx.fillStyle=q%3?'#322e4a':'#262338';cx.fillRect(Math.floor(Math.random()*128),Math.floor(Math.random()*64),2,1)}
+     cx.fillStyle='#4a4468';cx.font='700 9px sans-serif';cx.textAlign='center';cx.fillText('HIER SPRÜHEN',64,34);
+     const tex=new THREE.CanvasTexture(cv);tex.magFilter=THREE.NearestFilter;tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.colorSpace=THREE.SRGBColorSpace;
+     const G0=hillG(x,z),sx=Math.sin(ry),sz=Math.cos(ry),yc=1.3+G0+5.4,pl=new THREE.Mesh(new THREE.PlaneGeometry(16,8),new THREE.MeshBasicMaterial({map:tex})),fr=new THREE.Mesh(new THREE.PlaneGeometry(16.8,8.8),new THREE.MeshBasicMaterial({color:'#0e0b18'}));
+     pl.position.set(x+sx*.16,yc,z+sz*.16);fr.position.set(x+sx*.1,yc,z+sz*.1);pl.rotation.y=fr.rotation.y=ry;pl.userData.noBake=fr.userData.noBake=true;pl.userData.noOutline=fr.userData.noOutline=true;W0.add(fr);W0.add(pl);
+     const p={id,x,z,ry,cv,ctx:cx,tex,ax:x+sx*7.5,az:z+sz*7.5};HUB.graf.panels.push(p);grafLoadPanel(p)})}
    /* Unterwelt-Deko (nur sichtbar, wenn man unten ist): Gräber, Kürbisse, Kabel, Code-Regen */
    {const UWg=new THREE.Group();UWg.visible=false;UWg.userData.noBake=true;W0.add(UWg);const R3=mulberry(31337);
     const SMt=(c,em,ei)=>new THREE.MeshStandardMaterial({color:c,roughness:.8,emissive:em||'#000000',emissiveIntensity:em?(ei||.8):0});
@@ -2231,7 +2261,7 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
-    bettlerActs(a)}
+    bettlerActs(a);grafActs(a)}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});
@@ -2614,7 +2644,45 @@ function uwStep(dt){if(!UWE.ready)return;UWE.stun=Math.max(0,UWE.stun-dt);
     if(Math.hypot(P.x-p.x,P.z-p.z)<3.4&&G.phase==='play'){p.g.visible=false;UWQ.kc.push(p.id);UWQ.k++;uwSave();SFX.collect(UWQ.k);burst(p.x,p.y,p.z,40);toast('Kürbis-Laterne '+Math.min(UWQ.k,8)+'/8',900);uwHud();uwCheck()}}}
 function uwReset(){UWQ.z=0;UWQ.g=0;UWQ.k=0;UWQ.kc=[];uwSave();if(UWE.ready)uwSpawn()}
 
-window.__qa={get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+/* ================= Graffiti: Sprühdosen und 2D-Paint-Editor ================= */
+/* Dosen kauft man im Rarepod unter Laden (Scoops). Die Graffiti-Wände stehen an der Mauer. Der Editor hat eine feste Auflösung (128 x 64) und nur Dosenfarben als Palette.
+   Das Bild bleibt, bis man (später: jemand anderes) drüber sprüht. Es wird im Browser gespeichert. */
+const GFK='kq-cans',GFT='kq-graf-total',GF_COL=[['#2de0d0','Türkis'],['#ee7cb8','Pink'],['#ffe066','Gelb'],['#ff7a1a','Orange'],['#ffffff','Weiß'],['#1a1626','Schwarz']],GF_PRICE=2,GF_INK=2400,GF_W=128,GF_H=64;
+const GF={cans:{},total:0,cur:null,col:null,size:4,open:false,undo:[],down:false,lx:0,ly:0,dabs:0};
+try{const s=JSON.parse(localStorage.getItem(GFK)||'{}');GF_COL.forEach(([c])=>{GF.cans[c]=Math.max(0,s[c]|0)});GF.total=parseInt(localStorage.getItem(GFT)||'0')|0}catch(e){GF_COL.forEach(([c])=>GF.cans[c]=0)}
+function grafSave(){try{localStorage.setItem(GFK,JSON.stringify(GF.cans));localStorage.setItem(GFT,String(GF.total))}catch(e){}}
+function grafBuy(c){if(!scCan(GF_PRICE)){toast('Zu wenig Scoops: '+GF_PRICE+' nötig',1500);return false}
+  const nm=(GF_COL.find(x=>x[0]===c)||[0,'Farbe'])[1];GF.cans[c]=(GF.cans[c]||0)+GF_INK;grafSave();scAdd(-GF_PRICE,'Sprühdose '+nm);toast('Sprühdose '+nm+' gekauft',1200);return true}
+function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port Lupo (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
+  return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
+function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const im=new Image();im.onload=()=>{p.ctx.drawImage(im,0,0);p.tex.needsUpdate=true};im.src=d}catch(e){}}
+function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
+  if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im Rarepod (Taste I) gibt es unter "Laden" Sprühdosen für '+GF_PRICE+' Scoops.']);
+  GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];
+  const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
+  GF.col=(GF_COL.find(([c])=>GF.cans[c]>0)||GF_COL[0])[0];$('graf').hidden=false;grafPal();$('graf-done').focus({preventScroll:true})}
+function grafPal(){const pal=$('graf-pal');pal.innerHTML=GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;return `<button type="button" class="gpal${c===GF.col?' on':''}${ink>0?'':' empty'}" data-c="${c}" style="--c:${c}" title="${n}"><i style="width:${Math.round(Math.min(1,ink/GF_INK)*100)}%"></i></button>`}).join('');
+  pal.querySelectorAll('button').forEach(b=>b.onclick=()=>{if((GF.cans[b.dataset.c]||0)<=0){toast('Diese Dose ist leer. Im Laden nachfüllen.',1200);return}GF.col=b.dataset.c;grafPal()})}
+function grafClose(save){if(!GF.open)return;const p=GF.cur;
+  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'))}catch(e){}
+    GF.total+=GF.dabs;grafSave();if(GF.dabs>0){SFX.win();toast('Graffiti gesprüht!',1300);if(GF.total>=400&&!SC.au.graffiti)auComplete('graffiti')}}
+  else grafSave();
+  GF.open=false;GFOPEN=false;$('graf').hidden=true;GF.cur=null}
+function grafPt(e){const cv=$('graf-cv'),r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*GF_W),Math.floor((e.clientY-r.top)/r.height*GF_H)]}
+function grafSpray(x,y){const cx=$('graf-cv').getContext('2d'),c=GF.col;if((GF.cans[c]||0)<=0)return;const R=GF.size;cx.fillStyle=c;
+  const n=Math.max(4,Math.round(R*R*1.9));for(let i=0;i<n;i++){const a=Math.random()*6.283,d=Math.sqrt(Math.random())*R,px=Math.round(x+Math.cos(a)*d),py=Math.round(y+Math.sin(a)*d);if(px<0||py<0||px>=GF_W||py>=GF_H)continue;cx.fillRect(px,py,1,1)}
+  GF.cans[c]-=n*.35;GF.dabs+=n;if(GF.cans[c]<=0){GF.cans[c]=0;toast('Dose leer!',900);grafPal()}}
+(function(){const cv=$('graf-cv');if(!cv)return;
+  cv.addEventListener('pointerdown',e=>{if(!GF.open)return;e.preventDefault();cv.setPointerCapture(e.pointerId);GF.down=true;const cx=cv.getContext('2d');GF.undo.push(cx.getImageData(0,0,GF_W,GF_H));if(GF.undo.length>12)GF.undo.shift();const [x,y]=grafPt(e);GF.lx=x;GF.ly=y;grafSpray(x,y);if(Math.random()<.3)tone(900+Math.random()*300,.05,'sawtooth',.012)});
+  cv.addEventListener('pointermove',e=>{if(!GF.down)return;const [x,y]=grafPt(e),dx=x-GF.lx,dy=y-GF.ly,st=Math.max(1,Math.ceil(Math.hypot(dx,dy)/Math.max(1,GF.size*.6)));for(let i=1;i<=st;i++)grafSpray(GF.lx+dx*i/st,GF.ly+dy*i/st);GF.lx=x;GF.ly=y});
+  const up=()=>{if(GF.down){GF.down=false;grafPal()}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  document.querySelectorAll('#graf [data-sz]').forEach(b=>b.onclick=()=>{GF.size=+b.dataset.sz;document.querySelectorAll('#graf [data-sz]').forEach(x=>x.classList.toggle('on',x===b))});
+  $('graf-undo').onclick=()=>{const s=GF.undo.pop();if(s)cv.getContext('2d').putImageData(s,0,0)};
+  $('graf-done').onclick=()=>grafClose(true);$('graf-cancel').onclick=()=>grafClose(false);
+  addEventListener('keydown',e=>{if(!GF.open)return;e.stopImmediatePropagation();if(e.code==='Escape'){e.preventDefault();grafClose(false)}else if(e.code==='KeyZ'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('graf-undo').click()}},true)})();
+function grafActs(a){if(!HUB.graf)return;for(const p of HUB.graf.panels)a.push({x:p.ax,z:p.az,r:7.5,label:'Wand besprühen',fn:()=>grafOpen(p)})}
+
+window.__qa={GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
