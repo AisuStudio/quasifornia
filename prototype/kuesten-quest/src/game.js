@@ -244,6 +244,7 @@ addEventListener('resize',resize);
 
 /* ---------- UI ---------- */
 const $=id=>document.getElementById(id);
+try{document.fonts.load('40px "Smarta Nova"')}catch(e){}
 const narr={el:$('narr'),who:$('narr-who'),text:$('narr-text'),full:'',shown:0,hold:0,active:false};
 function say(who,text,hold=3.6){narr.full=text;narr.shown=0;narr.hold=hold;narr.active=true;narr.who.textContent=who==='v'?(LV.id===0?'Stadtfunk':LV.id>=2?'Eiswagen-Funk':'Eisverkäufer'):who==='d'?LV.boss:'Erzähler';narr.who.className='who '+(who==='v'?'v':who==='d'?'d':'');narr.el.classList.add('on')}
 function toast(t,ms=1700){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),ms)}

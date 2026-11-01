@@ -265,7 +265,7 @@ Hinweis: Mittelwerte aus vielen Bildern sind gedämpft. Für ein UI die gesätti
 - Vollversion (Quelle): `/Users/domdom/Documents/FONTS/FONTANE/smarta-nova.otf` (23 KB, 139 Glyphen, Ziffern vorhanden). Die woff2 aus fontane-share ist nur ein Subset (2 KB).
 - Lücke: **keine Umlaute** (ä ö ü Ä Ö Ü ß fehlen in der OTF). Entschieden: Der Nutzer ergänzt die Umlaute in der Schrift selbst, kein Fallback nötig. Danach die neue OTF/woff2 als Quelle eintragen.
 - Lizenz ist unkritisch: Die Schrift hat der Nutzer selbst gemacht.
-- Testrendering (2026-11-01): Die Straßenschilder in Port Lupo sind jetzt kalifornisches Grün (#0b6b4a, weißer Rand) und verwenden Smarta Nova, sobald die Schrift geladen ist. Die Schrift ist noch nicht im Repo, deshalb fällt das Spiel auf Baloo 2 zurück. Wegen der fehlenden Umlaute werden ä, ö, ü, ß auf den Schildern als ae, oe, ue, ss geschrieben (Schalter SN_NOUML in `game.js`, auf false setzen, sobald die Umlaute in der Schrift sind).
+- Testrendering (2026-11-01): Die Straßenschilder in Port Lupo sind jetzt kalifornisches Grün (#0b6b4a, weißer Rand) und verwenden Smarta Nova, sobald die Schrift geladen ist. Die Schrift liegt jetzt im Repo (`prototype/kuesten-quest/src/fonts/smarta-nova.otf`) und wird beim Bauen als Base64 in die HTML-Datei eingebettet. Wegen der fehlenden Umlaute werden ä, ö, ü, ß auf den Schildern als ae, oe, ue, ss geschrieben (Schalter SN_NOUML in `game.js`, auf false setzen, sobald die Umlaute in der Schrift sind).
 
 ## Tech-Stack-Kandidaten
 - Client: Three.js + React Three Fiber, Rapier (Physik), three-vrm, simplex-noise

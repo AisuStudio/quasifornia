@@ -76,7 +76,10 @@ chunks=[sm(c) for c in chunks]
 setup=open('src/setup.js').read();game=open('src/game.js').read()
 game=game.replace('window.__qa={',open('src/atoll.js').read()+'\n'+open('src/island.js').read()+'\n'+open('src/xmas.js').read()+'\n'+open('src/bettler.js').read()+'\n'+open('src/unter.js').read()+'\n'+open('src/graffiti.js').read()+'\nwindow.__qa={',1)
 js=setup+'\n'+'\n'.join(chunks)+'\n'+game
+import base64
 head=open('src/head.html').read();body=open('src/body.html').read()
+FONT=base64.b64encode(open('src/fonts/smarta-nova.otf','rb').read()).decode()
+head=head.replace('</style>','@font-face{font-family:"Smarta Nova";src:url(data:font/otf;base64,'+FONT+') format("opentype");font-display:swap}\n</style>',1)
 def build(prod):
     if prod:
         imap='{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}'
