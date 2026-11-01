@@ -24,5 +24,21 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 08 Laden (Skins)
 - 09 Geisterfahrer
 - 10 Neue Aufträge (Blitz-Eis, Kickflip-Serie)
+- 11 Messung: Dreiecke, Zeichenaufrufe, Ladezeit pro Welt
+- 12 Gehweg: Ollie und Kickflip auf den Bürgersteig
 
 Screenshots landen im Temp-Ordner des Systems.
+
+## Messwerte (Software-Rendering, Stand 2026-11-01; Zeiten nur relativ)
+Dreiecke pro Frame inklusive Schattendurchgang:
+
+| Welt | Dreiecke | Zeichenaufrufe |
+|---|---|---|
+| 0 Port Lupo (Stadt) | 1,32 Mio. | 1060 |
+| 1 Küste | 2,88 Mio. | 1509 |
+| 2 Eis-Galaxie | 0,25 Mio. | 1323 |
+| 3 Nacht-Stadt | 0,18 Mio. | 1584 |
+| 4 Labor | 0,03 Mio. | 217 |
+| 5 Atoll | 0,18 Mio. | 159 |
+
+Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrisslinien (jedes Objekt wird für den Rand ein zweites Mal gezeichnet), dazu kommt der Schattendurchgang. Ladezeit bis spielbereit im Headless-Test: etwa 12 bis 16 Sekunden.

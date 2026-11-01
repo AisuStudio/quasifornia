@@ -24,7 +24,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.screenshot({path:require('os').tmpdir()+'/t_coast_view.png'});
  await p.evaluate(()=>{document.getElementById('ui').style.display=''});
  // Lauf zur Küste
- const r=await p.evaluate(()=>{const H=__qa.HUB;__qa.P.x=H.sx;__qa.P.z=H.sz;__qa.P.h=H.sh;const w=pathTo(H.maze.coast);w.push([-143,H.coastZ]);w.push([-165,H.coastZ]);return walk(w,5000)});
+ const r=await p.evaluate(()=>{const H=__qa.HUB;__qa.P.x=H.sx;__qa.P.z=H.sz;__qa.P.h=H.sh;const w=pathTo(H.maze.coast);if(w[1]&&w[1][0]<w[0][0]&&w[1][1]===w[0][1])w.splice(1,0,[-36,29],[-58,29]);w.push([-143,H.coastZ]);w.push([-165,H.coastZ]);return walk(w,5000)});
  console.log('Lauf zur Küste',JSON.stringify(r));
  await p.evaluate(()=>{for(let i=0;i<25;i++)__qa.step(.05)});
  console.log('nach Küste',await p.evaluate(()=>JSON.stringify({lv:__qa.LV.id,ph:__qa.G.phase,quest:document.getElementById('q-title').textContent,x:Math.round(__qa.P.x),boss:__qa.LV.boss})));
