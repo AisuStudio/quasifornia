@@ -1,7 +1,10 @@
 {
   "name": "quasifornia",
+  "main": "worker/index.js",
   "compatibility_date": "2026-10-01",
   "assets": {
-    "directory": "./prototype/kuesten-quest/dist"
+    "directory": "./prototype/kuesten-quest/dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
   }
 }
