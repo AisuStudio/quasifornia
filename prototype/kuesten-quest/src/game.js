@@ -1095,14 +1095,24 @@ function buildLevel0(){
     bx(DARK,10,3.6,.5,0,h+.5,-d/2+1.5);bx(MT('#ff5fa8','#ff5fa8',.9),9.4,.25,.2,0,h+.55,-d/2+1.1);
     sign(nm,'#ffe066',0,5.6,-d/2-1.35,9,2.2,Math.PI,'#1a1030');sign(nm,'#ffe066',0,h+2.5,-d/2+1.2,9,3,Math.PI,'#1a1030');
     for(let k=0;k<4;k++)bx(MT(['#ff9a3d','#7be0a0','#4cc3ff','#f1a7c8'][k]),1.2,1.2,1.2,-9+k*2.4,0,-d/2-3.2);bx(MT('#6a5a9a'),3.4,.5,1.1,-w/2+4,.5,-d/2-3)}
-  /* ---- Café ---- */
-  function cafe(){const w=22,d=16,h=5.2;bx(MT('#fff0d8'),w,h,d,0,0,0);bx(MT('#8a5a3a'),w+.8,.5,d+.8,0,h,0);bx(GLASSW,w-4,3,.15,0,.6,-d/2-.08,false);bx(GLASSW,.15,3,d-4,-w/2-.08,.6,0,false);bx(WOOD,1.8,2.7,.2,w*.34,0,-d/2-.1);
-    for(let k=0;k<6;k++)bx(MT(k%2?'#fff0d8':'#8a5a3a'),w/6,.3,2.4,-w/2+w/12+k*w/6,3.8,-d/2-1.2);
-    /* große Kaffeetasse auf dem Dach: rosa Tasse, weißer Rand, Kaffee, Untertasse, Henkel, Dampf */
-    cyl(MT('#ffffff'),5.4,.4,-2,h+.1,0);cyl(MT('#ff5fa8','#ff5fa8',.25),3.9,5,-2,h+.5,0);cyl(MT('#ffffff'),4.1,.45,-2,h+5.4,0);cyl(MT('#4a2810'),3.5,.3,-2,h+5.75,0);
-    {const hd=new THREE.Mesh(new THREE.TorusGeometry(1,.3,8,16),MT('#ff5fa8','#ff5fa8',.25));hd.scale.set(2.1,2.1,2.1);hd.position.set(cur.x+2.5,Y0+h+3.1,cur.z);hd.castShadow=true;W0.add(hd)}
-    for(let k=0;k<3;k++)sph(MT('#ffffff','#ffffff',.5),.9+k*.3,.9+k*.3,.9+k*.3,-2+(k-1)*.9,h+7.6+k*1.7,0,false);
-    sign('CAFÉ','#ffb347',0,6,-d/2-.12,8,2,Math.PI,'#2a1a10');
+  /* ---- Café Pengu: Gebäude als große Kaffeekanne ---- */
+  const mesh=(geo,mat,x,y,z,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,mat);m.position.set(cur.x+x,Y0+y,cur.z+z);m.rotation.set(rx,ry,rz);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;W0.add(m);return m};
+  function cafe(){const d=16,pot=MT('#fff0d8'),mint=MT('#47c2a5'),brown=MT('#8a5a3a'),HEMI=new THREE.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2);
+    cyl(brown,10.1,.9,0,0,0);cyl(pot,9.6,7.2,0,.5,0);mesh(HEMI,pot,0,7.7,0,0,0,0,9.6,4.6,9.6);
+    mesh(new THREE.TorusGeometry(1,.07,6,40),mint,0,7.6,0,Math.PI/2,0,0,9.7,9.7,9.7);mesh(new THREE.TorusGeometry(1,.07,6,40),mint,0,3.4,0,Math.PI/2,0,0,9.7,9.7,9.7);
+    cyl(brown,4.8,.7,0,12.0,0);mesh(HEMI,mint,0,12.6,0,0,0,0,4.5,2.3,4.5);sph(brown,1,1,1,0,15.1,0);
+    mesh(new THREE.CylinderGeometry(.95,1.8,7.4,14),pot,11.3,10.0,0,0,0,-.95);mesh(new THREE.TorusGeometry(1,.075,6,20),mint,13.55,11.35,0,0,0,-.95,1.4,1.4,1.4);
+    mesh(new THREE.TorusGeometry(1,.32,10,24),brown,-10.2,8.2,0,0,0,0,3.6,4.4,1.6);
+    for(let k=0;k<3;k++)sph(MT('#ffffff','#ffffff',.5),.8+k*.25,.8+k*.25,.8+k*.25,14.5+k*.4,13.4+k*1.7,0,false);
+    /* Eingang, Bullaugen, Schild */
+    bx(MT('#f6efe6'),3.5,4.3,.25,0,.5,-9.62);bx(WOOD,2.7,3.7,.3,0,.5,-9.75);bx(brown,.25,.25,.3,.9,2.4,-9.95);
+    mesh(HEMI,mint,0,4.5,-10.3,0,0,0,2.6,.9,1.5);
+    [[-1,-.55],[1,.55]].forEach(([s,ry])=>mesh(SP,GLASSW,s*5.6,4.6,-7.85,0,ry,0,1.7,1.7,.35));
+    bx(MT('#2a1a10'),9.6,2.4,.4,0,6.1,-9.9);sign('Café Pengu','#ffb347',0,7.3,-10.12,9,2.1,Math.PI,'#2a1a10');
+    /* kleiner Pinguin auf der Schulter der Kanne */
+    {const px=-5.2,py=11.3,pz=-2.2,ink=MT('#1a1626');sph(ink,1.1,1.7,1,px,py+1.6,pz);sph(MT('#ffffff'),.75,1.25,.55,px,py+1.4,pz-.6);
+     mesh(CN,MT('#ff8a2a'),px,py+2.4,pz-1.15,-Math.PI/2,0,0,.28,.7,.28);[-1,1].forEach(s=>sph(MT('#ffffff'),.2,.25,.15,px+s*.38,py+2.75,pz-.85,false));
+     [-1,1].forEach(s=>mesh(SP,ink,px+s*1.2,py+1.6,pz,0,0,s*.5,.25,.9,.5))}
     for(let k=0;k<3;k++)for(let q=0;q<2;q++){const tx=-7+k*7,tz=-d/2-5-q*5,col=['#d54291','#47c2a5','#ff8a2a','#4cc3ff','#f6df73','#8e5bd6'][(k+q*3)%6];
       cyl(MT('#f6efe6'),.9,.15,tx,1.7,tz);cyl(MT('#6a5a8a'),.15,1.7,tx,0,tz);cyl(MT('#6a5a8a'),.8,.1,tx,0,tz);cyl(MT('#cfcfe0'),.1,3.2,tx,0,tz+.0);cone(MT(col),2.3,1,tx,3.2,tz);
       [[-1.5,0],[1.5,0]].forEach(([dx,dz])=>{cyl(MT('#ff9a3d'),.45,.9,tx+dx,0,tz+dz)})}}
@@ -1113,12 +1123,29 @@ function buildLevel0(){
     bx(MT('#3a3a5a'),w*.6,2,d*.6,0,h,0);cyl(MT('#cfcfe0'),.2,9,0,h+2,0);sph(MT('#ff2a4a','#ff2a4a',1),.6,.6,.6,0,h+11.4,0,false);
     bx(MT('#2a3a6a'),w+2,.5,4,0,3.6,-d/2-2);[-1,1].forEach(s=>cyl(MT('#cfcfe0'),.25,3.6,s*(w/2),0,-d/2-3.6));bx(GLASSW,5,3,.15,0,0,-d/2-.08,false);
     sign('ICE CORP','#4cc3ff',0,4.9,-d/2-.12,6,1.5,Math.PI,'#10183a')}
-  /* ---- Burger ---- */
-  function burger(){const w=20,d=16,h=5.2;bx(MT('#e5383b'),w,h,d,0,0,0);bx(MT('#ffd23a'),w+.8,.6,d+.8,0,h,0);for(let k=0;k<5;k++)bx(MT('#ffffff'),.7,h,.12,-w/2+2+k*4.2,0,-d/2-.06);
-    bx(GLASSW,w-8,2.8,.15,0,.7,-d/2-.12,false);bx(WOOD,1.8,2.7,.2,w*.37,0,-d/2-.12);
-    const by=h+.6;sph(MT('#e0a050'),4.4,1.6,4.4,0,by+.9,0);cyl(MT('#5b3a1e'),4.5,1.1,0,by+1.6,0);bx(MT('#ffd23a'),9,.35,9,0,by+2.7,0);cyl(MT('#6fcf93'),4.8,.5,0,by+3.05,0);cyl(MT('#e5383b'),4.3,.45,0,by+3.5,0);
-    sph(MT('#e8a85a'),4.4,2.6,4.4,0,by+5.2,0);for(let k=0;k<12;k++){const a=k*2.4,r=1+k*.28;sph(MT('#fff3d0'),.35,.2,.55,Math.cos(a)*r,by+7.6-r*.12,Math.sin(a)*r,false)}
-    sign('BURGER','#ffd23a',0,6.2,-d/2-.12,8,2,Math.PI,'#3a0a10');sign('24H','#ff5fa8',-w/2-.12,3.6,0,3,1,-Math.PI/2,'#10183a')}
+  /* ---- AstroBurger 3000: Gebäude als großer Burger, Reklame im Stil der 60er auf einer Säule ---- */
+  function burger(){const HEMI=new THREE.SphereGeometry(1,28,14,0,Math.PI*2,0,Math.PI/2),BUN=MT('#e8a85a'),LET=MT('#6fcf93');
+    cyl(MT('#e0a050'),9.6,4.2,0,0,0);cyl(MT('#5b3a1e'),10.1,1.8,0,4.2,0);
+    mesh(BX,MT('#ffd23a'),0,6.2,0,0,Math.PI/4,0,16.5,.4,16.5);
+    cyl(LET,10.1,.5,0,6.4,0);for(let k=0;k<18;k++){const a=k/18*Math.PI*2;sph(LET,1.7,.75,1.7,Math.cos(a)*10.3,6.9,Math.sin(a)*10.3,false)}
+    cyl(MT('#e5383b'),9.5,.7,0,6.9,0);
+    mesh(HEMI,BUN,0,7.6,0,0,0,0,10.4,6.4,10.4);
+    for(let k=0;k<26;k++){const a=k*2.4,el=Math.asin(.12+.8*(k/26)),rr=10.4*Math.cos(el)*.985;sph(MT('#fff3d0'),.42,.24,.62,Math.cos(a)*rr,7.6+6.4*Math.sin(el)*.985,Math.sin(a)*rr,false)}
+    /* Eingang, Bullaugen */
+    bx(MT('#f6efe6'),3.4,3.6,.25,0,.3,-9.6);bx(WOOD,2.6,3.1,.3,0,.3,-9.72);mesh(HEMI,MT('#e5383b'),0,3.6,-10.3,0,0,0,2.6,.8,1.5);
+    [[-1,-.5],[1,.5]].forEach(([s,ry])=>mesh(SP,GLASSW,s*5,2.3,-8.25,0,ry,0,1.5,1.5,.35));
+    sign('24H','#ff5fa8',0,4.3,-9.95,3.2,1,Math.PI,'#10183a');
+    /* Säule (7 m) mit unsymmetrischer 60er-Reklame: Schild seitlich und leicht schief, Sputnik-Stern, Bumerang, Ufo */
+    const metal=MT('#cfcfe0'),tex=(()=>{const c=document.createElement('canvas');c.width=1024;c.height=340;const x=c.getContext('2d');x.fillStyle='#fff3d6';x.fillRect(0,0,1024,340);x.strokeStyle='#2fa88a';x.lineWidth=18;x.strokeRect(9,9,1006,322);x.strokeStyle='#e5383b';x.lineWidth=6;x.strokeRect(34,34,956,272);
+      x.textAlign='center';x.textBaseline='middle';x.font='italic 900 150px "Baloo 2","Trebuchet MS",sans-serif';x.lineJoin='round';x.lineWidth=14;x.strokeStyle='#1a1626';x.strokeText('AstroBurger',512,128);x.fillStyle='#e5383b';x.fillText('AstroBurger',512,128);
+      x.font='italic 900 84px "Baloo 2","Trebuchet MS",sans-serif';x.lineWidth=10;x.strokeStyle='#1a1626';x.strokeText('★ 3000 ★',560,250);x.fillStyle='#2fa88a';x.fillText('★ 3000 ★',560,250);
+      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})();
+    cyl(metal,.38,7,0,13.6,0);
+    [0,Math.PI].forEach(ry=>{const bd=new THREE.Mesh(new THREE.PlaneGeometry(11.6,3.85),new THREE.MeshBasicMaterial({map:tex}));bd.position.set(cur.x+3.6,Y0+17.4,cur.z+(ry?.12:-.12));bd.rotation.set(0,Math.PI-ry,.11);bd.userData.noBake=true;W0.add(bd)});
+    bx(metal,3.4,.22,.22,1.4,16.1,0);bx(metal,3,.22,.22,1.8,18.4,0);
+    sph(MT('#ffd23a','#ffd23a',.6),.95,.95,.95,-3.6,20.3,0);for(let k=0;k<12;k++){const a=k/12*Math.PI*2;mesh(CN,MT('#ffd23a','#ffd23a',.6),-3.6+Math.cos(a)*1.65,20.3+Math.sin(a)*1.65,0,0,0,a-Math.PI/2,.26,1.25,.26)}
+    mesh(BX,MT('#ff5fa8'),-2.6,16.0,0,0,0,.55,3.3,.34,.3);mesh(BX,MT('#ff5fa8'),-1.3,16.35,0,0,0,-.2,2.2,.34,.3);
+    cyl(metal,1.9,.3,0,20.4,0);sph(GLASSW,1,.8,1,0,21.0,0,false);[-1,0,1].forEach(s=>sph(MT('#ff5fa8','#ff5fa8',1),.18,.18,.18,s*1.3,20.55,0,false))}
   HUB.h={bx,cyl,sph,sign,MT,Y0,cur:()=>cur,add:o=>W0.add(o)};
   const TYPES=[resi,shop,cafe,office,burger],TNAMES=['Wohnhaus','Laden','Café','Büro','Burger'],TCOL=['#f1a7c8','#ffb347','#8a5a3a','#4cc3ff','#e5383b'];
   /* ---- Boden, Bürgersteige, Mauer ---- */
