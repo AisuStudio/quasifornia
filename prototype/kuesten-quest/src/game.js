@@ -1125,22 +1125,32 @@ function buildLevel0(){
     for(let k=0;k<4;k++)bx(MT(['#ff9a3d','#7be0a0','#4cc3ff','#f1a7c8'][k]),1.2,1.2,1.2,-9+k*2.4,0,-d/2-3.2);bx(MT('#6a5a9a'),3.4,.5,1.1,-w/2+4,.5,-d/2-3)}
   /* ---- Café Pengu: Gebäude als große Kaffeekanne ---- */
   const mesh=(geo,mat,x,y,z,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,mat);m.position.set(cur.x+x,Y0+y,cur.z+z);m.rotation.set(rx,ry,rz);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;W0.add(m);return m};
-  function cafe(){const d=16,pot=MT('#fff0d8'),mint=MT('#47c2a5'),brown=MT('#8a5a3a'),HEMI=new THREE.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2);
-    cyl(brown,10.1,.9,0,0,0);cyl(pot,9.6,7.2,0,.5,0);mesh(HEMI,pot,0,7.7,0,0,0,0,9.6,4.6,9.6);
-    mesh(new THREE.TorusGeometry(1,.07,6,40),mint,0,7.6,0,Math.PI/2,0,0,9.7,9.7,9.7);mesh(new THREE.TorusGeometry(1,.07,6,40),mint,0,3.4,0,Math.PI/2,0,0,9.7,9.7,9.7);
-    cyl(brown,4.8,.7,0,12.0,0);mesh(HEMI,mint,0,12.6,0,0,0,0,4.5,2.3,4.5);sph(brown,1,1,1,0,15.1,0);
-    mesh(new THREE.CylinderGeometry(.95,1.8,7.4,14),pot,11.3,10.0,0,0,0,-.95);mesh(new THREE.TorusGeometry(1,.075,6,20),mint,13.55,11.35,0,0,0,-.95,1.4,1.4,1.4);
-    mesh(new THREE.TorusGeometry(1,.32,10,24),brown,-10.2,8.2,0,0,0,0,3.6,4.4,1.6);
-    for(let k=0;k<3;k++)sph(MT('#ffffff','#ffffff',.5),.8+k*.25,.8+k*.25,.8+k*.25,14.5+k*.4,13.4+k*1.7,0,false);
-    /* Eingang, Bullaugen, Schild */
-    bx(MT('#f6efe6'),3.5,4.3,.25,0,.5,-9.62);bx(WOOD,2.7,3.7,.3,0,.5,-9.75);bx(brown,.25,.25,.3,.9,2.4,-9.95);
-    mesh(HEMI,mint,0,4.5,-10.3,0,0,0,2.6,.9,1.5);
-    [[-1,-.55],[1,.55]].forEach(([s,ry])=>mesh(SP,GLASSW,s*5.6,4.6,-7.85,0,ry,0,1.7,1.7,.35));
-    bx(MT('#2a1a10'),9.6,2.4,.4,0,6.1,-9.9);sign('Café Pengu','#ffb347',0,7.3,-10.12,9,2.1,Math.PI,'#2a1a10');
-    /* kleiner Pinguin auf der Schulter der Kanne */
-    {const px=-5.2,py=11.3,pz=-2.2,ink=MT('#1a1626');sph(ink,1.1,1.7,1,px,py+1.6,pz);sph(MT('#ffffff'),.75,1.25,.55,px,py+1.4,pz-.6);
-     mesh(CN,MT('#ff8a2a'),px,py+2.4,pz-1.15,-Math.PI/2,0,0,.28,.7,.28);[-1,1].forEach(s=>sph(MT('#ffffff'),.2,.25,.15,px+s*.38,py+2.75,pz-.85,false));
-     [-1,1].forEach(s=>mesh(SP,ink,px+s*1.2,py+1.6,pz,0,0,s*.5,.25,.9,.5))}
+  function cafe(){const d=16,W=MT('#f4f4ee'),RED=MT('#d63a2f'),BLU=MT('#2f6fd0'),GLS=MT('#2a70d8','#1a4aa8',.35),HEMI=new THREE.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2),H=20,RB=7.4,RT=5.2,rAt=y=>RB-(RB-RT)*y/H;
+    /* hoher, nach oben schmaler Kaffeekannen-Turm wie die Coffee Pot aus der Vorlage */
+    cyl(MT('#cfcfd8'),8.4,.5,0,0,0);
+    {const body=new THREE.Mesh(new THREE.CylinderGeometry(RT,RB,H,24),W);body.position.set(cur.x,Y0+.5+H/2,cur.z);body.castShadow=true;body.receiveShadow=true;W0.add(body)}
+    cyl(RED,RT+.5,.9,0,H+.1,0);mesh(HEMI,RED,0,H+.9,0,0,0,0,RT+.1,3.1,RT+.1);sph(RED,1.2,1.2,1.2,0,H+4.1,0);
+    /* großer Ausguss links, Henkel rechts */
+    mesh(SP,W,-RT-2.3,13.2,0,0,0,0,4.3,3.5,3.3);mesh(new THREE.CylinderGeometry(1.1,2.7,6.5,14),W,-RT-6.2,16.3,0,0,0,.95);mesh(SP,W,-RT-8.7,18.9,0,0,0,0,1.15,.8,1.15);
+    mesh(new THREE.TorusGeometry(1,.19,10,28),W,RT+3.6,13.4,0,0,0,0,3.7,5.0,1.5);
+    for(let k=0;k<3;k++)sph(MT('#ffffff','#ffffff',.5),.85+k*.25,.85+k*.25,.85+k*.25,-RT-11.2-k*.5,21.4+k*1.9,0,false);
+    /* Eingang mit Doppeltür und Fensterkreuz, gestreifte Markise */
+    const fz=-rAt(2.5)+.3;bx(W,5.2,5.6,.7,0,.5,fz-.2);bx(BLU,.2,5.0,.2,0,.5,fz-.62);
+    [-1,1].forEach(s=>{for(let c=0;c<2;c++)for(let r2=0;r2<4;r2++)bx(GLS,.85,.9,.14,s*(.55+c*1.0)+(s>0?.0:0)-(s<0?.0:0)+0,.9+r2*1.15,fz-.66)});
+    for(let k=0;k<6;k++){const m=mesh(BX,k%2?(k%4===1?W:W):(k%4===0?RED:BLU),-3.3+k*1.32,7.0,fz-1.5,.32,0,0,1.3,.16,3.2);}
+    bx(W,6.6,.35,.35,0,6.0,fz-.65);
+    [[-2.3,18.0],[2.3,18.0],[-3.0,8.6],[3.0,8.6]].forEach(([x,y])=>{const zz=-Math.sqrt(Math.max(1,rAt(y)**2-x*x))-.15;bx(W,1.9,2.5,.45,x,y,zz);bx(GLS,1.4,2.0,.15,x,y+.25,zz-.26)});
+    /* Schild: CAFÉ klein, "Pengu" groß, als gebogene Fläche auf dem Körper */
+    {const c=document.createElement('canvas');c.width=512;c.height=256;const x=c.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
+     x.font='900 70px "Baloo 2","Trebuchet MS",sans-serif';x.lineWidth=14;x.strokeStyle='#7a1a1a';x.fillStyle='#ffffff';x.strokeText('CAFÉ',256,62);x.fillText('CAFÉ',256,62);x.fillStyle='#b02a2a';x.fillText('CAFÉ',256,62);
+     x.font='900 150px "Baloo 2","Trebuchet MS",sans-serif';x.lineWidth=22;x.strokeStyle='#4a0f0f';x.strokeText('Pengu',256,176);x.fillStyle='#e8352a';x.fillText('Pengu',256,176);
+     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+     const dc=new THREE.Mesh(new THREE.PlaneGeometry(6.6,3.3),new THREE.MeshBasicMaterial({map:t,transparent:true,alphaTest:.05,side:THREE.DoubleSide}));
+     dc.position.set(cur.x,Y0+13.4+hillG(cur.x,cur.z),cur.z-rAt(13.4)-.42);dc.rotation.y=Math.PI;dc.userData.noBake=true;dc.userData.noOutline=true;W0.add(dc)}
+    /* kleiner Pinguin auf dem Deckel */
+    {const px=-3.4,py=H+1.6,pz=-2.6,ink=MT('#1a1626');sph(ink,1.1,1.7,1,px,py+1.5,pz);sph(MT('#ffffff'),.75,1.25,.55,px,py+1.3,pz-.6);
+     mesh(CN,MT('#ff8a2a'),px,py+2.3,pz-1.15,-Math.PI/2,0,0,.28,.7,.28);[-1,1].forEach(s=>sph(MT('#ffffff'),.2,.25,.15,px+s*.38,py+2.65,pz-.85,false));
+     [-1,1].forEach(s=>mesh(SP,ink,px+s*1.2,py+1.5,pz,0,0,s*.5,.25,.9,.5))}
     for(let k=0;k<3;k++)for(let q=0;q<2;q++){const tx=-7+k*7,tz=-d/2-5-q*5,col=['#d54291','#47c2a5','#ff8a2a','#4cc3ff','#f6df73','#8e5bd6'][(k+q*3)%6];
       cyl(MT('#f6efe6'),.9,.15,tx,1.7,tz);cyl(MT('#6a5a8a'),.15,1.7,tx,0,tz);cyl(MT('#6a5a8a'),.8,.1,tx,0,tz);cyl(MT('#cfcfe0'),.1,3.2,tx,0,tz+.0);cone(MT(col),2.3,1,tx,3.2,tz);
       [[-1.5,0],[1.5,0]].forEach(([dx,dz])=>{cyl(MT('#ff9a3d'),.45,.9,tx+dx,0,tz+dz)})}}
@@ -1350,8 +1360,11 @@ function buildLevel0(){
     HUB.uw.g=UWg;HUB.uw.rain=rain;HUB.uw.drone=0}}
   /* ---- Straßennamen an den Kreuzungen, dazu ein Sticker am Start ---- */
   {const COLN=['Waffelweg','Sorbetstraße','Karamellallee','Pistazienweg','Minzgasse','Schokoring'],ROWN=['Möwenstraße','Palmenallee','Skate-Boulevard','Sonnenweg','Korallenweg','Dinoweg'];
-   const stTex=(t)=>{const c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#1d5fa8';x.fillRect(0,0,640,128);x.strokeStyle='#fff';x.lineWidth=7;x.strokeRect(8,8,624,112);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';
-     let fs=70;x.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif';while(x.measureText(t).width>560&&fs>20){fs-=3;x.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif'}x.fillText(t,320,68);
+   /* Straßenschilder im kalifornischen Grün (Caltrans-Stil), Schrift Smarta Nova.
+      Die Schrift hat noch keine Umlaute und kein ß: solange SN_NOUML gilt, werden sie als ae, oe, ue, ss geschrieben. */
+   const SN_NOUML=true,sn=t=>SN_NOUML?t.replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss'):t;
+   const stTex=(t0)=>{const t=sn(t0),c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#0b6b4a';x.fillRect(0,0,640,128);x.strokeStyle='#f4f7f2';x.lineWidth=7;x.beginPath();x.roundRect(7,7,626,114,16);x.stroke();x.fillStyle='#f4f7f2';x.textAlign='center';x.textBaseline='middle';
+     const fam='"Smarta Nova","Baloo 2","Trebuchet MS",sans-serif';let fs=74;x.font=fs+'px '+fam;while(x.measureText(t).width>560&&fs>20){fs-=3;x.font=fs+'px '+fam}x.fillText(t,320,66);
      const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})};
    const stickerTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#ffe066';x.beginPath();x.arc(128,128,122,0,7);x.fill();x.strokeStyle='#1a1626';x.lineWidth=8;x.stroke();x.fillStyle='#1a1626';x.textAlign='center';x.textBaseline='middle';x.font='800 27px "Baloo 2","Trebuchet MS",sans-serif';
      ['Nett hier, aber','waren Sie schon mal','auf Andromeda?'].forEach((l,i)=>x.fillText(l,128,84+i*34));x.font='800 22px sans-serif';x.fillText('★ ✦ ★',128,200);
