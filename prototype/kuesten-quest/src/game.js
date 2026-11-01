@@ -953,16 +953,40 @@ function stepGhost(){if(LV.id!==1)return;
   const a=GH.av;if(!a||!a.visible||!GH.trace)return;
   const f=G.time/GH.dt,i=Math.floor(f);if(i>=GH.trace.length-1){a.visible=false;return}
   const u=f-i,p=GH.trace[i],q=GH.trace[i+1];a.position.set(p[0]+(q[0]-p[0])*u,p[1]+(q[1]-p[1])*u,p[2]+(q[2]-p[2])*u);a.rotation.y=Math.PI/2-(p[3]+(q[3]-p[3])*u)}
+/* ---------- Skin-Editor: Accessoires für Scoops kaufen und anlegen ---------- */
+const ED_SLOTS=[['chain','Ketten'],['pendant','Anhänger'],['hat','Hüte'],['gl','Brillen'],['earring','Ohrringe'],['bangles','Armreifen'],['scarf','Schal'],['bag','Tasche'],['phones','Kopfhörer']];
+const ED_ITEMS=[
+ {id:'chain1',slot:'chain',name:'Kette',price:3,set:{chain:1}},{id:'chain3',slot:'chain',name:'Dreifach-Kette',price:6,set:{chain:3}},{id:'chain4',slot:'chain',name:'Gold-Kette XXL',price:10,set:{chain:4}},
+ {id:'pstar',slot:'pendant',name:'Stern',price:4,set:{pendant:'star'}},{id:'pice',slot:'pendant',name:'Eis',price:5,set:{pendant:'ice'}},{id:'pring',slot:'pendant',name:'Ring',price:3,set:{pendant:'ring'}},
+ {id:'hbucket',slot:'hat',name:'Bucket-Hat',price:5,set:{hat:'bucket'}},{id:'hbeanie',slot:'hat',name:'Bommelmütze',price:5,set:{hat:'beanie'}},{id:'hcap',slot:'hat',name:'Cap',price:5,set:{hat:'fwdcap'}},{id:'hcrown',slot:'hat',name:'Krone',price:12,set:{hat:'crown'}},
+ {id:'gvisor',slot:'gl',name:'Visier-Brille',price:4,set:{gl:'visor'}},{id:'gbig',slot:'gl',name:'Große Brille',price:4,set:{gl:'big'}},{id:'gheart',slot:'gl',name:'Herz-Brille',price:4,set:{gl:'heart'}},
+ {id:'earring',slot:'earring',name:'Ohrringe',price:3,set:{earring:1}},{id:'bangles',slot:'bangles',name:'Armreifen',price:3,set:{bangles:1}},
+ {id:'scarf',slot:'scarf',name:'Schal',price:4,set:{scarf:'#47c2a5'}},{id:'bag',slot:'bag',name:'Gürteltasche',price:4,set:{bag:'#f0cf36'}},{id:'phones',slot:'phones',name:'Kopfhörer',price:4,set:{phonesNeck:'#1cafd1'}}];
+const ED={owned:new Set(),on:{}},EDK='kq-edit';
+try{const s=JSON.parse(localStorage.getItem(EDK)||'null');if(s){(s.owned||[]).forEach(i=>{if(ED_ITEMS.some(x=>x.id===i))ED.owned.add(i)});Object.entries(s.on||{}).forEach(([k,v])=>{if(ED.owned.has(v))ED.on[k]=v})}}catch(e){}
+function edSave(){try{localStorage.setItem(EDK,JSON.stringify({owned:[...ED.owned],on:ED.on}))}catch(e){}}
+function edApply(){Object.keys(ACC_OVR).forEach(k=>delete ACC_OVR[k]);Object.values(ED.on).forEach(id=>{const it=ED_ITEMS.find(x=>x.id===id);if(it)Object.assign(ACC_OVR,it.set)})}
+edApply();
+function edBuy(id){const it=ED_ITEMS.find(x=>x.id===id);if(!it||ED.owned.has(id))return false;if(!scCan(it.price)){toast('Zu wenig Scoops: '+it.price+' nötig',1500);return false}
+  ED.owned.add(id);edSave();scAdd(-it.price,'Teil: '+it.name);toast(it.name+' gekauft',1300);return true}
+function edToggle(id){const it=ED_ITEMS.find(x=>x.id===id);if(!it||!ED.owned.has(id))return;if(ED.on[it.slot]===id)delete ED.on[it.slot];else ED.on[it.slot]=id;edSave();edApply();buildPlayer();P.av.scale.setScalar(1.35);rpRender()}
+function edPreview(){try{const W=200,H=260,rt=new THREE.WebGLRenderTarget(W,H,{samples:0});rt.texture.colorSpace=THREE.SRGBColorSpace;const buf=new Uint8Array(W*H*4),cm=new THREE.PerspectiveCamera(27,W/H,.5,500);
+  const av=skater(P.x,P.y,P.z,Math.PI/2+.5,P.preset,1.35);dynOf(av);addOutlines(av,'actor');av.updateMatrixWorld(true);
+  const pv=P.av.visible,bv=blobP.visible;P.av.visible=false;blobP.visible=false;cm.position.set(P.x+6.4,P.y+2.3,P.z-2.8);cm.lookAt(P.x,P.y+1.35,P.z);cm.updateProjectionMatrix();
+  const old=r.getRenderTarget();r.setRenderTarget(rt);r.render(sc,cm);r.readRenderTargetPixels(rt,0,0,W,H,buf);r.setRenderTarget(old);P.av.visible=pv;blobP.visible=bv;sc.remove(av);av.traverse(o=>{if(o.geometry)o.geometry.dispose()});rt.dispose();
+  const cc=document.createElement('canvas');cc.width=W;cc.height=H;const cx=cc.getContext('2d'),id=cx.createImageData(W,H);for(let y=0;y<H;y++)id.data.set(buf.subarray((H-1-y)*W*4,(H-y)*W*4),y*W*4);cx.putImageData(id,0,0);return cc.toDataURL('image/png')}catch(e){return ''}}
 function rpTab(t){SC.tab=t;rpRender()}
 function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
   [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
-  ['inv','auf','sco','lad','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
+  ['inv','auf','sco','lad','edi','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
   const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
   const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
   const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">Neue Looks für deine Figur. Dein Guthaben: <b>'+SC.n+' Scoops</b>.</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
     return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
     lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)})}
+  const edi=document.getElementById('rp-edi');if(edi&&SC.tab==='edi'){const pv=edPreview();edi.innerHTML=`<div class="edtop"><div class="edprev">${pv?`<img src="${pv}" alt="So sieht deine Figur aus">`:''}</div><div><p class="sub">Kaufe Teile und lege sie an. Du siehst sofort, wie deine Figur aussieht. Guthaben: <b>${SC.n} Scoops</b>.</p></div></div>`+ED_SLOTS.map(([sl,sn])=>`<h3 class="edh">${sn}</h3><div class="skgrid">`+ED_ITEMS.filter(x=>x.slot===sl).map(x=>{const own=ED.owned.has(x.id),on=ED.on[x.slot]===x.id;return `<div class="sk${on?' on':''}"><b>${x.name}</b><span>${own?(on?'Angelegt':'Im Besitz'):x.price+' Scoops'}</span>${own?`<button type="button" data-t="${x.id}">${on?'Ablegen':'Anlegen'}</button>`:`<button type="button" data-y="${x.id}"${scCan(x.price)?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>').join('');
+    edi.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>edToggle(b.dataset.t));edi.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{if(edBuy(b.dataset.y))edToggle(b.dataset.y)})}
   const mus=document.getElementById('rp-mus');if(mus)mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div><p class="sub">Mit M schaltest du den Ton aus. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`}
 const INV={open:false,items:new Set()};
 try{JSON.parse(localStorage.getItem('kq-items')||'[]').forEach(id=>{if(ITEM_DEFS.some(d=>d.id===id))INV.items.add(id)})}catch(e){}
@@ -1271,7 +1295,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;HUB.items.forEach(it=>{if(it.
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

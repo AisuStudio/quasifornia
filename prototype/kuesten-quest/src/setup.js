@@ -41,6 +41,7 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(400,32,16),new THREE.ShaderMat
  vertexShader:'varying float h;void main(){h=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
  fragmentShader:'uniform vec3 a;uniform vec3 b;varying float h;void main(){gl_FragColor=vec4(mix(b,a,smoothstep(-.05,.55,h)),1.);}'}));
 sky.userData.noBake=true;sc.add(sky);
+const ACC_OVR={};
 const FOG1=sc.fog=new THREE.Fog(skyBot,6,120);
 const OUTFOG={fc:{value:new THREE.Color(skyBot)},fn:{value:6},ff:{value:120}};
 const hemi=new THREE.HemisphereLight('#ffffff','#e8a6c8',1.0);sc.add(hemi);
