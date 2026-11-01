@@ -419,7 +419,7 @@ function updateThrowHud(){const e=$('throw'),s=$('throw-s'),bar=$('throw-bar');
   else{s.textContent=T.state==='out'?'fliegt …':'kommt zurück';e.classList.add('cd');bar.style.setProperty('--p',T.state==='out'?0:.5)}}
 function dinoCenter(){return dinoG.position.clone().add(new V3(0,8,0))}
 function rivalPos(r){return new V3(r.x,2.2,r.z)}
-function pickTarget(){let rb=null,bd=1e9;
+function pickTarget(){if(G.under){return uwNearest()}let rb=null,bd=1e9;
   RIV.list.forEach(r=>{if(!r.av.visible||r.hit>0||r.away>0)return;const d=Math.hypot(r.x-P.x,r.z-P.z);if(d<70&&d<bd){bd=d;rb=r}});
   const dino=G.phase==='chase'&&dinoG&&dinoG.visible;
   if(rb&&bd<45)return {type:'riv',r:rb};if(dino)return {type:'dino'};if(rb)return {type:'riv',r:rb};return null}
@@ -437,9 +437,10 @@ function hitDino(){const d=dinoG.userData;d.slow=SLOW_T;T.cd=THROW_CD;T.state='b
   say('e',[LV.boss+' hält inne und schaut beleidigt.','Das hat gesessen. '+LV.boss+' quietscht.','Autsch. Selbst für etwas Aufblasbares.'][Math.floor(Math.random()*3)],2.6)}
 function stepBoard(dt){
   if(T.cd>0&&T.state==='ready')T.cd=Math.max(0,T.cd-dt);
-  if(T.state==='out'){T.t+=dt;const tg=T.target,isR=tg&&tg.type==='riv',tgt=isR?rivalPos(tg.r):dinoCenter(),pos=flyBoard.position,dir=tgt.clone().sub(pos),dist=dir.length();
+  if(T.state==='out'){T.t+=dt;const tg=T.target,isE=tg&&tg.type==='enemy',isR=tg&&tg.type==='riv',tgt=isE?uwEnemyPos(tg.e):isR?rivalPos(tg.r):dinoCenter(),pos=flyBoard.position,dir=tgt.clone().sub(pos),dist=dir.length();
     pos.addScaledVector(dir.normalize(),Math.min(dist,46*dt));pos.y+=Math.sin(T.t*8)*.05;flyBoard.rotation.y+=dt*16;flyBoard.rotation.z+=dt*5;
-    if(isR&&(tg.r.hit>0||tg.r.away>0)){T.state='back';T.t=0;T.cd=THROW_CD}
+    if(isE){if(tg.e.state==='dead'){T.state='back';T.t=0;T.cd=THROW_CD}else if(dist<3.8)hitEnemy(tg.e);else if(T.t>2.4){T.state='back';T.t=0;T.cd=THROW_CD;toast('Daneben',800)}}
+    else if(isR&&(tg.r.hit>0||tg.r.away>0)){T.state='back';T.t=0;T.cd=THROW_CD}
     else if(dist<(isR?3.6:11))(isR?hitRival(tg.r):hitDino());else if(T.t>2.4){T.state='back';T.t=0;T.cd=THROW_CD;toast('Daneben',800)}}
   else if(T.state==='back'){T.t+=dt;const tgt=new V3(P.x,P.y+1.2,P.z),pos=flyBoard.position,dir=tgt.clone().sub(pos),dist=dir.length();
     pos.addScaledVector(dir.normalize(),Math.min(dist,(30+T.t*30)*dt));flyBoard.rotation.y-=dt*14;flyBoard.rotation.z=Math.sin(T.t*9)*.5;
@@ -937,6 +938,9 @@ try{SC.au=JSON.parse(localStorage.getItem(AUK)||'{}')||{}}catch(e){}
 function scSave(){try{localStorage.setItem(SCK,JSON.stringify({n:SC.n,log:SC.log.slice(0,12)}));localStorage.setItem(AUK,JSON.stringify(SC.au))}catch(e){}}
 const AUFTRAEGE=[
  {id:'sammeln',ziel:'Sammeln',titel:'Küsten-Eis',text:'Sammle alle 5 Eiskugeln an der Küste.',ort:'Welt 1 · Küste',reward:5},
+ {id:'gruft',ziel:'Kämpfen',titel:'Grabwächter',text:'Wirf in der Unterwelt dein Skateboard (Mausklick, F oder E) auf 6 Kürbis-Zombies.',ort:'Unterwelt',reward:10},
+ {id:'geister',ziel:'Kämpfen',titel:'Geisterjagd',text:'Vertreibe in der Unterwelt 4 Geister mit dem Skateboard.',ort:'Unterwelt',reward:10},
+ {id:'kuerbis',ziel:'Sammeln',titel:'Kürbisernte',text:'Sammle in der Unterwelt 8 leuchtende Kürbis-Laternen.',ort:'Unterwelt',reward:12},
  {id:'bettler',ziel:'Rätsel',titel:'Serafin und sein Geist',text:'Hilf Serafin, dem Bettler an der Kanalbrücke. Er hat ein Gedicht für dich. Lass seinen Geist in der Unterwelt frei.',ort:'Port Lupo und Unterwelt',reward:30},
  {id:'blitz',ziel:'Sammeln',titel:'Blitz-Eis',text:'Alle 5 Eiskugeln an der Küste in 60 Sekunden.',ort:'Welt 1 · Küste',reward:8},
  {id:'tricks',ziel:'Tricks',titel:'Trick-Serie',text:'Lande 5 Tricks in einem Lauf: Kickflip (Shift), Pop Shove-it (Q), 360 Flip (R) oder Curb Grind.',ort:'Überall',reward:8},
@@ -1004,7 +1008,7 @@ function rpTab(t){SC.tab=t;rpRender()}
 function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
   [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
   ['inv','auf','sco','lad','edi','mus'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
-  const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
+  const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text} ${(()=>{try{return uwProgText(a.id)}catch(e){return ''}})()}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
   const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
   const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">Neue Looks für deine Figur. Dein Guthaben: <b>'+SC.n+' Scoops</b>.</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
@@ -1477,7 +1481,7 @@ function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it
   const say1={funk:'Ein Funkzettel. Wer schreibt heute noch in Geheimschrift? Du, ab jetzt.',schraube:'Ein Schraubendreher. Er passt bestimmt irgendwo. Das tun sie immer.',usb:'Ein USB-Stick. Beschriftet mit PATROUILLE. Das klingt nach Ärger.',handbuch:'Ein Handbuch mit abgerissener Seite 12. Natürlich.',losung:'Ein Bon mit einer Geheimlosung. Das Möwen-Menü gibt es also wirklich.'}[it.def.id];
   say('e',core===4&&!it.def.bonus?'Das war der Vierte. Genug für ein Atoll. Es gibt nur noch keins.':say1,3.4)}
 /* ---------- Unterwelt: Spiegelstadt, kopfüber, dunkel, fest im Pixel-Look ---------- */
-function underApply(on){if(!!G.under===on)return;G.under=on;
+function underApply(on){if(!!G.under===on)return;G.under=on;if(on){setTimeout(()=>{try{uwSpawn()}catch(e){console.log('uw',e)}},0)}else if(typeof uwClear==='function')uwClear();
   HUB.portals.forEach(p=>{p.g.visible=false;p.beam.visible=!on});
   HUB.items.forEach(it=>{const v=!on&&!it.got;it.g.visible=v;it.ring.visible=v;it.beam.visible=v});
   if(HUB.man)HUB.man.g.visible=!on;if(HUB.atoll){HUB.atoll.g.visible=false;HUB.atoll.beam.visible=false}
@@ -1487,7 +1491,7 @@ function underApply(on){if(!!G.under===on)return;G.under=on;
 function underReset(){if(!G.under)return;G.under=false;pixPass.uniforms.uUW.value=0;G.pix=false;resize();r.domElement.style.transform='';if(HUB.uw&&HUB.uw.g)HUB.uw.g.visible=false}
 function underEnter(){if(G.under||!HUB.uw)return;toast('Leiter hinab …',1100);tone(220,.5,'sawtooth',.06,-170);later(.55,()=>{underApply(true);P.x=HUB.uw.bx;P.z=HUB.uw.bz+7;P.h=-Math.PI/2;P.speed=3;P.y=1.3;say('e','Hier unten steht alles kopf. Die Stadt sieht aus wie oben, nur dunkler, und irgendetwas leuchtet türkis. Die Leiter zurück ist dort, wo du gelandet bist.',5.5)})}
 function underExit(){if(!G.under||!HUB.uw)return;toast('Leiter hinauf …',1100);tone(160,.5,'sawtooth',.06,200);later(.55,()=>{underApply(false);P.x=HUB.uw.bx;P.z=HUB.uw.bz+7;P.h=-Math.PI/2;P.speed=3;P.y=1.3})}
-function stepUnder(dt){const U=HUB.uw;if(!U||!U.rain)return;
+function stepUnder(dt){const U=HUB.uw;if(!U||!U.rain)return;uwStep(dt);
   if(U.ghost){const gh=U.ghost,base=U.tower.top+2.5;if(U.rel>0&&typeof BQ!=='undefined'&&BQ.released){U.rel+=dt;gh.position.y=base+(U.rel-1)*6;gh.children.forEach(m=>{if(m.material&&m.material.opacity!==undefined&&m.material.transparent)m.material.opacity=Math.max(0,.8-(U.rel-1)*.4)});if(U.rel>3.2)gh.visible=false}else if(typeof BQ!=='undefined'&&BQ.released&&U.rel===0)gh.visible=false;else gh.position.y=base+Math.sin(G.t*1.6)*.35}const pa=U.rain.geometry.attributes.position,a=pa.array;for(let q=0;q<a.length;q+=3){a[q+1]-=(10+(q%7))*dt;if(a[q+1]<1.8)a[q+1]=70}pa.needsUpdate=true;
   U.drone-=dt;if(U.drone<=0){U.drone=2.6;tone(46,1.3,'sine',.07,-6);tone(69,1.1,'triangle',.025,0,.3)}}
 function stepTrain(dt){const T=HUB.train;if(!T)return;
@@ -1511,7 +1515,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

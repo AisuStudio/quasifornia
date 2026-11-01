@@ -163,6 +163,16 @@ Serafin, ein Bettler, sitzt an der Kanalbrücke in Port Lupo.
 - Mit dem Releaser lässt man den Geist frei. Belohnung: 30 Scoops (Auftrag "Serafin und sein Geist", einmalig). Danach sagt Serafin, er fühle sich leichter.
 - Offen: Serafins Hintergrundgeschichte, weitere Quests mit ihm, ob der Geist später als Begleiter zurückkehrt.
 
+### Unterwelt: Gegner und Aufträge (im Prototyp gebaut, 2026-11-01)
+Gegner und Sammelobjekte in der Spiegelstadt, nach dem Vorbild von Ghosts 'n Goblins, aber kindgerecht.
+- Kürbis-Zombies: Ein Kürbis mit Gesicht auf einem Körper steigt aus einem Erdhügel, wenn man näher als etwa 34 m kommt, und folgt dem Spieler langsam. Zwölf Stück, sie kommen nach 28 Sekunden wieder.
+- Geister: Weiße, türkis leuchtende Tuchgeister schweben heran, durch Wände. Sieben Stück.
+- Treffer ("Autsch"): Wer berührt wird, wird zurückgestoßen und fast zum Stehen gebracht. Kein Scoop-Verlust.
+- Waffe: Das Skateboard (Mausklick, F oder E) wirft den nächsten Gegner um.
+- Kürbis-Laternen: Acht leuchtende Kürbisse mit Lichtstrahl liegen verteilt auf den Gehwegen.
+- Aufträge (Rarepod): Grabwächter (6 Zombies, 10 Scoops), Geisterjagd (4 Geister, 10 Scoops), Kürbisernte (8 Laternen, 12 Scoops). Fortschritt wird gespeichert, Belohnung nur einmal.
+- Später: Boss, mehr Gegnerarten (Fledermäuse, Kabel-Schlangen), Waffen-Upgrades, echte 2D-Abschnitte.
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels
