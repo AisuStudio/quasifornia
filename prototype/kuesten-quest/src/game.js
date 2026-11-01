@@ -379,6 +379,7 @@ function makeThumbs(){const my=++thumbJob;const todo=SKIN_LIST.map(s=>s[0]).filt
   setTimeout(one,30)}
 function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',carIdx+1]].forEach(([id,idx])=>{const kk=carHue(idx)[0],im=$(id).querySelector('img');if(THUMBS[kk]){im.src=THUMBS[kk];im.hidden=false}})}
 
+const LOGO_SVG=__LOGO_SVG__;
 const TITLE={step:1,quest:0};
 function startChosen(){ac();const q=TITLE.quest;
   if(q===1){applyLevel(1);beginPlay();return}
@@ -387,7 +388,7 @@ function startChosen(){ac();const q=TITLE.quest;
   else setQuest('Erkunde die Stadt: Gegenstände, Portale, Küste',null)}
 function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
-  $('card').innerHTML=`<h1>Küsten-Quest</h1>
+  $('card').innerHTML=`<div class="logo">${LOGO_SVG}</div><h1 class="gt">Küsten-Quest</h1>
    <div class="step" id="st1">
    <p class="sub">Willkommen in Port Lupo. Such dir zuerst deine Figur aus.</p>
    <h2>Dein Avatar</h2>

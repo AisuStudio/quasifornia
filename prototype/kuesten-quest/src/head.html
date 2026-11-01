@@ -125,6 +125,9 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);color:var(--haze);font:500 13px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;z-index:5}
 @media (min-width:900px){#overlay{justify-content:flex-start;padding-left:max(5vw,24px)}}
 #card{max-height:calc(100dvh - 36px);overflow:auto}
+.logo{display:flex;justify-content:flex-start;margin:0 0 4px}.logo-svg{display:block;height:78px;width:auto;max-width:100%;filter:drop-shadow(0 3px 0 #d54291)}h1.gt{font-size:16px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--haze)!important;margin:0 0 6px!important;font-weight:700}
+@media (max-height:780px){.logo-svg{height:62px}}
+@media (max-height:660px){.logo-svg{height:50px}#cview{height:150px}#cview .main{width:100px;height:132px}#cview .side{width:60px;height:78px}#st1 .sub{display:none}#card h2{margin:6px 0}}
 .step{display:block}.step[hidden]{display:none}
 .navrow{display:flex;gap:10px;align-items:center;margin-top:12px}.navrow .btn{margin-top:0;flex:1}.navrow .btn.sec{flex:0 0 auto;margin-top:0}
 .qlist{display:flex;flex-direction:column;gap:9px;margin-top:6px}

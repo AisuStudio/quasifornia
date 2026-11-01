@@ -189,6 +189,10 @@ Aus der Notiz des Nutzers: Man sprüht an die große Wand, braucht dafür Dosen 
 - Enter geht einen Schritt weiter, in Schritt 2 wählt es die Stadt. Jeder Schritt passt in den Viewport.
 - Fehlerbehebung: Die HTML-Datei hatte keine Zeichenkodierung angegeben, dadurch erschienen Umlaute und Pfeile auf manchen Servern kaputt (zum Beispiel "GÃ¶rtel"). Jetzt steht `<meta charset="utf-8">` und ein Viewport-Tag am Anfang.
 
+### Logo (vom Nutzer, 2026-11-01)
+Datei `prototype/kuesten-quest/src/logo/port36_logo.svg`: weißer Schriftzug "PORT 36" in kantiger, leicht gewellter Schrift (575 × 200, nur ein Pfad pro Zeichen, 2 KB). Wird beim Bauen inline in die HTML-Datei gesetzt und steht auf dem Startbildschirm über "Küsten-Quest" mit rosa Schatten.
+- Die 36 passt zum Raster von Port Lupo: 6 × 6 Kreuzungen. Ob "Port 36" der Projektname wird, ist noch nicht entschieden (Marken- und Domainprüfung offen, siehe Abschnitt Name).
+
 ### Sozial
 - Notizen mit Ortsanker: privat als Standard, teilbar
 - Geteilte Notiz = Teleport-Link, funktioniert auch außerhalb des Spiels

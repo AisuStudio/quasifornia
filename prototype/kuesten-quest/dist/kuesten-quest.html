@@ -125,6 +125,9 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);color:var(--haze);font:500 13px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;z-index:5}
 @media (min-width:900px){#overlay{justify-content:flex-start;padding-left:max(5vw,24px)}}
 #card{max-height:calc(100dvh - 36px);overflow:auto}
+.logo{display:flex;justify-content:flex-start;margin:0 0 4px}.logo-svg{display:block;height:78px;width:auto;max-width:100%;filter:drop-shadow(0 3px 0 #d54291)}h1.gt{font-size:16px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--haze)!important;margin:0 0 6px!important;font-weight:700}
+@media (max-height:780px){.logo-svg{height:62px}}
+@media (max-height:660px){.logo-svg{height:50px}#cview{height:150px}#cview .main{width:100px;height:132px}#cview .side{width:60px;height:78px}#st1 .sub{display:none}#card h2{margin:6px 0}}
 .step{display:block}.step[hidden]{display:none}
 .navrow{display:flex;gap:10px;align-items:center;margin-top:12px}.navrow .btn{margin-top:0;flex:1}.navrow .btn.sec{flex:0 0 auto;margin-top:0}
 .qlist{display:flex;flex-direction:column;gap:9px;margin-top:6px}
@@ -992,6 +995,7 @@ function makeThumbs(){const my=++thumbJob;const todo=SKIN_LIST.map(s=>s[0]).filt
   setTimeout(one,30)}
 function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',carIdx+1]].forEach(([id,idx])=>{const kk=carHue(idx)[0],im=$(id).querySelector('img');if(THUMBS[kk]){im.src=THUMBS[kk];im.hidden=false}})}
 
+const LOGO_SVG="<svg class=\"logo-svg\" role=\"img\" aria-label=\"Logo\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 575.52 200.5\"><defs><style>.cls-1{fill:#fff;}</style></defs><g id=\"Layer_1-2\"><path class=\"cls-1\" d=\"M31,171.7c-10.33,2.53-20.67,5.6-31,9.25V19.57C21.42,12,42.85,6.96,64.27,3.9c7.26,6.25,11.33,9.84,18.59,16.41v67.88c-17.29,11.61-34.57,24.39-51.86,38.65v44.86ZM31,41.32v49.69c6.95-5.73,13.9-11.23,20.86-16.51v-37.6c-6.95,1.25-13.9,2.71-20.86,4.42Z\"/><path class=\"cls-1\" d=\"M557.3,186.77c-15.47,4.46-30.95,7.68-46.42,9.88-7.11-6.13-11.1-9.66-18.22-16.09V55.63c7.11-7.79,11.1-12.24,18.22-20.34,15.47-2.2,30.95-5.42,46.42-9.88,7.11,5.03,11.1,7.75,18.22,12.38v33.62c-10.33,3.65-20.67,6.71-31,9.25v-20.84c-6.95,1.71-13.9,3.17-20.86,4.42v32.07c17.29,1.35,34.57,1.35,51.86-.31v66.73c-7.11,9.6-11.1,14.86-18.22,24.05ZM523.66,163.6c6.95-1.25,13.9-2.71,20.86-4.42v-29.92c-6.95-.09-13.9-.41-20.86-.95v35.29Z\"/><path class=\"cls-1\" d=\"M467.66,200.29c-22.45.68-44.9-.37-67.36-2.52,0-10.33,0-20.67,0-31,17.29,1.65,34.57,2.66,51.86,2.72v-21.98c-9.04-6.13-18.07-12.51-27.11-19.11,0-6.28,0-12.57,0-18.85,9.04-5.59,18.07-11.39,27.11-17.45v-21.98c-17.29-.06-34.57-1.07-51.86-2.72,0-10.33,0-20.67,0-31,22.45,2.15,44.9,3.2,67.36,2.52,5.17,5.01,10.33,9.93,15.5,14.74v44.91c-9.32,7.39-18.65,14.46-27.97,21.24,9.32,6.73,18.65,13.19,27.97,19.32v44.91c-5.17,5.52-10.33,10.93-15.5,16.26Z\"/><path class=\"cls-1\" d=\"M156.62,162.58c-15.23-1.01-30.45-1.44-45.68-1.09-7.26-7.07-11.33-10.96-18.59-17.75V19.55c7.26-7.73,11.33-11.98,18.59-19.43,15.23-.36,30.45.07,45.68,1.09,7.26,7.76,11.33,12.16,18.59,20.1v124.19c-7.26,6.58-11.33,10.31-18.59,17.07ZM123.35,130.37c6.95.03,13.9.2,20.86.51V31.52c-6.95-.31-13.9-.49-20.86-.51v99.37Z\"/><path class=\"cls-1\" d=\"M258.48,14.45c-21.42-3.67-42.85-7.08-64.27-9.66v161.38c10.33,1.25,20.67,2.69,31,4.25v-51.16c1.47-.63,2.93-1.25,4.4-1.87,5.49,5.36,10.97,10.76,16.46,16.18v40.17c10.33,1.71,20.67,3.51,31,5.32v-54.81c-6.28-6.27-12.55-12.52-18.83-18.76,6.28-2.56,12.55-5.1,18.83-7.64v-61.58c-7.26-8.53-11.33-13.32-18.59-21.82ZM225.21,40.04c6.95,1.05,13.9,2.17,20.86,3.32v31.3c-6.95,2.88-13.9,5.79-20.86,8.77v-43.39Z\"/><path class=\"cls-1\" d=\"M369.42,32.83c-27.62-3.7-55.24-8.6-82.86-13.48v31c8.64,1.53,17.29,3.06,25.93,4.55v130.38c10.33,1.78,20.67,3.52,31,5.14V60.04c8.64,1.36,17.29,2.63,25.93,3.79,0-10.33,0-20.67,0-31Z\"/></g></svg>";
 const TITLE={step:1,quest:0};
 function startChosen(){ac();const q=TITLE.quest;
   if(q===1){applyLevel(1);beginPlay();return}
@@ -1000,7 +1004,7 @@ function startChosen(){ac();const q=TITLE.quest;
   else setQuest('Erkunde die Stadt: Gegenstände, Portale, Küste',null)}
 function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
-  $('card').innerHTML=`<h1>Küsten-Quest</h1>
+  $('card').innerHTML=`<div class="logo">${LOGO_SVG}</div><h1 class="gt">Küsten-Quest</h1>
    <div class="step" id="st1">
    <p class="sub">Willkommen in Port Lupo. Such dir zuerst deine Figur aus.</p>
    <h2>Dein Avatar</h2>
