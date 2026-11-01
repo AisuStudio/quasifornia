@@ -1805,6 +1805,36 @@ function buildLevel0(){
      if(hi>-139)HUB.colliders.push({x0:Math.max(lo,-141),x1:hi,z0:CAN.z0,z1:CAN.z1,top:999,water:1})});
    bxs.forEach(nx=>{[-1,1].forEach(s=>{bx(stone,.45,.8,wd+1,nx+s*6.8,-.3,zc2);bx(MT('#ee7cb8'),.5,.15,wd+1.1,nx+s*6.8,.5,zc2)})});
    HUB.bridges=bxs}
+  /* ---- Hochbahn: Hochtrasse an der Mauer entlang (Nord, Ost, Süd), regelmäßig fährt ein Zug vorbei ---- */
+  {const TY=15.2,RAD=14,XE=139,ZN=-139,ZS=139,XW=-168,pts=[];
+   for(let x=XW;x<XE-RAD;x+=1)pts.push([x,ZN]);
+   for(let a=-90;a<0;a+=6){const r=a*Math.PI/180;pts.push([XE-RAD+Math.cos(r)*RAD,ZN+RAD+Math.sin(r)*RAD])}
+   for(let z=ZN+RAD;z<ZS-RAD;z+=1)pts.push([XE,z]);
+   for(let a=0;a<90;a+=6){const r=a*Math.PI/180;pts.push([XE-RAD+Math.cos(r)*RAD,ZS-RAD+Math.sin(r)*RAD])}
+   for(let x=XE-RAD;x>XW;x-=1)pts.push([x,ZS]);
+   const cum=[0];for(let q=1;q<pts.length;q++)cum.push(cum[q-1]+Math.hypot(pts[q][0]-pts[q-1][0],pts[q][1]-pts[q-1][1]));const L=cum[cum.length-1];
+   const posAt=s=>{s=Math.max(0,Math.min(L-.01,s));let lo=0,hi=cum.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(cum[m]<=s)lo=m;else hi=m}const f=(s-cum[lo])/(cum[hi]-cum[lo]||1),a=pts[lo],b=pts[hi];return {x:a[0]+(b[0]-a[0])*f,z:a[1]+(b[1]-a[1])*f,h:Math.atan2(b[1]-a[1],b[0]-a[0])}};
+   const mkIM=(geo,col,n,em)=>{const m=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({color:col,roughness:.6,emissive:em||'#000000',emissiveIntensity:em?.4:0}),n);m.castShadow=true;m.userData.noBake=true;m.frustumCulled=false;W0.add(m);return m};
+   const step=3,N=Math.floor(L/step),deck=mkIM(new THREE.BoxGeometry(3.4,.8,4.6),'#9a8fc0',N),rails=mkIM(new THREE.BoxGeometry(3.4,.25,.25),'#2a2733',N*2),trim=mkIM(new THREE.BoxGeometry(3.4,.55,.3),'#ee7cb8',N*2,'#ee7cb8');
+   const m4=new THREE.Matrix4(),qt=new THREE.Quaternion(),e=new THREE.Euler(),one=new THREE.Vector3(1,1,1);
+   for(let k=0;k<N;k++){const p=posAt(k*step+1.5);qt.setFromEuler(e.set(0,-p.h,0));const nx=-Math.sin(p.h),nz=Math.cos(p.h);
+     m4.compose(new THREE.Vector3(p.x,TY-.4,p.z),qt,one);deck.setMatrixAt(k,m4);
+     [-1,1].forEach((sd,q)=>{m4.compose(new THREE.Vector3(p.x+nx*sd*1.4,TY+.12,p.z+nz*sd*1.4),qt,one);rails.setMatrixAt(k*2+q,m4);m4.compose(new THREE.Vector3(p.x+nx*sd*2.15,TY+.27,p.z+nz*sd*2.15),qt,one);trim.setMatrixAt(k*2+q,m4)})}
+   const sup=[];for(let s=6;s<L-6;s+=12){const p=posAt(s);if(Math.abs(p.x-XE)<2&&p.z>-92&&p.z<-64)continue;sup.push(p)}
+   const col=mkIM(new THREE.CylinderGeometry(.7,.9,1,10),'#7a6fa0',sup.length),beam=mkIM(new THREE.BoxGeometry(1.2,.9,6.2),'#7a6fa0',sup.length);
+   sup.forEach((p,k)=>{const gy=1.3+hillG(p.x,p.z),h=TY-.8-gy;m4.compose(new THREE.Vector3(p.x,gy+h/2,p.z),new THREE.Quaternion(),new THREE.Vector3(1,h,1));col.setMatrixAt(k,m4);
+     qt.setFromEuler(e.set(0,-p.h,0));m4.compose(new THREE.Vector3(p.x,TY-1.25,p.z),qt,one);beam.setMatrixAt(k,m4);
+     if(p.x>-139&&p.x<140)HUB.colliders.push({x0:p.x-.9,x1:p.x+.9,z0:p.z-.9,z1:p.z+.9,top:999})});
+   /* Zug: vier Wagen, bunt, mit beleuchteten Fenstern */
+   const tg=new THREE.Group();tg.visible=false;tg.userData.noBake=true;W0.add(tg);const cars=[];
+   [['#47c2a5',1],['#f1a7c8',0],['#ffe066',0],['#4cc3ff',0]].forEach(([c0,head],k)=>{const cg=new THREE.Group(),M=(c,em)=>new THREE.MeshStandardMaterial({color:c,roughness:.5,emissive:em||'#000000',emissiveIntensity:em?.8:0});
+     const add=(geo,mat,x,y,z,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;cg.add(m);return m};
+     add(BX,M(c0),0,0,0,9.2,2.8,2.7);add(BX,M('#ffffff'),0,1.5,0,9.3,.25,2.8);add(BX,M('#2a2733'),0,-1.55,0,7.6,.4,1.8);
+     for(let w=0;w<6;w++)[-1,1].forEach(s=>add(BX,M('#ffe9a0','#ffe9a0'),-3.4+w*1.36,.35,s*1.36,.95,.9,.08));
+     if(k===0){add(SP,M(c0),4.7,0,0,.9,1.4,1.35);add(BX,M('#fff0b0','#fff0b0'),5.45,-.2,0,.12,.4,1.5)}
+     cg.visible=true;tg.add(cg);cars.push(cg)});
+   cars.forEach(cg=>addOutlines(cg,'prop'));
+   HUB.train={g:tg,cars,L,posAt,state:'wait',cd:6,s:0,v:24,TY,snd:0}}
   /* ---- Straßennamen an den Kreuzungen, dazu ein Sticker am Start ---- */
   {const COLN=['Waffelweg','Sorbetstraße','Karamellallee','Pistazienweg','Minzgasse','Schokoring'],ROWN=['Möwenstraße','Palmenallee','Skate-Boulevard','Sonnenweg','Korallenweg','Dinoweg'];
    const stTex=(t)=>{const c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#1d5fa8';x.fillRect(0,0,640,128);x.strokeStyle='#fff';x.lineWidth=7;x.strokeRect(8,8,624,112);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';
@@ -1950,7 +1980,14 @@ function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it
   const n=INV.items.size,core=ITEM_DEFS.filter(d=>!d.bonus&&INV.items.has(d.id)).length;
   const say1={funk:'Ein Funkzettel. Wer schreibt heute noch in Geheimschrift? Du, ab jetzt.',schraube:'Ein Schraubendreher. Er passt bestimmt irgendwo. Das tun sie immer.',usb:'Ein USB-Stick. Beschriftet mit PATROUILLE. Das klingt nach Ärger.',handbuch:'Ein Handbuch mit abgerissener Seite 12. Natürlich.',losung:'Ein Bon mit einer Geheimlosung. Das Möwen-Menü gibt es also wirklich.'}[it.def.id];
   say('e',core===4&&!it.def.bonus?'Das war der Vierte. Genug für ein Atoll. Es gibt nur noch keins.':say1,3.4)}
-function stepLevel0(dt){if(!W0||!W0.visible)return;HUB.items.forEach(it=>{if(it.got)return;const d=Math.hypot(P.x-it.x,P.z-it.z);it.g.rotation.y+=dt*1.6;it.g.position.y=4.2+it.G0+Math.sin(G.t*2.2+it.ph)*.45;it.ring.scale.setScalar(1+.1*Math.sin(G.t*3+it.ph));it.beam.material.opacity=Math.max(0,Math.min(.3,(62-d)/36*.3))});HUB.sky.position.copy(cam.position);if(HUB.coastBeam)HUB.coastBeam.material.opacity=.2+.08*Math.sin(G.t*2.4);
+function stepTrain(dt){const T=HUB.train;if(!T)return;
+  if(T.state==='wait'){T.cd-=dt;if(T.cd<=0){T.state='run';T.s=0;T.g.visible=true;T.snd=0}return}
+  T.s+=T.v*dt;let dmin=1e9;
+  T.cars.forEach((cg,k)=>{const s=T.s-k*10-5,on=s>0&&s<T.L;cg.visible=on;if(!on)return;const p=T.posAt(s);cg.position.set(p.x,T.TY+1.8,p.z);cg.rotation.y=-p.h;if(k===0)dmin=Math.hypot(p.x-P.x,p.z-P.z)});
+  T.snd-=dt;const hd=T.posAt(Math.max(0,Math.min(T.L,T.s)));const d=Math.hypot(hd.x-P.x,hd.z-P.z);
+  if(d<110&&T.snd<=0){T.snd=.16;tone(46+Math.random()*8,.2,'sawtooth',.05*(1-d/110),0);if(d<55)G.shake=Math.max(G.shake,.05*(1-d/55))}
+  if(T.s>T.L+50){T.state='wait';T.cd=28+Math.random()*24;T.g.visible=false}}
+function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);HUB.items.forEach(it=>{if(it.got)return;const d=Math.hypot(P.x-it.x,P.z-it.z);it.g.rotation.y+=dt*1.6;it.g.position.y=4.2+it.G0+Math.sin(G.t*2.2+it.ph)*.45;it.ring.scale.setScalar(1+.1*Math.sin(G.t*3+it.ph));it.beam.material.opacity=Math.max(0,Math.min(.3,(62-d)/36*.3))});HUB.sky.position.copy(cam.position);if(HUB.coastBeam)HUB.coastBeam.material.opacity=.2+.08*Math.sin(G.t*2.4);
   let nd=1e9;HUB.portals.forEach(p=>{const d=Math.hypot(P.x-p.x,P.z-p.z);p.beam.material.opacity=Math.max(0,Math.min(.45,(105-d)/75*.45));p.g.visible=d<78||HUB.found.has(p.world);p.g.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});if(!HUB.found.has(p.world)&&d<nd)nd=d});
   const r=$('radar');if(r){const open=nd<1e8;r.classList.toggle('on',G.phase==='play'&&open);if(open){const w=nd<30?'heiß!':nd<65?'warm':nd<115?'lauwarm':'kalt';$('radar-s').textContent=w;$('radar-s').dataset.t=w[0];$('radar-bar').style.setProperty('--p',Math.max(.04,Math.min(1,1-nd/190)))}}
   /* Minikarte */
@@ -2390,7 +2427,7 @@ function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0
   HUB.gl={A,B,gl,st,t:0}}
 function stepXmas(dt){const l=HUB.gl;if(!l||!W0||!W0.visible)return;l.t+=dt;const ph=Math.floor(l.t/.6)%2;l.A.visible=ph===0;l.B.visible=ph===1;l.st.material.opacity=.7+.25*Math.sin(l.t*3);l.gl.material.opacity=.42+.1*Math.sin(l.t*1.7)}
 
-window.__qa={HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
