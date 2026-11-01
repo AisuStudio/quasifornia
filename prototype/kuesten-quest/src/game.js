@@ -380,8 +380,9 @@ function makeThumbs(){const my=++thumbJob;const todo=SKIN_LIST.map(s=>s[0]).filt
 function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',carIdx+1]].forEach(([id,idx])=>{const kk=carHue(idx)[0],im=$(id).querySelector('img');if(THUMBS[kk]){im.src=THUMBS[kk];im.hidden=false}})}
 
 const LOGO_SVG=__LOGO_SVG__;
+let LOGO_N=0;function logoSvg(){const p='l'+(++LOGO_N)+'_';return LOGO_SVG.replace(/id="(c\d)"/g,'id="'+p+'$1"').replace(/url\(#(c\d)\)/g,'url(#'+p+'$1)')}
 const TITLE={step:1,quest:0,opened:false};
-function openerDone(){if(TITLE.opened)return;TITLE.opened=true;ac();tone(392,.12,'square',.05);tone(587,.2,'square',.05,0,.1);const o=$('opener');o.hidden=true;$('card').hidden=false;$('overlay').classList.remove('opening');$('next1')&&$('next1').focus({preventScroll:true})}
+function openerDone(){if(TITLE.opened)return;TITLE.opened=true;ac();tone(392,.12,'square',.05);tone(587,.2,'square',.05,0,.1);const o=$('opener');o.hidden=true;o.querySelector('.op-logo').innerHTML='';$('card').hidden=false;$('overlay').classList.remove('opening');$('next1')&&$('next1').focus({preventScroll:true})}
 function startChosen(){ac();const q=TITLE.quest;
   if(q===1){applyLevel(1);beginPlay();return}
   applyLevel(0);beginPlay();
@@ -389,7 +390,7 @@ function startChosen(){ac();const q=TITLE.quest;
   else setQuest('Erkunde die Stadt: Gegenstände, Portale, Küste',null)}
 function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
-  $('card').innerHTML=`<div class="logo">${LOGO_SVG}</div><h1 class="gt">Küsten-Quest</h1>
+  $('card').innerHTML=`<div class="logo">${logoSvg()}</div><h1 class="gt">Küsten-Quest</h1>
    <div class="step" id="st1">
    <p class="sub">Willkommen in Port Lupo. Such dir zuerst deine Figur aus.</p>
    <h2>Dein Avatar</h2>
@@ -417,7 +418,7 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, sprühen)</span><kbd>I</kbd><span>Rarepod: Inventar, Aufträge, Scoops, Laden</span><kbd>M</kbd><span>Ton an oder aus</span></div>
    <div class="navrow"><button class="btn" id="start" type="button">Los geht’s ▶</button></div>
    </div>`;
-  if(!TITLE.opened&&!TEST){$('card').hidden=true;$('overlay').classList.add('opening');const o=$('opener');o.querySelector('.op-logo').innerHTML=LOGO_SVG;o.hidden=false;o.onclick=openerDone}else{$('card').hidden=false;$('opener').hidden=true;TITLE.opened=true}
+  if(!TITLE.opened&&!TEST){$('card').hidden=true;$('overlay').classList.add('opening');const o=$('opener');o.querySelector('.op-logo').innerHTML=logoSvg();o.hidden=false;o.onclick=openerDone}else{$('card').hidden=false;$('opener').hidden=true;TITLE.opened=true}
   const cur=Math.max(0,SKIN_LIST.findIndex(s=>PRESETS[s[0]]===P.preset));setCarousel(cur,true);
   $('cprev').onclick=()=>stepCarousel(-1);$('cnext').onclick=()=>stepCarousel(1);
   [...$('cdots').children].forEach(b=>b.onclick=()=>{if(SKOWN.has(SKIN_LIST[+b.dataset.i][0]))setCarousel(+b.dataset.i)});
