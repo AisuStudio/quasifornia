@@ -11,6 +11,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  console.log('Zu wenig',JSON.stringify(await p.evaluate(()=>{__qa.SC.n=2;const r=__qa.edBuy('hcrown');return {r,own:__qa.ED.owned.has('hcrown')}})));
  await p.evaluate(()=>{__qa.SC.n=40;__qa.edToggle('chain4');__qa.edBuy('hcrown');__qa.edToggle('hcrown');__qa.edBuy('gheart');__qa.edToggle('gheart');__qa.edBuy('pice');__qa.edToggle('pice')});
  console.log('Angelegt',JSON.stringify(await p.evaluate(()=>({on:__qa.ED.on,ovr:__qa.ACC_OVR}))),'Torus nachher',await tori());
+ console.log('Farben',JSON.stringify(await p.evaluate(()=>{const q=__qa;q.SC.n=30;const a=q.edColor('skin','#8a5a3c');const n0=q.SC.n;const b=q.edColor('top','#47c2a5');const n1=q.SC.n;const c=q.edColor('bot','#f0cf36');return {a,b,c,kosten:n0-n1,n:q.SC.n,ovr:q.PRE_OVR}})));
  await p.keyboard.press('i');await p.waitForTimeout(250);await p.click('#rp-tabs button[data-t=edi]');await p.waitForTimeout(500);await p.screenshot({path:require('os').tmpdir()+'/editor.png'});
  await p.evaluate(()=>__qa.edToggle('chain4'));console.log('Abgelegt Torus',await tori(),JSON.stringify(await p.evaluate(()=>__qa.ACC_OVR)));
  console.log('gespeichert',await p.evaluate(()=>localStorage.getItem('kq-edit')));

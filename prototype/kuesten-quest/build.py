@@ -38,7 +38,7 @@ decals=decals.replace("const cols=['#d54291','#f0cf36','#1cafd1','#eae8e8'];","c
 # --- Accessoires
 ACC="const ACC={'#d54291':{chain:2,pendant:'star',earring:1,bangles:1,bag:'#47c2a5'},'#2499bb':{chain:1,pendant:'ring',earring:1,scarf:'#47c2a5',gl:'heart',bangles:1},'#47c2a5':{hat:'fwdcap',hc:'#eae8e8',hc2:'#d54291',gl:'visor',chain:3,pendant:'ice',bag:'#f0cf36'},'#f0cf36':{chain:4,pendant:'ice',gl:'big',earring:1,bangles:1,hat:'crown'},'D':{hat:'bucket',hc:'#f1a7c8',gl:'visor',scarf:'#d54291',bag:'#d54291',chain:1,pendant:'ring',phonesNeck:'#1cafd1'}};\n"
 avatar=avatar.replace("const PRE={",ACC+"const PRE={",1)
-avatar=avatar.replace("const o=PRE[c]||PRE['#d54291'];","const o=PRE[c]||PRE['#d54291'];const X=Object.assign({hc:'#eae8e8',hc2:'#f0cf36'},ACC[c]||{},ACC_OVR);if(X.pendant&&!X.chain)X.chain=1;",1)
+avatar=avatar.replace("const o=PRE[c]||PRE['#d54291'];","const o=Object.assign({},PRE[c]||PRE['#d54291'],PRE_OVR);const X=Object.assign({hc:'#eae8e8',hc2:'#f0cf36'},ACC[c]||{},ACC_OVR);if(X.pendant&&!X.chain)X.chain=1;",1)
 for h in ("cap","bun","puff","helmet"):
     assert "if(o.hair==='%s'){"%h in avatar
     avatar=avatar.replace("if(o.hair==='%s'){"%h,"if(o.hair==='%s'&&!X.hat){"%h,1)
