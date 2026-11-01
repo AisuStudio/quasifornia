@@ -380,7 +380,8 @@ function makeThumbs(){const my=++thumbJob;const todo=SKIN_LIST.map(s=>s[0]).filt
 function refreshSlots(){if(!$('cm'))return;[['cl',carIdx-1],['cm',carIdx],['cr',carIdx+1]].forEach(([id,idx])=>{const kk=carHue(idx)[0],im=$(id).querySelector('img');if(THUMBS[kk]){im.src=THUMBS[kk];im.hidden=false}})}
 
 const LOGO_SVG=__LOGO_SVG__;
-const TITLE={step:1,quest:0};
+const TITLE={step:1,quest:0,opened:false};
+function openerDone(){if(TITLE.opened)return;TITLE.opened=true;ac();tone(392,.12,'square',.05);tone(587,.2,'square',.05,0,.1);const o=$('opener');o.hidden=true;$('card').hidden=false;$('overlay').classList.remove('opening');$('next1')&&$('next1').focus({preventScroll:true})}
 function startChosen(){ac();const q=TITLE.quest;
   if(q===1){applyLevel(1);beginPlay();return}
   applyLevel(0);beginPlay();
@@ -416,6 +417,7 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    <div class="keys2"><kbd>W / ↑</kbd><span>Gas geben</span><kbd>A D / ← →</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind</span><kbd>Shift · Q · R</kbd><span>Kickflip · Pop Shove-it · 360 Flip</span><kbd>Klick · F</kbd><span>Skateboard werfen</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, sprühen)</span><kbd>I</kbd><span>Rarepod: Inventar, Aufträge, Scoops, Laden</span><kbd>M</kbd><span>Ton an oder aus</span></div>
    <div class="navrow"><button class="btn" id="start" type="button">Los geht’s ▶</button></div>
    </div>`;
+  if(!TITLE.opened&&!TEST){$('card').hidden=true;$('overlay').classList.add('opening');const o=$('opener');o.querySelector('.op-logo').innerHTML=LOGO_SVG;o.hidden=false;o.onclick=openerDone}else{$('card').hidden=false;$('opener').hidden=true;TITLE.opened=true}
   const cur=Math.max(0,SKIN_LIST.findIndex(s=>PRESETS[s[0]]===P.preset));setCarousel(cur,true);
   $('cprev').onclick=()=>stepCarousel(-1);$('cnext').onclick=()=>stepCarousel(1);
   [...$('cdots').children].forEach(b=>b.onclick=()=>{if(SKOWN.has(SKIN_LIST[+b.dataset.i][0]))setCarousel(+b.dataset.i)});
@@ -511,7 +513,8 @@ function stepTrick(dt){
 
 /* ---------- Eingabe ---------- */
 const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
-addEventListener('keydown',e=>{if(G.phase==='title'&&TITLE.step===1&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD')&&$('cm')){e.preventDefault();stepCarousel(e.code==='ArrowLeft'||e.code==='KeyA'?-1:1);return}
+addEventListener('keydown',e=>{if(G.phase==='title'&&!TITLE.opened&&!TEST&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&e.code!=='Tab'){e.preventDefault();openerDone();return}
+  if(G.phase==='title'&&TITLE.step===1&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD')&&$('cm')){e.preventDefault();stepCarousel(e.code==='ArrowLeft'||e.code==='KeyA'?-1:1);return}
   const k=KEYMAP[e.code];if(k){K[k]=1;e.preventDefault()}
   if(e.code==='Space'){e.preventDefault();jump()}
   if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!e.repeat){e.preventDefault();doTrick('kickflip')}

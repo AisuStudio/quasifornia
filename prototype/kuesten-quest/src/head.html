@@ -125,9 +125,20 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);color:var(--haze);font:500 13px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;z-index:5}
 @media (min-width:900px){#overlay{justify-content:flex-start;padding-left:max(5vw,24px)}}
 #card{max-height:calc(100dvh - 36px);overflow:auto}
-.logo{display:flex;justify-content:flex-start;margin:0 0 4px}.logo-svg{display:block;height:78px;width:auto;max-width:100%;filter:drop-shadow(0 3px 0 #d54291)}h1.gt{font-size:16px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--haze)!important;margin:0 0 6px!important;font-weight:700}
-@media (max-height:780px){.logo-svg{height:62px}}
-@media (max-height:660px){.logo-svg{height:50px}#cview{height:150px}#cview .main{width:100px;height:132px}#cview .side{width:60px;height:78px}#st1 .sub{display:none}#card h2{margin:6px 0}}
+#opener{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,2.4vh,22px);cursor:pointer;background:radial-gradient(ellipse at center,rgba(20,17,31,.25),rgba(20,17,31,.8));text-align:center;padding:16px}
+#opener[hidden]{display:none}
+#opener .logo-svg{display:block;height:auto;width:min(880px,90vw);margin:0 auto;filter:drop-shadow(0 12px 28px rgba(0,0,0,.55))}
+.op-logo{animation:oppop .9s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes oppop{0%{opacity:0;transform:scale(.72) rotate(-3deg)}100%{opacity:1;transform:none}}
+.op-sub{font:700 clamp(13px,2.2vw,18px)/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--paper);text-shadow:0 2px 0 #0e0b18;animation:opfade 1s .5s both}
+.op-go{font:800 clamp(18px,3vw,26px)/1 var(--display);color:var(--gold);text-shadow:0 3px 0 #0e0b18;animation:opfade 1s .9s both,opblink 1.4s 1.9s infinite}
+@keyframes opfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes opblink{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.op-logo,.op-sub,.op-go{animation:none}}
+#overlay.opening{justify-content:center;padding-left:18px}
+.logo{display:flex;justify-content:flex-start;margin:0 0 4px}.logo-svg{display:block;height:104px;width:auto;max-width:100%;}h1.gt{font-size:16px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--haze)!important;margin:0 0 6px!important;font-weight:700}
+@media (max-height:780px){.logo-svg{height:84px}}
+@media (max-height:660px){.logo-svg{height:62px}#cview{height:150px}#cview .main{width:100px;height:132px}#cview .side{width:60px;height:78px}#st1 .sub{display:none}#card h2{margin:6px 0}}
 .step{display:block}.step[hidden]{display:none}
 .navrow{display:flex;gap:10px;align-items:center;margin-top:12px}.navrow .btn{margin-top:0;flex:1}.navrow .btn.sec{flex:0 0 auto;margin-top:0}
 .qlist{display:flex;flex-direction:column;gap:9px;margin-top:6px}

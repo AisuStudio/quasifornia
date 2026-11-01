@@ -36,6 +36,7 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 20 Serafin-Quest: Bettler, Releaser, Gedicht, Turm Tarxarox, Geist freilassen
 - 21 Unterwelt: Zombies, Geister, Kürbis-Laternen, drei Aufträge
 - 22 Graffiti: Dosen kaufen, Editor, Wand speichern
+- 23 Opener: Logo-Splash, Tastendruck führt zum Avatar
 
 Screenshots landen im Temp-Ordner des Systems.
 
