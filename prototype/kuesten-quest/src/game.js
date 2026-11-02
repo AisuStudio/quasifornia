@@ -428,8 +428,11 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
   makeThumbs();
   const QN={0:['Erkunde die Stadt','Entdecke Port Lupo auf eigene Faust.'],1:['Skate Contest','Sammle die fünf Eiskugeln an der Küste und fahr dem Riesenvieh davon.'],5:['Rette die Insel','Finde die Gegenstände in Port Lupo, befreie den Mann am Labor und rette dann das Atoll.']};
   const stepTo=n=>{$('st1').hidden=n!==1;$('st2').hidden=n!==2;$('st3').hidden=n!==3;TITLE.step=n;$('card').scrollTop=0;(n===1?$('next1'):n===2?$('go'):$('start')).focus({preventScroll:true})};TITLE.step=1;TITLE.quest=0;
-  const pick=q=>{TITLE.quest=q;$('st3q').innerHTML='<b>Quest: '+QN[q][0]+'</b><br>'+QN[q][1];stepTo(3)};
-  $('next1').onclick=()=>stepTo(2);$('back2').onclick=()=>stepTo(1);$('back3').onclick=()=>stepTo(2);window.__titleStep=stepTo;
+  /* Die Questauswahl entfällt: man startet direkt in der Stadt (mit ?quests=1 und in den Tests gibt es sie weiter) */
+  const SKIPQ=!TEST&&!QP.has('quests');
+  const pick=q=>{TITLE.quest=q;$('st3q').innerHTML=SKIPQ?'':'<b>Quest: '+QN[q][0]+'</b><br>'+QN[q][1];stepTo(3)};
+  if(SKIPQ)$('back3').textContent='◀ Avatar ändern';
+  $('next1').onclick=()=>SKIPQ?pick(0):stepTo(2);$('back2').onclick=()=>stepTo(1);$('back3').onclick=()=>stepTo(SKIPQ?1:2);window.__titleStep=stepTo;
   $('go').onclick=()=>pick(0);$('go1').onclick=()=>pick(1);$('go5').onclick=()=>pick(5);
   $('start').onclick=()=>startChosen();
   $('go2').onclick=()=>{ac();applyLevel(2);beginPlay()};$('go3').onclick=()=>{ac();applyLevel(3);beginPlay()}}
