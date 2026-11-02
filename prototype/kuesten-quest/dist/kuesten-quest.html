@@ -2872,11 +2872,13 @@ function mpTerrain(add){
   MAPD.roads.forEach(r=>{const wU=Math.max(r.w,MP.RW),wM=wU*MP.SC,pts=r.pts.map(p=>[mwx(p[0]),mwz(p[1])]);
     const m=new THREE.Mesh(mpRibbon(pts,wM,1.32),asphalt);m.receiveShadow=true;m.userData.noBake=true;m.userData.noOutline=true;add(m);
     const rs=mpResample(r.pts,2.6);
-    rs.forEach(s=>{for(const side of [1,-1]){const off=wM/2+MP.SWK/2,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)===3)sw.push({x,z,ry:-Math.atan2(s.tz,s.tx)})}
+    rs.forEach(s=>{for(const side of [1,-1]){const off=wM/2+MP.SWK/2,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)===3){const ax=s.tx,az=s.tz,nx=-s.tz,nz=s.tx,bad=t=>[-1,0,1].some(o=>mpAt(x+ax*t+nx*o,z+az*t+nz*o)===2);
+        let t0=0,t1=0;while(t0>-1.55&&!bad(t0-.2))t0-=.2;while(t1<1.55&&!bad(t1+.2))t1+=.2;
+        if(!bad(0)&&t1-t0>.5)sw.push({x:x+ax*(t0+t1)/2,z:z+az*(t0+t1)/2,ry:-Math.atan2(s.tz,s.tx),len:Math.min(3.1,t1-t0+.2)})}}
       if(!mpIsLand(s.x,s.z)){bridge.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx),w:wM})}});
     if(r.w>=14){const ds=mpResample(r.pts,7);ds.forEach(s=>{if(mpAt(s.x,s.z)===2&&(s.tx||s.tz))dash.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx)})})}
     const ps=mpResample(r.pts,24);ps.forEach(s=>{if(!mpIsLand(s.x,s.z))pier.push({x:s.x,z:s.z})})});
-  add(mpInstanced(BX,mpMat('sw','#cfc4e0'),sw,s=>({x:s.x,y:1.45,z:s.z,ry:s.ry,sx:3.1,sy:.3,sz:MP.SWK})));
+  add(mpInstanced(BX,mpMat('sw','#cfc4e0'),sw,s=>({x:s.x,y:1.45,z:s.z,ry:s.ry,sx:s.len||3.1,sy:.3,sz:MP.SWK})));
   add(mpInstanced(BX,new THREE.MeshStandardMaterial({color:'#fff0b0',emissive:'#fff0b0',emissiveIntensity:.5}),dash,s=>({x:s.x,y:1.34,z:s.z,ry:s.ry,sx:2.6,sy:.04,sz:.35})));
   /* Brücken: Fahrbahnplatte, Pfeiler, Geländer */
   add(mpInstanced(BX,mpMat('deck','#6a5a9a'),bridge,s=>({x:s.x,y:1.0,z:s.z,ry:s.ry,sx:3.0,sy:.7,sz:s.w+.3})));
@@ -3043,7 +3045,7 @@ function portLupoNew(H){
    ITEM_DEFS.forEach((d,k)=>{const p=spots[d.id];placeItem(d,k,p[0],p[1])})}
   /* Portale zu Welt 2 und 3 an Straßenenden */
   {const WCOL=[{ring:'#8e5bd6',d:['#4cc3ff','#ff5fa8','#ffffff']},{ring:'#d54291',d:['#ffe066','#4cc3ff','#ffffff']}],ends=[[1891,1270],[2296,590]];
-   ends.forEach((e,k)=>{const f=mpFindFree(e[0],e[1],2.5,14,true)||[mwx(e[0]),mwz(e[1])],g=portal(f[0],8,f[1]);sc.remove(g);g.rotation.y=0;
+   ends.forEach((e,k)=>{const f=mpFindFree(e[0],e[1],7,40,true)||[mwx(e[0]),mwz(e[1])],g=portal(f[0],8,f[1]);sc.remove(g);g.rotation.y=0;
      g.children[0].material.color.set(WCOL[k].ring);g.children[0].material.emissive.set(WCOL[k].ring);[1,2,3].forEach(i=>g.children[i].material.color.set(WCOL[k].d[i-1]));g.userData.noBake=true;W0.add(g);
      const beam=new THREE.Mesh(new THREE.CylinderGeometry(3,3,90,16,1,true),BM(WCOL[k].ring,{transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,fog:false}));beam.position.set(f[0],45,f[1]);beam.userData.noBake=true;beam.userData.noOutline=true;W0.add(beam);
      HUB.portals.push({x:f[0],z:f[1],world:k+2,g,beam,node:0,col:WCOL[k].ring})})}
