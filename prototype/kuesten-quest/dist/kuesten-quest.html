@@ -2792,7 +2792,7 @@ function grafClose(save){if(!GF.open)return;const p=GF.cur;
 function grafPt(e){const cv=$('graf-cv'),r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*GF_W),Math.floor((e.clientY-r.top)/r.height*GF_H)]}
 function grafSpray(x,y){const cx=$('graf-cv').getContext('2d'),c=GF.col;if((GF.cans[c]||0)<=0)return;const R=GF.size;cx.fillStyle=c;
   const n=Math.max(4,Math.round(R*R*1.9));for(let i=0;i<n;i++){const a=Math.random()*6.283,d=Math.sqrt(Math.random())*R,px=Math.round(x+Math.cos(a)*d),py=Math.round(y+Math.sin(a)*d);if(px<0||py<0||px>=GF_W||py>=GF_H)continue;cx.fillRect(px,py,1,1)}
-  GF.cans[c]-=n*.35;GF.dabs+=n;if(GF.cans[c]<=0){GF.cans[c]=0;toast('Dose leer!',900);grafPal()}}
+  GF.cans[c]-=n*.07;GF.dabs+=n;if(GF.cans[c]<=0){GF.cans[c]=0;toast('Dose leer!',900);grafPal()}}
 (function(){const cv=$('graf-cv');if(!cv)return;
   cv.addEventListener('pointerdown',e=>{if(!GF.open)return;e.preventDefault();cv.setPointerCapture(e.pointerId);GF.down=true;const cx=cv.getContext('2d');GF.undo.push(cx.getImageData(0,0,GF_W,GF_H));if(GF.undo.length>12)GF.undo.shift();const [x,y]=grafPt(e);GF.lx=x;GF.ly=y;grafSpray(x,y);if(Math.random()<.3)tone(900+Math.random()*300,.05,'sawtooth',.012)});
   cv.addEventListener('pointermove',e=>{if(!GF.down)return;const [x,y]=grafPt(e),dx=x-GF.lx,dy=y-GF.ly,st=Math.max(1,Math.ceil(Math.hypot(dx,dy)/Math.max(1,GF.size*.6)));for(let i=1;i<=st;i++)grafSpray(GF.lx+dx*i/st,GF.ly+dy*i/st);GF.lx=x;GF.ly=y});
