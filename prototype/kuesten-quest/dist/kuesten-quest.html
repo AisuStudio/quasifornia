@@ -3038,6 +3038,15 @@ function portLupoNew(H){
    const sg=new THREE.Mesh(new THREE.PlaneGeometry(10.4,2.6),signMat('KÜSTEN-RENNEN','#ffe066','#1a1030'));sg.position.set(X+tx*1.1,1.3+13.4,Z+tz*1.1);sg.rotation.y=Math.atan2(tx,tz);sg.userData.noBake=true;add(sg);
    const sg2=sg.clone();sg2.position.set(X-tx*1.1,1.3+13.4,Z-tz*1.1);sg2.rotation.y=Math.atan2(-tx,-tz);add(sg2);
    HUB.gate={x:X,z:Z,r:Math.max(5,half+1)}}
+  /* Südbrücke zum Festland: vorerst gesperrt, Baustellen-Absperrung quer über die Fahrbahn, Brücke ist unbegehbar */
+  {const SX=4.5,SZ=190.5,HW=6.8,mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.7}),red=mat('#e8452c'),wht=mat('#f6efe6'),pst=mat('#4a4458'),lamp=new THREE.MeshBasicMaterial({color:'#ffd23a'});
+   const box=(m,w,h,d,x,y,z)=>{const o=new THREE.Mesh(BX,m);o.scale.set(w,h,d);o.position.set(x,y,z);o.castShadow=true;add(o);return o};
+   for(let i=0;i<14;i++){const x=SX-HW+i*(2*HW/14)+HW/14,m=i%2?wht:red;box(m,2*HW/14+.02,.45,.18,x,1.3+1.55,SZ);box(m,2*HW/14+.02,.45,.18,x,1.3+.8,SZ)}
+   [-HW,-HW/2,0,HW/2,HW].forEach(dx=>box(pst,.25,2.1,.25,SX+dx,1.3+1.05,SZ+.15));
+   [-HW,HW].forEach(dx=>{const l=new THREE.Mesh(new THREE.SphereGeometry(.28,10,8),lamp);l.position.set(SX+dx,1.3+2.35,SZ);l.userData.noBake=true;add(l)});
+   const sg=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.6),signMat('BAUSTELLE','#1a1030','#ffd23a'));sg.position.set(SX,1.3+3.3,SZ-.4);sg.rotation.y=Math.PI;sg.userData.noBake=true;add(sg);
+   box(pst,.25,3.4,.25,SX-2.2,1.3+1.7,SZ-.4);box(pst,.25,3.4,.25,SX+2.2,1.3+1.7,SZ-.4);
+   mpMarkRect(SX,(SZ+330)/2,HW+1.2,(330-SZ)/2+2,0);HUB.southBlocked=true}
   return {rail,lamps}}
 
 /* Gegenstand der Atoll-Quest mit Ring und Strahl */
@@ -3113,7 +3122,7 @@ function mpQuestPlaces(H){
   /* Graffiti-Wände auf freien Flächen an den Straßen, weit auseinander */
   {HUB.graf={panels:[]};const cands=[];MAPD.roads.forEach(r=>{const wM=Math.max(r.w,MP.RW)*MP.SC;mpResample(r.pts,12).forEach(s=>{if(!(s.tx||s.tz))return;for(const side of [1,-1]){const off=wM/2+MP.SWK+1.6,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;
       let ok=true;for(let t=-8;t<=8;t+=2){const px=x+s.tx*t,pz=z+s.tz*t;if(![1,3,4].includes(mpAt(px,pz))||![1,3,4].includes(mpAt(px-s.tz*side*1.5,pz+s.tx*side*1.5))){ok=false;break}}
-      if(ok&&Math.hypot(x-HUB.sx,z-HUB.sz)>35)cands.push({x,z,tx:s.tx,tz:s.tz,side})}})});
+      if(ok&&z<300&&Math.hypot(x-HUB.sx,z-HUB.sz)>35)cands.push({x,z,tx:s.tx,tz:s.tz,side})}})});
    const picks=[];for(let k=0;k<5&&cands.length;k++){let best=null,bd=-1;cands.forEach(c=>{const d=picks.length?Math.min(...picks.map(p=>Math.hypot(p.x-c.x,p.z-c.z))):Math.hypot(c.x-HUB.sx,c.z-HUB.sz);if(d>bd){bd=d;best=c}});picks.push(best)}
    picks.forEach((c,i)=>{const id='w'+(i+1),cv=document.createElement('canvas');cv.width=128;cv.height=64;const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
      cx.fillStyle='#2b2840';cx.fillRect(0,0,128,64);for(let q=0;q<300;q++){cx.fillStyle=q%3?'#322e4a':'#262338';cx.fillRect(Math.floor(Math.random()*128),Math.floor(Math.random()*64),2,1)}cx.fillStyle='#4a4468';cx.font='700 9px sans-serif';cx.textAlign='center';cx.fillText('HIER SPRÜHEN',64,34);
