@@ -2185,7 +2185,7 @@ function stepCity(dt){
     if(Math.abs(P.x-c.x)<1.3&&Math.abs(P.z-c.z)<1.3&&P.y-(LV.id===0?hillG(c.x,c.z):0)<2.4){c.hit=1.1;c.vx=Math.cos(P.h)*P.speed*1.2;c.vz=Math.sin(P.h)*P.speed*.8+(Math.random()-.5)*4;c.vy=8;P.speed*=.6;SFX.thud();G.shake=Math.max(G.shake,.2)}}
   if(LV.id===0&&!G.under)for(const p of HUB.portals){if(p.blocked&&Math.hypot(P.x-p.x,P.z-p.z)>9){p.blocked=0;p.hit=0}if(Math.hypot(P.x-p.x,P.z-p.z)<5.2&&G.phase==='play'&&!p.hit){p.hit=1;enterPortal(p)}}
   if(LV.id===0&&!G.under)for(const it of HUB.items){if(!it.got&&G.phase==='play'&&Math.hypot(P.x-it.x,P.z-it.z)<3.6&&P.y-it.G0<5.5)collectItem(it)}
-  if(LV.id===0&&!G.under&&G.phase==='play'&&!HUB.coastHit&&(NEWMAP?(HUB.gate&&Math.hypot(P.x-HUB.gate.x,P.z-HUB.gate.z)<HUB.gate.r):P.x<-150))startCoastRace()}
+  if(LV.id===0&&!G.under&&G.phase==='play'&&!HUB.coastHit&&(!NEWMAP&&P.x<-150))startCoastRace()}
 function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it.beam.material.opacity=0;INV.items.add(it.def.id);invSave();invRender();SFX.collect(INV.items.size);burst(it.x,4.5,it.z,60);
   toast(it.def.name+' gefunden!',1300);
   const n=INV.items.size,core=ITEM_DEFS.filter(d=>!d.bonus&&INV.items.has(d.id)).length;
@@ -2379,6 +2379,7 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
     ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:shopEnter}));
+    if(NEWMAP&&HUB.gate&&!HUB.coastHit)a.push({x:HUB.gate.x,z:HUB.gate.z,r:HUB.gate.r+2,label:'Küstenrennen starten',fn:startCoastRace});
     bettlerActs(a);grafActs(a)}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){

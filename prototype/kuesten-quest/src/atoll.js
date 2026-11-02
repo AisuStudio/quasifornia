@@ -138,6 +138,7 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
     ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:shopEnter}));
+    if(NEWMAP&&HUB.gate&&!HUB.coastHit)a.push({x:HUB.gate.x,z:HUB.gate.z,r:HUB.gate.r+2,label:'Küstenrennen starten',fn:startCoastRace});
     bettlerActs(a);grafActs(a)}
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){

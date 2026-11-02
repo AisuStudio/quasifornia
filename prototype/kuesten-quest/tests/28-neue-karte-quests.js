@@ -16,7 +16,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  console.log('Portal',JSON.stringify(await p.evaluate(()=>{const q=__qa,po=q.HUB.portals[0],s0=q.SC.n;q.P.x=po.x;q.P.z=po.z;q.P.y=2;for(let i=0;i<4;i++)q.step(.05);return {scoops:q.SC.n-s0,gefunden:q.HUB.found.size}})));
  await p.evaluate(()=>{__qa.applyLevel(0);__qa.beginPlay();__qa.G.phase='play'});
  /* Küstentor startet das Rennen */
- console.log('Küstentor',JSON.stringify(await p.evaluate(()=>{const q=__qa,g=q.HUB.gate;q.HUB.coastHit=0;q.P.x=g.x;q.P.z=g.z;q.P.y=2;q.step(.05);for(let i=0;i<40;i++)q.step(.05);return {level:q.LV.id}})));
+ console.log('Küstentor',JSON.stringify(await p.evaluate(()=>{const q=__qa,g=q.HUB.gate;q.HUB.coastHit=0;q.P.x=g.x;q.P.z=g.z;q.P.y=2;for(let i=0;i<20;i++)q.step(.05);const auto=q.LV.id,act=q.curActs().find(a=>a.label==='Küstenrennen starten');if(act)act.fn();for(let i=0;i<40;i++)q.step(.05);return {startetVonAlleine:auto!==0,aktionDa:!!act,levelNachAktion:q.LV.id}})));
  await p.evaluate(()=>{__qa.applyLevel(0);__qa.beginPlay();__qa.G.phase='play'});
  /* Unterwelt: Leiter, Karte, Serafin */
  console.log('Leiter',JSON.stringify(await p.evaluate(()=>{const q=__qa,U=q.HUB.uw;q.P.x=U.bx;q.P.z=U.bz+3;q.P.speed=0;q.step(.03);const a=q.curActs().map(x=>x.label);q.underApply(true);q.P.x=U.bx;q.P.z=U.bz+6;q.G.phase='play';for(let i=0;i<20;i++)q.step(.03);return {oben:a,unten:q.curActs().map(x=>x.label),under:q.G.under}})));
