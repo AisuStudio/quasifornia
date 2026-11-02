@@ -2176,8 +2176,8 @@ function cullCity(){if(!HUB.bgroups)return;const on=HUB.cull!==false,R2=(HUB.cul
 function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
   const sf=.45+.55*Math.min(1,P.speed/5);P.h+=P.turn*dt*2.3*sf;
-  const CF=NEWMAP&&LV.id===0?1.6:1;const target=K.up?SPEED_MAX*CF:(K.down?1.8:SPEED_CRUISE*CF);P.speed+=(target-P.speed)*Math.min(1,dt*(K.up?1.5:1.1));
-  const ox0=P.x,oz0=P.z;P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;if(LV.id===0&&P.coy<.14){const hx=Math.cos(P.h),hz=Math.sin(P.h),sl=(hillG(P.x+hx*.6,P.z+hz*.6)-hillG(P.x,P.z))/.6;P.speed=Math.max(1.6,Math.min(SPEED_MAX*CF+3,P.speed-sl*dt*9))}if(LV.id===5){const dk=Math.abs(P.z+36)<4.2&&P.x>40&&ISL.gate,ax=dk?96:78,k=(P.x*P.x)/(ax*ax)+(dk?0:(P.z*P.z)/(52*52));if(!dk&&k>1){const s=.995/Math.sqrt(k);P.x*=s;P.z*=s}else if(dk&&P.x>ax){P.x=ax}}
+  const CF=NEWMAP&&LV.id===0?1.6:1,STOP=NEWMAP&&LV.id===0&&K.down&&!K.up;const target=K.up?SPEED_MAX*CF:(STOP?0:(K.down?1.8:SPEED_CRUISE*CF));P.speed+=(target-P.speed)*Math.min(1,dt*(K.up?1.5:STOP?3:1.1));if(STOP&&P.speed<.15)P.speed=0;
+  const ox0=P.x,oz0=P.z;P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;if(LV.id===0&&P.coy<.14){const hx=Math.cos(P.h),hz=Math.sin(P.h),sl=(hillG(P.x+hx*.6,P.z+hz*.6)-hillG(P.x,P.z))/.6;P.speed=Math.max(STOP?0:1.6,Math.min(SPEED_MAX*CF+3,P.speed-sl*dt*9))}if(LV.id===5){const dk=Math.abs(P.z+36)<4.2&&P.x>40&&ISL.gate,ax=dk?96:78,k=(P.x*P.x)/(ax*ax)+(dk?0:(P.z*P.z)/(52*52));if(!dk&&k>1){const s=.995/Math.sqrt(k);P.x*=s;P.z*=s}else if(dk&&P.x>ax){P.x=ax}}
   if(NEWMAP&&LV.id===0)mpMove(ox0,oz0);else{const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
   resolveCity();P.h=((P.h+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   const gy=LV.id===0?cityGround(P.x,P.z):1.3,wasG=P.coy<.14&&P.vy<=.01;P.vy-=LV.grav*dt;P.y+=P.vy*dt;if(P.y<=gy||(LV.id===0&&wasG&&P.y-gy<.45)){P.y=gy;if(P.vy<0)P.vy=0}P.coy=P.y<=gy+.05?0:P.coy+dt;if(LV.id===0)stepGrind(dt);
@@ -2998,6 +2998,18 @@ function portLupoNew(H){
   const lamps=mpLamps();
   {const post=mpInstanced(CY,new THREE.MeshStandardMaterial({color:'#5a4a8a'}),lamps,p=>({x:p[0],y:1.6+2.7,z:p[1],sx:.14,sy:6,sz:.14})),head=mpInstanced(SP,new THREE.MeshBasicMaterial({color:'#fff0b0'}),lamps,p=>({x:p[0],y:1.6+6.2,z:p[1],sx:.55,sy:.55,sz:.55}));post.castShadow=true;add(post);add(head)}
   HUB.lamps=lamps;
+  /* Straßenschilder im kalifornischen Grün (wie in der alten Stadt), Namen sind Platzhalter, bis die Karte Namen liefert */
+  {const NM=['Waffelweg','Sorbetstraße','Karamellallee','Pistazienweg','Minzgasse','Schokoring','Möwenstraße','Palmenallee','Sonnenweg','Korallenweg','Dinoweg','Muschelgasse'],sn=t=>t.replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss'),TX={};
+   const stMat=t0=>TX[t0]||(TX[t0]=(()=>{const t=sn(t0),c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#0b6b4a';x.fillRect(0,0,640,128);x.strokeStyle='#f4f7f2';x.lineWidth=7;x.beginPath();x.roundRect(7,7,626,114,16);x.stroke();x.fillStyle='#f4f7f2';x.textAlign='center';x.textBaseline='middle';
+     const fam='"Smarta Nova","Baloo 2","Trebuchet MS",sans-serif';let fs=74;x.font=fs+'px '+fam;while(x.measureText(t).width>560&&fs>20){fs-=3;x.font=fs+'px '+fam}x.fillText(t,320,66);
+     const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})})()),pole=new THREE.MeshStandardMaterial({color:'#8a8aa0',roughness:.7}),placed=[];
+   MAPD.roads.forEach((r,ri)=>{const name=ri===0?'Uferpromenade':ri===MAPD.roads.length-1?'Skate-Boulevard':NM[(ri-1)%NM.length],wM=Math.max(r.w,MP.RW)*MP.SC;
+     mpResample(r.pts,50).forEach((sm,si)=>{if(si%1||!(sm.tx||sm.tz))return;const side=si%2?1:-1,off=wM/2+MP.SWK-.5,X=sm.x-sm.tz*side*off,Z=sm.z+sm.tx*side*off;
+       if(mpAt(X,Z)!==3||Z>186||placed.some(q=>Math.hypot(q[0]-X,q[1]-Z)<30))return;placed.push([X,Z]);
+       const pm=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,6.6,6),pole);pm.position.set(X,1.6+3.3,Z);pm.userData.noBake=true;add(pm);
+       const nx=sm.tz*side,nz=-sm.tx*side,ry=Math.atan2(nx,nz);
+       [0,1].forEach(b=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(6,1.2),stMat(name));const o=(b?-1:1)*.14;m.position.set(X+nx*o,1.6+5.9,Z+nz*o);m.rotation.y=ry+(b?Math.PI:0);m.userData.noBake=true;add(m)})})})
+   HUB.streetSigns=placed.length}
   /* Pflanzen: die Bäume der Karte und Parks aus Regeln */
   {const oF=FSP,oH=FW.h,oA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
    const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed)=>{const R2=mulberry(seed),gp=FLORA[kind](R2,sc2);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};

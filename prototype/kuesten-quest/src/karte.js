@@ -194,6 +194,18 @@ function portLupoNew(H){
   const lamps=mpLamps();
   {const post=mpInstanced(CY,new THREE.MeshStandardMaterial({color:'#5a4a8a'}),lamps,p=>({x:p[0],y:1.6+2.7,z:p[1],sx:.14,sy:6,sz:.14})),head=mpInstanced(SP,new THREE.MeshBasicMaterial({color:'#fff0b0'}),lamps,p=>({x:p[0],y:1.6+6.2,z:p[1],sx:.55,sy:.55,sz:.55}));post.castShadow=true;add(post);add(head)}
   HUB.lamps=lamps;
+  /* Straßenschilder im kalifornischen Grün (wie in der alten Stadt), Namen sind Platzhalter, bis die Karte Namen liefert */
+  {const NM=['Waffelweg','Sorbetstraße','Karamellallee','Pistazienweg','Minzgasse','Schokoring','Möwenstraße','Palmenallee','Sonnenweg','Korallenweg','Dinoweg','Muschelgasse'],sn=t=>t.replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss'),TX={};
+   const stMat=t0=>TX[t0]||(TX[t0]=(()=>{const t=sn(t0),c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#0b6b4a';x.fillRect(0,0,640,128);x.strokeStyle='#f4f7f2';x.lineWidth=7;x.beginPath();x.roundRect(7,7,626,114,16);x.stroke();x.fillStyle='#f4f7f2';x.textAlign='center';x.textBaseline='middle';
+     const fam='"Smarta Nova","Baloo 2","Trebuchet MS",sans-serif';let fs=74;x.font=fs+'px '+fam;while(x.measureText(t).width>560&&fs>20){fs-=3;x.font=fs+'px '+fam}x.fillText(t,320,66);
+     const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})})()),pole=new THREE.MeshStandardMaterial({color:'#8a8aa0',roughness:.7}),placed=[];
+   MAPD.roads.forEach((r,ri)=>{const name=ri===0?'Uferpromenade':ri===MAPD.roads.length-1?'Skate-Boulevard':NM[(ri-1)%NM.length],wM=Math.max(r.w,MP.RW)*MP.SC;
+     mpResample(r.pts,50).forEach((sm,si)=>{if(si%1||!(sm.tx||sm.tz))return;const side=si%2?1:-1,off=wM/2+MP.SWK-.5,X=sm.x-sm.tz*side*off,Z=sm.z+sm.tx*side*off;
+       if(mpAt(X,Z)!==3||Z>186||placed.some(q=>Math.hypot(q[0]-X,q[1]-Z)<30))return;placed.push([X,Z]);
+       const pm=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,6.6,6),pole);pm.position.set(X,1.6+3.3,Z);pm.userData.noBake=true;add(pm);
+       const nx=sm.tz*side,nz=-sm.tx*side,ry=Math.atan2(nx,nz);
+       [0,1].forEach(b=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(6,1.2),stMat(name));const o=(b?-1:1)*.14;m.position.set(X+nx*o,1.6+5.9,Z+nz*o);m.rotation.y=ry+(b?Math.PI:0);m.userData.noBake=true;add(m)})})})
+   HUB.streetSigns=placed.length}
   /* Pflanzen: die Bäume der Karte und Parks aus Regeln */
   {const oF=FSP,oH=FW.h,oA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
    const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed)=>{const R2=mulberry(seed),gp=FLORA[kind](R2,sc2);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};
