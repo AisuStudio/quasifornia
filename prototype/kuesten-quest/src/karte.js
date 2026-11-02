@@ -74,7 +74,7 @@ function mpTerrain(add){
     const rs=mpResample(r.pts,2.6);
     /* Bordsteine: kurze, mit der Straße gedrehte Stücke (1 m); fällt weg, wenn es in Straße, Haus oder Wasser ragen würde */
     mpResample(r.pts,.9).forEach(s=>{if(!(s.tx||s.tz))return;for(const side of [1,-1]){const off=wM/2+MP.SWK/2,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)!==3)continue;let good=true;
-      for(const a of [-.55,0,.55])for(const o of [-1.15,-.5,0,.5,1.15]){const c=mpAt(x+s.tx*a-s.tz*o,z+s.tz*a+s.tx*o);if(c===2||c===0){good=false;break}}
+      for(const a of [-.5,0,.5])for(const o of [-.8,0,.8]){const c=mpAt(x+s.tx*a-s.tz*o,z+s.tz*a+s.tx*o);if(c===2||c===0){good=false;break}}
       if(good)sw.push({x,z,ry:-Math.atan2(s.tz,s.tx),len:1.25})}});
     rs.forEach(s=>{if(!mpIsLand(s.x,s.z)){bridge.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx),w:wM})}});
     if(r.w>=14){const ds=mpResample(r.pts,7);ds.forEach(s=>{if(mpAt(s.x,s.z)===2&&(s.tx||s.tz))dash.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx)})})}
