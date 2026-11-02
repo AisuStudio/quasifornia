@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:760}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8839/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
+ await p.goto('http://localhost:8839/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  console.log('Wände',JSON.stringify(await p.evaluate(()=>__qa.HUB.graf.panels.map(p=>p.id+':'+Math.round(p.ax)+','+Math.round(p.az)))));
  console.log('ohne Dose',JSON.stringify(await p.evaluate(()=>{const q=__qa,pn=q.HUB.graf.panels[0];q.G.phase='play';q.P.x=pn.ax;q.P.z=pn.az;q.P.speed=0;q.step(.03);const acts=q.curActs().map(a=>a.label).filter(l=>/Wand/.test(l));q.grafOpen(pn);return {acts,editorOffen:q.GF.open,dialog:q.DLG.open}})));
  await p.evaluate(()=>{const q=__qa;let n=0;while(q.DLG.open&&n++<10)q.dlgNext()});

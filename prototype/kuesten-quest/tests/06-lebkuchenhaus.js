@@ -6,7 +6,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const p=await b.newPage({viewport:{width:1280,height:800}});
  p.on('pageerror',e=>console.log('ERR',e.message));p.on('console',m=>{const t=m.text();if(!/GPU stall|Font|fonts.g|Failed to load/.test(t))console.log('LOG',t.slice(0,300))});
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8807/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
+ await p.goto('http://localhost:8807/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
  await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const info=await p.evaluate(()=>JSON.stringify({gb:__qa.HUB.gb,lab:[__qa.HUB.lab.i,__qa.HUB.lab.j],items:__qa.HUB.items.map(i=>[i.def.id,Math.round(i.x),Math.round(i.z)]),dist:__qa.HUB.maze.dist[__qa.HUB.maze.id(__qa.HUB.gb.i,__qa.HUB.gb.j)],gl:!!__qa.HUB.gl,bulbs:__qa.HUB.gl&&[__qa.HUB.gl.A.count,__qa.HUB.gl.B.count]}));
  console.log(info);const gb=JSON.parse(info).gb;

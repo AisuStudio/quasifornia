@@ -9,6 +9,8 @@ function uwProgText(id){const m={gruft:['z','Zombies'],geister:['g','Geister'],k
 function uwHud(){if(!G.under)return;setQuest('Unterwelt: Zombies '+Math.min(UWQ.z,6)+'/6 · Geister '+Math.min(UWQ.g,4)+'/4 · Kürbisse '+Math.min(UWQ.k,8)+'/8',null)}
 function uwCheck(){if(UWQ.z>=UW_GOAL.z&&!SC.au.gruft)auComplete('gruft');if(UWQ.g>=UW_GOAL.g&&!SC.au.geister)auComplete('geister');if(UWQ.k>=UW_GOAL.k&&!SC.au.kuerbis)auComplete('kuerbis')}
 function uwSpots(n,seed,minFromEntry){const R=mulberry(seed),out=[],blk=(x,z,m)=>HUB.colliders.some(c=>c.top>=900&&x>c.x0-m&&x<c.x1+m&&z>c.z0-m&&z<c.z1+m);
+  if(NEWMAP&&HUB.spotPool){const pool=HUB.spotPool.slice();for(let i=pool.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+    for(const [x,z] of pool){if(out.length>=n)break;const T=HUB.uw&&HUB.uw.tower;if(Math.hypot(x-HUB.uw.bx,z-HUB.uw.bz)<minFromEntry||(T&&Math.hypot(x-T.x,z-T.z)<14))continue;if(out.every(o=>Math.hypot(o[0]-x,o[1]-z)>22))out.push([x,z])}return out}
   for(let t=0;t<900&&out.length<n;t++){const i=Math.floor(R()*5),j=Math.floor(R()*5),side=Math.floor(R()*4),u=(R()-.5)*28,w=15.6+R()*1.6,cx=(i-2)*50,cz=(j-2)*50;
     const x=side===0?cx+u:side===1?cx+u:side===2?cx-w:cx+w,z=side===0?cz-w:side===1?cz+w:cz+u;
     if(blk(x,z,1.6)||Math.hypot(x-HUB.uw.bx,z-HUB.uw.bz)<minFromEntry||Math.hypot(x-128,z-128)<14)continue;

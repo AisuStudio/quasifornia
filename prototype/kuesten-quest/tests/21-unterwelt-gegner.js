@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:620}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8837/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
+ await p.goto('http://localhost:8837/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  await p.evaluate(()=>{localStorage.removeItem('kq-uw');__qa.uwReset();__qa.G.phase='play';__qa.underApply(true)});await p.waitForTimeout(150);
  console.log('Spawn',JSON.stringify(await p.evaluate(()=>{const q=__qa;q.step(.03);const L=q.UWE.list;return {zombies:L.filter(e=>e.kind==='z').length,geister:L.filter(e=>e.kind==='g').length,kuerbisse:q.UWE.pumpkins.length,hud:document.getElementById('q-title').textContent}})));
  console.log('Aufwachen',JSON.stringify(await p.evaluate(()=>{const q=__qa,z=q.UWE.list.find(e=>e.kind==='z');q.P.x=z.x+18;q.P.z=z.z;q.P.speed=0;const s0=z.state;for(let i=0;i<10;i++)q.step(.03);const s1=z.state;for(let i=0;i<60;i++)q.step(.03);return {vorher:s0,nach:s1,spaeter:z.state}})));

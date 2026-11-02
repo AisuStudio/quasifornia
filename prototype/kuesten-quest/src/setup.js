@@ -5,7 +5,7 @@ import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 
-const QP=new URLSearchParams(location.search);const TEST=QP.get('test')==='1';const shot='1';
+const QP=new URLSearchParams(location.search);const NEWMAP=!QP.has('alt');const TEST=QP.get('test')==='1';const shot='1';
 const stageEl=document.getElementById('stage');
 const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:TEST,powerPreference:'high-performance'});
 r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.outputColorSpace=THREE.SRGBColorSpace;

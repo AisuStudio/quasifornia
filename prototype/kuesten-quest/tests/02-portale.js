@@ -6,7 +6,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const p=await b.newPage({viewport:{width:1280,height:800}});
  p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8802/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
+ await p.goto('http://localhost:8802/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
  await p.evaluate(()=>{
   window.pathTo=(target)=>{const H=__qa.HUB,m=H.maze,N=6,start=m.id(2,3);const prev={};const q=[start];prev[start]=-1;for(let h=0;h<q.length;h++){const u=q[h];m.adj[u].forEach(v=>{if(prev[v]===undefined){prev[v]=u;q.push(v)}})}
     const path=[];for(let n=target;n!==-1;n=prev[n])path.unshift(n);return path.map(n=>[(n%N-2.5)*50,(Math.floor(n/N)-2.5)*50])};

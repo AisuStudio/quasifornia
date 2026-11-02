@@ -3,7 +3,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:700}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8812/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
+ await p.goto('http://localhost:8812/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
  console.log('Titel: gesperrte Punkte',await p.evaluate(()=>[...document.querySelectorAll('#cdots button')].map(b=>b.disabled?1:0).join('')));
  console.log('Pfeil weiter x12',await p.evaluate(()=>{const o=[];for(let i=0;i<12;i++){document.getElementById('cnext').click();o.push(document.getElementById('cname').textContent)}return o.join(',')}));
  await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));

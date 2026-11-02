@@ -77,7 +77,7 @@ function vanUse(){if(Q.ice)return say('e','Du hast schon ein Eis. Mehr passt nic
   Q.ice=true;SFX.collect(3);toast('Eis erhalten!',1200);burst(P.x,P.y+2,P.z,30);invRender();say('e',Q.dictated?'Ein Eis. Es sieht aus wie eine Medizin für gefesselte Männer.':'Ein Eis. Der Eisverkäufer sagt, es kostet nichts. Du fragst nicht nach.',3.2)}
 
 function enterLab(){LEVELS[4].vendor=INV.items.has('losung')?'Auf dem Möwen-Bon steht: "Frag nach dem Möwen-Menü." Vielleicht hängt hier irgendwo ein Möwen-Poster.':'Such den Schlüssel für die Handschellen. Schaltkästen sind meistens verschraubt.';HUB.spawnAt=null;applyLevel(4);beginPlay()}
-function leaveLab(){const L=HUB.lab;HUB.spawnAt={x:L.cx-1,z:L.cz-21,h:-Math.PI/2};applyLevel(0);beginPlay()}
+function leaveLab(){const L=HUB.lab;HUB.spawnAt=L.spawnX!==undefined?{x:L.spawnX,z:L.spawnZ,h:L.spawnH}:{x:L.cx-1,z:L.cz-21,h:-Math.PI/2};applyLevel(0);beginPlay()}
 function atollEnter(){HUB.atollHit=1;SFX.win();burst(P.x,P.y+3,P.z,120);toast('Das Atoll!',1400);later(.7,()=>{applyLevel(5);beginPlay()})}
 
 /* ---------- Labor-Gebäude (außen) ---------- */
@@ -113,15 +113,16 @@ function buildAtollQuestObjects(){const L=HUB.lab;if(!L)return;
   const beam=new THREE.Mesh(new THREE.CylinderGeometry(3,3,90,16,1,true),BM('#2fd6b0',{transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false,fog:false}));beam.position.set(L.portalX,45,L.portalZ);beam.userData.noBake=true;beam.userData.noOutline=true;W0.add(beam);
   addOutlines(g,'actor');HUB.atoll={g,beam,x:L.portalX,z:L.portalZ};
   /* Eiswagen */
-  icevan(-40,21.5,Math.PI/2,'#8fd6e4');const van=sc.children[sc.children.length-1];sc.remove(van);van.userData.noBake=true;W0.add(van);addOutlines(van,'prop');
-  HUB.colliders.push({x0:-43.6,x1:-36.4,z0:19.2,z1:23.8,top:999});HUB.van={x:-40,z:21.5};
+  const vx=L.vanX!==undefined?L.vanX:-40,vz=L.vanZ!==undefined?L.vanZ:21.5,vr=L.vanR!==undefined?L.vanR:Math.PI/2;icevan(vx,vz,vr,'#8fd6e4');const van=sc.children[sc.children.length-1];sc.remove(van);van.userData.noBake=true;W0.add(van);addOutlines(van,'prop');
+  if(L.vanX===undefined)HUB.colliders.push({x0:-43.6,x1:-36.4,z0:19.2,z1:23.8,top:999});else if(typeof mpMarkRect==='function')mpMarkRect(vx,vz,3.4,1.8,-vr);HUB.van={x:vx,z:vz};
   atollRefresh()}
 function atollRefresh(){const m=HUB.man,A=HUB.atoll,L=HUB.lab;if(!m||!A)return;
   A.g.visible=Q.freed;A.beam.visible=Q.freed;
-  if(Q.freed){m.state='stand';m.x=L.portalX+(L.portalX>L.cx?-4:4);m.z=L.portalZ+(L.portalZ>0?-4:4);m.g.position.set(m.x,1.3,m.z);m.g.rotation.set(0,Math.PI/2,0);m.g.children.forEach(c=>{if(c.geometry&&c.geometry.type==='TorusGeometry')c.visible=false})}
+  if(Q.freed){m.state='stand';m.x=L.standX!==undefined?L.standX:L.portalX+(L.portalX>L.cx?-4:4);m.z=L.standZ!==undefined?L.standZ:L.portalZ+(L.portalZ>0?-4:4);m.g.position.set(m.x,1.3,m.z);m.g.rotation.set(0,Math.PI/2,0);m.g.children.forEach(c=>{if(c.geometry&&c.geometry.type==='TorusGeometry')c.visible=false})}
   else{m.state='tied';m.x=L.manX;m.z=L.manZ;m.g.position.set(m.x,1.3+.55,m.z);m.g.rotation.set(0,Math.PI,Math.PI/2);m.g.children.forEach(c=>{if(c.geometry&&c.geometry.type==='TorusGeometry')c.visible=true})}}
 function manWalk(){const m=HUB.man,L=HUB.lab,A=HUB.atoll;A.g.visible=true;A.beam.visible=true;
   m.g.rotation.set(0,Math.PI,0);m.g.position.y=1.3;m.g.children.forEach(c=>{if(c.geometry&&c.geometry.type==='TorusGeometry')c.visible=false});
+  if(L.standX!==undefined){m.path=[[L.standX,L.standZ]];m.pi=0;m.state='walk';return}
   const tz=L.portalZ+(L.portalZ>0?-4:4),px=L.portalX+(L.portalX>L.cx?-4:4);m.path=[[m.x,L.cz-25],[px,L.cz-25],[px,tz]];m.pi=0;m.state='walk'}
 
 /* ---------- Schritt pro Frame ---------- */
@@ -133,7 +134,7 @@ function curActs(){const a=[],L=HUB.lab;
     if(m&&!Q.freed)a.push({x:L.manX,z:L.manZ,r:6.5,label:Q.hasKey?'Mann befreien (Schlüssel)':(Q.ice&&Q.dictated&&!Q.corrected)?'Dem Mann das Eis geben':'Mit dem Mann sprechen',fn:manTalk});
     else if(m&&Q.freed&&m.state==='stand')a.push({x:m.x,z:m.z,r:6,label:'Mit dem Mann sprechen',fn:manTalk});
     a.push({x:L.doorX,z:L.doorZ,r:9,label:!Q.dictated?'Labor-Tür (verriegelt)':(Q.doorOpen||Q.hasKey)?'Labor betreten':'Code eingeben',fn:doorUse});
-    if(HUB.gb)a.push({x:HUB.gb.cx,z:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
+    if(HUB.gb)a.push({x:HUB.gb.sx!==undefined?HUB.gb.sx:HUB.gb.cx,z:HUB.gb.sz!==undefined?HUB.gb.sz:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
     ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:shopEnter}));

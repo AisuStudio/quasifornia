@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:760}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8852/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
+ await p.goto('http://localhost:8852/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const st=()=>p.evaluate(()=>({musikPause:__qa.MUSE.paused,sfxAus:__qa.G.muted,knopf:document.getElementById('b-snd').textContent,vol:+__qa.MUS.volume.toFixed(2),gespeichert:localStorage.getItem('kq-mus')}));
  console.log('Start',JSON.stringify(await st()));
  await p.keyboard.press('m');console.log('M',JSON.stringify(await st()));

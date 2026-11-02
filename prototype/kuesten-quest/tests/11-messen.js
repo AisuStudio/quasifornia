@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const p=await b.newPage({viewport:{width:1100,height:620}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- const t0=Date.now();await p.goto('http://localhost:8816/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
+ const t0=Date.now();await p.goto('http://localhost:8816/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
  console.log('Ladezeit bis bereit (ms):',Date.now()-t0);
  for(const n of [0,1,2,3,4,5]){
   const row=await p.evaluate(async(n)=>{const q=__qa;const t=performance.now();q.applyLevel(n);q.beginPlay();const build=performance.now()-t;q.step(.03);

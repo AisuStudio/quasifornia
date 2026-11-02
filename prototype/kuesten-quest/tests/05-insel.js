@@ -6,7 +6,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const ctx=await b.newContext({viewport:{width:1280,height:800}});const p=await ctx.newPage();
  p.on('pageerror',e=>console.log('ERR',e.message));p.on('console',m=>{const t=m.text();if(!/GPU stall|Font|fonts.g|Failed to load/.test(t))console.log('LOG',t.slice(0,300))});
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8806/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
+ await p.goto('http://localhost:8806/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});
  const shot=async n=>{await p.evaluate('__qa.render()');await p.screenshot({path:require("os").tmpdir()+`/t_i_${n}.png`})};
  const T=(x,z,h=0)=>p.evaluate(([x,z,h])=>{const q=__qa;q.P.x=x;q.P.z=z;q.P.h=h;q.P.speed=0;q.P.y=1.3;for(let i=0;i<3;i++)q.step(.03)},[x,z,h]);
  const act=()=>p.evaluate(()=>{const q=__qa;let best=null,bd=1e9;for(const a of q.curActs()){const d=Math.hypot(q.P.x-a.x,q.P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}return best?best.label:null});

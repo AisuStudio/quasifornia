@@ -552,7 +552,7 @@ HILL.hb=Array.from({length:5},(_,j)=>Array.from({length:5},(_,i)=>{const d=Math.
 function hillCell(u){if(u<=-82)return [0,0,0];const s=(u+82)/50,k=Math.min(4,Math.floor(s)),f=s-k;if(k>=4)return [4,4,0];if(f<.28){const t=f/.28;return [k,k+1,t*t*(3-2*t)]}return [k+1,k+1,0]}
 function hillG(x,z){if(HILL.off)return 0;const [kx,kx1,wx]=hillCell(x),[kz,kz1,wz]=hillCell(z),B=HILL.hb;
   return (1-wz)*((1-wx)*B[kz][kx]+wx*B[kz][kx1])+wz*((1-wx)*B[kz1][kx]+wx*B[kz1][kx1])}
-function cityGround(x,z){const h=hillG(x,z);for(const c of HUB.colliders){if(c.uw&&!G.under)continue;if(c.walk&&x>=c.x0&&x<=c.x1&&z>=c.z0&&z<=c.z1)return c.walk+h}return 1.3+h}
+function cityGround(x,z){if(NEWMAP){let g0=mpAt(x,z)===3?1.6:1.3;for(const c of HUB.colliders){if(c.uw&&!G.under)continue;if(c.walk&&x>=c.x0&&x<=c.x1&&z>=c.z0&&z<=c.z1)return c.walk}return g0}const h=hillG(x,z);for(const c of HUB.colliders){if(c.uw&&!G.under)continue;if(c.walk&&x>=c.x0&&x<=c.x1&&z>=c.z0&&z<=c.z1)return c.walk+h}return 1.3+h}
 function groundAt(x,z){return LV.id===0?cityGround(x,z):gapAt(x)?-999:rampAt(x,z)}
 function stepPlayer(dt){
   const flip=G.front>.5?-1:1;
@@ -1251,6 +1251,7 @@ function buildLevel0(){
     cyl(metal,1.9,.3,0,20.4,0);sph(GLASSW,1,.8,1,0,21.0,0,false);[-1,0,1].forEach(s=>sph(MT('#ff5fa8','#ff5fa8',1),.18,.18,.18,s*1.3,20.55,0,false))}
   HUB.h={bx,cyl,sph,sign,MT,Y0,cur:()=>cur,add:o=>W0.add(o)};
   const TYPES=[resi,shop,cafe,office,burger],TNAMES=['Wohnhaus','Laden','Café','Büro','Burger'],TCOL=['#f1a7c8','#ffb347','#8a5a3a','#4cc3ff','#e5383b'];
+  if(NEWMAP){Object.assign(HUB.h,{mesh,setCur:(x,z)=>{cur={x,z}},TYPES});portLupoNew(HUB.h);portLupoFinish(HUB.h);return}
   /* ---- Boden, Bürgersteige, Mauer ---- */
   const gGeo=new THREE.PlaneGeometry(420,420,120,120);gGeo.rotateX(-Math.PI/2);{const pa=gGeo.attributes.position;for(let q=0;q<pa.count;q++)pa.setY(q,hillG(pa.getX(q),pa.getZ(q)));gGeo.computeVertexNormals()}
   const ground=new THREE.Mesh(gGeo,new THREE.MeshStandardMaterial({color:'#4a3f66',roughness:.95}));ground.position.set(0,1.3,0);ground.receiveShadow=true;ground.userData.noBake=true;W0.add(ground);
@@ -1477,18 +1478,7 @@ function buildLevel0(){
    ITEM_DEFS.forEach((d,k)=>{const blocks=[];for(let j=0;j<5;j++)for(let i=0;i<5;i++)if((i+2*j)%5===d.type&&!(HUB.lab&&i===HUB.lab.i&&j===HUB.lab.j)&&!(HUB.gb&&i===HUB.gb.i&&j===HUB.gb.j))blocks.push([i,j]);
      const far=blocks.filter(([i,j])=>Math.hypot((i-2)*50-HUB.sx,(j-2)*50-HUB.sz)>60);const pool=far.length?far:blocks;const [bi,bj]=pool[Math.floor(RI()*pool.length)];
      const ix=(bi-2)*50+(k%2?7:-7),iz=(bj-2)*50-22;
-     const g=new THREE.Group();const mt=(c,e)=>new THREE.MeshStandardMaterial({color:c,roughness:.5,emissive:e||'#000000',emissiveIntensity:e?.35:0});
-     const add2=(geo,m,x,y,z,sx=1,sy=1,sz=1,rx=0,ry=0,rz=0)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.rotation.set(rx,ry,rz);o.castShadow=true;g.add(o);return o};
-     if(d.id==='funk'){add2(BX,mt('#fff6ea','#fff6ea'),0,0,0,2.4,.16,3,.1,0,.1);add2(BX,mt(d.col,d.col),0,.12,-1.3,2.4,.12,.5,.1,0,.1);for(let q=0;q<4;q++)add2(BX,mt('#1a1626'),q%2?.2:0,.16,-.4+q*.6,q%2?1.2:1.8,.06,.14,.1,0,.1)}
-     else if(d.id==='schraube'){add2(CY,mt(d.col,d.col),0,0,0,.6,2.6,.6,0,0,Math.PI/2);add2(CY,mt('#cfcfe0'),2.1,0,0,.2,2.2,.2,0,0,Math.PI/2);add2(BX,mt('#cfcfe0'),3.2,0,0,.3,.7,.12)}
-     else if(d.id==='usb'){add2(BX,mt('#2a3a8a'),0,0,0,1.5,.7,3);add2(BX,mt('#cfcfe0'),0,0,1.9,1.1,.5,1.2);add2(SP,mt('#7be0a0','#7be0a0'),0,.45,-.8,.2,.12,.2)}
-     else if(d.id==='handbuch'){add2(BX,mt(d.col,d.col),0,0,0,2.6,.7,3.4);add2(BX,mt('#fff6ea'),.1,0,0,2.3,.55,3.1);add2(BX,mt('#ff5f5f'),.9,.4,1.1,.35,.1,1.2)}
-     else{add2(BX,mt('#fff6ea','#fff6ea'),0,0,0,1.8,.1,3.2);add2(BX,mt(d.col,d.col),0,.08,-.8,1.8,.1,.8);add2(CY,mt('#ffe066','#ffe066'),0,.1,.9,.5,.08,.5)}
-     const G0=hillG(ix,iz);g.scale.setScalar(1.25);g.position.set(ix,4.2+G0,iz);g.userData.noBake=true;g.userData.tier='actor';W0.add(g);
-     const ring=new THREE.Mesh(new THREE.RingGeometry(1.8,2.5,28),BM(d.col,{transparent:true,opacity:.8,side:THREE.DoubleSide,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.set(ix,1.65+G0,iz);ring.userData.noBake=true;ring.userData.noOutline=true;W0.add(ring);
-     const beam=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,26,12,1,true),BM(d.col,{transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,fog:false}));beam.position.set(ix,14+G0,iz);beam.userData.noBake=true;beam.userData.noOutline=true;W0.add(beam);
-     const got=INV.items.has(d.id);g.visible=!got;ring.visible=!got;
-     HUB.items.push({def:d,g,ring,beam,x:ix,z:iz,got,ph:k*1.3,G0})})}
+     placeItem(d,k,ix,iz)})}
   (HUB.bgroups||[]).forEach(gp=>{const b=gp.userData.blk,i=Math.round(b.x/50)+2,j=Math.round(b.z/50)+2;bakeGroup(gp,HILL.hb[j][i]>0?hillG:null)});bakeGroup(W0,hillG);
   buildAtollQuestObjects();buildGingerLights();
   /* Himmel: Skyline-Ring, Wolken (folgen / stehen) */
@@ -1535,16 +1525,17 @@ function enterPortal(p){if(!scCan(PORTAL_COST)){p.hit=1;p.blocked=1;SFX.thud&&SF
 /* ---------- Curb Grind: auf der Bordsteinkante der Gehwege rutschen ---------- */
 const GR={on:false,edge:null,t:0,dir:1,spark:0,best:0,lastEnd:0,edges:null};
 function grindEdges(){if(GR.edges)return GR.edges;GR.edges=[];for(const c of HUB.colliders)if(c.walk&&!c.uw){GR.edges.push({ax:'x',co:c.z0,lo:c.x0,hi:c.x1},{ax:'x',co:c.z1,lo:c.x0,hi:c.x1},{ax:'z',co:c.x0,lo:c.z0,hi:c.z1},{ax:'z',co:c.x1,lo:c.z0,hi:c.z1})}return GR.edges}
-function grindTry(){if(GR.on||LV.id!==0||G.phase!=='play'||P.speed<3.2||P.y-hillG(P.x,P.z)<1.62||P.y-hillG(P.x,P.z)>2.35||P.vy>3||G.t-GR.lastEnd<.35)return;
+function grindTry(){if(NEWMAP&&mpGrindTry())return;if(NEWMAP)return;if(GR.on||LV.id!==0||G.phase!=='play'||P.speed<3.2||P.y-hillG(P.x,P.z)<1.62||P.y-hillG(P.x,P.z)>2.35||P.vy>3||G.t-GR.lastEnd<.35)return;
   const hx=Math.cos(P.h),hz=Math.sin(P.h);
   for(const e of grindEdges()){const along=e.ax==='x'?P.x:P.z,across=e.ax==='x'?P.z:P.x;if(along<e.lo+1||along>e.hi-1||Math.abs(across-e.co)>.95)continue;
     const dx=e.ax==='x'?1:0,dz=e.ax==='x'?0:1,dot=hx*dx+hz*dz;if(Math.abs(dot)<.8)continue;
     GR.on=true;GR.edge=e;GR.dir=Math.sign(dot)||1;GR.t=0;GR.spark=0;SFX.whoosh();toast('CURB GRIND!',700);return}}
-function grindEnd(jumpOff){if(!GR.on)return;const sec=GR.t;GR.on=false;GR.lastEnd=G.t;
+function grindEnd(jumpOff){if(!GR.on)return;GR.seg=null;const sec=GR.t;GR.on=false;GR.lastEnd=G.t;
   if(jumpOff){P.vy=7.4;P.coy=1;SFX.jump()}
   if(sec>=.6){trickScored('grind','CURB GRIND '+sec.toFixed(1)+' s!');burst(P.x,P.y+1.5,P.z,40);if(!Tk.saidG){Tk.saidG=1;say('e','Curb Grind: Du rutschst auf der Bordsteinkante. Die Kante ist nicht begeistert.',3.2)}}}
 function stepGrind(dt){
   if(!GR.on){grindTry();return}
+  if(GR.seg){mpGrindStep(dt);return}
   const e=GR.edge,dx=e.ax==='x'?GR.dir:0,dz=e.ax==='x'?0:GR.dir;GR.t+=dt;
   if(e.ax==='x')P.z=e.co;else P.x=e.co;
   let d=Math.atan2(dz,dx)-P.h;d=Math.atan2(Math.sin(d),Math.cos(d));P.h+=d*Math.min(1,dt*12);
@@ -1557,15 +1548,15 @@ function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
   const sf=.45+.55*Math.min(1,P.speed/5);P.h+=P.turn*dt*2.3*sf;
   const target=K.up?SPEED_MAX:(K.down?1.8:SPEED_CRUISE);P.speed+=(target-P.speed)*Math.min(1,dt*(K.up?1.5:1.1));
-  P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;if(LV.id===0&&P.coy<.14){const hx=Math.cos(P.h),hz=Math.sin(P.h),sl=(hillG(P.x+hx*.6,P.z+hz*.6)-hillG(P.x,P.z))/.6;P.speed=Math.max(1.6,Math.min(SPEED_MAX+3,P.speed-sl*dt*9))}if(LV.id===5){const dk=Math.abs(P.z+36)<4.2&&P.x>40&&ISL.gate,ax=dk?96:78,k=(P.x*P.x)/(ax*ax)+(dk?0:(P.z*P.z)/(52*52));if(!dk&&k>1){const s=.995/Math.sqrt(k);P.x*=s;P.z*=s}else if(dk&&P.x>ax){P.x=ax}}
-  {const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
+  const ox0=P.x,oz0=P.z;P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;if(LV.id===0&&P.coy<.14){const hx=Math.cos(P.h),hz=Math.sin(P.h),sl=(hillG(P.x+hx*.6,P.z+hz*.6)-hillG(P.x,P.z))/.6;P.speed=Math.max(1.6,Math.min(SPEED_MAX+3,P.speed-sl*dt*9))}if(LV.id===5){const dk=Math.abs(P.z+36)<4.2&&P.x>40&&ISL.gate,ax=dk?96:78,k=(P.x*P.x)/(ax*ax)+(dk?0:(P.z*P.z)/(52*52));if(!dk&&k>1){const s=.995/Math.sqrt(k);P.x*=s;P.z*=s}else if(dk&&P.x>ax){P.x=ax}}
+  if(NEWMAP&&LV.id===0)mpMove(ox0,oz0);else{const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
   resolveCity();P.h=((P.h+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   const gy=LV.id===0?cityGround(P.x,P.z):1.3,wasG=P.coy<.14&&P.vy<=.01;P.vy-=LV.grav*dt;P.y+=P.vy*dt;if(P.y<=gy||(LV.id===0&&wasG&&P.y-gy<.45)){P.y=gy;if(P.vy<0)P.vy=0}P.coy=P.y<=gy+.05?0:P.coy+dt;if(LV.id===0)stepGrind(dt);
   for(const c of cones){if(c.hit){c.o.position.x+=c.vx*dt;c.o.position.y+=c.vy*dt;c.o.position.z+=c.vz*dt;c.vy-=18*dt;c.o.rotation.x+=7*dt;c.o.rotation.z+=5*dt;c.hit-=dt;if(c.hit<=0)c.o.visible=false;continue}
     if(Math.abs(P.x-c.x)<1.3&&Math.abs(P.z-c.z)<1.3&&P.y-(LV.id===0?hillG(c.x,c.z):0)<2.4){c.hit=1.1;c.vx=Math.cos(P.h)*P.speed*1.2;c.vz=Math.sin(P.h)*P.speed*.8+(Math.random()-.5)*4;c.vy=8;P.speed*=.6;SFX.thud();G.shake=Math.max(G.shake,.2)}}
   if(LV.id===0&&!G.under)for(const p of HUB.portals){if(p.blocked&&Math.hypot(P.x-p.x,P.z-p.z)>9){p.blocked=0;p.hit=0}if(Math.hypot(P.x-p.x,P.z-p.z)<5.2&&G.phase==='play'&&!p.hit){p.hit=1;enterPortal(p)}}
   if(LV.id===0&&!G.under)for(const it of HUB.items){if(!it.got&&G.phase==='play'&&Math.hypot(P.x-it.x,P.z-it.z)<3.6&&P.y-it.G0<5.5)collectItem(it)}
-  if(LV.id===0&&!G.under&&P.x<-150&&G.phase==='play'&&!HUB.coastHit)startCoastRace()}
+  if(LV.id===0&&!G.under&&G.phase==='play'&&!HUB.coastHit&&(NEWMAP?(HUB.gate&&Math.hypot(P.x-HUB.gate.x,P.z-HUB.gate.z)<HUB.gate.r):P.x<-150))startCoastRace()}
 function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it.beam.material.opacity=0;INV.items.add(it.def.id);invSave();invRender();SFX.collect(INV.items.size);burst(it.x,4.5,it.z,60);
   toast(it.def.name+' gefunden!',1300);
   const n=INV.items.size,core=ITEM_DEFS.filter(d=>!d.bonus&&INV.items.has(d.id)).length;
@@ -1589,7 +1580,7 @@ function stepUnder(dt){const U=HUB.uw;if(!U||!U.rain)return;uwStep(dt);
 function stepTrain(dt){const T=HUB.train;if(!T)return;
   if(T.state==='wait'){T.cd-=dt;if(T.cd<=0){T.state='run';T.s=0;T.g.visible=true;T.snd=0}return}
   T.s+=T.v*dt;let dmin=1e9;
-  T.cars.forEach((cg,k)=>{const s=T.s-k*10-5,on=s>0&&s<T.L;cg.visible=on;if(!on)return;const p=T.posAt(s);cg.position.set(p.x,T.TY+1.8,p.z);cg.rotation.y=-p.h;if(k===0)dmin=Math.hypot(p.x-P.x,p.z-P.z)});
+  T.cars.forEach((cg,k)=>{const s=T.s-k*10-5,on=s>0&&s<T.L;cg.visible=on;if(!on)return;const p=T.posAt(s),yy=T.yAt?T.yAt(s):T.TY;cg.position.set(p.x,yy+1.8,p.z);cg.rotation.y=-p.h;if(T.yAt)cg.rotation.z=Math.atan2(T.yAt(s+2)-T.yAt(s-2),4);if(k===0)dmin=Math.hypot(p.x-P.x,p.z-P.z)});
   T.snd-=dt;const hd=T.posAt(Math.max(0,Math.min(T.L,T.s)));const d=Math.hypot(hd.x-P.x,hd.z-P.z);
   if(d<110&&T.snd<=0){T.snd=.16;tone(46+Math.random()*8,.2,'sawtooth',.05*(1-d/110),0);if(d<55)G.shake=Math.max(G.shake,.05*(1-d/55))}
   if(T.s>T.L+50){T.state='wait';T.cd=28+Math.random()*24;T.g.visible=false}}
@@ -1597,6 +1588,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   let nd=1e9;HUB.portals.forEach(p=>{const d=Math.hypot(P.x-p.x,P.z-p.z);p.beam.material.opacity=Math.max(0,Math.min(.45,(105-d)/75*.45));p.g.visible=!G.under&&(d<78||HUB.found.has(p.world));p.g.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});if(!HUB.found.has(p.world)&&d<nd)nd=d});
   const r=$('radar');if(r){const open=nd<1e8;r.classList.toggle('on',G.phase==='play'&&open&&!G.under);if(open){const w=nd<30?'heiß!':nd<65?'warm':nd<115?'lauwarm':'kalt';$('radar-s').textContent=w;$('radar-s').dataset.t=w[0];$('radar-bar').style.setProperty('--p',Math.max(.04,Math.min(1,1-nd/190)))}}
   /* Minikarte */
+  if(HUB.mapn){mpMini(dt);return}
   const mm=HUB.mm;if(!mm)return;mm.exg.fillStyle='#fff';mm.exg.beginPath();const [ex,ez]=mm.pxz(P.x,P.z);mm.exg.arc(ex,ez,52*mm.S,0,7);mm.exg.fill();if(G.under&&HUB.uw&&HUB.uw.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const [tx,tz]=mm.pxz(HUB.uw.tower.x,HUB.uw.tower.z);mm.exg.beginPath();mm.exg.arc(tx,tz,26*mm.S,0,7);mm.exg.fill()}
   HUB.mmT+=dt;if(HUB.mmT<.12)return;HUB.mmT=0;const cv=$('mini');if(!cv)return;cv.classList.toggle('on',G.phase==='play');const g=cv.getContext('2d'),t=mm.tmp.getContext('2d');
   t.globalCompositeOperation='source-over';t.clearRect(0,0,150,150);t.drawImage(mm.map,0,0);t.globalCompositeOperation='destination-in';t.drawImage(mm.ex,0,0);
@@ -1618,7 +1610,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

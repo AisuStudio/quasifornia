@@ -49,8 +49,8 @@ function buildGingerBlock(){const H=HUB.h,bx=H.bx,cyl=H.cyl,sph=H.sph,MT=H.MT,cu
   const sg=new THREE.Mesh(new THREE.PlaneGeometry(8.4,4.2),adventSignMat());sg.position.set(cur.x,H.Y0+4.6,cur.z-D/2-9.8);sg.rotation.y=Math.PI;sg.userData.noBake=true;H.add(sg);HUB.advSign=sg;
   HUB.gbBuilt=true}
 /* Blinkende Lichterketten (nach bakeGroup anlegen, damit sie dynamisch bleiben) */
-function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0=HUB.h.Y0;const P=[];
-  const add=(x,y,z)=>P.push([g.cx+x,y0+y,g.cz+z]);
+function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0=HUB.h.Y0-(NEWMAP?.3:0);const P=[];
+  const gyaw=g.yaw||0,gc=Math.cos(gyaw),gs=Math.sin(gyaw);const add=(x,y,z)=>P.push([g.cx+x*gc+z*gs,y0+y,g.cz-x*gs+z*gc]);
   for(let x=-12;x<=12.01;x+=1.5)add(x,Hh+.1,-D/2-.5);
   for(let z=-10;z<=10.01;z+=1.5){add(-W/2-.5,Hh+.1,z);add(W/2+.5,Hh+.1,z)}
   for(let k=0;k<=10;k++){const t=k/10;add(-12+12*t,Hh+10*t+.1,-D/2-1);add(12-12*t,Hh+10*t+.1,-D/2-1)}
@@ -63,7 +63,7 @@ function buildGingerLights(){const g=HUB.gb;if(!g)return;const Hh=8,D=20,W=24,y0
   P.forEach((p,k)=>{const im=k%2?B:A,i=k%2?ib++:ia++;m4.makeTranslation(p[0],p[1],p[2]);im.setMatrixAt(i,m4);im.setColorAt(i,new THREE.Color(cols[(k*2+Math.floor(k/9))%5]))});
   A.count=ia;B.count=ib;[A,B].forEach(im=>{im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;HUB.h.add(im)});
   /* weicher Schein hinter dem Haus */
-  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('255,190,110'),transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));gl.scale.set(46,30,1);gl.position.set(g.cx,y0+8,g.cz-12);gl.userData.noBake=true;HUB.h.add(gl);
+  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('255,190,110'),transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));gl.scale.set(46,30,1);gl.position.set(g.cx+(-12)*gs,y0+8,g.cz+(-12)*gc);gl.userData.noBake=true;HUB.h.add(gl);
   const st=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('255,230,120'),transparent:true,opacity:.9,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));st.scale.set(7,7,1);st.position.set(g.cx,y0+Hh+11.6,g.cz);st.userData.noBake=true;HUB.h.add(st);
   HUB.gl={A,B,gl,st,t:0}}
 function stepXmas(dt){const l=HUB.gl;if(!l||!W0||!W0.visible)return;l.t+=dt;const ph=Math.floor(l.t/.6)%2;l.A.visible=ph===0;l.B.visible=ph===1;l.st.material.opacity=.7+.25*Math.sin(l.t*3);l.gl.material.opacity=.42+.1*Math.sin(l.t*1.7)}
