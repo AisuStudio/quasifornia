@@ -60,9 +60,31 @@ function mpResample(pts,step){const out=[],P=pts.map(p=>[mwx(p[0]),mwz(p[1])]);l
   if(out.length>1)out[0].tx=out[1].tx,out[0].tz=out[1].tz;return out}
 function mpInstanced(geo,mat,items,fn){const im=new THREE.InstancedMesh(geo,mat,Math.max(1,items.length)),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),s=new THREE.Vector3(),p=new THREE.Vector3();
   items.forEach((it,k)=>{const r=fn(it);q.setFromEuler(e.set(0,r.ry||0,r.rz||0,'YZX'));s.set(r.sx,r.sy,r.sz);p.set(r.x,r.y,r.z);m4.compose(p,q,s);im.setMatrixAt(k,m4)});im.count=items.length;im.instanceMatrix.needsUpdate=true;im.castShadow=!!mat.userData&&false;im.receiveShadow=true;im.frustumCulled=false;im.userData.noBake=true;im.userData.noOutline=true;return im}
+function mpSeaMat(){const W=MP.w,H=MP.h,d=new Float32Array(W*H),INF=1e4;for(let i=0;i<W*H;i++)d[i]=MP.land[i]===1?0:INF;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;let v=d[i];if(x>0)v=Math.min(v,d[i-1]+1);if(y>0){v=Math.min(v,d[i-W]+1);if(x>0)v=Math.min(v,d[i-W-1]+1.414);if(x<W-1)v=Math.min(v,d[i-W+1]+1.414)}d[i]=v}
+  for(let y=H-1;y>=0;y--)for(let x=W-1;x>=0;x--){const i=y*W+x;let v=d[i];if(x<W-1)v=Math.min(v,d[i+1]+1);if(y<H-1){v=Math.min(v,d[i+W]+1);if(x<W-1)v=Math.min(v,d[i+W+1]+1.414);if(x>0)v=Math.min(v,d[i+W-1]+1.414)}d[i]=v}
+  const by=new Uint8Array(W*H);for(let i=0;i<W*H;i++)by[i]=Math.min(255,Math.round(d[i]*255/80));
+  const tex=new THREE.DataTexture(by,W,H,THREE.RedFormat,THREE.UnsignedByteType);tex.minFilter=tex.magFilter=THREE.LinearFilter;tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;tex.needsUpdate=true;
+  const mat=new THREE.ShaderMaterial({fog:true,transparent:false,
+   uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{tD:{value:tex},t:{value:0},dim:{value:1},geo:{value:new THREE.Vector4(MP.PLAY.x0,MP.PLAY.y0,W,H)},org:{value:new THREE.Vector3(MP.OX,MP.OY,MP.SC)},
+    shallow:{value:new THREE.Color('#5fe0d6')},deep:{value:new THREE.Color('#1d8fc4')}}]),
+   vertexShader:'varying vec3 vW;\n#include <fog_pars_vertex>\nvoid main(){vec4 wp=modelMatrix*vec4(position,1.);vW=wp.xyz;vec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
+   fragmentShader:`uniform sampler2D tD;uniform float t;uniform float dim;uniform vec4 geo;uniform vec3 org;uniform vec3 shallow;uniform vec3 deep;varying vec3 vW;
+#include <fog_pars_fragment>
+float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+void main(){vec2 m=vec2(vW.x/org.z+org.x-geo.x,vW.z/org.z+org.y-geo.y)/geo.zw;float dm=40.;if(m.x>0.&&m.y>0.&&m.x<1.&&m.y<1.)dm=texture2D(tD,m).r*80.*org.z;
+ vec3 c=mix(shallow,deep,smoothstep(1.2,26.,dm));
+ float foam=(1.-smoothstep(0.,1.3,dm))*(.65+.35*sin(t*1.3+vW.x*.2+vW.z*.15));
+ float line=smoothstep(.4,0.,abs(dm-(3.2+sin(t*.8+vW.x*.05)*.9)))*.4*(1.-smoothstep(5.,9.,dm));
+ float sp=step(.988,hs(floor(vW.xz*1.3+vec2(t*.7,t*.4))))*(.5+.5*sin(t*3.+vW.x))*.7;
+ c=mix(c,vec3(1.),clamp(foam+line,0.,1.));c+=sp*dim;c*=.22+.78*dim;
+ gl_FragColor=vec4(c,1.);
+#include <colorspace_fragment>
+#include <fog_fragment>
+}`});DAY.sea=mat;return mat}
 function mpTerrain(add){
-  /* Meer */
-  {const g=new THREE.PlaneGeometry(7000,7000);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:'#2ac6d6',roughness:.25,metalness:.1}));m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;m.receiveShadow=true;add(m)}
+  /* Meer: türkis nahe am Strand, tiefblau draußen, mit Schaumkante, Wellenlinie und Glitzern (Abstand zur Küste aus der Maske) */
+  {const m=new THREE.Mesh(new THREE.PlaneGeometry(7000,7000),mpSeaMat());m.rotation.x=-Math.PI/2;m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;add(m)}
   /* Land (angehoben, mit sichtbarer Kante) */
   MAPD.land.forEach(it=>{const geo=new THREE.ExtrudeGeometry(mpShape(it.c),{depth:.7,bevelEnabled:false});geo.rotateX(-Math.PI/2);const m=new THREE.Mesh(geo,mpMat('land','#f1e5c0'));m.position.y=.6;m.receiveShadow=true;m.userData.noBake=true;add(m)});
   mpFlat(MAPD.parks,1.31,mpMat('park','#4fa874'),add);mpFlat(MAPD.lots,1.31,mpMat('lot','#8d93a0'),add);mpFlat(MAPD.courts,1.315,mpMat('court','#c98a4a'),add);
@@ -240,7 +262,7 @@ function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayIn
   hemi.color.copy(a[3]).lerp(b[3],e);hemi.groundColor.copy(a[4]).lerp(b[4],e);hemi.intensity=L(a[5],b[5]);
   sun.color.copy(a[6]).lerp(b[6],e);sun.intensity=L(a[7],b[7]);DAY.sunY=L(a[8],b[8]);fill.color.copy(a[9]).lerp(b[9],e);fill.intensity=L(a[10],b[10]);
   const bc=sky.material.uniforms.b.value,dn=Math.max(0,Math.min(1,(sun.intensity-1)/1.8)),fn=10+18*dn,ff=150+170*dn;if(sc.fog){if(sc.fog.color)sc.fog.color.copy(bc);sc.fog.near=fn;sc.fog.far=ff}OUTFOG.fc.value.copy(bc);OUTFOG.fn.value=fn;OUTFOG.ff.value=ff;
-  DAY.hour=Math.floor(((p*24+12)%24)*10)/10}
+  DAY.hour=Math.floor(((p*24+12)%24)*10)/10;if(DAY.sea){DAY.sea.uniforms.t.value+=dt;DAY.sea.uniforms.dim.value=Math.max(0,Math.min(1,(sun.intensity+hemi.intensity*.6-.7)/2.6))}}
 /* ---------- Gesamtaufbau ---------- */
 function portLupoNew(H){
   HUB.doors=[];HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
