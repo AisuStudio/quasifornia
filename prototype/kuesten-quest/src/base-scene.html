@@ -57,14 +57,14 @@ function fcol(R,l=.5,sat=.55,acc){const a=acc===undefined?R()<FW.acc:acc;const h
 function ell(g,mat,p,sx,sy,sz,dir){const m=new THREE.Mesh(FSP,mat);m.position.copy(p);m.scale.set(sx,sy,sz);if(dir)m.quaternion.setFromUnitVectors(new V3(0,0,1),dir.clone().normalize());g.add(m);return m}
 function seg(g,a,b,r0,r1,mat){const d=b.clone().sub(a),L=d.length();const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,L,10),mat);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new V3(0,1,0),d.normalize());g.add(m);ell(g,mat,b,r1,r1,r1)}
 const FLORA={
- palm(R,s,ht=1){const g=new THREE.Group();const T1=FM(fcol(R,.32,.32,false)),T2=FM(fcol(R,.4,.34,false));const H=(7+R()*5)*s*ht,n=9,pts=[new V3()];const dir=new V3((R()-.5)*.25,1,(R()-.5)*.25).normalize(),bend=(R()-.5)*.5;
+ palm(R,s,ht=1,nat=false){const g=new THREE.Group();const T1=nat?FM('#a38d6a'):FM(fcol(R,.32,.32,false)),T2=nat?FM('#8a7455'):FM(fcol(R,.4,.34,false));const GR=['#4f9a5a','#5fae62','#3f8a52','#6dbb70'];const H=(7+R()*5)*s*ht,n=9,pts=[new V3()];const dir=new V3((R()-.5)*.25,1,(R()-.5)*.25).normalize(),bend=(R()-.5)*.5;
   for(let i=0;i<n;i++){dir.x+=bend*.08;dir.normalize();pts.push(pts[i].clone().add(dir.clone().multiplyScalar(H/n)))}
   const rr=i=>(.55*(1-i/n*.55)+(i%2?.09:0))*s;for(let i=0;i<n;i++)seg(g,pts[i],pts[i+1],rr(i),rr(i+1),i%2?T1:T2);
   const c=pts[n],nf=8+Math.floor(R()*4);
-  for(let k=0;k<nf;k++){const a=k/nf*Math.PI*2+R()*.3,len=(4+R()*2)*s,dr=.5+R()*.5,mat=FM(fcol(R,.42+R()*.14,.68));let prev=c.clone();
+  for(let k=0;k<nf;k++){const a=k/nf*Math.PI*2+R()*.3,len=(4+R()*2)*s,dr=.5+R()*.5,mat=nat?FM(GR[Math.floor(R()*GR.length)]):FM(fcol(R,.42+R()*.14,.68));let prev=c.clone();
    for(let j=1;j<=7;j++){const t=j/7,p=c.clone().add(new V3(Math.cos(a)*len*t,len*(.55*Math.sin(t*2.2)-dr*t*t),Math.sin(a)*len*t));const d=p.clone().sub(prev);
     ell(g,mat,prev.clone().add(p).multiplyScalar(.5),.6*s*(1-t*.65),.14*s,d.length()*.62,d);prev=p}}
-  for(let i=0;i<3;i++)ell(g,FM(fcol(R,.6,.75,true)),c.clone().add(new V3((i-1)*.45*s,-.5*s,(i%2-.5)*.4*s)),.38*s,.38*s,.38*s);return g},
+  for(let i=0;i<3;i++)ell(g,nat?FM('#6a4a30'):FM(fcol(R,.6,.75,true)),c.clone().add(new V3((i-1)*.45*s,-.5*s,(i%2-.5)*.4*s)),.38*s,.38*s,.38*s);return g},
  balloon(R,s){const g=new THREE.Group();const T2=FM(fcol(R,.4,.32,false));
   const br=(p,d,len,r,depth)=>{const e=p.clone().add(d.clone().multiplyScalar(len));seg(g,p,e,r,r*.72,T2);
    if(depth>0){const nb=2+(R()<.4?1:0);for(let i=0;i<nb;i++){const yaw=R()*Math.PI*2,pit=.5+R()*.55;const nd=new V3(Math.sin(pit)*Math.cos(yaw),Math.cos(pit)*.9+.35,Math.sin(pit)*Math.sin(yaw)).normalize();br(e,nd,len*(.7+R()*.12),r*.7,depth-1)}}

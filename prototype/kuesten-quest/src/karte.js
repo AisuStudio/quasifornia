@@ -290,14 +290,14 @@ function portLupoNew(H){
    HUB.streetSigns=placed.length}
   /* Pflanzen: die Bäume der Karte und Parks aus Regeln */
   {const oF=FSP,oH=FW.h,oA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
-   const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed,ht)=>{if(mpRailDist(X,Z)<(kind==='palm'?9:6))return;const R2=mulberry(seed),gp=FLORA[kind](R2,sc2,ht);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};
+   const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed,ht,nat)=>{if(mpRailDist(X,Z)<(kind==='palm'?9:6))return;const R2=mulberry(seed),gp=FLORA[kind](R2,sc2,ht,nat);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};
    MAPD.trees.forEach((t,i)=>{const X=mwx(t.x),Z=mwz(t.y);if(mpAt(X,Z)===0)return;put(KS[i%KS.length],X,Z,t.r>4?1.3:.8,i*17+3)});
    const RP=mulberry(909);MAPD.parks.forEach((pk,pi)=>{const r=pk.c[0],xs=r.map(p=>p[0]),ys=r.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),n=Math.floor(Math.abs(mpArea(r))*MP.SC*MP.SC/260);
      for(let k=0,t=0;k<n&&t<n*20;t++){const ux=x0+RP()*(x1-x0),uy=y0+RP()*(y1-y0);if(!mpInPoly(r,ux,uy))continue;const X=mwx(ux),Z=mwz(uy);if(mpAt(X,Z)!==4||!mpFree(X,Z,1.6))continue;put(KS[Math.floor(RP()*KS.length)],X,Z,.9+RP()*.4,pi*1000+k);k++}});
    /* Hohe Palmen am Straßenrand auf dem Sandstreifen (Strand), automatisch, ohne Kollision */
    {const RT=mulberry(777),cand=[];MAPD.roads.forEach(r=>{const wM=Math.max(r.w,MP.RW)*MP.SC;mpResample(r.pts,7).forEach(sm=>{if(!(sm.tx||sm.tz))return;for(const side of [1,-1]){const off=wM/2+MP.SWK+3+RT()*5,X=sm.x-sm.tz*side*off,Z=sm.z+sm.tx*side*off;
        if(Z>186||mpAt(X,Z)!==1||!mpFree(X,Z,2.2)||Math.hypot(X-HUB.sx,Z-HUB.sz)<14)continue;cand.push([X,Z,RT()])}})});
-    cand.sort((a,b)=>a[2]-b[2]);const placed=[];for(const c of cand){if(placed.length>=60)break;if(placed.some(q=>Math.hypot(q[0]-c[0],q[1]-c[1])<18))continue;placed.push(c);put('palm',c[0],c[1],2.4,4000+placed.length,1.6+((placed.length*7)%11)/11*.8)}HUB.tallPalms=placed.length}
+    cand.sort((a,b)=>a[2]-b[2]);const placed=[];for(const c of cand){if(placed.length>=60)break;if(placed.some(q=>Math.hypot(q[0]-c[0],q[1]-c[1])<18))continue;placed.push(c);put('palm',c[0],c[1],2.4,4000+placed.length,1.6+((placed.length*7)%11)/11*.8,true)}HUB.tallPalms=placed.length}
    CTX='stage';FCYL=10;FSP=oF;FW.h=oH;FW.acc=oA;FW.lb=0;FW.sb=0}
   /* Pylonen am Straßenrand */
   {const RC=mulberry(321),cand=mpSpotPool().slice(0,400);let n=0;for(const p of cand){if(n>=14)break;if(Math.hypot(p[0]-HUB.sx,p[1]-HUB.sz)<25)continue;if(HUB.cones.some(c=>Math.hypot(c.x-p[0],c.z-p[1])<50))continue;
