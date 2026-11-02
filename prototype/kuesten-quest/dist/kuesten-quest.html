@@ -2873,16 +2873,14 @@ function mpTerrain(add){
   MAPD.roads.forEach(r=>{const wU=Math.max(r.w,MP.RW),wM=wU*MP.SC,pts=r.pts.map(p=>[mwx(p[0]),mwz(p[1])]);
     const m=new THREE.Mesh(mpRibbon(pts,wM,1.32),asphalt);m.receiveShadow=true;m.userData.noBake=true;m.userData.noOutline=true;add(m);
     const rs=mpResample(r.pts,2.6);
-    rs.forEach(s=>{for(const side of [1,-1]){const off=wM/2+MP.SWK/2,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)===3){const ax=s.tx,az=s.tz,nx=-s.tz,nz=s.tx,bad=t=>[-1,0,1].some(o=>mpAt(x+ax*t+nx*o,z+az*t+nz*o)===2);
-        let t0=0,t1=0;while(t0>-1.55&&!bad(t0-.2))t0-=.2;while(t1<1.55&&!bad(t1+.2))t1+=.2;
-        if(!bad(0)&&t1-t0>.5)sw.push({x:x+ax*(t0+t1)/2,z:z+az*(t0+t1)/2,ry:-Math.atan2(s.tz,s.tx),len:Math.min(3.1,t1-t0+.2)})}}
-      if(!mpIsLand(s.x,s.z)){bridge.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx),w:wM})}});
+    /* Bordsteine: kurze, mit der Straße gedrehte Stücke (1 m); fällt weg, wenn es in Straße, Haus oder Wasser ragen würde */
+    mpResample(r.pts,.9).forEach(s=>{if(!(s.tx||s.tz))return;for(const side of [1,-1]){const off=wM/2+MP.SWK/2,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)!==3)continue;let good=true;
+      for(const a of [-.55,0,.55])for(const o of [-1.15,-.5,0,.5,1.15]){const c=mpAt(x+s.tx*a-s.tz*o,z+s.tz*a+s.tx*o);if(c===2||c===0){good=false;break}}
+      if(good)sw.push({x,z,ry:-Math.atan2(s.tz,s.tx),len:1.25})}});
+    rs.forEach(s=>{if(!mpIsLand(s.x,s.z)){bridge.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx),w:wM})}});
     if(r.w>=14){const ds=mpResample(r.pts,7);ds.forEach(s=>{if(mpAt(s.x,s.z)===2&&(s.tx||s.tz))dash.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx)})})}
     const ps=mpResample(r.pts,24);ps.forEach(s=>{if(!mpIsLand(s.x,s.z))pier.push({x:s.x,z:s.z})})});
-  /* Bordsteine direkt aus der Maske: zusammengefasste Streifen (1 m breit), nie über Straße, Haus oder Wasser hinaus */
-  {const strips=[],ok=c=>c===1||c===3||c===4;for(let iy=0;iy+1<MP.h;iy+=2){let x0=-1;for(let ix=0;ix<=MP.w;ix++){let good=false;if(ix<MP.w){const a=MP.cls[iy*MP.w+ix],b=MP.cls[(iy+1)*MP.w+ix];good=ok(a)&&ok(b)&&(a===3||b===3)}
-      if(good&&x0<0)x0=ix;else if(!good&&x0>=0){strips.push({x:mwx(MP.PLAY.x0+(x0+ix)/2),z:mwz(MP.PLAY.y0+iy+1),len:(ix-x0)*MP.SC});x0=-1}}}
-   MP.swStrips=strips.length;add(mpInstanced(BX,mpMat('sw','#cfc4e0'),strips,s=>({x:s.x,y:1.45,z:s.z,ry:0,sx:s.len,sy:.3,sz:2*MP.SC})))}
+  add(mpInstanced(BX,mpMat('sw','#cfc4e0'),sw,s=>({x:s.x,y:1.45,z:s.z,ry:s.ry,sx:s.len||3.1,sy:.3,sz:MP.SWK})));
   add(mpInstanced(BX,new THREE.MeshStandardMaterial({color:'#fff0b0',emissive:'#fff0b0',emissiveIntensity:.5}),dash,s=>({x:s.x,y:1.34,z:s.z,ry:s.ry,sx:2.6,sy:.04,sz:.35})));
   /* Brücken: Fahrbahnplatte, Pfeiler, Geländer */
   add(mpInstanced(BX,mpMat('deck','#6a5a9a'),bridge,s=>({x:s.x,y:1.0,z:s.z,ry:s.ry,sx:3.0,sy:.7,sz:s.w+.3})));
