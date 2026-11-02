@@ -2,6 +2,8 @@
   "name": "quasifornia",
   "main": "worker/index.js",
   "compatibility_date": "2026-10-01",
+  "durable_objects": { "bindings": [ { "name": "GRAF", "class_name": "GrafStore" } ] },
+  "migrations": [ { "tag": "v1", "new_sqlite_classes": [ "GrafStore" ] } ],
   "assets": {
     "directory": "./prototype/kuesten-quest/dist",
     "binding": "ASSETS",

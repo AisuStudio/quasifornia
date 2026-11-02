@@ -15,16 +15,59 @@ function grafInvHTML(){const have=GF_COL.filter(([c])=>(GF.cans[c]||0)>0);
   return have.map(([c,n])=>{const f=GF.cans[c]/GF_INK;return `<div class="slot-i got"><div class="ic">${grafCanSvg(c,f)}</div><b>Sprühdose ${n}</b><span>Farbe: ${Math.max(1,Math.round(f*100))}%</span><em>Wand besprühen (Enter an einer Graffiti-Wand)</em></div>`}).join('')}
 function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port Lupo (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
   return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)&&SHOP.in?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
-function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const im=new Image();im.onload=()=>{p.ctx.drawImage(im,0,0);p.tex.needsUpdate=true};im.src=d}catch(e){}}
+/* Graffiti bleiben 48 Stunden (mindestens 24). Mit Server: dort gespeichert und für alle sichtbar; ohne Server: nur im Browser. */
+const GF_TTL=48*3600*1000;
+function grafDraw(p,d){const im=new Image();im.onload=()=>{p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage(im,0,0);p.tex.needsUpdate=true};im.src=d}
+function grafLegal(id){return /^w\d$/.test(id)}
+function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const tk='kq-graf-t-'+p.id;let t=Number(localStorage.getItem(tk))||0;if(!t){t=Date.now();localStorage.setItem(tk,String(t))}
+  if(Date.now()-t>GF_TTL){localStorage.removeItem('kq-graf-'+p.id);localStorage.removeItem(tk);return}grafDraw(p,d)}catch(e){}}
+/* ---- Fassaden: überall sprühen (verboten, außer an den fünf legalen Wänden) ---- */
+function grafEdges(){if(GF.edges)return GF.edges;const E=[];MAPD.buildings.forEach((b,bi)=>{if(b.skip)return;const ring=b.c[0].map(p=>[mwx(p[0]),mwz(p[1])]);
+  for(let e=0;e<ring.length;e++){const a=ring[e],c=ring[(e+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<6)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
+    if(mpInPoly(ring,mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}E.push({bi,e,ax:a[0],az:a[1],ux,uz,nx,nz,L})}});GF.edges=E;return E}
+function grafSlot(id){const m=/^f(\d+)-(\d+)-(\d+)$/.exec(id);if(!m)return null;const E=grafEdges().find(x=>x.bi===+m[1]&&x.e===+m[2]);if(!E)return null;const k=+m[3],t=k*6+3;if(t+2.8>E.L)return null;
+  return {id,k,E,x:E.ax+E.ux*t+E.nx*.26,z:E.az+E.uz*t+E.nz*.26,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
+function grafFacadeNear(){const px=P.x,pz=P.z;let best=null;for(const E of grafEdges()){const rx=px-E.ax,rz=pz-E.az,t=Math.max(0,Math.min(E.L,rx*E.ux+rz*E.uz)),cx=E.ax+E.ux*t,cz=E.az+E.uz*t,d=Math.hypot(px-cx,pz-cz),side=rx*E.nx+rz*E.nz;
+    if(d<3.8&&side>-.3&&(!best||d<best.d))best={d,E,t}}
+  if(!best)return null;const E=best.E,k=Math.max(0,Math.min(Math.floor(E.L/6)-1,Math.floor(best.t/6))),id='f'+E.bi+'-'+E.e+'-'+k,sl=grafSlot(id);if(!sl)return null;
+  const door=(HUB.doors||[]).some(d=>Math.hypot(d[0]-sl.x,d[1]-sl.z)<4.2);return {id,sl,door,ax:sl.x+sl.nx*2.4,az:sl.z+sl.nz*2.4}}
+function grafEnsurePanel(id){let p=HUB.graf.panels.find(q=>q.id===id);if(p)return p;const sl=grafSlot(id);if(!sl)return null;
+  const cv=document.createElement('canvas');cv.width=GF_W;cv.height=GF_H;const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
+  const tex=new THREE.CanvasTexture(cv);tex.magFilter=THREE.NearestFilter;tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.colorSpace=THREE.SRGBColorSpace;
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+  pl.position.set(sl.x,1.3+2.1,sl.z);pl.rotation.y=sl.yaw;pl.userData.noBake=true;pl.userData.noOutline=true;W0.add(pl);
+  p={id,dyn:true,x:sl.x,z:sl.z,ry:sl.yaw,cv,ctx:cx,tex,mesh:pl,ax:sl.x+sl.nx*2.4,az:sl.z+sl.nz*2.4};HUB.graf.panels.push(p);return p}
+function grafRemovePanel(p){if(p.mesh){W0.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose()}const i=HUB.graf.panels.indexOf(p);if(i>=0)HUB.graf.panels.splice(i,1)}
+/* ---- Erwischt werden: tagsüber eher als nachts ---- */
+function grafRisk(){const dn=typeof DAY!=='undefined'&&DAY.dn!==undefined?DAY.dn:1;return .15+.55*dn}
+function grafCaught(){const lost=Math.min(10,SC.n|0);if(lost>0)scAdd(-lost,'Erwischt!');SFX.thud();G.shake=Math.max(G.shake||0,.3);toast('Erwischt! −'+lost+' Scoops',1800)}
+/* ---- Server ---- */
+const GFSRV={ok:null,known:{},timer:0,busy:false,retryAt:0};
+async function grafApi(path,init){const r=await fetch('/api/graffiti'+path,{credentials:'same-origin',cache:'no-store',...init});if(!r.ok)throw new Error(r.status);return r}
+async function grafSync(){if(GFSRV.busy||Date.now()<GFSRV.retryAt||!HUB.graf)return;GFSRV.busy=true;
+  try{const j=await (await grafApi('')).json();if(!j||typeof j.items!=='object')throw new Error('format');GFSRV.ok=true;const items=j.items;
+    for(const id of Object.keys(items)){if(GFSRV.known[id]===items[id])continue;const p=grafLegal(id)?HUB.graf.panels.find(q=>q.id===id):grafEnsurePanel(id);if(!p)continue;
+      const d=await (await grafApi('/'+id)).text();GFSRV.known[id]=items[id];grafDraw(p,d);try{localStorage.setItem('kq-graf-'+id,d);localStorage.setItem('kq-graf-t-'+id,String(Date.now()))}catch(e){}}
+    for(const p of HUB.graf.panels.slice()){if(items[p.id]!==undefined)continue;
+      let local=null;try{local=localStorage.getItem('kq-graf-'+p.id)}catch(e){}
+      if(local&&GFSRV.known[p.id]===undefined){try{await grafApi('/'+p.id,{method:'PUT',body:local,headers:{'content-type':'text/plain'}});GFSRV.known[p.id]=-1}catch(e){}}
+      else if(GFSRV.known[p.id]!==undefined){if(p.dyn)grafRemovePanel(p);else{p.ctx.clearRect(0,0,GF_W,GF_H);grafBase(p)}delete GFSRV.known[p.id];try{localStorage.removeItem('kq-graf-'+p.id);localStorage.removeItem('kq-graf-t-'+p.id)}catch(e){}}}
+  }catch(e){GFSRV.ok=false;GFSRV.retryAt=Date.now()+120000}finally{GFSRV.busy=false}}
+function grafBase(p){const cx=p.ctx;cx.fillStyle='#2b2840';cx.fillRect(0,0,GF_W,GF_H);cx.fillStyle='#4a4468';cx.font='700 9px sans-serif';cx.textAlign='center';cx.fillText('HIER SPRÜHEN',64,34);p.tex.needsUpdate=true}
+async function grafPush(p){if(GFSRV.ok===false&&Date.now()<GFSRV.retryAt)return;try{await grafApi('/'+p.id,{method:'PUT',body:p.cv.toDataURL('image/png'),headers:{'content-type':'text/plain'}});GFSRV.ok=true;GFSRV.known[p.id]=-1}catch(e){GFSRV.ok=false;GFSRV.retryAt=Date.now()+120000}}
+function grafInitWorld(){if(!HUB.graf)return;GF.edges=null;GFSRV.known={};
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&/^kq-graf-f\d+-\d+-\d+$/.test(k)){const id=k.slice(8),p=grafEnsurePanel(id);if(p)grafLoadPanel(p)}}}catch(e){}
+  grafSync();clearInterval(GFSRV.timer);GFSRV.timer=setInterval(()=>{if(LV.id===0&&!document.hidden)grafSync()},60000)}
 function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
   if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im P-Mart (blaues Band, auf der Minikarte als P) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
   GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];
+  if(!grafLegal(p.id)){const r=grafRisk();toast('Verbotene Wand! Risiko erwischt zu werden: '+(r>.55?'hoch (Tag)':r>.3?'mittel':'niedrig (Nacht)')+'. Strafe: 10 Scoops',2600)}
   const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
   GF.col=(GF_COL.find(([c])=>GF.cans[c]>0)||GF_COL[0])[0];$('graf').hidden=false;grafPal();$('graf-done').focus({preventScroll:true})}
 function grafPal(){const pal=$('graf-pal');pal.innerHTML=GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;return `<button type="button" class="gpal${c===GF.col?' on':''}${ink>0?'':' empty'}" data-c="${c}" style="--c:${c}" title="${n}"><i style="width:${Math.round(Math.min(1,ink/GF_INK)*100)}%"></i></button>`}).join('');
   pal.querySelectorAll('button').forEach(b=>b.onclick=()=>{if((GF.cans[b.dataset.c]||0)<=0){toast('Diese Dose ist leer. Im Laden nachfüllen.',1200);return}GF.col=b.dataset.c;grafPal()})}
 function grafClose(save){if(!GF.open)return;const p=GF.cur;
-  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'))}catch(e){}
+  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;if(GF.dabs>0){try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'));localStorage.setItem('kq-graf-t-'+p.id,String(Date.now()))}catch(e){}grafPush(p);if(!grafLegal(p.id)&&Math.random()<grafRisk())later(1.2,grafCaught)}
     GF.total+=GF.dabs;grafSave();if(GF.dabs>0){SFX.win();toast('Graffiti gesprüht!',1300);if(GF.total>=400&&!SC.au.graffiti)auComplete('graffiti')}}
   else grafSave();
   GF.open=false;GFOPEN=false;$('graf').hidden=true;GF.cur=null}
@@ -40,4 +83,6 @@ function grafSpray(x,y){const cx=$('graf-cv').getContext('2d'),c=GF.col;if((GF.c
   $('graf-undo').onclick=()=>{const s=GF.undo.pop();if(s)cv.getContext('2d').putImageData(s,0,0)};
   $('graf-done').onclick=()=>grafClose(true);$('graf-cancel').onclick=()=>grafClose(false);
   addEventListener('keydown',e=>{if(!GF.open)return;e.stopImmediatePropagation();if(e.code==='Escape'){e.preventDefault();grafClose(false)}else if(e.code==='KeyZ'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('graf-undo').click()}},true)})();
-function grafActs(a){if(!HUB.graf)return;for(const p of HUB.graf.panels)a.push({x:p.ax,z:p.az,r:7.5,label:'Wand besprühen',fn:()=>grafOpen(p)})}
+function grafActs(a){if(!HUB.graf)return;let near=false;for(const p of HUB.graf.panels){if(p.dyn)continue;a.push({x:p.ax,z:p.az,r:7.5,label:'Wand besprühen',fn:()=>grafOpen(p)});if(Math.hypot(P.x-p.ax,P.z-p.az)<9)near=true}
+  if(near||!NEWMAP)return;const f=grafFacadeNear();if(!f)return;
+  if(f.door)return;a.push({x:f.ax,z:f.az,r:4.6,label:'Hier sprühen (verboten)',fn:()=>{const p=grafEnsurePanel(f.id);if(p)grafOpen(p)}})}
