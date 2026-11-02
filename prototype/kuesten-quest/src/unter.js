@@ -48,11 +48,12 @@ function uwStep(dt){if(!UWE.ready)return;UWE.stun=Math.max(0,UWE.stun-dt);
     if(e.state==='sleep'){if(d<(e.kind==='z'?34:28)){e.state='rise';e.t=0;e.g.visible=true;tone(90,.4,'sawtooth',.05,-40)}else continue}
     if(e.state==='rise'){e.t+=dt;e.y=gy-2.2+Math.min(1,e.t/1.1)*(e.kind==='z'?2.2:5.4);e.g.position.set(e.x,e.y,e.z);e.g.rotation.y=Math.atan2(dx,dz);if(e.t>=1.1)e.state='chase';continue}
     /* chase */
-    const wob=Math.sin(G.t*2+e.hx)*.6,ux=dx/(d||1),uz=dz/(d||1);e.x+=(ux+uz*wob*.25)*e.sp*dt;e.z+=(uz-ux*wob*.25)*e.sp*dt;
+    const wob=Math.sin(G.t*2+e.hx)*.6,ux=dx/(d||1),uz=dz/(d||1),ex0=e.x,ez0=e.z;e.x+=(ux+uz*wob*.25)*e.sp*dt;e.z+=(uz-ux*wob*.25)*e.sp*dt;
+    if(e.kind==='z'&&NEWMAP&&!mpWalk(e.x,e.z)){const nx2=e.x,nz2=e.z;if(mpWalk(nx2,ez0))e.z=ez0;else if(mpWalk(ex0,nz2))e.x=ex0;else{e.x=ex0;e.z=ez0}}
     if(e.kind==='z'){for(const c of blds){if(e.x>c.x0-.9&&e.x<c.x1+.9&&e.z>c.z0-.9&&e.z<c.z1+.9){const l=e.x-c.x0,r=c.x1-e.x,t=e.z-c.z0,b=c.z1-e.z,m=Math.min(l,r,t,b);if(m===l)e.x=c.x0-.9;else if(m===r)e.x=c.x1+.9;else if(m===t)e.z=c.z0-.9;else e.z=c.z1+.9}}
       e.y=cityGround(e.x,e.z)}else e.y=cityGround(e.x,e.z)+2.4+Math.sin(G.t*2.4+e.hz)*.5;
     e.g.position.set(e.x,e.y,e.z);e.g.rotation.y=Math.atan2(dx,dz);if(e.kind==='z')e.g.children.forEach((c,i)=>{if(i>=3&&i<5)c.rotation.x=Math.sin(G.t*6+i)*.3});
-    if(d<e.r&&Math.abs(P.y-e.y)<4&&UWE.stun<=0&&G.phase==='play'){UWE.stun=1.4;P.speed*=.25;P.x-=ux*3;P.z-=uz*3;SFX.thud();G.shake=Math.max(G.shake,.35);toast(e.kind==='z'?'Autsch! Ein Kürbis-Zombie!':'Huch! Ein Geist!',800)}}
+    if(d<e.r&&Math.abs(P.y-e.y)<4&&UWE.stun<=0&&G.phase==='play'){UWE.stun=1.4;P.speed*=.25;if(NEWMAP)mpPush(-ux*3,-uz*3);else{P.x-=ux*3;P.z-=uz*3}SFX.thud();G.shake=Math.max(G.shake,.35);toast(e.kind==='z'?'Autsch! Ein Kürbis-Zombie!':'Huch! Ein Geist!',800)}}
   for(const p of UWE.pumpkins){if(!p.g.visible)continue;p.g.position.y=p.y+Math.sin(G.t*2+p.id)*.3;p.g.rotation.y+=dt*1.4;
     if(Math.hypot(P.x-p.x,P.z-p.z)<3.4&&G.phase==='play'){p.g.visible=false;UWQ.kc.push(p.id);UWQ.k++;uwSave();SFX.collect(UWQ.k);burst(p.x,p.y,p.z,40);toast('Kürbis-Laterne '+Math.min(UWQ.k,8)+'/8',900);uwHud();uwCheck()}}}
 function uwReset(){UWQ.z=0;UWQ.g=0;UWQ.k=0;UWQ.kc=[];uwSave();if(UWE.ready)uwSpawn()}

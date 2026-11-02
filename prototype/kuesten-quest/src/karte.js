@@ -73,7 +73,10 @@ function mpTerrain(add){
       if(!mpIsLand(s.x,s.z)){bridge.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx),w:wM})}});
     if(r.w>=14){const ds=mpResample(r.pts,7);ds.forEach(s=>{if(mpAt(s.x,s.z)===2&&(s.tx||s.tz))dash.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx)})})}
     const ps=mpResample(r.pts,24);ps.forEach(s=>{if(!mpIsLand(s.x,s.z))pier.push({x:s.x,z:s.z})})});
-  add(mpInstanced(BX,mpMat('sw','#cfc4e0'),sw,s=>({x:s.x,y:1.45,z:s.z,ry:s.ry,sx:s.len||3.1,sy:.3,sz:MP.SWK})));
+  /* Bordsteine direkt aus der Maske: zusammengefasste Streifen (1 m breit), nie über Straße, Haus oder Wasser hinaus */
+  {const strips=[],ok=c=>c===1||c===3||c===4;for(let iy=0;iy+1<MP.h;iy+=2){let x0=-1;for(let ix=0;ix<=MP.w;ix++){let good=false;if(ix<MP.w){const a=MP.cls[iy*MP.w+ix],b=MP.cls[(iy+1)*MP.w+ix];good=ok(a)&&ok(b)&&(a===3||b===3)}
+      if(good&&x0<0)x0=ix;else if(!good&&x0>=0){strips.push({x:mwx(MP.PLAY.x0+(x0+ix)/2),z:mwz(MP.PLAY.y0+iy+1),len:(ix-x0)*MP.SC});x0=-1}}}
+   MP.swStrips=strips.length;add(mpInstanced(BX,mpMat('sw','#cfc4e0'),strips,s=>({x:s.x,y:1.45,z:s.z,ry:0,sx:s.len,sy:.3,sz:2*MP.SC})))}
   add(mpInstanced(BX,new THREE.MeshStandardMaterial({color:'#fff0b0',emissive:'#fff0b0',emissiveIntensity:.5}),dash,s=>({x:s.x,y:1.34,z:s.z,ry:s.ry,sx:2.6,sy:.04,sz:.35})));
   /* Brücken: Fahrbahnplatte, Pfeiler, Geländer */
   add(mpInstanced(BX,mpMat('deck','#6a5a9a'),bridge,s=>({x:s.x,y:1.0,z:s.z,ry:s.ry,sx:3.0,sy:.7,sz:s.w+.3})));
@@ -388,7 +391,11 @@ function portLupoFinish(H){
 
 /* ---------- Bewegung: Wasser und Gebäude über das Raster, Seitwärts-Gleiten an Kanten ---------- */
 function mpOk(X,Z){const r=.9;return mpWalk(X,Z)&&mpWalk(X+r,Z)&&mpWalk(X-r,Z)&&mpWalk(X,Z+r)&&mpWalk(X,Z-r)}
-function mpMove(ox,oz){if(mpOk(P.x,P.z))return;const nx=P.x,nz=P.z;let hit=true;
+/* Rückstoß in kleinen Schritten, bleibt vor Wänden und Wasser stehen */
+function mpPush(dx,dz){for(let i=1;i<=6;i++){const x=P.x+dx/6,z=P.z+dz/6;if(!mpOk(x,z))break;P.x=x;P.z=z}}
+/* Steckt man in einem Gebäude fest, an die nächste freie Stelle setzen */
+function mpUnstick(){for(let d=1;d<=40;d++)for(let a=0;a<24;a++){const x=P.x+Math.cos(a/24*6.283)*d,z=P.z+Math.sin(a/24*6.283)*d;if(mpOk(x,z)){P.x=x;P.z=z;P.speed=0;return true}}return false}
+function mpMove(ox,oz){if(mpOk(P.x,P.z))return;if(!mpOk(ox,oz)){mpUnstick();return}const nx=P.x,nz=P.z;let hit=true;
   if(mpOk(nx,oz)){P.z=oz}else if(mpOk(ox,nz)){P.x=ox}else{P.x=ox;P.z=oz}
   const mv=Math.hypot(P.x-ox,P.z-oz);if(mv>.01){const tang=Math.atan2(P.z-oz,P.x-ox);let d=tang-P.h;d=Math.atan2(Math.sin(d),Math.cos(d));P.h+=d*.35}
   P.speed*=.93;if(P.speed>2.5&&G.t-(P.lastBump||0)>.4){SFX.thud();G.shake=Math.max(G.shake,.15);P.lastBump=G.t}}

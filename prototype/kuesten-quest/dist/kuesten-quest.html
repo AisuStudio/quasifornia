@@ -2756,11 +2756,12 @@ function uwStep(dt){if(!UWE.ready)return;UWE.stun=Math.max(0,UWE.stun-dt);
     if(e.state==='sleep'){if(d<(e.kind==='z'?34:28)){e.state='rise';e.t=0;e.g.visible=true;tone(90,.4,'sawtooth',.05,-40)}else continue}
     if(e.state==='rise'){e.t+=dt;e.y=gy-2.2+Math.min(1,e.t/1.1)*(e.kind==='z'?2.2:5.4);e.g.position.set(e.x,e.y,e.z);e.g.rotation.y=Math.atan2(dx,dz);if(e.t>=1.1)e.state='chase';continue}
     /* chase */
-    const wob=Math.sin(G.t*2+e.hx)*.6,ux=dx/(d||1),uz=dz/(d||1);e.x+=(ux+uz*wob*.25)*e.sp*dt;e.z+=(uz-ux*wob*.25)*e.sp*dt;
+    const wob=Math.sin(G.t*2+e.hx)*.6,ux=dx/(d||1),uz=dz/(d||1),ex0=e.x,ez0=e.z;e.x+=(ux+uz*wob*.25)*e.sp*dt;e.z+=(uz-ux*wob*.25)*e.sp*dt;
+    if(e.kind==='z'&&NEWMAP&&!mpWalk(e.x,e.z)){const nx2=e.x,nz2=e.z;if(mpWalk(nx2,ez0))e.z=ez0;else if(mpWalk(ex0,nz2))e.x=ex0;else{e.x=ex0;e.z=ez0}}
     if(e.kind==='z'){for(const c of blds){if(e.x>c.x0-.9&&e.x<c.x1+.9&&e.z>c.z0-.9&&e.z<c.z1+.9){const l=e.x-c.x0,r=c.x1-e.x,t=e.z-c.z0,b=c.z1-e.z,m=Math.min(l,r,t,b);if(m===l)e.x=c.x0-.9;else if(m===r)e.x=c.x1+.9;else if(m===t)e.z=c.z0-.9;else e.z=c.z1+.9}}
       e.y=cityGround(e.x,e.z)}else e.y=cityGround(e.x,e.z)+2.4+Math.sin(G.t*2.4+e.hz)*.5;
     e.g.position.set(e.x,e.y,e.z);e.g.rotation.y=Math.atan2(dx,dz);if(e.kind==='z')e.g.children.forEach((c,i)=>{if(i>=3&&i<5)c.rotation.x=Math.sin(G.t*6+i)*.3});
-    if(d<e.r&&Math.abs(P.y-e.y)<4&&UWE.stun<=0&&G.phase==='play'){UWE.stun=1.4;P.speed*=.25;P.x-=ux*3;P.z-=uz*3;SFX.thud();G.shake=Math.max(G.shake,.35);toast(e.kind==='z'?'Autsch! Ein Kürbis-Zombie!':'Huch! Ein Geist!',800)}}
+    if(d<e.r&&Math.abs(P.y-e.y)<4&&UWE.stun<=0&&G.phase==='play'){UWE.stun=1.4;P.speed*=.25;if(NEWMAP)mpPush(-ux*3,-uz*3);else{P.x-=ux*3;P.z-=uz*3}SFX.thud();G.shake=Math.max(G.shake,.35);toast(e.kind==='z'?'Autsch! Ein Kürbis-Zombie!':'Huch! Ein Geist!',800)}}
   for(const p of UWE.pumpkins){if(!p.g.visible)continue;p.g.position.y=p.y+Math.sin(G.t*2+p.id)*.3;p.g.rotation.y+=dt*1.4;
     if(Math.hypot(P.x-p.x,P.z-p.z)<3.4&&G.phase==='play'){p.g.visible=false;UWQ.kc.push(p.id);UWQ.k++;uwSave();SFX.collect(UWQ.k);burst(p.x,p.y,p.z,40);toast('Kürbis-Laterne '+Math.min(UWQ.k,8)+'/8',900);uwHud();uwCheck()}}}
 function uwReset(){UWQ.z=0;UWQ.g=0;UWQ.k=0;UWQ.kc=[];uwSave();if(UWE.ready)uwSpawn()}
@@ -2878,7 +2879,10 @@ function mpTerrain(add){
       if(!mpIsLand(s.x,s.z)){bridge.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx),w:wM})}});
     if(r.w>=14){const ds=mpResample(r.pts,7);ds.forEach(s=>{if(mpAt(s.x,s.z)===2&&(s.tx||s.tz))dash.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx)})})}
     const ps=mpResample(r.pts,24);ps.forEach(s=>{if(!mpIsLand(s.x,s.z))pier.push({x:s.x,z:s.z})})});
-  add(mpInstanced(BX,mpMat('sw','#cfc4e0'),sw,s=>({x:s.x,y:1.45,z:s.z,ry:s.ry,sx:s.len||3.1,sy:.3,sz:MP.SWK})));
+  /* Bordsteine direkt aus der Maske: zusammengefasste Streifen (1 m breit), nie über Straße, Haus oder Wasser hinaus */
+  {const strips=[],ok=c=>c===1||c===3||c===4;for(let iy=0;iy+1<MP.h;iy+=2){let x0=-1;for(let ix=0;ix<=MP.w;ix++){let good=false;if(ix<MP.w){const a=MP.cls[iy*MP.w+ix],b=MP.cls[(iy+1)*MP.w+ix];good=ok(a)&&ok(b)&&(a===3||b===3)}
+      if(good&&x0<0)x0=ix;else if(!good&&x0>=0){strips.push({x:mwx(MP.PLAY.x0+(x0+ix)/2),z:mwz(MP.PLAY.y0+iy+1),len:(ix-x0)*MP.SC});x0=-1}}}
+   MP.swStrips=strips.length;add(mpInstanced(BX,mpMat('sw','#cfc4e0'),strips,s=>({x:s.x,y:1.45,z:s.z,ry:0,sx:s.len,sy:.3,sz:2*MP.SC})))}
   add(mpInstanced(BX,new THREE.MeshStandardMaterial({color:'#fff0b0',emissive:'#fff0b0',emissiveIntensity:.5}),dash,s=>({x:s.x,y:1.34,z:s.z,ry:s.ry,sx:2.6,sy:.04,sz:.35})));
   /* Brücken: Fahrbahnplatte, Pfeiler, Geländer */
   add(mpInstanced(BX,mpMat('deck','#6a5a9a'),bridge,s=>({x:s.x,y:1.0,z:s.z,ry:s.ry,sx:3.0,sy:.7,sz:s.w+.3})));
@@ -3193,7 +3197,11 @@ function portLupoFinish(H){
 
 /* ---------- Bewegung: Wasser und Gebäude über das Raster, Seitwärts-Gleiten an Kanten ---------- */
 function mpOk(X,Z){const r=.9;return mpWalk(X,Z)&&mpWalk(X+r,Z)&&mpWalk(X-r,Z)&&mpWalk(X,Z+r)&&mpWalk(X,Z-r)}
-function mpMove(ox,oz){if(mpOk(P.x,P.z))return;const nx=P.x,nz=P.z;let hit=true;
+/* Rückstoß in kleinen Schritten, bleibt vor Wänden und Wasser stehen */
+function mpPush(dx,dz){for(let i=1;i<=6;i++){const x=P.x+dx/6,z=P.z+dz/6;if(!mpOk(x,z))break;P.x=x;P.z=z}}
+/* Steckt man in einem Gebäude fest, an die nächste freie Stelle setzen */
+function mpUnstick(){for(let d=1;d<=40;d++)for(let a=0;a<24;a++){const x=P.x+Math.cos(a/24*6.283)*d,z=P.z+Math.sin(a/24*6.283)*d;if(mpOk(x,z)){P.x=x;P.z=z;P.speed=0;return true}}return false}
+function mpMove(ox,oz){if(mpOk(P.x,P.z))return;if(!mpOk(ox,oz)){mpUnstick();return}const nx=P.x,nz=P.z;let hit=true;
   if(mpOk(nx,oz)){P.z=oz}else if(mpOk(ox,nz)){P.x=ox}else{P.x=ox;P.z=oz}
   const mv=Math.hypot(P.x-ox,P.z-oz);if(mv>.01){const tang=Math.atan2(P.z-oz,P.x-ox);let d=tang-P.h;d=Math.atan2(Math.sin(d),Math.cos(d));P.h+=d*.35}
   P.speed*=.93;if(P.speed>2.5&&G.t-(P.lastBump||0)>.4){SFX.thud();G.shake=Math.max(G.shake,.15);P.lastBump=G.t}}
