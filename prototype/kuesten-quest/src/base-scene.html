@@ -57,7 +57,7 @@ function fcol(R,l=.5,sat=.55,acc){const a=acc===undefined?R()<FW.acc:acc;const h
 function ell(g,mat,p,sx,sy,sz,dir){const m=new THREE.Mesh(FSP,mat);m.position.copy(p);m.scale.set(sx,sy,sz);if(dir)m.quaternion.setFromUnitVectors(new V3(0,0,1),dir.clone().normalize());g.add(m);return m}
 function seg(g,a,b,r0,r1,mat){const d=b.clone().sub(a),L=d.length();const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,L,10),mat);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new V3(0,1,0),d.normalize());g.add(m);ell(g,mat,b,r1,r1,r1)}
 const FLORA={
- palm(R,s){const g=new THREE.Group();const T1=FM(fcol(R,.32,.32,false)),T2=FM(fcol(R,.4,.34,false));const H=(7+R()*5)*s,n=9,pts=[new V3()];const dir=new V3((R()-.5)*.25,1,(R()-.5)*.25).normalize(),bend=(R()-.5)*.5;
+ palm(R,s,ht=1){const g=new THREE.Group();const T1=FM(fcol(R,.32,.32,false)),T2=FM(fcol(R,.4,.34,false));const H=(7+R()*5)*s*ht,n=9,pts=[new V3()];const dir=new V3((R()-.5)*.25,1,(R()-.5)*.25).normalize(),bend=(R()-.5)*.5;
   for(let i=0;i<n;i++){dir.x+=bend*.08;dir.normalize();pts.push(pts[i].clone().add(dir.clone().multiplyScalar(H/n)))}
   const rr=i=>(.55*(1-i/n*.55)+(i%2?.09:0))*s;for(let i=0;i<n;i++)seg(g,pts[i],pts[i+1],rr(i),rr(i+1),i%2?T1:T2);
   const c=pts[n],nf=8+Math.floor(R()*4);
