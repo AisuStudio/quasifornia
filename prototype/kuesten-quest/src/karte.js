@@ -19,10 +19,10 @@ function mpObb(r){let best=null;for(let a=0;a<90;a+=2){const c=Math.cos(a*Math.P
 /* nächster Punkt auf den Straßen (Karteneinheiten) */
 function mpNearRoad(ux,uy){let best=null;for(const r of MAPD.roads){const w=Math.max(r.w,MP.RW);for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dy=b[1]-a[1],L2=dx*dx+dy*dy||1e-9;let t=((ux-a[0])*dx+(uy-a[1])*dy)/L2;t=Math.max(0,Math.min(1,t));const px=a[0]+dx*t,py=a[1]+dy*t,d=Math.hypot(ux-px,uy-py);if(!best||d<best.d)best={d,x:px,y:py,w,tx:dx/Math.sqrt(L2),ty:dy/Math.sqrt(L2)}}}return best}
 /* Platz für ein rundes Gebäude (Radius Rm in Metern) suchen: auf Land, nicht in Häusern, mit Abstand zu Straße und Bordstein */
-function mpFitClear(ux,uy,Rm){const segD=(x,y)=>{let d=1e9;MAPD.rail.forEach(r=>{if(r.dash)return;for(let i=0;i<r.pts.length-1;i++){const A=r.pts[i],B=r.pts[i+1],dx=B[0]-A[0],dy=B[1]-A[1],L2=dx*dx+dy*dy||1e-9;let t=((x-A[0])*dx+(y-A[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-A[0]-dx*t,y-A[1]-dy*t))}});return d*MP.SC};
+function mpFitClear(ux,uy,Rm,maxU){const segD=(x,y)=>{let d=1e9;MAPD.rail.forEach(r=>{if(r.dash)return;for(let i=0;i<r.pts.length-1;i++){const A=r.pts[i],B=r.pts[i+1],dx=B[0]-A[0],dy=B[1]-A[1],L2=dx*dx+dy*dy||1e-9;let t=((x-A[0])*dx+(y-A[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-A[0]-dx*t,y-A[1]-dy*t))}});return d*MP.SC};
   const ptsOk=(x,y)=>{if(segD(x,y)<Rm+4)return false;const n=mpNearRoad(x,y);if(n&&n.d*MP.SC<Math.max(n.w,MP.RW)*MP.SC/2+MP.SWK+Rm+.4)return false;
-  for(let a=0;a<9;a++){const px=a?x+Math.cos(a/8*6.283)*Rm/MP.SC:x,py=a?y+Math.sin(a/8*6.283)*Rm/MP.SC:y;if(!MAPD.land.some(l=>mpInPoly(l.c[0],px,py)))return false;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],px,py)))return false}return true};
-  for(let d=0;d<=60;d+=3)for(let a=0;a<(d?16:1);a++){const x=ux+Math.cos(a/16*6.283)*d,y=uy+Math.sin(a/16*6.283)*d;if(ptsOk(x,y))return [x,y]}return null}
+  for(let a=0;a<9;a++){const px=a?x+Math.cos(a/8*6.283)*Rm/MP.SC:x,py=a?y+Math.sin(a/8*6.283)*Rm/MP.SC:y;if(!MAPD.land.some(l=>mpInPoly(l.c[0],px,py)))return false;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],px,py)))return false;if([MAPD.courts,MAPD.parks,MAPD.lots,MAPD.water].some(L=>(L||[]).some(it=>it.c&&mpInPoly(it.c[0],px,py))))return false}return true};
+  for(let d=0;d<=(maxU||60);d+=3)for(let a=0;a<(d?16:1);a++){const x=ux+Math.cos(a/16*6.283)*d,y=uy+Math.sin(a/16*6.283)*d;if(ptsOk(x,y))return [x,y]}return null}
 function mpFrontYaw(ux,uy){const n=mpNearRoad(ux,uy);return n?Math.atan2(-(n.x-ux),-(n.y-uy)):0}
 /* Punkt vor einem Gebäude: von der Mitte Richtung Straße, bis er begehbar ist */
 function mpFront(ux,uy,distM){const n=mpNearRoad(ux,uy);if(!n)return [mwx(ux),mwz(uy)];const L=Math.hypot(n.x-ux,n.y-uy)||1,dx=(n.x-ux)/L,dy=(n.y-uy)/L;
@@ -108,6 +108,14 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   /* Dachaufbauten */
   const cen=[mwx(b.cen[0]),mwz(b.cen[1])];if(mpInPoly(ring,cen[0],cen[1])){const m=new THREE.Mesh(BX,MT('#b9bdc9'));m.scale.set(3.2,1.1,2.4);m.position.set(cen[0],1.3+h+.55+.55,cen[1]);bg.add(m)}
   if(sign&&sbest){const w=Math.min(12,Math.max(5.5,sbest.L*.7)),sg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*.24),signMat(sign,'#ffe066','#1a1030'));sg.position.set(sbest.mx+sbest.nx*.25,1.3+Math.min(h-1.6,5.8),sbest.mz+sbest.nz*.25);sg.rotation.y=Math.atan2(sbest.nx,sbest.nz);sg.userData.noBake=true;sg.userData.noOutline=true;bg.add(sg)}
+  /* Eingang: Tür mit Glas und Vordach an der Fassade zur Straße (Bahnhof und große Gebäude breiter) */
+  if(sbest&&b.kind==='station')HUB.station={x:sbest.mx,z:sbest.mz,nx:sbest.nx,nz:sbest.nz};
+  if(sbest){const big=/station|casino|shopping|resort|tower/.test(b.kind||''),dw=big?4.6:1.9,ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),px=sbest.mx+sbest.nx*.12,pz=sbest.mz+sbest.nz*.12;
+    const part=(m,w,hh,d,x,y,z)=>{const o=new THREE.Mesh(BX,m);o.scale.set(w,hh,d);o.position.set(x,y,z);o.rotation.y=ry;o.castShadow=true;bg.add(o);return o};
+    part(MT('#2a2038'),dw+.5,2.9,.2,px,1.3+1.45,pz);
+    part(MT('#9fe6f0','#9fe6f0',.35),dw-.3,2.5,.24,px+sbest.nx*.03,1.3+1.3,pz+sbest.nz*.03);
+    part(MT('#2a2038'),.14,2.5,.28,px+sbest.nx*.05,1.3+1.3,pz+sbest.nz*.05);
+    part(MT('#f6efe6'),dw+1.6,.3,1.5,px+sbest.nx*.7,1.3+3.2,pz+sbest.nz*.7)}
   return ring}
 function mpBuildings(H){
   const solids=[],groups=[];const L0=MAPD.labels;
@@ -133,7 +141,8 @@ function mpBuildings(H){
     const bg=mkGroup(X,Z);b.bg=bg;mpGenBuilding(bg,b,WALL[kind]||MPPAST[b.i%7],h,b.i,SIGN[kind]||null);b.h=h});
   /* Café Pengu und AstroBurger an den Markern C und B */
   MAPD.markers.forEach(m=>{const lab=L0.find(l=>Math.hypot(l.x-m.x,l.y-m.y)<12&&(l.t==='C'||l.t==='B'));if(!lab)return;const yaw=mpFrontYaw(m.x,m.y),X=mwx(m.x),Z=mwz(m.y);
-    if(lab.t==='C'){const bg=mkGroup(X,Z);mpStamp(H,()=>H.TYPES[2](0),X,Z,yaw,bg,1);solids.push({x:m.x,y:m.y,a:0,r:19});HUB.cafe={x:X,z:Z,ux:m.x,uy:m.y,yaw}}
+    if(lab.t==='C'){let sc=.6,pos=[m.x,m.y];for(const k of [1,.85,.7,.6]){const f=mpFitClear(m.x,m.y,11*k,90);if(f){sc=k;pos=f;break}}
+      const ux=pos[0],uy=pos[1],X2=mwx(ux),Z2=mwz(uy),yaw2=mpFrontYaw(ux,uy),bg=mkGroup(X2,Z2);mpStamp(H,()=>H.TYPES[2](0),X2,Z2,yaw2,bg,sc);solids.push({x:ux,y:uy,a:0,r:Math.round(26*sc)});HUB.cafe={x:X2,z:Z2,ux,uy,yaw:yaw2}}
     else{let sc=.8,pos=[m.x,m.y];for(const k of [.8,.7,.6]){const f=mpFitClear(m.x,m.y,9.5*k/.8);if(f){sc=k;pos=f;break}}
       const ux=pos[0],uy=pos[1],X2=mwx(ux),Z2=mwz(uy),yaw2=mpFrontYaw(ux,uy),bg=mkGroup(X2,Z2);mpStamp(H,()=>H.TYPES[4](0),X2,Z2,yaw2,bg,sc);solids.push({x:ux,y:uy,a:0,r:Math.round(21*sc)});HUB.burger={x:X2,z:Z2,ux,uy,yaw:yaw2}}});
   return solids}

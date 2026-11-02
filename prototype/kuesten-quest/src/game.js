@@ -1126,7 +1126,7 @@ function genMaze(seed){const R=mulberry(seed),N=6,id=(i,j)=>j*N+i,key=(a,b)=>a<b
   return {N,id,key,open,all,deg,adj,dist,pick,coast}}
 
 function shopTex(txt,fg,bg){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,128);g.strokeStyle=fg;g.lineWidth=8;g.shadowColor=fg;g.shadowBlur=18;g.strokeRect(8,8,496,112);
-  g.fillStyle='#fff';g.shadowBlur=22;g.font='800 66px "Baloo 2","Trebuchet MS",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,256,68);
+  g.fillStyle='#fff';g.shadowBlur=22;let fs=66;g.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif';while(g.measureText(txt).width>450&&fs>20){fs-=2;g.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif'}g.textAlign='center';g.textBaseline='middle';g.fillText(txt,256,68);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
 const SIGNM={};function signMat(txt,fg,bg){const k=txt+fg;return SIGNM[k]||(SIGNM[k]=new THREE.MeshBasicMaterial({map:shopTex(txt,fg,bg||'#1a1030'),side:THREE.DoubleSide}))}
 const MTC={};function MT(c,em,ei){const k=c+'|'+em+'|'+ei;return MTC[k]||(MTC[k]=new THREE.MeshStandardMaterial({color:c,roughness:.8,flatShading:true,...(em?{emissive:em,emissiveIntensity:ei||.8}:{})}))}
