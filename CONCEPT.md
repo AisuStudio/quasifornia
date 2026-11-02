@@ -54,7 +54,7 @@ Ein offenes, vernetztes Welten-Spiel als Web-App, inspiriert von der OASIS aus "
 
 ### Küstenstadt als Hub (Idee vom Nutzer, 2026-10-31)
 In der Küstenstadt entstehen nach und nach Gebäude. Jedes Gebäude teleportiert zu einer anderen Quest. Die Stadt wächst also mit dem Fortschritt und ist zugleich das Menü der Quests. Verbindet Kern (Quests), Portale und Belohnung (neues Gebäude = neue Quest).
-- Die 5×5-Blockmap gibt es schon: Sie ist **Welt 0, die Stadt** des Prototyps (siehe "Welten im Prototyp"): 5×5 Blöcke, 6×6 Kreuzungen, Labyrinth per Seed, fünf Gebäudetypen, drei Portale in Sackgassen, Minikarte, die sich beim Fahren füllt. Offen dort: Leben in der Stadt, Innenräume, 10×10 zu schwer für Handys. Der Hub-Gedanke baut darauf auf: Gebäude der 5×5-Stadt werden zu Quest-Portalen, statt dass Portale nur in Sackgassen versteckt sind.
+- (Seit 2026-11-02 ersetzt durch die Halbinsel-Karte, siehe unten; die Rasterstadt läuft nur noch unter `?alt=1`.) Die 5×5-Blockmap gab es zuerst: Sie ist **Welt 0, die Stadt** des Prototyps (siehe "Welten im Prototyp"): 5×5 Blöcke, 6×6 Kreuzungen, Labyrinth per Seed, fünf Gebäudetypen, drei Portale in Sackgassen, Minikarte, die sich beim Fahren füllt. Offen dort: Leben in der Stadt, Innenräume, 10×10 zu schwer für Handys. Der Hub-Gedanke baut darauf auf: Gebäude der 5×5-Stadt werden zu Quest-Portalen, statt dass Portale nur in Sackgassen versteckt sind.
 - Offen: Was löst ein neues Gebäude aus (abgeschlossene Quest, Sammelgut, Zeit)? Wer platziert sie (automatisch oder Spieler)? Passt "Countdown auf dem Atoll" als ein Gebäude/Portal?
 
 ### Inventar (Idee vom Nutzer, 2026-10-31)
@@ -132,6 +132,16 @@ Offene Fragen aus der Notiz:
 - Multiplayer als offene Welt mit Orten auf Planeten.
 - Kollaborationsvertrag für Artist- und Konstruktions-Collabs.
 - Musik: Ansatz wie GTA-Radio, aber Indie; weitere Artist-Collabos geplant; Rechte-Go pro Song noch einzuholen (Stand: Packed Rich hat mündlich zugesagt).
+
+### Karte: Halbinsel Port Lupo (Entwurf vom Nutzer, 2026-11-02, gebaut, ersetzt die Rasterstadt)
+Die Stadt ist jetzt eine Halbinsel nach dem SVG des Nutzers (`prototype/kuesten-quest/src/map/Map_1.svg`). Die alte 5×5-Rasterstadt mit Mauer gibt es nur noch unter `?alt=1`, Standard ist die neue Karte. Der Nutzer pflegt die Karte selbst und fügt nur hinzu, ändert nichts Bestehendes.
+- **Pipeline:** SVG → `tools/make-map.js` (Farben und Strichbreiten bestimmen die Klasse) → `src/map/map.json` → `src/karte.js`. 1 Kartenpunkt = 0,5 m (angenommen), Straßen mindestens 11 Einheiten breit.
+- **SVG-Konventionen:** beige = Land (der Inselumriss), blau = Meer, rot durchgezogen = Hochbahn über der Erde, rot gestrichelt = Untergrund (S-Bahn/U-Bahn, bisher nur Minikarte), graue Fläche = Parkplatz, Buchstabenmarker: C = Café Pengu, B = AstroBurger (angenommen). Hügel sind aus der Karte entfernt.
+- **Strand (Entscheidung 2026-11-02):** Strand ist das Land außerhalb der Straßen (der beige Inselumriss). Keine Mauer, keine Kante: Der Strand schließt direkt an, ist aber zunächst nicht betretbar (Sperre später, Vorschlag: Absperrband mit Schild). Noch nicht gebaut.
+- **Küstenrennen:** vorne im Westen an der Uferpromenade (Küstentor).
+- **Gebaut:** Gelände mit Wasser, Straßen, Gehsteigen, Parks, Parkplätzen, 44 Gebäude (Café, Burger, P-Mart, Labor, Lebkuchenhaus, Casino, Resort, Einkaufszentrum, Turm), Hochbahn mit Rampe und Tunnelmund, Zug, Minikarte (150 px = 300 m), 2 Portale, Items, Unterwelt mit Leiter und Turm Tarxarox, 5 Graffiti-Wände. Kollision per Raster (Wasser und Gebäude blockieren). Tempo in Port Lupo 1,6× (Reise 7,2, Höchst 14,1; Schätzwert).
+- **Automatisch platziert (Nutzer kann per Marker verschieben):** Portale, Leiter-Busch, Tarxarox, Graffiti-Wände, Serafin.
+- **Offen:** Häfen und Marinas (Nutzer zeichnet sie konkret), Gesamtkarte per Taste oder im Rarepod (die Minikarte zeigt nur 300 m), Haltestelle und Mitfahren in der S-Bahn, Untergrund-Strecken, Festland und Atoll-Insel (bisher nur Gelände), Beach Volley, X-Fit, Basketball, Marina Club Casino als Mathe-Casino, Bordstein-Grind und Performance auf der neuen Karte ungetestet, ein schwarzer Fleck am Horizont in einer Brückenansicht ungeklärt.
 
 ### Hochbahn an der Mauer (Idee vom Nutzer, 2026-11-01)
 Eine Hochbahn-Strecke (S-Bahn) läuft auf Stützen durch die Stadt, immer wieder fährt ein Zug vorbei.
