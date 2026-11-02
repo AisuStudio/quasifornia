@@ -62,13 +62,13 @@ function mpInstanced(geo,mat,items,fn){const im=new THREE.InstancedMesh(geo,mat,
   items.forEach((it,k)=>{const r=fn(it);q.setFromEuler(e.set(0,r.ry||0,r.rz||0,'YZX'));s.set(r.sx,r.sy,r.sz);p.set(r.x,r.y,r.z);m4.compose(p,q,s);im.setMatrixAt(k,m4)});im.count=items.length;im.instanceMatrix.needsUpdate=true;im.castShadow=!!mat.userData&&false;im.receiveShadow=true;im.frustumCulled=false;im.userData.noBake=true;im.userData.noOutline=true;return im}
 function mpTerrain(add){
   /* Meer */
-  {const g=new THREE.PlaneGeometry(7000,7000);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:'#1cafd1',roughness:.25,metalness:.1}));m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;m.receiveShadow=true;add(m)}
+  {const g=new THREE.PlaneGeometry(7000,7000);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:'#2ac6d6',roughness:.25,metalness:.1}));m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;m.receiveShadow=true;add(m)}
   /* Land (angehoben, mit sichtbarer Kante) */
-  MAPD.land.forEach(it=>{const geo=new THREE.ExtrudeGeometry(mpShape(it.c),{depth:.7,bevelEnabled:false});geo.rotateX(-Math.PI/2);const m=new THREE.Mesh(geo,mpMat('land','#dccaa0'));m.position.y=.6;m.receiveShadow=true;m.userData.noBake=true;add(m)});
+  MAPD.land.forEach(it=>{const geo=new THREE.ExtrudeGeometry(mpShape(it.c),{depth:.7,bevelEnabled:false});geo.rotateX(-Math.PI/2);const m=new THREE.Mesh(geo,mpMat('land','#f1e5c0'));m.position.y=.6;m.receiveShadow=true;m.userData.noBake=true;add(m)});
   mpFlat(MAPD.parks,1.31,mpMat('park','#4fa874'),add);mpFlat(MAPD.lots,1.31,mpMat('lot','#8d93a0'),add);mpFlat(MAPD.courts,1.315,mpMat('court','#c98a4a'),add);
   mpFlat(MAPD.water,1.34,new THREE.MeshStandardMaterial({color:'#1cafd1',roughness:.3,metalness:.1}),add);
   /* Straßen */
-  const asphalt=mpMat('road','#4a3f66'),dash=[],sw=[],bridge=[],pier=[];
+  const asphalt=mpMat('road','#7a7790'),dash=[],sw=[],bridge=[],pier=[];
   MAPD.roads.forEach(r=>{const wU=Math.max(r.w,MP.RW),wM=wU*MP.SC,pts=r.pts.map(p=>[mwx(p[0]),mwz(p[1])]);
     const m=new THREE.Mesh(mpRibbon(pts,wM,1.32),asphalt);m.receiveShadow=true;m.userData.noBake=true;m.userData.noOutline=true;add(m);
     const rs=mpResample(r.pts,2.6);
@@ -79,7 +79,7 @@ function mpTerrain(add){
     rs.forEach(s=>{if(!mpIsLand(s.x,s.z)){bridge.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx),w:wM})}});
     if(r.w>=14){const ds=mpResample(r.pts,7);ds.forEach(s=>{if(mpAt(s.x,s.z)===2&&(s.tx||s.tz))dash.push({x:s.x,z:s.z,ry:-Math.atan2(s.tz,s.tx)})})}
     const ps=mpResample(r.pts,24);ps.forEach(s=>{if(!mpIsLand(s.x,s.z))pier.push({x:s.x,z:s.z})})});
-  add(mpInstanced(BX,mpMat('sw','#cfc4e0'),sw,s=>({x:s.x,y:1.45,z:s.z,ry:s.ry,sx:s.len||3.1,sy:.3,sz:MP.SWK})));
+  add(mpInstanced(BX,mpMat('sw','#f0e4d6'),sw,s=>({x:s.x,y:1.45,z:s.z,ry:s.ry,sx:s.len||3.1,sy:.3,sz:MP.SWK})));
   add(mpInstanced(BX,new THREE.MeshStandardMaterial({color:'#fff0b0',emissive:'#fff0b0',emissiveIntensity:.5}),dash,s=>({x:s.x,y:1.34,z:s.z,ry:s.ry,sx:2.6,sy:.04,sz:.35})));
   /* Brücken: Fahrbahnplatte, Pfeiler, Geländer */
   add(mpInstanced(BX,mpMat('deck','#6a5a9a'),bridge,s=>({x:s.x,y:1.0,z:s.z,ry:s.ry,sx:3.0,sy:.7,sz:s.w+.3})));
@@ -216,6 +216,31 @@ function mpSpotPool(){const R=mulberry(2024),out=[];for(let y=0;y<MP.h;y+=5)for(
   for(let i=out.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
 function mpLamps(){const out=[];let k=0;MAPD.roads.forEach(r=>{const wM=Math.max(r.w,MP.RW)*MP.SC;mpResample(r.pts,26).forEach(s=>{if(!(s.tx||s.tz))return;const side=(k++%2)?1:-1,off=wM/2+MP.SWK*.5,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)===3&&!(HUB.doors||[]).some(d=>Math.hypot(d[0]-x,d[1]-z)<5.5))out.push([x,z])})});return out}
 
+/* ---------- Tag und Nacht: ein Tag dauert 30 Minuten, Start am Mittag (Pacific-Sim-Look) ---------- */
+const DAY={len:1800,t:0,on:true,grain:null,K:null,last:-1};
+function dayInit(){const C=c=>new THREE.Color(c);
+  /* p, Himmel oben, Horizont/Nebel, Hemi oben, Hemi unten, Hemi-Stärke, Sonne, Sonnenstärke, Sonnenhöhe, Fill, Fill-Stärke */
+  DAY.K=[[0,'#58b6e8','#d2ecf0','#ffffff','#f3c6d8',1.15,'#fff3d6',3.0,52,'#ffc8e0',.7],
+   [.22,'#4a9fd8','#f6e4d2','#fff4e6','#e8b0c8',1.1,'#ffe2b0',2.8,34,'#ffb0d0',.9],
+   [.38,'#6a7fd0','#ffc29c','#ffe6e0','#a070b0',1.0,'#ffb060',2.6,18,'#c090ff',1.0],
+   [.48,'#3a2a8a','#ff9a78','#ffd9f0','#7a5aa0',1.0,'#ffb870',2.3,9,'#8e7bff',1.0],
+   [.58,'#1a1650','#a05a9a','#9a90e0','#3a2a6a',.7,'#7a70d0',1.0,12,'#ff7ab8',1.0],
+   [.70,'#050824','#1c1e50','#6a78d8','#1a1840',.5,'#8a98ff',.7,30,'#5a7aff',.5],
+   [.86,'#3a4a9a','#ffb0b0','#ffd0e8','#6a60a8',.8,'#ffb890',1.5,12,'#a090ff',.8],
+   [1,'#58b6e8','#d2ecf0','#ffffff','#f3c6d8',1.15,'#fff3d6',3.0,52,'#ffc8e0',.7]].map(k=>k.map((v,i)=>typeof v==='string'?C(v):v));
+  DAY.tmp=[C('#000'),C('#000'),C('#000'),C('#000'),C('#000'),C('#000')];
+  const g=document.createElement('div');g.id='grain';g.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.1;mix-blend-mode:overlay;background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.6 -.3'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\");background-size:220px 220px";
+  const v=document.createElement('div');v.id='vign';v.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(60,20,40,.22) 100%)";
+  const ui=document.getElementById('ui');[g,v].forEach(e=>ui&&ui.parentNode?ui.parentNode.insertBefore(e,ui):document.body.appendChild(e));DAY.grain=[g,v]}
+function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayInit();
+  const show=!G.under&&LV.id===0;DAY.grain&&DAY.grain.forEach(e=>{const d=show?'':'none';if(e.style.display!==d)e.style.display=d});
+  if(!show)return;DAY.t=(DAY.t+dt)%DAY.len;const p=DAY.t/DAY.len,K=DAY.K;let i=0;while(i<K.length-2&&p>=K[i+1][0])i++;
+  const a=K[i],b=K[i+1],f=Math.max(0,Math.min(1,(p-a[0])/(b[0]-a[0]))),e=f*f*(3-2*f),T=DAY.tmp,L=(x,y)=>x+(y-x)*e;
+  sky.material.uniforms.a.value.copy(a[1]).lerp(b[1],e);sky.material.uniforms.b.value.copy(a[2]).lerp(b[2],e);
+  hemi.color.copy(a[3]).lerp(b[3],e);hemi.groundColor.copy(a[4]).lerp(b[4],e);hemi.intensity=L(a[5],b[5]);
+  sun.color.copy(a[6]).lerp(b[6],e);sun.intensity=L(a[7],b[7]);DAY.sunY=L(a[8],b[8]);fill.color.copy(a[9]).lerp(b[9],e);fill.intensity=L(a[10],b[10]);
+  const bc=sky.material.uniforms.b.value,dn=Math.max(0,Math.min(1,(sun.intensity-1)/1.8)),fn=10+18*dn,ff=150+170*dn;if(sc.fog){if(sc.fog.color)sc.fog.color.copy(bc);sc.fog.near=fn;sc.fog.far=ff}OUTFOG.fc.value.copy(bc);OUTFOG.fn.value=fn;OUTFOG.ff.value=ff;
+  DAY.hour=Math.floor(((p*24+12)%24)*10)/10}
 /* ---------- Gesamtaufbau ---------- */
 function portLupoNew(H){
   HUB.doors=[];HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
