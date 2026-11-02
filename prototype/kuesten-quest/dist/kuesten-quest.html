@@ -2994,6 +2994,18 @@ function mpRail(add){
   {const m=new THREE.Mesh(BX,mpMat('portal','#6a5a8a'));m.scale.set(1.8,1.2,8.2);m.position.set(e.x,1.3+6.6,e.z);m.rotation.y=-e.h+Math.PI/2*0;m.castShadow=true;add(m)}
   {const m=new THREE.Mesh(BX,new THREE.MeshBasicMaterial({color:'#07070d'}));m.scale.set(.6,5.6,5.6);m.position.set(e.x+Math.cos(e.h)*1.4,1.3+2.8,e.z+Math.sin(e.h)*1.4);m.rotation.y=-e.h;m.userData.noBake=true;add(m)}
   return {pts,L,posAt,yAt,sol,mouth:e}}
+/* Bahnhofshalle über den Gleisen (wie die alten Berliner Hochbahnhöfe): gewölbtes Glasdach auf Stahlrippen, seitliche Bahnsteige */
+function mpStationHall(rail){const st=HUB.station;if(!st)return;let best=null;
+  for(let q=0;q<rail.L;q+=2){const p=rail.posAt(q),d=Math.hypot(p.x-st.x,p.z-st.z);if(!best||d<best.d)best={d,s:q,p}}
+  if(!best||best.d>40)return;const LEN=40,R=5.6,s0=Math.max(LEN/2,Math.min(rail.L-80-LEN/2,best.s)),c=rail.posAt(s0),y=rail.yAt(s0)-.05;
+  const g=new THREE.Group();g.position.set(c.x,y,c.z);g.rotation.y=-c.h;g.userData.noBake=true;
+  const steel=new THREE.MeshStandardMaterial({color:'#4f5578',roughness:.55,metalness:.3}),glass=new THREE.MeshStandardMaterial({color:'#9fe6f0',emissive:'#4fb8d0',emissiveIntensity:.25,transparent:true,opacity:.38,roughness:.2,side:THREE.DoubleSide,depthWrite:false});
+  const roof=new THREE.Mesh(new THREE.CylinderGeometry(R,R,LEN,28,1,true,0,Math.PI),glass);roof.rotation.z=Math.PI/2;roof.position.y=.4;g.add(roof);
+  for(let i=0;i<=10;i++){const rib=new THREE.Mesh(new THREE.TorusGeometry(R,i%10===0?.3:.16,6,26,Math.PI),steel);rib.rotation.y=Math.PI/2;rib.position.set(-LEN/2+i*LEN/10,.4,0);rib.castShadow=true;g.add(rib)}
+  [-1,0,1].forEach(a=>{const bm=new THREE.Mesh(BX,steel);bm.scale.set(LEN,.28,.28);bm.position.set(0,.4+R*Math.cos(a*1.0)*(a?Math.cos(0):1)*(a?.55:1)+(a?0:0),a?R*Math.sin(a*1.0)*.85:0);g.add(bm)});
+  [-1,1].forEach(sd=>{const pl=new THREE.Mesh(BX,mpMat('platform','#cfc4e0'));pl.scale.set(LEN-2,.34,2.3);pl.position.set(0,.05,sd*3.5);g.add(pl);
+    const rl=new THREE.Mesh(BX,steel);rl.scale.set(LEN-2,.9,.14);rl.position.set(0,.65,sd*4.55);g.add(rl)});
+  W0.add(g);HUB.stationHall={x:c.x,z:c.z,y,h:c.h}}
 /* Abstand zur Hochbahn-Mittellinie (Pflanzen dürfen nicht durch Trasse oder Pfeiler wachsen) */
 function mpRailDist(X,Z){const P=HUB.railPts;if(!P)return 999;let d=999;for(let i=0;i<P.length;i+=2){const q=Math.hypot(P[i][0]-X,P[i][1]-Z);if(q<d)d=q}return d}
 function mpBuildTrain(rail){
@@ -3024,7 +3036,7 @@ function portLupoNew(H){
   const add=o=>W0.add(o);
   const solids=mpBuildings(H);mpBuildMask(solids);
   mpTerrain(add);
-  const rail=mpRail(add);if(rail)HUB.railPts=rail.pts;if(rail){rail.sol.forEach(p=>mpMarkDisc(p.x,p.z,1.1));mpBuildTrain(rail)}
+  const rail=mpRail(add);if(rail)HUB.railPts=rail.pts;if(rail)mpStationHall(rail);if(rail){rail.sol.forEach(p=>mpMarkDisc(p.x,p.z,1.1));mpBuildTrain(rail)}
   /* Start auf der Straße zwischen Café und Büroturm, Blick nach Norden */
   HUB.sx=mwx(2108);HUB.sz=mwz(1352);HUB.sh=-Math.PI/2;
   /* Laternen */
