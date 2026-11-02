@@ -18,6 +18,11 @@ function mpObb(r){let best=null;for(let a=0;a<90;a+=2){const c=Math.cos(a*Math.P
   const ar=(x1-x0)*(y1-y0);if(!best||ar<best.ar){const uc=(x0+x1)/2,vc=(y0+y1)/2;best={ar,a:a*Math.PI/180,cx:uc*c-vc*s,cy:uc*s+vc*c,w:x1-x0,h:y1-y0}}}return best}
 /* nächster Punkt auf den Straßen (Karteneinheiten) */
 function mpNearRoad(ux,uy){let best=null;for(const r of MAPD.roads){const w=Math.max(r.w,MP.RW);for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dy=b[1]-a[1],L2=dx*dx+dy*dy||1e-9;let t=((ux-a[0])*dx+(uy-a[1])*dy)/L2;t=Math.max(0,Math.min(1,t));const px=a[0]+dx*t,py=a[1]+dy*t,d=Math.hypot(ux-px,uy-py);if(!best||d<best.d)best={d,x:px,y:py,w,tx:dx/Math.sqrt(L2),ty:dy/Math.sqrt(L2)}}}return best}
+/* Platz für ein rundes Gebäude (Radius Rm in Metern) suchen: auf Land, nicht in Häusern, mit Abstand zu Straße und Bordstein */
+function mpFitClear(ux,uy,Rm){const segD=(x,y)=>{let d=1e9;MAPD.rail.forEach(r=>{if(r.dash)return;for(let i=0;i<r.pts.length-1;i++){const A=r.pts[i],B=r.pts[i+1],dx=B[0]-A[0],dy=B[1]-A[1],L2=dx*dx+dy*dy||1e-9;let t=((x-A[0])*dx+(y-A[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-A[0]-dx*t,y-A[1]-dy*t))}});return d*MP.SC};
+  const ptsOk=(x,y)=>{if(segD(x,y)<Rm+4)return false;const n=mpNearRoad(x,y);if(n&&n.d*MP.SC<Math.max(n.w,MP.RW)*MP.SC/2+MP.SWK+Rm+.4)return false;
+  for(let a=0;a<9;a++){const px=a?x+Math.cos(a/8*6.283)*Rm/MP.SC:x,py=a?y+Math.sin(a/8*6.283)*Rm/MP.SC:y;if(!MAPD.land.some(l=>mpInPoly(l.c[0],px,py)))return false;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],px,py)))return false}return true};
+  for(let d=0;d<=60;d+=3)for(let a=0;a<(d?16:1);a++){const x=ux+Math.cos(a/16*6.283)*d,y=uy+Math.sin(a/16*6.283)*d;if(ptsOk(x,y))return [x,y]}return null}
 function mpFrontYaw(ux,uy){const n=mpNearRoad(ux,uy);return n?Math.atan2(-(n.x-ux),-(n.y-uy)):0}
 /* Punkt vor einem Gebäude: von der Mitte Richtung Straße, bis er begehbar ist */
 function mpFront(ux,uy,distM){const n=mpNearRoad(ux,uy);if(!n)return [mwx(ux),mwz(uy)];const L=Math.hypot(n.x-ux,n.y-uy)||1,dx=(n.x-ux)/L,dy=(n.y-uy)/L;
@@ -54,7 +59,7 @@ function mpResample(pts,step){const out=[],P=pts.map(p=>[mwx(p[0]),mwz(p[1])]);l
   for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz)||1e-9;let d=step-carry;while(d<=L){out.push({x:a[0]+dx*d/L,z:a[1]+dz*d/L,tx:dx/L,tz:dz/L});d+=step}carry=L-(d-step)}
   if(out.length>1)out[0].tx=out[1].tx,out[0].tz=out[1].tz;return out}
 function mpInstanced(geo,mat,items,fn){const im=new THREE.InstancedMesh(geo,mat,Math.max(1,items.length)),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),s=new THREE.Vector3(),p=new THREE.Vector3();
-  items.forEach((it,k)=>{const r=fn(it);q.setFromEuler(e.set(0,r.ry||0,0));s.set(r.sx,r.sy,r.sz);p.set(r.x,r.y,r.z);m4.compose(p,q,s);im.setMatrixAt(k,m4)});im.count=items.length;im.instanceMatrix.needsUpdate=true;im.castShadow=!!mat.userData&&false;im.receiveShadow=true;im.frustumCulled=false;im.userData.noBake=true;im.userData.noOutline=true;return im}
+  items.forEach((it,k)=>{const r=fn(it);q.setFromEuler(e.set(0,r.ry||0,r.rz||0,'YZX'));s.set(r.sx,r.sy,r.sz);p.set(r.x,r.y,r.z);m4.compose(p,q,s);im.setMatrixAt(k,m4)});im.count=items.length;im.instanceMatrix.needsUpdate=true;im.castShadow=!!mat.userData&&false;im.receiveShadow=true;im.frustumCulled=false;im.userData.noBake=true;im.userData.noOutline=true;return im}
 function mpTerrain(add){
   /* Meer */
   {const g=new THREE.PlaneGeometry(7000,7000);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:'#1cafd1',roughness:.25,metalness:.1}));m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;m.receiveShadow=true;add(m)}
@@ -129,7 +134,8 @@ function mpBuildings(H){
   /* Café Pengu und AstroBurger an den Markern C und B */
   MAPD.markers.forEach(m=>{const lab=L0.find(l=>Math.hypot(l.x-m.x,l.y-m.y)<12&&(l.t==='C'||l.t==='B'));if(!lab)return;const yaw=mpFrontYaw(m.x,m.y),X=mwx(m.x),Z=mwz(m.y);
     if(lab.t==='C'){const bg=mkGroup(X,Z);mpStamp(H,()=>H.TYPES[2](0),X,Z,yaw,bg,1);solids.push({x:m.x,y:m.y,a:0,r:19});HUB.cafe={x:X,z:Z,ux:m.x,uy:m.y,yaw}}
-    else{const bg=mkGroup(X,Z);mpStamp(H,()=>H.TYPES[4](0),X,Z,yaw,bg,.8);solids.push({x:m.x,y:m.y,a:0,r:17});HUB.burger={x:X,z:Z,ux:m.x,uy:m.y,yaw}}});
+    else{let sc=.8,pos=[m.x,m.y];for(const k of [.8,.7,.6]){const f=mpFitClear(m.x,m.y,9.5*k/.8);if(f){sc=k;pos=f;break}}
+      const ux=pos[0],uy=pos[1],X2=mwx(ux),Z2=mwz(uy),yaw2=mpFrontYaw(ux,uy),bg=mkGroup(X2,Z2);mpStamp(H,()=>H.TYPES[4](0),X2,Z2,yaw2,bg,sc);solids.push({x:ux,y:uy,a:0,r:Math.round(21*sc)});HUB.burger={x:X2,z:Z2,ux,uy,yaw:yaw2}}});
   return solids}
 
 /* ---------- S-Bahn (oberirdisch, rot durchgezogen) mit Tunnelmund; gestrichelt = unterirdisch ---------- */
@@ -139,16 +145,18 @@ function mpRail(add){
   const near=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<14;let chain=[];
   let cur=solid.slice().sort((a,b)=>b.pts[0][1]-a.pts[0][1])[0];if(!cur)return null;chain=cur.pts.slice();const used=new Set([cur]);
   for(let k=0;k<6;k++){const end=chain[chain.length-1],nx=solid.find(r=>!used.has(r)&&near(r.pts[0],end));if(!nx)break;used.add(nx);chain=chain.concat(nx.pts.slice(1))}
+  /* Kurve glätten (Chaikin), damit die Trasse keine Knicke und Stufen hat */
+  for(let it=0;it<3;it++){const o=[chain[0]];for(let i=0;i<chain.length-1;i++){const a=chain[i],b=chain[i+1];o.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}o.push(chain[chain.length-1]);chain=o}
   const P=mpResample(chain,2);const pts=P.map(p=>[p.x,p.z]);
   const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));const L=cum[cum.length-1];
   const TY=12.5,RAMP=80,Lr=L-RAMP,yAt=s=>s<Lr?TY:Math.max(1.6,TY-(TY-1.6)*(s-Lr)/RAMP);
   const posAt=s=>{s=Math.max(0,Math.min(L-.01,s));let lo=0,hi=cum.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(cum[m]<=s)lo=m;else hi=m}const f=(s-cum[lo])/(cum[hi]-cum[lo]||1),a=pts[lo],b=pts[hi];return {x:a[0]+(b[0]-a[0])*f,z:a[1]+(b[1]-a[1])*f,h:Math.atan2(b[1]-a[1],b[0]-a[0])}};
-  const step=3,N=Math.floor(L/step),items=[];for(let k=0;k<N;k++){const s=k*step+1.5,p=posAt(s);items.push({p,s})}
+  const step=1.5,N=Math.floor(L/step),items=[];for(let k=0;k<N;k++){const s=k*step+.75,p=posAt(s);items.push({p,s,pit:Math.atan2(yAt(s+.75)-yAt(s-.75),1.5)})}
   const dk=mpMat('raildeck','#9a8fc0');
-  add(mpInstanced(BX,dk,items,it=>({x:it.p.x,y:yAt(it.s)-.4,z:it.p.z,ry:-it.p.h,sx:3.4,sy:.8,sz:4.6})));
+  add(mpInstanced(BX,dk,items,it=>({x:it.p.x,y:yAt(it.s)-.4,z:it.p.z,ry:-it.p.h,rz:it.pit,sx:2.0,sy:.8,sz:4.6})));
   const trim=new THREE.MeshStandardMaterial({color:'#ee7cb8',emissive:'#ee7cb8',emissiveIntensity:.4,roughness:.6}),rl=[];
-  items.forEach(it=>{[-1,1].forEach(sd=>{const nx=-Math.sin(it.p.h),nz=Math.cos(it.p.h);rl.push({x:it.p.x+nx*sd*2.15,z:it.p.z+nz*sd*2.15,y:yAt(it.s)+.27,ry:-it.p.h})})});
-  add(mpInstanced(BX,trim,rl,r=>({x:r.x,y:r.y,z:r.z,ry:r.ry,sx:3.4,sy:.55,sz:.3})));
+  items.forEach(it=>{[-1,1].forEach(sd=>{const nx=-Math.sin(it.p.h),nz=Math.cos(it.p.h);rl.push({x:it.p.x+nx*sd*2.15,z:it.p.z+nz*sd*2.15,y:yAt(it.s)+.27,ry:-it.p.h,rz:it.pit})})});
+  add(mpInstanced(BX,trim,rl,r=>({x:r.x,y:r.y,z:r.z,ry:r.ry,rz:r.rz,sx:2.0,sy:.55,sz:.3})));
   /* Pfeiler: auf Wasser, Land oder Bürgersteig, nie auf der Fahrbahn, mit Ausleger zur Gleismitte */
   const col=[],beam=[],sol=[];
   for(let s=8;s<Lr;s+=24){const p=posAt(s),nx=-Math.sin(p.h),nz=Math.cos(p.h),y=yAt(s);let placed=false;
@@ -162,6 +170,8 @@ function mpRail(add){
   {const m=new THREE.Mesh(BX,mpMat('portal','#6a5a8a'));m.scale.set(1.8,1.2,8.2);m.position.set(e.x,1.3+6.6,e.z);m.rotation.y=-e.h+Math.PI/2*0;m.castShadow=true;add(m)}
   {const m=new THREE.Mesh(BX,new THREE.MeshBasicMaterial({color:'#07070d'}));m.scale.set(.6,5.6,5.6);m.position.set(e.x+Math.cos(e.h)*1.4,1.3+2.8,e.z+Math.sin(e.h)*1.4);m.rotation.y=-e.h;m.userData.noBake=true;add(m)}
   return {pts,L,posAt,yAt,sol,mouth:e}}
+/* Abstand zur Hochbahn-Mittellinie (Pflanzen dürfen nicht durch Trasse oder Pfeiler wachsen) */
+function mpRailDist(X,Z){const P=HUB.railPts;if(!P)return 999;let d=999;for(let i=0;i<P.length;i+=2){const q=Math.hypot(P[i][0]-X,P[i][1]-Z);if(q<d)d=q}return d}
 function mpBuildTrain(rail){
   const tg=new THREE.Group();tg.visible=false;tg.userData.noBake=true;W0.add(tg);const cars=[];
   [['#47c2a5',1],['#f1a7c8',0],['#ffe066',0],['#4cc3ff',0]].forEach(([c0,head],k)=>{const cg=new THREE.Group(),M=(c,em)=>new THREE.MeshStandardMaterial({color:c,roughness:.5,emissive:em||'#000000',emissiveIntensity:em?.8:0});
@@ -190,7 +200,7 @@ function portLupoNew(H){
   const add=o=>W0.add(o);
   const solids=mpBuildings(H);mpBuildMask(solids);
   mpTerrain(add);
-  const rail=mpRail(add);if(rail){rail.sol.forEach(p=>mpMarkDisc(p.x,p.z,1.1));mpBuildTrain(rail)}
+  const rail=mpRail(add);if(rail)HUB.railPts=rail.pts;if(rail){rail.sol.forEach(p=>mpMarkDisc(p.x,p.z,1.1));mpBuildTrain(rail)}
   /* Start auf der Straße zwischen Café und Büroturm, Blick nach Norden */
   HUB.sx=mwx(2108);HUB.sz=mwz(1352);HUB.sh=-Math.PI/2;
   /* Laternen */
@@ -211,7 +221,7 @@ function portLupoNew(H){
    HUB.streetSigns=placed.length}
   /* Pflanzen: die Bäume der Karte und Parks aus Regeln */
   {const oF=FSP,oH=FW.h,oA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
-   const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed,ht)=>{const R2=mulberry(seed),gp=FLORA[kind](R2,sc2,ht);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};
+   const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed,ht)=>{if(mpRailDist(X,Z)<(kind==='palm'?9:6))return;const R2=mulberry(seed),gp=FLORA[kind](R2,sc2,ht);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};
    MAPD.trees.forEach((t,i)=>{const X=mwx(t.x),Z=mwz(t.y);if(mpAt(X,Z)===0)return;put(KS[i%KS.length],X,Z,t.r>4?1.3:.8,i*17+3)});
    const RP=mulberry(909);MAPD.parks.forEach((pk,pi)=>{const r=pk.c[0],xs=r.map(p=>p[0]),ys=r.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),n=Math.floor(Math.abs(mpArea(r))*MP.SC*MP.SC/260);
      for(let k=0,t=0;k<n&&t<n*20;t++){const ux=x0+RP()*(x1-x0),uy=y0+RP()*(y1-y0);if(!mpInPoly(r,ux,uy))continue;const X=mwx(ux),Z=mwz(uy);if(mpAt(X,Z)!==4||!mpFree(X,Z,1.6))continue;put(KS[Math.floor(RP()*KS.length)],X,Z,.9+RP()*.4,pi*1000+k);k++}});
