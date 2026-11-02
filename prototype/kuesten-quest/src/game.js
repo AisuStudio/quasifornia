@@ -1547,7 +1547,7 @@ function cullCity(){if(!HUB.bgroups)return;const on=HUB.cull!==false,R2=(HUB.cul
 function stepCity(dt){
   const steer=(K.right?1:0)-(K.left?1:0);P.turn+=(steer-P.turn)*Math.min(1,dt*9);
   const sf=.45+.55*Math.min(1,P.speed/5);P.h+=P.turn*dt*2.3*sf;
-  const CF=NEWMAP&&LV.id===0?1.6:1,STOP=NEWMAP&&LV.id===0&&K.down&&!K.up;const target=K.up?SPEED_MAX*CF:(STOP?0:(K.down?1.8:SPEED_CRUISE*CF));P.speed+=(target-P.speed)*Math.min(1,dt*(K.up?1.5:STOP?3:1.1));if(STOP&&P.speed<.15)P.speed=0;
+  const CF=NEWMAP&&LV.id===0?1.6:1,STOP=NEWMAP&&LV.id===0&&!K.up;const target=K.up?SPEED_MAX*CF:(STOP?0:(K.down?1.8:SPEED_CRUISE*CF));P.speed+=(target-P.speed)*Math.min(1,dt*(K.up?1.5:STOP?(K.down?3:1.6):1.1));if(STOP&&P.speed<.15)P.speed=0;
   const ox0=P.x,oz0=P.z;P.x+=Math.cos(P.h)*P.speed*dt;P.z+=Math.sin(P.h)*P.speed*dt;if(LV.id===0&&P.coy<.14){const hx=Math.cos(P.h),hz=Math.sin(P.h),sl=(hillG(P.x+hx*.6,P.z+hz*.6)-hillG(P.x,P.z))/.6;P.speed=Math.max(STOP?0:1.6,Math.min(SPEED_MAX*CF+3,P.speed-sl*dt*9))}if(LV.id===5){const dk=Math.abs(P.z+36)<4.2&&P.x>40&&ISL.gate,ax=dk?96:78,k=(P.x*P.x)/(ax*ax)+(dk?0:(P.z*P.z)/(52*52));if(!dk&&k>1){const s=.995/Math.sqrt(k);P.x*=s;P.z*=s}else if(dk&&P.x>ax){P.x=ax}}
   if(NEWMAP&&LV.id===0)mpMove(ox0,oz0);else{const gt=Math.abs(P.z-HUB.coastZ)<9.2;P.x=Math.max((gt||P.x<-139.5)?-190:-139,Math.min(139,P.x));if(P.x<-139.5)P.z=Math.max(HUB.coastZ-9,Math.min(HUB.coastZ+9,P.z));P.z=Math.max(-139,Math.min(139,P.z))}
   resolveCity();P.h=((P.h+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
