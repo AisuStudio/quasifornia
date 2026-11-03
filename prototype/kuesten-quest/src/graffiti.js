@@ -57,19 +57,21 @@ function grafInitWorld(){if(!HUB.graf)return;GF.edges=null;GFSRV.known={};
   grafSync();clearInterval(GFSRV.timer);GFSRV.timer=setInterval(()=>{if(LV.id===0&&!document.hidden)grafSync()},60000)}
 function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
   if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im P-Mart (blaues Band, auf der Minikarte als P) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
-  GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];
+  GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];GF.polQueued=false;
   if(!grafLegal(p.id))toast('Verbotene Wand! Danach kommt die Polizei ('+(polNight()?'nachts nach 3 Minuten':'nach 1 Minute')+'). Strafe: 10 Scoops',3000)
   const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
   GF.col=(GF_COL.find(([c])=>GF.cans[c]>0)||GF_COL[0])[0];$('graf').hidden=false;grafPal();$('graf-done').focus({preventScroll:true})}
 function grafPal(){const pal=$('graf-pal');pal.innerHTML=GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;return `<button type="button" class="gpal${c===GF.col?' on':''}${ink>0?'':' empty'}" data-c="${c}" style="--c:${c}" title="${n}"><i style="width:${Math.round(Math.min(1,ink/GF_INK)*100)}%"></i></button>`}).join('');
   pal.querySelectorAll('button').forEach(b=>b.onclick=()=>{if((GF.cans[b.dataset.c]||0)<=0){toast('Diese Dose ist leer. Im Laden nachfüllen.',1200);return}GF.col=b.dataset.c;grafPal()})}
 function grafClose(save){if(!GF.open)return;const p=GF.cur;
-  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;if(GF.dabs>0){try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'));localStorage.setItem('kq-graf-t-'+p.id,String(Date.now()))}catch(e){}grafPush(p);if(!grafLegal(p.id))polAlert(p)}
+  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;if(GF.dabs>0){try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'));localStorage.setItem('kq-graf-t-'+p.id,String(Date.now()))}catch(e){}grafPush(p);}
     GF.total+=GF.dabs;grafSave();if(GF.dabs>0){SFX.win();toast('Graffiti gesprüht!',1300);if(GF.total>=400&&!SC.au.graffiti)auComplete('graffiti')}}
   else grafSave();
   GF.open=false;GFOPEN=false;$('graf').hidden=true;GF.cur=null}
 function grafPt(e){const cv=$('graf-cv'),r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*GF_W),Math.floor((e.clientY-r.top)/r.height*GF_H)]}
-function grafSpray(x,y){const cx=$('graf-cv').getContext('2d'),c=GF.col;if((GF.cans[c]||0)<=0)return;const R=GF.size;cx.fillStyle=c;
+function grafSpray(x,y){const cx=$('graf-cv').getContext('2d'),c=GF.col;if((GF.cans[c]||0)<=0)return;
+  /* Polizei: der Countdown startet 2 Sekunden nachdem man auf einer verbotenen Wand zu sprühen beginnt */
+  if(!GF.polQueued&&GF.cur&&!grafLegal(GF.cur.id)){GF.polQueued=true;const pn=GF.cur;setTimeout(()=>{if(typeof polAlert==='function')polAlert(pn)},2000)}const R=GF.size;cx.fillStyle=c;
   const n=Math.max(4,Math.round(R*R*1.9));for(let i=0;i<n;i++){const a=Math.random()*6.283,d=Math.sqrt(Math.random())*R,px=Math.round(x+Math.cos(a)*d),py=Math.round(y+Math.sin(a)*d);if(px<0||py<0||px>=GF_W||py>=GF_H)continue;cx.fillRect(px,py,1,1)}
   GF.cans[c]-=n*.07;GF.dabs+=n;if(GF.cans[c]<=0){GF.cans[c]=0;toast('Dose leer!',900);grafPal()}}
 (function(){const cv=$('graf-cv');if(!cv)return;

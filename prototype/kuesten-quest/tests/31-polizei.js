@@ -31,4 +31,11 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
     /* versteckt hinter dem Haus */c0.x=T.a[0];c0.z=T.a[1];c1.x=T.a[0];c1.z=T.a[1]-1;q.P.x=T.b[0];q.P.z=T.b[1];for(let i=0;i<60&&q.POL.state==='chase';i++){c0.x=T.a[0];c0.z=T.a[1];c1.x=T.a[0];c1.z=T.a[1]-1;q.POL.last={x:T.a[0],z:T.a[1]};q.step(.05);if(q.POL.hid>2.6)break}
     res.push({runde:round+1,verloren:q.POL.lost,zustand:q.POL.state});if(q.POL.state!=='chase')break}
   return {res}})));
+ /* Countdown startet 2 Sekunden nach dem ersten Sprühen auf einer verbotenen Wand */
+ await run(()=>{const q=__qa;q.DLG.open=false;q.POL.cops.forEach(()=>{});q.POL.state='idle';q.POL.cops=[];q.SC.n=50;q.grafBuy('#2de0d0')});
+ const F=await run(()=>{const q=__qa;for(let x=-120;x<120;x+=3)for(let z=-200;z<150;z+=3){q.P.x=x;q.P.z=z;const f=q.grafFacadeNear();if(f&&!f.door&&q.mpWalk(x,z))return {x,z,id:f.id}}});
+ await run(F=>{const q=__qa;q.P.x=F.x;q.P.z=F.z;q.GF.open=false;q.grafOpen(q.grafEnsurePanel(F.id))},F);
+ const vor=await run(()=>__qa.POL.state);
+ await run(()=>__qa.grafSpray(10,10));await p.waitForTimeout(800);const nach08=await run(()=>__qa.POL.state);await p.waitForTimeout(1600);
+ console.log('Countdown',JSON.stringify({vorSprühen:vor,nach08s:nach08,nach24s:await run(()=>({zustand:__qa.POL.state,sekunden:Math.round(__qa.POL.timer)}))}));
  await b.close();srv.close()})
