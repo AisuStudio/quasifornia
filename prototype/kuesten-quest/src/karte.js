@@ -323,14 +323,23 @@ function polNight(){return (typeof DAY!=='undefined'&&DAY.dn!==undefined?DAY.dn:
 function polAlert(panel){if(POL.state!=='idle')return;const night=polNight();POL.state='warn';POL.total=POL.timer=night?180:60;POL.spot={x:panel.ax,z:panel.az};
   toast('Achtung! Die Polizei wurde gerufen',2600);say('e','Jemand hat dein Graffiti gemeldet. Die Polizei ist in '+(night?'drei Minuten':'einer Minute')+' da. Verschwinde besser, sonst gibt es '+POL.FINE+' Scoops Strafe.',5.2);tone(520,.18,'square',.05);tone(390,.22,'square',.05,0,.2)}
 function polSpawnPoint(){if(HUB.policeStation)return {x:HUB.policeStation.x,z:HUB.policeStation.z};let best=null;MAPD.roads.forEach(r=>mpResample(r.pts,20).forEach(s=>{if(!(s.tx||s.tz)||mpAt(s.x,s.z)!==2||s.z>186)return;const d=Math.hypot(s.x-P.x,s.z-P.z);if(d>95&&d<170&&(!best||Math.abs(d-130)<Math.abs(best.d-130)))best={x:s.x,z:s.z,d}}));return best||{x:P.x+60,z:P.z}}
-function polMakeCop(x,z,col,i){const g=skater(x,cityGround(x,z),z,0,col,1.35);g.userData.noBake=true;W0.add(g);addOutlines(g,'actor');const mk=c=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),new THREE.MeshBasicMaterial({color:c}));m.position.set(0,2.55,0);g.add(m);return m},la=mk('#ff2a2a'),lb=mk('#2a6aff');la.position.x=-.22;lb.position.x=.22;
-  return {g,x,z,h:0,la,lb,i,sp:POL.SPEED+(i?.5:0)}}
+function polMakeCop(x,z,col,i){const g=skater(x,cityGround(x,z),z,0,col,1.35);g.userData.noBake=true;W0.add(g);
+  /* Rollschuhe statt Skateboard: Board ausblenden, vier Rollen unter jeden Fuß, Beine pendeln beim Laufen */
+  const grp=g.children.filter(c=>c.isGroup),board=grp[0],P0=grp[1],legs=P0?P0.children.filter(c=>c.isGroup&&c.children.length===2):[];if(board)board.visible=false;
+  const wm=new THREE.MeshStandardMaterial({color:'#f6efe6',roughness:.5}),pm=new THREE.MeshStandardMaterial({color:'#2a2a38',roughness:.6}),wheels=[],swing=[];
+  legs.forEach((th,li)=>{swing.push({th,base:th.rotation.x,ph:li?Math.PI:0});const sh=th.children.find(c=>c.isGroup),ft=sh&&sh.children.find(c=>c.isGroup);if(!ft)return;
+    const plate=new THREE.Mesh(BX,pm);plate.scale.set(.13,.03,.34);plate.position.set(0,-.14,.07);ft.add(plate);
+    [-.06,.06].forEach(dx=>[-.07,.2].forEach(dz=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.04,8),wm);w.rotation.z=Math.PI/2;w.position.set(dx,-.17,dz);ft.add(w);wheels.push(w)}))});
+  g.updateMatrixWorld(true);let low=1e9;wheels.forEach(w=>{const v=new V3();w.getWorldPosition(v);low=Math.min(low,v.y-.05*1.35)});const yadd=isFinite(low)?cityGround(x,z)-low:0;
+  addOutlines(g,'actor');const mk=c=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),new THREE.MeshBasicMaterial({color:c}));m.position.set(0,2.55,0);g.add(m);return m},la=mk('#ff2a2a'),lb=mk('#2a6aff');la.position.x=-.22;lb.position.x=.22;
+  return {g,x,z,h:0,la,lb,i,sp:POL.SPEED+(i?.5:0),swing,yadd,mv:0}}
 function polDispatch(){const sp=polSpawnPoint();POL.cops.forEach(c=>W0.remove(c.g));POL.cops=[polMakeCop(sp.x,sp.z,'#2a4a9a',0),polMakeCop(sp.x+2.4,sp.z+1.2,'#3a5ab8',1)];POL.state='patrol';POL.search=0;POL.t=0;toast('Die Polizei ist da!',1800);polText('POLIZEI IM EINSATZ','#4a7aff')}
-function polMove(c,tx,tz,sp,dt){const dx=tx-c.x,dz=tz-c.z,L=Math.hypot(dx,dz)||1,st=Math.min(L,sp*dt),a0=Math.atan2(dz,dx);
+function polMove(c,tx,tz,sp,dt){const dx=tx-c.x,dz=tz-c.z,L=Math.hypot(dx,dz)||1,st=Math.min(L,sp*dt),a0=Math.atan2(dz,dx);c.moved=(c.moved||0)+st;
   /* geradeaus, sonst um Hindernisse herum: Ausweichwinkel probieren, die zuletzt gewählte Seite bevorzugen */
   const side=c.side||1;for(const off of [0,.5,-.5,1.0,-1.0,1.6,-1.6,2.3,-2.3]){const ang=a0+off*side,nx=c.x+Math.cos(ang)*st,nz=c.z+Math.sin(ang)*st;if(mpWalk(nx,nz)&&mpWalk(c.x+Math.cos(ang)*(st+.8),c.z+Math.sin(ang)*(st+.8))){c.x=nx;c.z=nz;c.h=ang;if(off)c.side=off>0?1:-1;return L}}
   c.side=-side;return L}
-function polDraw(dt){const flash=Math.floor(POL.t*4)%2===0,up=!G.under&&LV.id===0;POL.cops.forEach(c=>{const g=c.g;g.visible=up;g.position.set(c.x,cityGround(c.x,c.z),c.z);g.rotation.y=Math.PI/2-c.h;la_lb(c,flash)})}
+function polDraw(dt){const flash=Math.floor(POL.t*4)%2===0,up=!G.under&&LV.id===0;POL.cops.forEach(c=>{const g=c.g;g.visible=up;g.position.set(c.x,cityGround(c.x,c.z)+(c.yadd||0),c.z);g.rotation.y=Math.PI/2-c.h;la_lb(c,flash);
+  const mv=c.moved||0;c.moved=0;c.mv+=mv*.9;(c.swing||[]).forEach(sw=>{sw.th.rotation.x=sw.base+Math.sin(c.mv*1.1+sw.ph)*Math.min(.55,mv/.4)})})}
 function la_lb(c,f){c.la.visible=f;c.lb.visible=!f}
 function polEnd(msg,col){POL.cops.forEach(c=>{W0.remove(c.g)});POL.cops=[];POL.state='idle';POL.cin=null;polText('');if(msg)toast(msg,2600)}
 function polCatch(){POL.state='caught';const c0=POL.cops[0],c1=POL.cops[1]||c0;P.speed=0;K.up=K.down=K.left=K.right=0;
@@ -341,18 +350,26 @@ function polCatch(){POL.state='caught';const c0=POL.cops[0],c1=POL.cops[1]||c0;P
 function polCin(step){const c=POL.cops[step%2]||POL.cops[0];const fx=Math.cos(c.h),fz=Math.sin(c.h);
   POL.cin.pos=new V3(c.x+fx*1.25,cityGround(c.x,c.z)+3.05,c.z+fz*1.25);POL.cin.look=new V3(c.x,cityGround(c.x,c.z)+3.0,c.z);POL.cin.step=step;POL.cin.t=0}
 function polRelease(){const lost=Math.min(POL.FINE,SC.n|0);if(lost>0)scAdd(-lost,'Strafe');polEnd('−'+lost+' Scoops')}
+/* Sichtlinie: nur Häuser, Autos und Statuen (Maske 5) blockieren den Blick */
+function polLos(ax,az,bx,bz){const n=Math.ceil(Math.hypot(bx-ax,bz-az));for(let i=1;i<n;i++){const t=i/n;if(mpAt(ax+(bx-ax)*t,az+(bz-az)*t)===5)return false}return true}
+function polSees(){return POL.cops.some(c=>Math.hypot(c.x-P.x,c.z-P.z)<POL.SIGHT&&polLos(c.x,c.z,P.x,P.z))}
 function polStep(dt){if(!POL.hud&&POL.state==='idle')return;POL.t+=dt;const live=LV.id===0&&!G.under;
   if(POL.state==='warn'){if(!live)return;POL.timer-=dt;const t=Math.max(0,Math.ceil(POL.timer));polText('POLIZEI IN '+Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),POL.timer<15?'#ff2a2a':'#ffb020');if(POL.timer<=0)polDispatch();return}
   if(!POL.cops.length)return;polDraw(dt);if(!live)return;
   if(POL.state==='patrol'||POL.state==='chase'){if(Math.floor(POL.t*2)!==Math.floor((POL.t-dt)*2))tone(Math.floor(POL.t*2)%2?640:860,.22,'square',.018)}
-  const near=POL.cops.reduce((m,c)=>Math.min(m,Math.hypot(c.x-P.x,c.z-P.z)),1e9);
+  const near=POL.cops.reduce((m,c)=>Math.min(m,Math.hypot(c.x-P.x,c.z-P.z)),1e9),seen=polSees();
   if(POL.state==='patrol'){POL.cops.forEach((c,i)=>{const a=POL.t*.5+i*3.1,tx=POL.spot.x+Math.cos(a)*(POL.search>3?10:0),tz=POL.spot.z+Math.sin(a)*(POL.search>3?10:0),L=polMove(c,tx,tz,c.sp*.85,dt);if(L<2.5)POL.search+=dt/POL.cops.length});
-    if(near<POL.SIGHT&&G.phase==='play'){POL.state='chase';POL.chaseT=0;POL.loseT=0;toast('Polizei! Lauf!',1600);polText('VERFOLGUNG!','#ff2a2a');tone(900,.25,'square',.06)}
+    if(seen&&G.phase==='play'){POL.state='chase';POL.chaseT=0;POL.loseT=0;POL.lost=0;POL.hid=0;POL.lostFlag=false;POL.last={x:P.x,z:P.z};toast('Polizei! Lauf!',1600);polText('VERFOLGUNG!','#ff2a2a');tone(900,.25,'square',.06)}
     else if(POL.search>20){polEnd('Glück gehabt! Die Polizei zieht ab.')}
     return}
-  if(POL.state==='chase'){POL.chaseT+=dt;POL.cops.forEach(c=>polMove(c,P.x,P.z,c.sp+Math.min(2.5,POL.chaseT*.15),dt));
+  if(POL.state==='chase'){POL.chaseT+=dt;
+    /* Sichtkontakt: aus dem Blick geraten (mindestens 2,5 s) zählt als "verloren", dreimal verloren = Polizei gibt auf; wer sich ruhig versteckt, wird auch ohne Gas in Ruhe gelassen */
+    if(seen){POL.hid=0;POL.lostFlag=false;POL.last={x:P.x,z:P.z}}else{POL.hid+=dt;if(POL.hid>=2.5&&!POL.lostFlag){POL.lostFlag=true;POL.lost++;if(POL.lost<3)toast('Aus dem Sichtfeld! ('+POL.lost+'/3)',1300)}}
+    polText(seen?'VERFOLGUNG!':'AUS DEM SICHTFELD '+POL.lost+'/3',seen?'#ff2a2a':'#ffb020');
+    const tx=seen?P.x:POL.last.x,tz=seen?P.z:POL.last.z;POL.cops.forEach(c=>{if(Math.hypot(c.x-tx,c.z-tz)>1.8)polMove(c,tx,tz,c.sp+Math.min(2.5,POL.chaseT*.15),dt)});
     if(near<2.4&&G.phase==='play')return polCatch();
-    POL.loseT=near>75?POL.loseT+dt:0;if(POL.loseT>4)polEnd('Glück gehabt! Du hast sie abgehängt.');else if(POL.chaseT>70)polEnd('Glück gehabt! Die Polizei gibt auf.');return}
+    POL.loseT=near>75?POL.loseT+dt:0;
+    if(POL.lost>=3||POL.hid>14||POL.loseT>4)polEnd('Glück gehabt! Du hast sie abgehängt.');else if(POL.chaseT>70)polEnd('Glück gehabt! Die Polizei gibt auf.');return}
   if(POL.state==='caught'&&POL.cin){POL.cin.t+=dt;if(POL.cin.t>1.7&&POL.cin.step<3)polCin(POL.cin.step+1)}}
 /* ---------- Tag und Nacht: ein Tag dauert 30 Minuten, Start am Mittag (Pacific-Sim-Look) ---------- */
 const DAY={len:1800,t:0,on:true,grain:null,K:null,last:-1};

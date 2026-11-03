@@ -14,11 +14,21 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  /* Glück gehabt: Spieler weit weg, Polizei sucht und zieht ab */
  console.log('Suche',JSON.stringify(await run(()=>{const q=__qa;q.POL.spot={x:q.P.x+300,z:q.P.z};q.POL.search=0;for(let i=0;i<40;i++)q.step(.05);const mid=q.POL.state;q.POL.search=21;for(let i=0;i<5;i++)q.step(.05);return {waehrend:mid,danach:q.POL.state,polizisten:q.POL.cops.length}})));
  /* Verfolgung im Sichtradius, dann Festnahme */
- console.log('Verfolgung',JSON.stringify(await run(()=>{const q=__qa;q.POL.state='idle';q.polAlert({ax:q.P.x,az:q.P.z});q.POL.timer=.1;for(let i=0;i<10;i++)q.step(.05);const c=q.POL.cops[0];let ok=false;for(let a=0;a<24&&!ok;a++){const x=c.x+Math.cos(a/24*6.283)*25,z=c.z+Math.sin(a/24*6.283)*25;if(q.mpWalk(x,z)){q.P.x=x;q.P.z=z;ok=true}}q.P.speed=0;for(let i=0;i<4;i++)q.step(.05);const st1=q.POL.state;
+ console.log('Verfolgung',JSON.stringify(await run(()=>{const q=__qa;q.POL.state='idle';q.polAlert({ax:q.P.x,az:q.P.z});q.POL.timer=.1;for(let i=0;i<10;i++)q.step(.05);const c=q.POL.cops[0];let ok=false;for(let a=0;a<24&&!ok;a++){const x=c.x+Math.cos(a/24*6.283)*25,z=c.z+Math.sin(a/24*6.283)*25;if(q.mpWalk(x,z)&&q.polLos(c.x,c.z,x,z)){q.P.x=x;q.P.z=z;ok=true}}q.P.speed=0;for(let i=0;i<4;i++)q.step(.05);const st1=q.POL.state;
   for(let i=0;i<400&&q.POL.state==='chase';i++){q.P.speed=0;q.step(.05)}
   return {sichtradius:st1,ende:q.POL.state,kamera:!!(q.POL.cin&&q.POL.cin.pos),dialog:q.DLG.open}})));
  console.log('Strafe',JSON.stringify(await run(()=>{const q=__qa,vor=q.SC.n;if(q.DLG.done)q.DLG.done();return {vor,nach:q.SC.n,zustand:q.POL.state,polizisten:q.POL.cops.length}})));
  /* Abgehängt */
- console.log('Abgehängt',JSON.stringify(await run(()=>{const q=__qa;q.DLG.open=false;q.POL.state='idle';q.polAlert({ax:q.P.x,az:q.P.z});q.POL.timer=.1;for(let i=0;i<10;i++)q.step(.05);const c=q.POL.cops[0];let ok=false;for(let a=0;a<24&&!ok;a++){const x=c.x+Math.cos(a/24*6.283)*30,z=c.z+Math.sin(a/24*6.283)*30;if(q.mpWalk(x,z)){q.P.x=x;q.P.z=z;ok=true}}for(let i=0;i<4;i++)q.step(.05);const st=q.POL.state;
+ console.log('Abgehängt',JSON.stringify(await run(()=>{const q=__qa;q.DLG.open=false;q.POL.state='idle';q.polAlert({ax:q.P.x,az:q.P.z});q.POL.timer=.1;for(let i=0;i<10;i++)q.step(.05);const c=q.POL.cops[0];let ok=false;for(let a=0;a<24&&!ok;a++){const x=c.x+Math.cos(a/24*6.283)*30,z=c.z+Math.sin(a/24*6.283)*30;if(q.mpWalk(x,z)&&q.polLos(c.x,c.z,x,z)){q.P.x=x;q.P.z=z;ok=true}}for(let i=0;i<4;i++)q.step(.05);const st=q.POL.state;
   for(let i=0;i<200&&q.POL.state==='chase';i++){q.P.x=q.POL.cops[0].x+90;q.P.z=q.POL.cops[0].z;q.step(.05)}return {verfolgung:st,ende:q.POL.state}})));
+ /* Sichtlinie: Haus zwischen Polizei und Spieler, dreimal aus dem Blick = Polizei gibt auf */
+ console.log('Sichtlinie',JSON.stringify(await run(()=>{const q=__qa;q.DLG.open=false;q.POL.state='idle';q.POL.cops.forEach(c=>q.POL.cops=[]);q.polAlert({ax:q.P.x,az:q.P.z});q.POL.timer=.1;for(let i=0;i<10;i++)q.step(.05);
+  let T=null;for(let x=-120;x<120&&!T;x+=2)for(let z=-200;z<150&&!T;z+=2){if(q.mpAt(x,z)!==5)continue;for(let w=4;w<=30;w++){if(q.mpAt(x+w,z)===5)continue;if(q.mpWalk(x-2,z)&&q.mpWalk(x+w+2,z)&&!q.mpWalk(x+w/2,z)){T={a:[x-3,z],b:[x+w+3,z]};break}}}
+  if(!T)return {fehler:'kein Haus gefunden'};
+  const seeing={a:q.mpWalk(T.a[0],T.a[1]),b:q.mpWalk(T.b[0],T.b[1])};
+  const c0=q.POL.cops[0],c1=q.POL.cops[1];q.POL.state='chase';q.POL.chaseT=0;q.POL.lost=0;q.POL.hid=0;q.POL.lostFlag=false;q.POL.last={x:T.a[0],z:T.a[1]};
+  const res=[];for(let round=0;round<3;round++){/* sichtbar */c0.x=T.a[0];c0.z=T.a[1];c1.x=T.a[0];c1.z=T.a[1]-1;let vp=null;for(let a2=0;a2<24&&!vp;a2++){const vx=T.a[0]+Math.cos(a2/24*6.283)*8,vz=T.a[1]+Math.sin(a2/24*6.283)*8;if(q.mpWalk(vx,vz)&&q.polLos(T.a[0],T.a[1],vx,vz))vp=[vx,vz]}q.P.x=vp[0];q.P.z=vp[1];q.P.speed=0;q.step(.05);
+    /* versteckt hinter dem Haus */c0.x=T.a[0];c0.z=T.a[1];c1.x=T.a[0];c1.z=T.a[1]-1;q.P.x=T.b[0];q.P.z=T.b[1];for(let i=0;i<60&&q.POL.state==='chase';i++){c0.x=T.a[0];c0.z=T.a[1];c1.x=T.a[0];c1.z=T.a[1]-1;q.POL.last={x:T.a[0],z:T.a[1]};q.step(.05);if(q.POL.hid>2.6)break}
+    res.push({runde:round+1,verloren:q.POL.lost,zustand:q.POL.state});if(q.POL.state!=='chase')break}
+  return {res}})));
  await b.close();srv.close()})
