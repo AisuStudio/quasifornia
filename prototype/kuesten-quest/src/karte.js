@@ -586,7 +586,7 @@ function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayIn
   /* Leuchtturm: oben sichtbar, unten steht an derselben Stelle der Turm Tarxarox */
   if(HUB.lighthouse){HUB.lighthouse.g.visible=!G.under;HUB.lighthouse.beam.rotation.y+=dt*1.1}
   const show=!G.under&&LV.id===0;DAY.grain&&DAY.grain.forEach(e=>{const d=show?'':'none';if(e.style.display!==d)e.style.display=d});
-  if(!show)return;DAY.t=(DAY.t+dt)%DAY.len;const p=DAY.t/DAY.len,K=DAY.K;let i=0;while(i<K.length-2&&p>=K[i+1][0])i++;
+  if(!show)return;DAY.t=(DAY.t+dt)%DAY.len;if(typeof MULTI!=='undefined'&&MULTI.on&&MULTI.synced)DAY.t=((MULTI.now()/1000)%DAY.len+DAY.len)%DAY.len;/* im Raum läuft die Uhr des Servers */const p=DAY.t/DAY.len,K=DAY.K;let i=0;while(i<K.length-2&&p>=K[i+1][0])i++;
   const a=K[i],b=K[i+1],f=Math.max(0,Math.min(1,(p-a[0])/(b[0]-a[0]))),e=f*f*(3-2*f),T=DAY.tmp,L=(x,y)=>x+(y-x)*e;
   sky.material.uniforms.a.value.copy(a[1]).lerp(b[1],e);sky.material.uniforms.b.value.copy(a[2]).lerp(b[2],e);
   hemi.color.copy(a[3]).lerp(b[3],e);hemi.groundColor.copy(a[4]).lerp(b[4],e);hemi.intensity=L(a[5],b[5]);
@@ -782,6 +782,7 @@ function mpMini(dt){const mm=HUB.mapn&&HUB.mm2;if(!mm)return;HUB.mmT+=dt;if(HUB.
   const dot=(X,Z,col,txt,rad)=>{const [x,y]=pp(X,Z);if(!inside(x,y))return;g.fillStyle=col;g.strokeStyle='#1a1626';g.lineWidth=1.5;g.beginPath();g.arc(x,y,rad||5,0,7);g.fill();g.stroke();if(txt){g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText(txt,x,y+3)}};
   if(!G.under){(HUB.shops||[]).forEach(s=>{const [x,y]=pp(s.x,s.z);if(!inside(x,y))return;g.fillStyle='#2b5fcf';g.strokeStyle='#f4f7ff';g.lineWidth=1.5;g.fillRect(x-5,y-5,10,10);g.strokeRect(x-5,y-5,10,10);g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText('P',x,y+3)});
     HUB.portals.forEach(p=>{if(HUB.found.has(p.world))dot(p.x,p.z,p.col,p.world,5)});if(HUB.gate)dot(HUB.gate.x,HUB.gate.z,'#ffe066','K',6);(HUB.courts||[]).forEach(c=>dot(c.x,c.z,c.col,c.txt,6));(HUB.marks||[]).forEach(m=>dot(m.x,m.z,m.col,m.txt,6));
+    if(typeof MULTI!=='undefined')MULTI.peers.forEach(p=>{if(p.has&&p.g&&p.g.visible)dot(p.x,p.z,p.skin&&p.skin[0]==='#'?p.skin:'#e8f0ff','',4)});
     HUB.items.forEach(it=>{if(it.got){const [x,y]=pp(it.x,it.z);if(!inside(x,y))return;g.fillStyle=it.def.col;g.strokeStyle='#1a1626';g.lineWidth=1;g.beginPath();g.moveTo(x,y-4);g.lineTo(x+4,y);g.lineTo(x,y+4);g.lineTo(x-4,y);g.closePath();g.fill();g.stroke()}})}
   else if(HUB.uw){const U=HUB.uw;dot(U.bx,U.bz,'#2de0d0','L',6);
     if(U.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const pulse=.5+.5*Math.sin(G.t*4),[tx,ty]=pp(U.tower.x,U.tower.z);let X=tx,Y=ty;if(!inside(X,Y)){const dx=tx-75,dy=ty-75,k=66/Math.max(Math.abs(dx),Math.abs(dy));X=75+dx*k;Y=75+dy*k}

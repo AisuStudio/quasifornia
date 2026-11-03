@@ -1,3 +1,4 @@
+export {Room} from './room.js';
 // Passwortschutz für die ganze Seite (inklusive Song). Läuft in Cloudflare vor den statischen Dateien.
 // Das Passwort steht NICHT im Code: Es liegt als Secret "SITE_PASSWORD" in Cloudflare (Worker > Settings > Variables and Secrets).
 // Ist kein Passwort gesetzt, bleibt die Seite gesperrt (fail closed). Benutzername ist egal.
@@ -13,6 +14,14 @@ export default{
     if(given===null||!(await same(given,pw)))
       return new Response('Passwort erforderlich.',{status:401,headers:{'www-authenticate':'Basic realm="Port 36 (Test)", charset="UTF-8"','content-type':'text/plain; charset=utf-8',...NOSTORE}});
     const url=new URL(request.url);
+    /* Freundes-Raum (WebSocket, bis zu 5 Spieler): /api/room/<name> */
+    if(url.pathname.startsWith('/api/room/')){
+      const name=decodeURIComponent(url.pathname.slice(10));
+      if(!/^[a-z0-9-]{1,32}$/.test(name))return new Response('Ungültiger Raumname',{status:400,headers:NOSTORE});
+      if(request.headers.get('upgrade')!=='websocket')return new Response('WebSocket nötig',{status:426,headers:NOSTORE});
+      const org=request.headers.get('origin');if(org&&new URL(org).host!==url.host)return new Response('Falsche Herkunft',{status:403,headers:NOSTORE});
+      if(!env.ROOM)return new Response('Räume nicht eingerichtet',{status:503,headers:NOSTORE});
+      return env.ROOM.get(env.ROOM.idFromName(name)).fetch(request)}
     /* Graffiti-Speicher: Bilder bleiben 48 Stunden auf dem Server (Durable Object), Liste = nur Zeitstempel, Bild einzeln */
     if(url.pathname==='/api/graffiti'||url.pathname.startsWith('/api/graffiti/')){
       if(!env.GRAF)return new Response('Speicher nicht eingerichtet',{status:503,headers:NOSTORE});

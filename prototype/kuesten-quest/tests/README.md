@@ -56,3 +56,5 @@ Dreiecke pro Frame inklusive Schattendurchgang:
 | 5 Atoll | 0,18 Mio. | 159 |
 
 Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrisslinien (jedes Objekt wird für den Rand ein zweites Mal gezeichnet), dazu kommt der Schattendurchgang. Ladezeit bis spielbereit im Headless-Test: etwa 12 bis 16 Sekunden.
+
+**Mehrspieler-Tests (35, 36):** brauchen einen lokalen Worker. Vorher im Ordner `quasifornia`: `npx wrangler dev --local --port 8790 --var SITE_PASSWORD:testpw`. Läuft er nicht, melden sie "übersprungen" und gelten als bestanden. 35 prüft den Raum-Server mit echten WebSockets (Beitritt, Positionen, 5 Plätze, Verlassen, fremde Herkunft), 36 zwei Browser gegen den Raum (Skater sichtbar, Fahrt, Name, Uhr, Unterwelt, Namensfeld).
