@@ -5,3 +5,6 @@ sound/*.m4a
 node_modules
 prototype/kuesten-quest/dist/dev.html
 prototype/kuesten-quest/*.png
+
+# lokaler Cloudflare-Worker (npx wrangler dev)
+.wrangler/
