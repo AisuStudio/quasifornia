@@ -220,12 +220,37 @@ Das ganze Spiel bringt Kindern Schritt für Schritt Ethical Hacking (White Hat) 
 - **Offen:** Welche Bezirke es gibt und welches Prinzip wohin gehört; wer der Bösewicht ist; fachliche Prüfung der Rätsel.
 
 ### Aisukurimu: Aisu als Hauptgeschichte (Idee vom Nutzer, 2026-11-03, Konzept)
-Aisu ist die Eistüten-Figur aus dem Comic "Aisukurimu" des Nutzers (aisukurimu.com, 2016). Die kleine Eistüte kam bei vielen gut an. Vorschlag: Aisu wird die Hauptgeschichte des Spiels.
-- **Aus den Comics:** Aisu (männlich, naiv, begeistert, "amazaking!") wird halb geschmolzen in einen Kühlschrank gebracht und dort von Mirku (Milchtüte, fürsorglich) aufgenommen. Eine alte Flasche von 1897 aus dem Keller ist der Weise ("I've seen many come and go"). El-Mano ist ein Wissenschaftler (Glatze, Bart, Sternbrille), der den Kühlschrank aus seinem Labor überwacht. Sein Scanner findet bei Aisu "no artificial consciousness", sondern "materialised soul, emotion waves": Aisu ist nicht von dieser Welt. Seine Heimat: "vanilla and chocolate, a honey atmosphere and a blueberry moon". Rufus ist ein Roboter-Spion mit Propellermütze. El-Mano will Aisus Geheimnis lüften, "before the others". Der "Tower of Power" ist ein Leuchtturm.
-- **Parallelen zum Spiel:** El-Manos Labor = Labor bzw. Atoll Lab & Bunker; Tower of Power = Leuchtturm/Tarxarox; Aisus Heimatplanet = Welt 2, Eis-Galaxie (Boss Galaxzilla); Rufus und "artificial consciousness" = Hacking-Thema (Überwachung, Spyware, KI oder echt?); der überwachte Kühlschrank = ein geschlossenes System durchschauen. Schmelzen statt Sterben passt zu Scoops und Eis-Fressen.
-- **Story-Vorschlag:** Aisu strandet in Port Lupo. El-Mano und "die anderen" wollen sein Geheimnis. Der Spieler hilft Aisu, das System zu durchschauen und nach Hause zu kommen. Jeder Bezirk ist ein Schritt, die Eis-Galaxie ist das Finale. Aisu ist Begleiter und Maskottchen (Neuling wie der Spieler, natürliches Tutorial), Mirku Helferin, die Flasche von 1897 ein zweiter Weiser neben Serafin (Hacking-Mentor) oder mit ihm zusammengelegt.
-- **Kindgerecht anpassen:** Carl und die Dosen (betrunken, Zigaretten) spielen keine Rolle (Entscheidung Nutzer). Auch Sätze wie "I wonder how he tastes" fallen weg.
-- **Offen:** Ist El-Mano Bösewicht, Gegenspieler mit guten Gründen oder Verbündeter? Wer sind "die anderen"? Welche Rolle spielt Rufus genau? Weitere Folgen (#1 bis #12, ab #18) sichten; aisukurimu.com ist in der Cloud-Session nicht erreichbar, Comics bisher nur als hochgeladene Bilder gesehen.
+Aisu ist die Eistüten-Figur aus dem Comic "Aisukurimu" des Nutzers (aisukurimu.com, 2015/16). Die kleine Eistüte kam bei vielen gut an. Vorschlag: Aisu wird die Hauptgeschichte des Spiels.
+- **Figuren aus den Comics:**
+  - **Aisu:** männlich, naiv, begeistert ("amazaking!"), stammt vom Planeten **Vanilla IV** ("vanilla and chocolate, a honey atmosphere and a blueberry moon"). Kommt halb geschmolzen in einen Kühlschrank. Ein Scanner findet bei ihm "no artificial consciousness", sondern "materialised soul, emotion waves": Er ist nicht von dieser Welt. (Passt zu "Port Vanilla" auf der Namensliste.)
+  - **Mirku:** Milchtüte, fürsorglich, nimmt Aisu auf und erklärt ihm die Welt.
+  - **Flasche von 1897:** alter Weiser aus dem Keller ("I've seen many come and go").
+  - **El-Mano:** einfach irgendein Typ mit Kühlschrank, die Hand von außen. Die Bewohner halten ihn für einen Gott; er weiß nicht, dass sie leben. Gegenseitige Unwissenheit über das System.
+  - **Der Wissenschaftler mit der Sternbrille** (Folgen #13 bis #16, Name offen): gehört zur Seed-Seite (die Guten). Untersucht Aisu, um das Lebendige zu verstehen, "before the others". Sein Roboter-Spion **Rufus** (Propellermütze) beobachtet die Kühlschrank-Bewohner.
+  - **Carl und die Dosen** (betrunken, Zigaretten) spielen keine Rolle (Entscheidung Nutzer). Auch Sätze wie "I wonder how he tastes" fallen weg.
+- **Gegenspieler (nicht aus Aisukurimu, aus der ersten Quasifornia-Story):** ein Thanos-artiger Machtmensch, der Daten und Überwachung kontrolliert und über Transhumanismus auf der Hyper-Ebene im Cyberspace zur Göttlichkeit will. Er und seine Leute sind "die anderen". Seiner Technik fehlt echtes Bewusstsein, deshalb ist Aisus Seele für ihn interessant. Wende: Sein Durchbruch schießt übers Ziel hinaus und führt ihn zum lebendigen Ursprung statt zur Göttlichkeit. Fürs Kinderspiel eher Umkehr als Untergang. Archetyp, keine reale Person (kein Name, kein Aussehen, kein Firmenbezug). Offen: Name; ob er und der Wissenschaftler sich kennen (zum Beispiel frühere Kollegen, einer Seed-Seite, einer Kontroll-Seite); wo er landet (Vanilla IV?).
+- **Zwei Leuchttürme:** (1) Leuchtturm/Tarxarox an der Westküste von Port Lupo (oben klassischer Leuchtturm, unten Tarxarox, siehe Karte). (2) **Roter Sand** (Vorbild: Leuchtturm Roter Sand vor Bremerhaven, rot-weiß gestreift): einsam mitten im Meer, abgeschieden, noch nicht auf der Karte. Kommt schon in den Aisukurimu-Illustrationen vor (Aisu im Sturm vor dem Leuchtturm; "Tower of Power").
+- **Parallelen zum Spiel:** Labor bzw. Atoll Lab & Bunker; Aisus Heimat = Eis-Galaxie (Welt 2, Boss Galaxzilla); Rufus und "artificial consciousness" = Hacking-Thema (Überwachung, KI oder echt?); Schmelzen statt Sterben passt zu Scoops und Eis-Fressen.
+- **Story-Vorschlag:** Aisu strandet (im Sturm bei Roter Sand?) und landet in Port Lupo. Der Gegenspieler und seine Leute wollen sein Geheimnis. Der Spieler hilft Aisu mit der Seed-Seite, das System zu durchschauen und nach Hause zu kommen. Jeder Bezirk ist ein Schritt, Vanilla IV bzw. die Eis-Galaxie ist das Finale. Aisu ist Begleiter und Maskottchen (Neuling wie der Spieler, natürliches Tutorial), Mirku Helferin, die Flasche von 1897 ein zweiter Weiser neben Serafin (Hacking-Mentor) oder mit ihm zusammengelegt. Kernaussage für Kinder: Technik ist mächtig, aber das Lebendige lässt sich nicht kopieren.
+- **Offen:** weitere Folgen sichten (aisukurimu.com ist in der Cloud-Session gesperrt; bisher nur hochgeladene Bilder); Hologramm-Figur mit Klaviertasten-Zähnen aus einer Illustration (wer ist das?).
+
+### Motive aus einem Romanentwurf des Nutzers (2026-11-03, nur Motive, keine Figuren)
+Der Nutzer hatte einen Romanentwurf (Erwachsenen-Satire), den er vermutlich nicht weiterverfolgt. Nicht übernehmen: Handlung, Figuren, derbe Kosmologie, Gewalt. Übernehmbar als Motive (zweite Ebene für Erwachsene nach Simpsons-Art nur über Anspielungen, nicht über Handlung):
+- **Überwachungsnetz einer Firma** (im Entwurf "Cupro-Light", ein allsehendes Licht-Netz): Werkzeug des Gegenspielers. Hacking-Lernziel: Überwachung erkennen, offline gehen.
+- **Lebendes Netz gegen totes Netz:** Pflanzen, Gumper, Myzel tragen geheime Nachrichten; Kabel und Code-Regen (Unterwelt) sind das tote Netz.
+- **Ruf und Antwort als Melodie:** Musik als Botschaft (Musik-Player der Figur).
+- **Versteckte Knoten / Samenverstecke:** über alle Bezirke verstreute Sammelobjekte, die zusammen etwas wiederherstellen.
+- **Crew statt Pyramide:** Multiplayer-Ziel, gemeinsam etwas Zerbrochenes wiederherstellen.
+- **Arche:** eine Yacht im Marina als Zuflucht.
+- **Spurensuche (OSINT) und Schreibstil erkennen:** Lernmodule, mit dem Dreh "eigene Privatsphäre schützen", nicht andere enttarnen. Zum Beispiel erkennen, wer einen Graffiti-Tag geschrieben hat.
+- **Gebaut statt geboren:** Kopien und Uploads gegen echtes Bewusstsein (Aisu).
+- **Easter Eggs für Erwachsene:** ein Buch "Atlas Shards" im Regal, ein Firmenschild des Überwachungsnetzes, ein Pfandhaus mit seltsamem Ring.
+
+### Art-Brush-Wellen (Technik des Nutzers aus den Aisukurimu-Illustrationen, 2026-11-03, Idee)
+In Illustrator hat der Nutzer Motive (Schuppen, Dosen, Rippen) mit Art Brushes entlang von Pfaden gebogen und so amorphe Wellenbewegungen erzeugt.
+- **Im Spiel:** dasselbe Prinzip in Three.js. Ein Motiv wird viele Male entlang einer Kurve gesetzt und an der Kurvenrichtung ausgerichtet (InstancedMesh, handytauglich). Verschiebt man die Motive mit der Zeit entlang der Kurve, rollen die Wellen.
+- **Ablauf:** In Affinity zeichnet der Nutzer nur den Pfad (zum Beispiel Ebene "Welle"), der Parser liest ihn, das Spiel setzt das Motiv darauf.
+- **Einsatz:** Sturm-Meer um Roter Sand, Zwischenszene "Aisus Ankunft im Sturm", Motiv-Wellen in der Unterwelt (Kabel, Kürbisse).
 
 ### Unterwelt: Gegner und Aufträge (im Prototyp gebaut, 2026-11-01)
 Gegner und Sammelobjekte in der Spiegelstadt, nach dem Vorbild von Ghosts 'n Goblins, aber kindgerecht.
