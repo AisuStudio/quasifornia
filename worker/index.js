@@ -1,4 +1,5 @@
 export {Room} from './room.js';
+export {Stats} from './stats.js';
 // Passwortschutz für die ganze Seite (inklusive Song). Läuft in Cloudflare vor den statischen Dateien.
 // Das Passwort steht NICHT im Code: Es liegt als Secret "SITE_PASSWORD" in Cloudflare (Worker > Settings > Variables and Secrets).
 // Ist kein Passwort gesetzt, bleibt die Seite gesperrt (fail closed). Benutzername ist egal.
@@ -8,12 +9,27 @@ function creds(h){if(!h||!h.startsWith('Basic '))return null;try{const bin=atob(
 const NOSTORE={'cache-control':'private, no-store','x-robots-tag':'noindex, nofollow'};
 export default{
   async fetch(request,env){
+    const url0=new URL(request.url);
+    /* Auswertung ansehen (Seite /stats und die Zahlen): eigenes Passwort STATS_PASSWORD, ersatzweise das Seitenpasswort.
+       Wird vor der Seitenprüfung behandelt, weil ein Browser pro Anfrage nur ein Passwort schickt. */
+    if(url0.pathname==='/stats'||url0.pathname==='/stats/'||url0.pathname==='/api/stats/summary'||url0.pathname==='/api/stats/reset'){
+      const spw=env.STATS_PASSWORD||env.SITE_PASSWORD;
+      if(!spw)return new Response('Diese Seite ist gesperrt. Das Passwort wurde noch nicht eingerichtet.',{status:503,headers:{'content-type':'text/plain; charset=utf-8',...NOSTORE}});
+      const sg=creds(request.headers.get('authorization'));
+      if(sg===null||!(await same(sg,spw)))return new Response('Passwort für die Auswertung erforderlich.',{status:401,headers:{'www-authenticate':'Basic realm="Port 36 Auswertung", charset="UTF-8"','content-type':'text/plain; charset=utf-8',...NOSTORE}});
+      if(url0.pathname.startsWith('/stats')){const r=await env.ASSETS.fetch(new Request(new URL('/stats',url0),request));const o=new Response(r.body,r);o.headers.set('cache-control','private, no-store');o.headers.set('x-robots-tag','noindex, nofollow');return o}
+      if(!env.STATS)return new Response('Auswertung nicht eingerichtet',{status:503,headers:NOSTORE});
+      if(url0.pathname==='/api/stats/reset'&&request.method!=='POST')return new Response('?',{status:405,headers:NOSTORE});
+      if(url0.pathname==='/api/stats/summary'&&request.method!=='GET')return new Response('?',{status:405,headers:NOSTORE});
+      return env.STATS.get(env.STATS.idFromName('main')).fetch(request)}
     const pw=env.SITE_PASSWORD;
     if(!pw)return new Response('Diese Seite ist gesperrt. Das Passwort wurde noch nicht eingerichtet.',{status:503,headers:{'content-type':'text/plain; charset=utf-8',...NOSTORE}});
     const given=creds(request.headers.get('authorization'));
     if(given===null||!(await same(given,pw)))
       return new Response('Passwort erforderlich.',{status:401,headers:{'www-authenticate':'Basic realm="Port 36 (Test)", charset="UTF-8"','content-type':'text/plain; charset=utf-8',...NOSTORE}});
     const url=new URL(request.url);
+    /* Einsenden der Spiele: normales Seitenpasswort */
+    if(url.pathname==='/api/stats'&&request.method==='POST'){if(!env.STATS)return new Response('Auswertung nicht eingerichtet',{status:503,headers:NOSTORE});return env.STATS.get(env.STATS.idFromName('main')).fetch(request)}
     /* Freundes-Raum (WebSocket, bis zu 5 Spieler): /api/room/<name> */
     if(url.pathname.startsWith('/api/room/')){
       const name=decodeURIComponent(url.pathname.slice(10));

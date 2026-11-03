@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Auswertung Port 36</title>
+<style>
+/* Farben als Rollen: hell und dunkel getrennt gewählt (Palette: blau, orange; Status für Fehler) */
+:root{
+  color-scheme:light;
+  --surface:#fcfcfb;--panel:#ffffff;--page:#f3f2ee;
+  --text:#0b0b0b;--text2:#52514e;--muted:#7b7a74;
+  --grid:#e3e2dd;--axis:#cfcec8;
+  --s1:#2a78d6;--s2:#eb6834;--seq:#2a78d6;--seq-soft:#cde2fb;
+  --good:#0ca30c;--warn:#b57600;--crit:#d03b3b;
+  --shadow:0 1px 0 rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme:dark;
+    --surface:#1a1a19;--panel:#222221;--page:#141413;
+    --text:#f0efec;--text2:#c3c2b7;--muted:#97968c;
+    --grid:#34332f;--axis:#46453f;
+    --s1:#3987e5;--s2:#d95926;--seq:#3987e5;--seq-soft:#184f95;
+    --good:#2bc02b;--warn:#fab219;--crit:#ec6a6a;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --surface:#1a1a19;--panel:#222221;--page:#141413;
+  --text:#f0efec;--text2:#c3c2b7;--muted:#97968c;
+  --grid:#34332f;--axis:#46453f;
+  --s1:#3987e5;--s2:#d95926;--seq:#3987e5;--seq-soft:#184f95;
+  --good:#2bc02b;--warn:#fab219;--crit:#ec6a6a;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 16px 48px}
+.wrap{max-width:1180px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:22px 0 14px}
+h1{font-size:22px;line-height:1.2;margin:0}
+h1 small{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-top:4px}
+.ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select,button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--axis);border-radius:8px;padding:7px 11px;cursor:pointer}
+button:hover,select:hover{border-color:var(--text2)}
+button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
+.upd{font-size:12px;color:var(--muted)}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 14px}
+.tile{background:var(--panel);border:1px solid var(--grid);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.tile .l{font-size:12px;color:var(--text2)}
+.tile .v{font-size:30px;line-height:1.1;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--muted);margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--grid);border-radius:14px;padding:14px 16px 12px;box-shadow:var(--shadow);min-width:0}
+.c12{grid-column:span 12}.c6{grid-column:span 6}.c4{grid-column:span 4}.c8{grid-column:span 8}
+@media (max-width:860px){.c6,.c4,.c8{grid-column:span 12}}
+h2{font-size:15px;margin:0 0 2px}
+.sub{font-size:12px;color:var(--text2);margin:0 0 10px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--text2);margin:0 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.cols{display:flex;align-items:flex-end;gap:4px;height:150px;border-bottom:1px solid var(--axis);position:relative;padding-top:6px}
+.cols .g{position:absolute;left:0;right:0;border-top:1px solid var(--grid);pointer-events:none}
+.cols .g span{position:absolute;right:100%;margin-right:6px;font-size:11px;color:var(--muted);transform:translateY(-50%)}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+.col b{display:block;width:100%;max-width:24px;background:var(--s1);border-radius:4px 4px 0 0;min-height:0}
+.col.zero b{background:var(--grid);height:2px!important}
+.col:hover b,.col:focus b{filter:brightness(1.12)}
+.col:focus{outline:none}.col:focus-visible b{outline:2px solid var(--text)}
+.col em{position:absolute;top:-2px;font-style:normal;font-size:11px;color:var(--text2);transform:translateY(-100%);white-space:nowrap}
+.xl{display:flex;gap:4px;font-size:11px;color:var(--muted);margin:4px 0 0 0}
+.xl span{flex:1;text-align:center;min-width:0;overflow:visible;white-space:nowrap;font-size:10px}
+.bars{display:grid;gap:6px}
+.bar{display:grid;grid-template-columns:minmax(110px,32%) 1fr;gap:10px;align-items:center;font-size:13px}
+.bar .n{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .t{position:relative;height:18px;display:flex;align-items:center}
+.bar .t b{display:block;height:14px;border-radius:0 4px 4px 0;background:var(--s1);min-width:2px}
+.bar .t b+b{margin-left:2px;background:var(--s2)}
+.bar .t u{text-decoration:none;font-size:12px;color:var(--text2);margin-left:8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar.zero .t b{background:var(--grid);width:2px!important}
+.bar.zero .n{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--grid);vertical-align:top}
+th{font-weight:600;color:var(--text2);font-size:12px;white-space:nowrap}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--grid)}
+.dot.on{background:var(--good)}
+.chip{display:inline-flex;gap:6px;align-items:center;background:var(--page);border:1px solid var(--grid);border-radius:999px;padding:4px 10px;margin:0 6px 6px 0;font-size:13px}
+.crit{color:var(--crit);font-weight:600}
+.warnc{color:var(--warn);font-weight:600}
+.ico{display:inline-block;margin-right:4px}
+details{margin-top:8px}
+summary{cursor:pointer;font-size:12px;color:var(--text2)}
+.tip{position:fixed;z-index:10;pointer-events:none;background:var(--text);color:var(--surface);font-size:12px;line-height:1.35;padding:6px 9px;border-radius:7px;max-width:260px;display:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+svg.map{width:100%;height:auto;background:var(--surface);border:1px solid var(--grid);border-radius:10px;display:block}
+.empty{font-size:13px;color:var(--muted);padding:6px 0}
+.note{font-size:12px;color:var(--muted);margin-top:18px}
+.err{color:var(--crit);padding:30px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Auswertung Port 36<small>Geschlossene Beta · Zahlen aus den Spielen der Testerinnen und Tester</small></h1>
+  <div class="ctl">
+    <label class="upd" for="days">Zeitraum</label>
+    <select id="days"><option value="7">7 Tage</option><option value="14" selected>14 Tage</option><option value="30">30 Tage</option><option value="60">60 Tage</option></select>
+    <button id="reload" type="button">Aktualisieren</button>
+    <span class="upd" id="upd"></span>
+  </div>
+</header>
+<div id="root"><p class="empty">Lade …</p></div>
+<p class="note">Aktualisiert sich alle 30 Sekunden. Gezählt werden Sitzungen, Spielzeit (nur bei sichtbarem Spiel), Aufträge, Scoops mit Grund, Fehler im Browser und Hänger (Gas gedrückt, aber man kommt nicht weiter). Rohdaten: <a id="raw" href="/api/stats/summary?days=14">JSON</a> ·
+<button id="reset" type="button" style="font-size:12px;padding:3px 8px">Alle Daten löschen</button></p>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+<script>
+const QN={sammeln:'Küsten-Eis',graffiti:'Street-Artist',gruft:'Grabwächter',geister:'Geisterjagd',kuerbis:'Kürbisernte',bettler:'Serafin und sein Geist',blitz:'Blitz-Eis',tricks:'Trick-Serie',vielfalt:'Trick-Mix',rennen:'Küsten-Rennen',galaxie:'Eis-Galaxie',nacht:'Nacht-Stadt',atoll:'Rette die Insel'};
+const LV={0:'Port Lupo',1:'Küste',2:'Eis-Galaxie',3:'Nacht-Stadt',4:'Labor',5:'Atoll'};
+const $=s=>document.querySelector(s),root=$('#root'),tip=$('#tip');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>Math.round(n).toLocaleString('de-DE');
+const dur=s=>{s=Math.round(s);if(s<60)return s+' s';const m=Math.floor(s/60);if(m<60)return m+' min';return Math.floor(m/60)+' h '+(m%60)+' min'};
+const ago=t=>{const s=(Date.now()-t)/1000;if(s<60)return 'gerade eben';if(s<3600)return 'vor '+Math.floor(s/60)+' min';if(s<86400)return 'vor '+Math.floor(s/3600)+' h';return 'vor '+Math.floor(s/86400)+' Tagen'};
+const dmy=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.';
+/* Säulen: eine Reihe, Wert am Kopf nur bei wenigen, sonst Tooltip */
+function cols(items,{unit='',label=()=>'',max}){
+  const mx=max||Math.max(1,...items.map(i=>i.v)),every=items.length>20?Math.ceil(items.length/8):1;
+  const grid=[0,.5,1].map(f=>`<div class="g" style="bottom:${f*100}%"><span>${f===0?'0':fmt(mx*f)}</span></div>`).join('');
+  const gp=items.length>24?'2px':'4px',cs=items.map((i,k)=>`<div class="col${i.v?'':' zero'}" tabindex="0" data-tip="${esc(i.tip)}"><b style="height:${i.v/mx*100}%"></b>${items.length<=16&&i.v?`<em>${esc(i.show!=null?i.show:fmt(i.v))}</em>`:''}</div>`).join('');
+  const xl=items.map((i,k)=>`<span>${k%every===0?esc(i.x):''}</span>`).join('');
+  return `<div style="padding-left:34px"><div class="cols" style="gap:${gp}">${grid}${cs}</div><div class="xl" style="gap:${gp}">${xl}</div></div>`}
+/* Balken waagerecht: ein oder zwei Reihen */
+function hbars(rows,{max,unit=''}){
+  const mx=max||Math.max(1,...rows.map(r=>Math.max(r.a||0,0)+(r.b||0)));
+  return `<div class="bars">${rows.map(r=>{const a=r.a||0,b=r.b||0,zero=!a&&!b;return `<div class="bar${zero?' zero':''}" data-tip="${esc(r.tip||'')}"><div class="n" title="${esc(r.n)}">${esc(r.n)}</div><div class="t">${zero?'<b style="width:2px"></b>':`<b style="width:${a/mx*100}%;max-width:calc(100% - 70px)"></b>${b?`<b style="width:${b/mx*100}%;max-width:calc(100% - 70px)"></b>`:''}`}<u>${esc(r.v)}</u></div></div>`}).join('')}</div>`}
+function table(head,rows,right=[]){return `<div class="tw"><table><thead><tr>${head.map((h,i)=>`<th class="${right.includes(i)?'r':''}">${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${right.includes(i)?'r':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+const asTable=(head,rows,right)=>`<details><summary>Als Tabelle</summary>${table(head,rows,right)}</details>`;
+const tile=(l,v,s)=>`<div class="tile"><div class="l">${esc(l)}</div><div class="v">${v}</div><div class="s">${s||'&nbsp;'}</div></div>`;
+function map(d){
+  /* Hänger auf der Karte: x von -200 bis 330, z von -420 bis 350 (Weltkoordinaten in Metern) */
+  const x0=-230,x1=330,z0=-430,z1=360,W=560,H=790,sx=x=>(x-x0)/(x1-x0)*W,sz=z=>(z-z0)/(z1-z0)*H;
+  const pts=d.stuck.points.map(p=>`<circle cx="${sx(p[0]).toFixed(1)}" cy="${sz(p[1]).toFixed(1)}" r="5" fill="${p[2]===1?'var(--s2)':'var(--crit)'}" fill-opacity=".75" stroke="var(--surface)" stroke-width="2"><title>${p[2]===1?'Hänger':'Befreiung'} bei ${p[0]} / ${p[1]}</title></circle>`).join('');
+  return `<svg class="map" viewBox="0 0 ${W} ${H}" role="img" aria-label="Karte der Hänger"><rect x="0" y="0" width="${W}" height="${H}" fill="none"/>${[-200,-100,0,100,200,300].map(x=>`<line x1="${sx(x)}" y1="0" x2="${sx(x)}" y2="${H}" stroke="var(--grid)"/><text x="${sx(x)+3}" y="12" font-size="11" fill="var(--muted)">${x}</text>`).join('')}${[-400,-300,-200,-100,0,100,200,300].map(z=>`<line x1="0" y1="${sz(z)}" x2="${W}" y2="${sz(z)}" stroke="var(--grid)"/><text x="3" y="${sz(z)-3}" font-size="11" fill="var(--muted)">${z}</text>`).join('')}${pts}</svg>`}
+function render(d){
+  const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Berlin'}),td=d.perDay.find(x=>x.day===today)||{players:0,sessions:0,play:0};
+  let h='';
+  h+=`<div class="kpi">${tile('Jetzt online',d.online.count,d.rooms.length?d.rooms.map(r=>esc(r.room)+' ('+r.n+')').join(', '):'in keinem Raum')}${tile('Spieler heute',td.players,td.sessions+' Sitzungen')}${tile('Spielzeit heute',dur(td.play),'')}${tile('Spieler gesamt',d.total.players,d.total.returning+' an 2+ Tagen')}${tile('Ø Sitzung',dur(d.total.avg),'Median '+dur(d.total.median))}${tile('Längste Sitzung',dur(d.total.longest),'Gesamt '+dur(d.total.play))}</div>`;
+  h+='<div class="grid">';
+  /* online */
+  h+=`<section class="card c12"><h2>Gerade im Spiel</h2><p class="sub">Aktiv in den letzten 45 Sekunden</p>${d.online.players.length?d.online.players.map(p=>`<span class="chip"><span class="dot on"></span><b>${esc(p.name)}</b> ${esc(LV[p.lvl]||'?')}${p.under?' (unten)':''}${p.room?' · Raum '+esc(p.room):''}${p.sc!=null?' · '+p.sc+' Scoops':''}${p.fps?' · '+p.fps+' fps':''}${p.dev==='m'?' · Handy':''}</span>`).join(''):'<p class="empty">Niemand gerade.</p>'}</section>`;
+  /* Tage */
+  const pd=d.perDay,pdI=pd.map(x=>({v:Math.round(x.play/60),x:dmy(x.day),show:Math.round(x.play/60)+'',tip:dmy(x.day)+': '+dur(x.play)+' Spielzeit · '+x.players+' Spieler · '+x.sessions+' Sitzungen'}));
+  h+=`<section class="card c6"><h2>Spielzeit pro Tag</h2><p class="sub">Minuten, alle Spieler zusammen</p>${cols(pdI,{})}${asTable(['Tag','Spielzeit','Spieler','Sitzungen'],pd.map(x=>[dmy(x.day),dur(x.play),x.players,x.sessions]),[1,2,3])}</section>`;
+  const pp=pd.map(x=>({v:x.players,x:dmy(x.day),tip:dmy(x.day)+': '+x.players+' verschiedene Spieler'}));
+  h+=`<section class="card c6"><h2>Spieler pro Tag</h2><p class="sub">Verschiedene Spieler mit mindestens einer Sitzung</p>${cols(pp,{})}</section>`;
+  const ph=d.perHour.map(x=>({v:x.n,x:x.hour,tip:dmy(x.day)+' '+x.hour+' Uhr: '+x.n+' aktive Sitzungen'}));
+  h+=`<section class="card c12"><h2>Wann wird gespielt?</h2><p class="sub">Aktive Sitzungen pro Stunde, letzte 48 Stunden (Ortszeit Berlin)</p>${cols(ph,{})}</section>`;
+  /* Trichter */
+  const fm=Math.max(1,d.funnel[0].n);
+  h+=`<section class="card c6"><h2>Wie weit kommen die Spieler?</h2><p class="sub">Verschiedene Spieler, die den Schritt erreicht haben</p>${hbars(d.funnel.map((f,i)=>({n:f.label,a:f.n,v:f.n+(i?' ('+Math.round(f.n/fm*100)+' %)':''),tip:f.label+': '+f.n+' Spieler'})),{max:fm})}${asTable(['Schritt','Spieler'],d.funnel.map(f=>[esc(f.label),f.n]),[1])}</section>`;
+  /* Quests */
+  const qm=new Map(d.quests.map(q=>[q.key,q])),qrows=Object.keys(QN).map(k=>({k,q:qm.get(k)||{players:0,median:0}}));d.quests.forEach(q=>{if(!QN[q.key])qrows.push({k:q.key,q})});
+  const qmax=Math.max(1,...qrows.map(r=>r.q.players));
+  h+=`<section class="card c6"><h2>Gelöste Aufträge</h2><p class="sub">Spieler, die den Auftrag gelöst haben, mit mittlerer Zeit seit Sitzungsbeginn</p>${hbars(qrows.map(r=>({n:QN[r.k]||r.k,a:r.q.players,v:r.q.players?r.q.players+' · nach '+r.q.median+' min':'noch keiner',tip:(QN[r.k]||r.k)+': '+r.q.players+' Spieler'})),{max:qmax})}${asTable(['Auftrag','Spieler','Median (min)'],qrows.map(r=>[esc(QN[r.k]||r.k),r.q.players,r.q.median]),[1,2])}</section>`;
+  /* Scoops */
+  const sr=d.scoops.reasons,smax=Math.max(1,...sr.map(r=>r.earned+r.spent));
+  h+=`<section class="card c8"><h2>Scoops</h2><p class="sub">Wofür gibt es Scoops, wofür werden sie ausgegeben</p><div class="legend"><span><i style="background:var(--s1)"></i>Eingenommen</span><span><i style="background:var(--s2)"></i>Ausgegeben</span></div>${sr.length?hbars(sr.map(r=>({n:r.key,a:r.earned,b:r.spent,v:(r.earned?'+'+fmt(r.earned):'')+(r.earned&&r.spent?' / ':'')+(r.spent?'−'+fmt(r.spent):''),tip:r.key+': +'+r.earned+' / −'+r.spent+' · '+r.n+' Mal · '+r.players+' Spieler'})),{max:smax}):'<p class="empty">Noch keine Daten.</p>'}${asTable(['Grund','Eingenommen','Ausgegeben','Mal','Spieler'],sr.map(r=>[esc(r.key),r.earned,r.spent,r.n,r.players]),[1,2,3,4])}</section>`;
+  h+=`<section class="card c4"><h2>Scoops insgesamt</h2><p class="sub">Im gewählten Zeitraum</p>${tile('Eingenommen','+'+fmt(d.scoops.earned),'')}<div style="height:8px"></div>${tile('Ausgegeben','−'+fmt(d.scoops.spent),'')}<div style="height:8px"></div>${tile('Kontostand der Spieler',fmt(d.scoops.balance.median),'kleinster '+fmt(d.scoops.balance.min)+' · größter '+fmt(d.scoops.balance.max))}</section>`;
+  /* Probleme */
+  h+=`<section class="card c12"><h2><span class="ico crit" aria-hidden="true">⚠</span>Fehler im Browser</h2><p class="sub">Von den Spielen gemeldete Fehlermeldungen, häufigste zuerst</p>${d.errors.length?table(['Meldung','Anzahl','Spieler','Zuletzt','Ort'],d.errors.map(e=>[`<span class="crit"><span class="ico" aria-hidden="true">⚠</span>${esc(e.key)}</span>`,e.n,e.players,ago(e.last),esc(LV[e.lvl]||'?')+(e.x!=null?' · '+e.x+' / '+e.z:'')]),[1,2]):'<p class="empty"><span class="ico" aria-hidden="true" style="color:var(--good)">✓</span>Keine Fehler gemeldet.</p>'}</section>`;
+  const sk=d.stuck.cells;
+  h+=`<section class="card c6"><h2><span class="ico warnc" aria-hidden="true">▲</span>Hänger</h2><p class="sub">Gas gedrückt, aber 4 Sekunden nicht vom Fleck (orange), und automatische Befreiungen (rot). Kästchen von 16 m.</p>${d.stuck.points.length?map(d):'<p class="empty"><span class="ico" aria-hidden="true" style="color:var(--good)">✓</span>Keine Hänger gemeldet.</p>'}${sk.length?asTable(['Ort (x / z)','Hänger','Befreiungen','Spieler'],sk.map(c=>[c.x+' / '+c.z,c.stuck,c.unstick,c.players]),[1,2,3]):''}</section>`;
+  const pf=d.perf;
+  h+=`<section class="card c6"><h2>Leistung und Verbindung</h2><p class="sub">Bildrate je Gerät und Verbindungsprobleme</p>${table(['Gerät','Sitzungen','Median fps','unter 30 fps','Ruckler'],[['Computer',pf.d.sessions,pf.d.medianFps||'–',pf.d.lowShare+' %',pf.d.slowShare+' %'],['Handy/Tablet',pf.m.sessions,pf.m.medianFps||'–',pf.m.lowShare+' %',pf.m.slowShare+' %']],[1,2,3,4])}<p class="sub" style="margin-top:12px">Ruckler = Anteil der Bilder, die länger als 50 ms brauchten. Niedrige Bildrate gemeldet: ${d.lowFpsEvents} Mal.</p>${table(['Verbindung im Raum','Anzahl'],[['Verbindung gescheitert',d.net.fehler||0],['Raum war voll',d.net.voll||0]],[1])}<p class="sub" style="margin-top:12px">Grafikkarten</p>${d.gpus.length?table(['Grafikkarte','Sitzungen'],d.gpus.map(g=>[esc(g.gpu),g.n]),[1]):'<p class="empty">Keine Daten.</p>'}</section>`;
+  /* Spiel */
+  const po=d.police,gr=d.graffiti;
+  h+=`<section class="card c6"><h2>Polizei und Graffiti</h2><p class="sub">Wie oft wurde gesprüht und was passierte danach</p>${table(['Ereignis','Anzahl'],[['Graffiti an erlaubter Wand',gr.legal],['Graffiti an verbotener Wand',gr.illegal],['Polizei alarmiert',po.alarm||0],['Erwischt',po.erwischt||0],['Strafe bezahlt',po.bezahlt||0],['Entkommen',po.entkommen||0]],[1])}</section>`;
+  const lv=d.levels;
+  h+=`<section class="card c6"><h2>Welten</h2><p class="sub">Wie oft wurde eine Welt betreten (nur Zeitraum)</p>${table(['Welt','Betreten'],Object.keys(LV).map(k=>[LV[k],lv[k]||0]),[1])}<p class="sub" style="margin-top:12px">Tricks gelandet: ${d.tricks} · Versionen: ${d.versions.map(v=>esc(v.v)+' ('+v.n+')').join(', ')||'–'}</p></section>`;
+  /* Spieler */
+  h+=`<section class="card c12"><h2>Spieler</h2><p class="sub">Zuletzt aktive zuerst</p>${table(['','Name','Sitzungen','Spielzeit','Zuletzt','Scoops','Aufträge','Fehler','Gerät'],d.players.map(p=>[`<span class="dot${p.online?' on':''}" title="${p.online?'online':'offline'}"></span>`,esc(p.name),p.sessions,dur(p.play),p.online?'jetzt':ago(p.last),p.sc==null?'–':p.sc,p.quests,p.err?`<span class="crit"><span class="ico" aria-hidden="true">⚠</span>${p.err}</span>`:'0',p.dev==='m'?'Handy':'Computer']),[2,3,5,6,7])}</section>`;
+  h+='</div>';
+  root.innerHTML=h;
+  $('#raw').href='/api/stats/summary?days='+d.days;
+}
+async function load(){try{const r=await fetch('/api/stats/summary?days='+$('#days').value,{cache:'no-store'});if(!r.ok)throw new Error(r.status);const d=await r.json();render(d);$('#upd').textContent='Stand '+new Date().toLocaleTimeString('de-DE')}catch(e){root.innerHTML='<p class="err">Die Zahlen konnten nicht geladen werden ('+esc(e.message)+'). Ist die Auswertung eingerichtet?</p>'}}
+$('#days').onchange=load;$('#reload').onclick=load;
+$('#reset').onclick=async()=>{if(!confirm('Wirklich ALLE gesammelten Daten löschen? Das lässt sich nicht rückgängig machen.'))return;await fetch('/api/stats/reset',{method:'POST'});load()};
+/* Tooltip für Säulen und Balken */
+function showTip(e){const t=e.target.closest('[data-tip]');if(!t){tip.style.display='none';return}tip.textContent=t.dataset.tip;tip.style.display='block';const x=(e.clientX!==undefined&&e.type!=='focusin')?e.clientX:t.getBoundingClientRect().left+10,y=(e.clientY!==undefined&&e.type!=='focusin')?e.clientY:t.getBoundingClientRect().top;tip.style.left=Math.min(innerWidth-tip.offsetWidth-8,x+12)+'px';tip.style.top=Math.max(8,y-tip.offsetHeight-12)+'px'}
+document.addEventListener('mousemove',showTip);document.addEventListener('focusin',showTip);document.addEventListener('mouseleave',()=>tip.style.display='none');document.addEventListener('focusout',()=>tip.style.display='none');
+load();setInterval(()=>{if(!document.hidden)load()},30000);
+</script>
+</body>
+</html>
