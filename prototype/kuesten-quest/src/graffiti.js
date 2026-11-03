@@ -38,9 +38,6 @@ function grafEnsurePanel(id){let p=HUB.graf.panels.find(q=>q.id===id);if(p)retur
   pl.position.set(sl.x,1.3+2.1,sl.z);pl.rotation.y=sl.yaw;pl.userData.noBake=true;pl.userData.noOutline=true;W0.add(pl);
   p={id,dyn:true,x:sl.x,z:sl.z,ry:sl.yaw,cv,ctx:cx,tex,mesh:pl,ax:sl.x+sl.nx*2.4,az:sl.z+sl.nz*2.4};HUB.graf.panels.push(p);return p}
 function grafRemovePanel(p){if(p.mesh){W0.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose()}const i=HUB.graf.panels.indexOf(p);if(i>=0)HUB.graf.panels.splice(i,1)}
-/* ---- Erwischt werden: tagsüber eher als nachts ---- */
-function grafRisk(){const dn=typeof DAY!=='undefined'&&DAY.dn!==undefined?DAY.dn:1;return .15+.55*dn}
-function grafCaught(){const lost=Math.min(10,SC.n|0);if(lost>0)scAdd(-lost,'Erwischt!');SFX.thud();G.shake=Math.max(G.shake||0,.3);toast('Erwischt! −'+lost+' Scoops',1800)}
 /* ---- Server ---- */
 const GFSRV={ok:null,known:{},timer:0,busy:false,retryAt:0};
 async function grafApi(path,init){const r=await fetch('/api/graffiti'+path,{credentials:'same-origin',cache:'no-store',...init});if(!r.ok)throw new Error(r.status);return r}
@@ -61,13 +58,13 @@ function grafInitWorld(){if(!HUB.graf)return;GF.edges=null;GFSRV.known={};
 function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
   if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im P-Mart (blaues Band, auf der Minikarte als P) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
   GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];
-  if(!grafLegal(p.id)){const r=grafRisk();toast('Verbotene Wand! Risiko erwischt zu werden: '+(r>.55?'hoch (Tag)':r>.3?'mittel':'niedrig (Nacht)')+'. Strafe: 10 Scoops',2600)}
+  if(!grafLegal(p.id))toast('Verbotene Wand! Danach kommt die Polizei ('+(polNight()?'nachts nach 3 Minuten':'nach 1 Minute')+'). Strafe: 10 Scoops',3000)
   const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
   GF.col=(GF_COL.find(([c])=>GF.cans[c]>0)||GF_COL[0])[0];$('graf').hidden=false;grafPal();$('graf-done').focus({preventScroll:true})}
 function grafPal(){const pal=$('graf-pal');pal.innerHTML=GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;return `<button type="button" class="gpal${c===GF.col?' on':''}${ink>0?'':' empty'}" data-c="${c}" style="--c:${c}" title="${n}"><i style="width:${Math.round(Math.min(1,ink/GF_INK)*100)}%"></i></button>`}).join('');
   pal.querySelectorAll('button').forEach(b=>b.onclick=()=>{if((GF.cans[b.dataset.c]||0)<=0){toast('Diese Dose ist leer. Im Laden nachfüllen.',1200);return}GF.col=b.dataset.c;grafPal()})}
 function grafClose(save){if(!GF.open)return;const p=GF.cur;
-  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;if(GF.dabs>0){try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'));localStorage.setItem('kq-graf-t-'+p.id,String(Date.now()))}catch(e){}grafPush(p);if(!grafLegal(p.id)&&Math.random()<grafRisk())later(1.2,grafCaught)}
+  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;if(GF.dabs>0){try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'));localStorage.setItem('kq-graf-t-'+p.id,String(Date.now()))}catch(e){}grafPush(p);if(!grafLegal(p.id))polAlert(p)}
     GF.total+=GF.dabs;grafSave();if(GF.dabs>0){SFX.win();toast('Graffiti gesprüht!',1300);if(GF.total>=400&&!SC.au.graffiti)auComplete('graffiti')}}
   else grafSave();
   GF.open=false;GFOPEN=false;$('graf').hidden=true;GF.cur=null}

@@ -1264,7 +1264,8 @@ function step(dt){
   if(G.phase==='title'){const c=new V3(P.x,P.y,P.z),sw=Math.sin(G.t*.35);tp=c.clone().add(new V3(9+sw*2.2,3.6+sw*.4,4.5));tl=c.clone().add(new V3(innerWidth>900?-2.2:0,2.5,innerWidth>900?4.4:0))}
   if(G.phase==='caught'){const sw=Math.sin(G.t*.8);tp=new V3(E.x-9+sw*2,8,E.z-42);tl=new V3(E.x-12,11.5,E.z)}
   if(G.phase==='win'){const c=new V3(P.x,P.y,P.z),sw=Math.sin(G.t*.5);tp=c.clone().add(new V3(-12+sw*2,3.4,3.5));tl=new V3(P.x+8,5.2,P.z-1)}
-  const k=1-Math.exp(-dt*(G.phase==='title'||G.phase==='win'?2:6));camPos.lerp(tp,k);camLook.lerp(tl,k);
+  if(typeof POL!=='undefined'&&POL.cin&&POL.cin.pos){tp=POL.cin.pos;tl=POL.cin.look}
+  const k=(typeof POL!=='undefined'&&POL.cin&&POL.cin.pos)?1:1-Math.exp(-dt*(G.phase==='title'||G.phase==='win'?2:6));camPos.lerp(tp,k);camLook.lerp(tl,k);
   G.shake=Math.max(0,G.shake-dt*1.6);
   cam.position.copy(camPos);if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*.6;cam.position.y+=(Math.random()-.5)*G.shake*.6}
   cam.lookAt(camLook);cam.fov=G.phase==='caught'?56:60+Math.min(14,(P.speed-4)*1.3)+(P.boost>0?4:0);cam.updateProjectionMatrix();
@@ -2220,7 +2221,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   let nd=1e9;HUB.portals.forEach(p=>{const d=Math.hypot(P.x-p.x,P.z-p.z);p.beam.material.opacity=Math.max(0,Math.min(.45,(105-d)/75*.45));p.g.visible=!G.under&&(d<78||HUB.found.has(p.world));p.g.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});if(!HUB.found.has(p.world)&&d<nd)nd=d});
   const r=$('radar');if(r){const open=nd<1e8;r.classList.toggle('on',G.phase==='play'&&open&&!G.under);if(open){const w=nd<30?'heiß!':nd<65?'warm':nd<115?'lauwarm':'kalt';$('radar-s').textContent=w;$('radar-s').dataset.t=w[0];$('radar-bar').style.setProperty('--p',Math.max(.04,Math.min(1,1-nd/190)))}}
   /* Minikarte */
-  if(HUB.mapn){dayStep(dt);mpMini(dt);return}
+  if(HUB.mapn){dayStep(dt);polStep(dt);mpMini(dt);return}
   const mm=HUB.mm;if(!mm)return;mm.exg.fillStyle='#fff';mm.exg.beginPath();const [ex,ez]=mm.pxz(P.x,P.z);mm.exg.arc(ex,ez,52*mm.S,0,7);mm.exg.fill();if(G.under&&HUB.uw&&HUB.uw.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const [tx,tz]=mm.pxz(HUB.uw.tower.x,HUB.uw.tower.z);mm.exg.beginPath();mm.exg.arc(tx,tz,26*mm.S,0,7);mm.exg.fill()}
   HUB.mmT+=dt;if(HUB.mmT<.12)return;HUB.mmT=0;const cv=$('mini');if(!cv)return;cv.classList.toggle('on',G.phase==='play');const g=cv.getContext('2d'),t=mm.tmp.getContext('2d');
   t.globalCompositeOperation='source-over';t.clearRect(0,0,150,150);t.drawImage(mm.map,0,0);t.globalCompositeOperation='destination-in';t.drawImage(mm.ex,0,0);
@@ -2809,9 +2810,6 @@ function grafEnsurePanel(id){let p=HUB.graf.panels.find(q=>q.id===id);if(p)retur
   pl.position.set(sl.x,1.3+2.1,sl.z);pl.rotation.y=sl.yaw;pl.userData.noBake=true;pl.userData.noOutline=true;W0.add(pl);
   p={id,dyn:true,x:sl.x,z:sl.z,ry:sl.yaw,cv,ctx:cx,tex,mesh:pl,ax:sl.x+sl.nx*2.4,az:sl.z+sl.nz*2.4};HUB.graf.panels.push(p);return p}
 function grafRemovePanel(p){if(p.mesh){W0.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose()}const i=HUB.graf.panels.indexOf(p);if(i>=0)HUB.graf.panels.splice(i,1)}
-/* ---- Erwischt werden: tagsüber eher als nachts ---- */
-function grafRisk(){const dn=typeof DAY!=='undefined'&&DAY.dn!==undefined?DAY.dn:1;return .15+.55*dn}
-function grafCaught(){const lost=Math.min(10,SC.n|0);if(lost>0)scAdd(-lost,'Erwischt!');SFX.thud();G.shake=Math.max(G.shake||0,.3);toast('Erwischt! −'+lost+' Scoops',1800)}
 /* ---- Server ---- */
 const GFSRV={ok:null,known:{},timer:0,busy:false,retryAt:0};
 async function grafApi(path,init){const r=await fetch('/api/graffiti'+path,{credentials:'same-origin',cache:'no-store',...init});if(!r.ok)throw new Error(r.status);return r}
@@ -2832,13 +2830,13 @@ function grafInitWorld(){if(!HUB.graf)return;GF.edges=null;GFSRV.known={};
 function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
   if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im P-Mart (blaues Band, auf der Minikarte als P) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
   GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];
-  if(!grafLegal(p.id)){const r=grafRisk();toast('Verbotene Wand! Risiko erwischt zu werden: '+(r>.55?'hoch (Tag)':r>.3?'mittel':'niedrig (Nacht)')+'. Strafe: 10 Scoops',2600)}
+  if(!grafLegal(p.id))toast('Verbotene Wand! Danach kommt die Polizei ('+(polNight()?'nachts nach 3 Minuten':'nach 1 Minute')+'). Strafe: 10 Scoops',3000)
   const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
   GF.col=(GF_COL.find(([c])=>GF.cans[c]>0)||GF_COL[0])[0];$('graf').hidden=false;grafPal();$('graf-done').focus({preventScroll:true})}
 function grafPal(){const pal=$('graf-pal');pal.innerHTML=GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;return `<button type="button" class="gpal${c===GF.col?' on':''}${ink>0?'':' empty'}" data-c="${c}" style="--c:${c}" title="${n}"><i style="width:${Math.round(Math.min(1,ink/GF_INK)*100)}%"></i></button>`}).join('');
   pal.querySelectorAll('button').forEach(b=>b.onclick=()=>{if((GF.cans[b.dataset.c]||0)<=0){toast('Diese Dose ist leer. Im Laden nachfüllen.',1200);return}GF.col=b.dataset.c;grafPal()})}
 function grafClose(save){if(!GF.open)return;const p=GF.cur;
-  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;if(GF.dabs>0){try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'));localStorage.setItem('kq-graf-t-'+p.id,String(Date.now()))}catch(e){}grafPush(p);if(!grafLegal(p.id)&&Math.random()<grafRisk())later(1.2,grafCaught)}
+  if(save&&p){p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage($('graf-cv'),0,0);p.tex.needsUpdate=true;if(GF.dabs>0){try{localStorage.setItem('kq-graf-'+p.id,p.cv.toDataURL('image/png'));localStorage.setItem('kq-graf-t-'+p.id,String(Date.now()))}catch(e){}grafPush(p);if(!grafLegal(p.id))polAlert(p)}
     GF.total+=GF.dabs;grafSave();if(GF.dabs>0){SFX.win();toast('Graffiti gesprüht!',1300);if(GF.total>=400&&!SC.au.graffiti)auComplete('graffiti')}}
   else grafSave();
   GF.open=false;GFOPEN=false;$('graf').hidden=true;GF.cur=null}
@@ -3059,6 +3057,7 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   if(sign&&sbest){const w=Math.min(12,Math.max(5.5,sbest.L*.7)),sg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*.24),signMat(sign,'#ffe066','#1a1030'));sg.position.set(sbest.mx+sbest.nx*.25,1.3+Math.min(h-1.6,5.8),sbest.mz+sbest.nz*.25);sg.rotation.y=Math.atan2(sbest.nx,sbest.nz);sg.userData.noBake=true;sg.userData.noOutline=true;bg.add(sg)}
   /* Eingang: Tür mit Glas und Vordach an der Fassade zur Straße (Bahnhof und große Gebäude breiter) */
   if(sbest){(HUB.doors=HUB.doors||[]).push([sbest.mx+sbest.nx*1.5,sbest.mz+sbest.nz*1.5])}
+  if(sbest&&b.kind==='police'){HUB.policeStation={x:sbest.mx+sbest.nx*4,z:sbest.mz+sbest.nz*4};const bc=new THREE.Mesh(BX,MT('#2a6aff','#2a6aff',.9));bc.scale.set(1.2,.6,2.2);bc.position.set(ring.reduce((a,p)=>a+p[0],0)/ring.length,1.3+h+1.4,ring.reduce((a,p)=>a+p[1],0)/ring.length);bg.add(bc)}
   if(sbest&&b.kind==='station')HUB.station={x:sbest.mx,z:sbest.mz,nx:sbest.nx,nz:sbest.nz};
   if(sbest){const big=/station|casino|shopping|resort|tower/.test(b.kind||''),dw=big?4.6:1.9,ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),px=sbest.mx+sbest.nx*.12,pz=sbest.mz+sbest.nz*.12;
     const part=(m,w,hh,d,x,y,z)=>{const o=new THREE.Mesh(BX,m);o.scale.set(w,hh,d);o.position.set(x,y,z);o.rotation.y=ry;o.castShadow=true;bg.add(o);return o};
@@ -3076,11 +3075,11 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   return ring}
 function mpBuildings(H){
   const solids=[],groups=[];const L0=MAPD.labels;
-  const kindOf=t=>/P-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':'';
+  const kindOf=t=>/Poli(zei|ce)/i.test(t)?'police':/P-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':'';
   MAPD.buildings.forEach((b,i)=>{b.i=i;b.kind='';b.skip=false;b.cen=mpCentroid(b.c[0]);b.area=Math.abs(mpArea(b.c[0]))});
   L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;MAPD.buildings.forEach(b=>{if(mpInPoly(b.c[0],l.x,l.y)){b.kind=k;b.label=l.t}})});
-  const SIGN={station:'PORT LUPO STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER'};
-  const WALL={station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a'};
+  const SIGN={police:'POLIZEI',station:'PORT LUPO STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER'};
+  const WALL={police:'#9db8e8',station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a'};
   const mkGroup=(x,z)=>{const bg=new THREE.Group();bg.userData.noBake=true;bg.userData.blk={x,z};W0.add(bg);HUB.bgroups.push(bg);return bg};
   MAPD.buildings.forEach(b=>{const aM=b.area*MP.SC*MP.SC,X=mwx(b.cen[0]),Z=mwz(b.cen[1]);
     if(b.kind==='pmart'||b.kind==='lab'||b.kind==='xmas'){
@@ -3093,7 +3092,7 @@ function mpBuildings(H){
         }
       else{mpStamp(H,()=>buildGingerBlock(),cx,cz,yaw,bg,1);solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:44});const sgp=mpTf(cx,cz,yaw,0,-19.8);HUB.gb={i:0,j:0,cx,cz,sx:sgp[0],sz:sgp[1],yaw}}
       return}
-    const kind=b.kind;let h;switch(kind){case 'tower':h=64;break;case 'resort':h=30;break;case 'casino':h=17;break;case 'shopping':h=13;break;case 'station':h=10;break;
+    const kind=b.kind;let h;switch(kind){case 'tower':h=64;break;case 'resort':h=30;break;case 'casino':h=17;break;case 'shopping':h=13;break;case 'station':h=10;break;case 'police':h=9;break;
       default:h=aM<150?7.2:aM<650?7.5+(b.i*7%3)*3:9+(b.i*5%9)}
     const bg=mkGroup(X,Z);b.bg=bg;mpGenBuilding(bg,b,WALL[kind]||MPPAST[b.i%7],h,b.i,SIGN[kind]||null);b.h=h});
   /* Café Pengu und AstroBurger an den Markern C und B */
@@ -3172,6 +3171,47 @@ function mpSpotPool(){const R=mulberry(2024),out=[];for(let y=0;y<MP.h;y+=5)for(
   for(let i=out.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
 function mpLamps(){const out=[];let k=0;MAPD.roads.forEach(r=>{const wM=Math.max(r.w,MP.RW)*MP.SC;mpResample(r.pts,26).forEach(s=>{if(!(s.tx||s.tz))return;const side=(k++%2)?1:-1,off=wM/2+MP.SWK*.5,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)===3&&!(HUB.doors||[]).some(d=>Math.hypot(d[0]-x,d[1]-z)<5.5))out.push([x,z])})});return out}
 
+/* ---------- Polizei: kommt nach illegalem Graffiti (1 Minute, nachts 3), Skate-Polizisten verfolgen im Sichtradius, Festnahme = Nahaufnahme und 10 Scoops Strafe ---------- */
+const POL={state:'idle',timer:0,total:0,spot:null,cops:[],cin:null,hud:null,loseT:0,t:0,chaseT:0,search:0,FINE:10,SIGHT:42,SPEED:9.2};
+PRE['#2a4a9a']={skin:'#e0a98a',top:'#2a4a9a',bot:'#1f2a4a',sole:'#f0cf36',hair:'cap',hc:'#1f2a4a',lens:'#141416',frame:'#141416',pack:'#1f2a4a',pads:'#c9d4ff',watch:1,stripe:'#ffffff'};
+PRE['#3a5ab8']={skin:'#c98e6a',top:'#3a5ab8',bot:'#1f2a4a',sole:'#ffffff',hair:'cap',hc:'#1f2a4a',lens:'#141416',frame:'#141416',pack:'#1f2a4a',pads:'#c9d4ff',watch:1,stripe:'#ffffff'};
+function polHud(){if(POL.hud)return POL.hud;const d=document.createElement('div');d.id='pol';d.style.cssText="position:absolute;top:64px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:12px;border:3px solid #0e0b18;background:rgba(26,22,38,.9);color:#fff;font:800 16px/1.2 'Baloo 2',sans-serif;letter-spacing:.04em;display:none;z-index:3;box-shadow:0 4px 0 #0e0b18;pointer-events:none";const ui=document.getElementById('ui');(ui||document.body).appendChild(d);return POL.hud=d}
+function polText(t,col){const h=polHud();h.style.display=t?'block':'none';h.style.borderColor=col||'#0e0b18';h.textContent=t||''}
+function polNight(){return (typeof DAY!=='undefined'&&DAY.dn!==undefined?DAY.dn:1)<.35}
+function polAlert(panel){if(POL.state!=='idle')return;const night=polNight();POL.state='warn';POL.total=POL.timer=night?180:60;POL.spot={x:panel.ax,z:panel.az};
+  toast('Achtung! Die Polizei wurde gerufen',2600);say('e','Jemand hat dein Graffiti gemeldet. Die Polizei ist in '+(night?'drei Minuten':'einer Minute')+' da. Verschwinde besser, sonst gibt es '+POL.FINE+' Scoops Strafe.',5.2);tone(520,.18,'square',.05);tone(390,.22,'square',.05,0,.2)}
+function polSpawnPoint(){if(HUB.policeStation)return {x:HUB.policeStation.x,z:HUB.policeStation.z};let best=null;MAPD.roads.forEach(r=>mpResample(r.pts,20).forEach(s=>{if(!(s.tx||s.tz)||mpAt(s.x,s.z)!==2||s.z>186)return;const d=Math.hypot(s.x-P.x,s.z-P.z);if(d>95&&d<170&&(!best||Math.abs(d-130)<Math.abs(best.d-130)))best={x:s.x,z:s.z,d}}));return best||{x:P.x+60,z:P.z}}
+function polMakeCop(x,z,col,i){const g=skater(x,cityGround(x,z),z,0,col,1.35);g.userData.noBake=true;W0.add(g);addOutlines(g,'actor');const mk=c=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),new THREE.MeshBasicMaterial({color:c}));m.position.set(0,2.55,0);g.add(m);return m},la=mk('#ff2a2a'),lb=mk('#2a6aff');la.position.x=-.22;lb.position.x=.22;
+  return {g,x,z,h:0,la,lb,i,sp:POL.SPEED+(i?.5:0)}}
+function polDispatch(){const sp=polSpawnPoint();POL.cops.forEach(c=>W0.remove(c.g));POL.cops=[polMakeCop(sp.x,sp.z,'#2a4a9a',0),polMakeCop(sp.x+2.4,sp.z+1.2,'#3a5ab8',1)];POL.state='patrol';POL.search=0;POL.t=0;toast('Die Polizei ist da!',1800);polText('POLIZEI IM EINSATZ','#4a7aff')}
+function polMove(c,tx,tz,sp,dt){const dx=tx-c.x,dz=tz-c.z,L=Math.hypot(dx,dz)||1,st=Math.min(L,sp*dt),a0=Math.atan2(dz,dx);
+  /* geradeaus, sonst um Hindernisse herum: Ausweichwinkel probieren, die zuletzt gewählte Seite bevorzugen */
+  const side=c.side||1;for(const off of [0,.5,-.5,1.0,-1.0,1.6,-1.6,2.3,-2.3]){const ang=a0+off*side,nx=c.x+Math.cos(ang)*st,nz=c.z+Math.sin(ang)*st;if(mpWalk(nx,nz)&&mpWalk(c.x+Math.cos(ang)*(st+.8),c.z+Math.sin(ang)*(st+.8))){c.x=nx;c.z=nz;c.h=ang;if(off)c.side=off>0?1:-1;return L}}
+  c.side=-side;return L}
+function polDraw(dt){const flash=Math.floor(POL.t*4)%2===0,up=!G.under&&LV.id===0;POL.cops.forEach(c=>{const g=c.g;g.visible=up;g.position.set(c.x,cityGround(c.x,c.z),c.z);g.rotation.y=Math.PI/2-c.h;la_lb(c,flash)})}
+function la_lb(c,f){c.la.visible=f;c.lb.visible=!f}
+function polEnd(msg,col){POL.cops.forEach(c=>{W0.remove(c.g)});POL.cops=[];POL.state='idle';POL.cin=null;polText('');if(msg)toast(msg,2600)}
+function polCatch(){POL.state='caught';const c0=POL.cops[0],c1=POL.cops[1]||c0;P.speed=0;K.up=K.down=K.left=K.right=0;
+  /* Polizisten stellen sich vor den Spieler, Kamera zoomt auf die Gesichter */
+  const f=[Math.cos(P.h),Math.sin(P.h)];c0.x=P.x+f[0]*2.0-f[1]*.9;c0.z=P.z+f[1]*2.0+f[0]*.9;c1.x=P.x+f[0]*2.0+f[1]*.9;c1.z=P.z+f[1]*2.0-f[0]*.9;c0.h=c1.h=Math.atan2(-f[1],-f[0]);
+  POL.cin={step:0,t:0};polText('ERWISCHT!','#ff2a2a');SFX.thud();tone(300,.3,'sawtooth',.06,-120);polCin(0);
+  dlgStart('Polizei',['Halt! Polizei! Illegales Graffiti.','Das macht '+POL.FINE+' Scoops Strafe. Und jetzt ab nach Hause.'],polRelease)}
+function polCin(step){const c=POL.cops[step%2]||POL.cops[0];const fx=Math.cos(c.h),fz=Math.sin(c.h);
+  POL.cin.pos=new V3(c.x+fx*1.25,cityGround(c.x,c.z)+3.05,c.z+fz*1.25);POL.cin.look=new V3(c.x,cityGround(c.x,c.z)+3.0,c.z);POL.cin.step=step;POL.cin.t=0}
+function polRelease(){const lost=Math.min(POL.FINE,SC.n|0);if(lost>0)scAdd(-lost,'Strafe');polEnd('−'+lost+' Scoops')}
+function polStep(dt){if(!POL.hud&&POL.state==='idle')return;POL.t+=dt;const live=LV.id===0&&!G.under;
+  if(POL.state==='warn'){if(!live)return;POL.timer-=dt;const t=Math.max(0,Math.ceil(POL.timer));polText('POLIZEI IN '+Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),POL.timer<15?'#ff2a2a':'#ffb020');if(POL.timer<=0)polDispatch();return}
+  if(!POL.cops.length)return;polDraw(dt);if(!live)return;
+  if(POL.state==='patrol'||POL.state==='chase'){if(Math.floor(POL.t*2)!==Math.floor((POL.t-dt)*2))tone(Math.floor(POL.t*2)%2?640:860,.22,'square',.018)}
+  const near=POL.cops.reduce((m,c)=>Math.min(m,Math.hypot(c.x-P.x,c.z-P.z)),1e9);
+  if(POL.state==='patrol'){POL.cops.forEach((c,i)=>{const a=POL.t*.5+i*3.1,tx=POL.spot.x+Math.cos(a)*(POL.search>3?10:0),tz=POL.spot.z+Math.sin(a)*(POL.search>3?10:0),L=polMove(c,tx,tz,c.sp*.85,dt);if(L<2.5)POL.search+=dt/POL.cops.length});
+    if(near<POL.SIGHT&&G.phase==='play'){POL.state='chase';POL.chaseT=0;POL.loseT=0;toast('Polizei! Lauf!',1600);polText('VERFOLGUNG!','#ff2a2a');tone(900,.25,'square',.06)}
+    else if(POL.search>20){polEnd('Glück gehabt! Die Polizei zieht ab.')}
+    return}
+  if(POL.state==='chase'){POL.chaseT+=dt;POL.cops.forEach(c=>polMove(c,P.x,P.z,c.sp+Math.min(2.5,POL.chaseT*.15),dt));
+    if(near<2.4&&G.phase==='play')return polCatch();
+    POL.loseT=near>75?POL.loseT+dt:0;if(POL.loseT>4)polEnd('Glück gehabt! Du hast sie abgehängt.');else if(POL.chaseT>70)polEnd('Glück gehabt! Die Polizei gibt auf.');return}
+  if(POL.state==='caught'&&POL.cin){POL.cin.t+=dt;if(POL.cin.t>1.7&&POL.cin.step<3)polCin(POL.cin.step+1)}}
 /* ---------- Tag und Nacht: ein Tag dauert 30 Minuten, Start am Mittag (Pacific-Sim-Look) ---------- */
 const DAY={len:1800,t:0,on:true,grain:null,K:null,last:-1};
 function dayInit(){const C=c=>new THREE.Color(c);
@@ -3199,7 +3239,7 @@ function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayIn
   DAY.hour=Math.floor(((p*24+12)%24)*10)/10;if(DAY.sea){DAY.sea.uniforms.t.value+=dt;DAY.sea.uniforms.dim.value=Math.max(0,Math.min(1,(sun.intensity+hemi.intensity*.6-.7)/2.6))}}
 /* ---------- Gesamtaufbau ---------- */
 function portLupoNew(H){
-  HUB.doors=[];HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
+  HUB.doors=[];HUB.policeStation=null;HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
   const add=o=>W0.add(o);
   const solids=mpBuildings(H);mpBuildMask(solids);
   mpTerrain(add);
@@ -3423,7 +3463,7 @@ function mpGrindStep(dt){const e=GR.seg;GR.t+=dt;const rx=P.x-e.ax,rz=P.z-e.az,a
   if(al<.5||al>e.L-.5){const nxt=mpGrindEdges().find(q=>q!==e&&Math.hypot(q.ax-(e.ax+e.tx*(GR.dir>0?e.L:0)),q.az-(e.az+e.tz*(GR.dir>0?e.L:0)))<1.6&&q.tx*e.tx+q.tz*e.tz>.9);if(nxt){GR.seg=nxt}else grindEnd(false);return}
   if(P.speed<2.2||(K.left||K.right)&&GR.t>.25)grindEnd(false)}
 
-window.__qa={DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafRisk,grafCaught,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={POL,polAlert,polStep,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

@@ -22,6 +22,4 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  /* 4 Ablauf: Server wirft alte Bilder raus */
  store.get(F.id).t=Date.now()-49*3600*1000;
  console.log('Nach 49 h',JSON.stringify(await p2.evaluate(async F=>{const q=__qa;q.GFSRV.retryAt=0;await q.grafSync();return {panelNoch:!!q.HUB.graf.panels.find(x=>x.id===F.id)}},F)));
- /* 5 Erwischt: Strafe 10 Scoops, nachts seltener */
- console.log('Risiko',JSON.stringify(await p2.evaluate(()=>{const q=__qa;q.DAY.dn=1;const tag=q.grafRisk();q.DAY.dn=0;const nacht=q.grafRisk();q.SC.n=25;q.grafCaught();const nach1=q.SC.n;q.SC.n=4;q.grafCaught();return {tag,nacht,scoopsNach25:nach1,scoopsNach4:q.SC.n}})));
  await b.close();srv.close()})

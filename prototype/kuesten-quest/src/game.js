@@ -635,7 +635,8 @@ function step(dt){
   if(G.phase==='title'){const c=new V3(P.x,P.y,P.z),sw=Math.sin(G.t*.35);tp=c.clone().add(new V3(9+sw*2.2,3.6+sw*.4,4.5));tl=c.clone().add(new V3(innerWidth>900?-2.2:0,2.5,innerWidth>900?4.4:0))}
   if(G.phase==='caught'){const sw=Math.sin(G.t*.8);tp=new V3(E.x-9+sw*2,8,E.z-42);tl=new V3(E.x-12,11.5,E.z)}
   if(G.phase==='win'){const c=new V3(P.x,P.y,P.z),sw=Math.sin(G.t*.5);tp=c.clone().add(new V3(-12+sw*2,3.4,3.5));tl=new V3(P.x+8,5.2,P.z-1)}
-  const k=1-Math.exp(-dt*(G.phase==='title'||G.phase==='win'?2:6));camPos.lerp(tp,k);camLook.lerp(tl,k);
+  if(typeof POL!=='undefined'&&POL.cin&&POL.cin.pos){tp=POL.cin.pos;tl=POL.cin.look}
+  const k=(typeof POL!=='undefined'&&POL.cin&&POL.cin.pos)?1:1-Math.exp(-dt*(G.phase==='title'||G.phase==='win'?2:6));camPos.lerp(tp,k);camLook.lerp(tl,k);
   G.shake=Math.max(0,G.shake-dt*1.6);
   cam.position.copy(camPos);if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*.6;cam.position.y+=(Math.random()-.5)*G.shake*.6}
   cam.lookAt(camLook);cam.fov=G.phase==='caught'?56:60+Math.min(14,(P.speed-4)*1.3)+(P.boost>0?4:0);cam.updateProjectionMatrix();
@@ -1591,7 +1592,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   let nd=1e9;HUB.portals.forEach(p=>{const d=Math.hypot(P.x-p.x,P.z-p.z);p.beam.material.opacity=Math.max(0,Math.min(.45,(105-d)/75*.45));p.g.visible=!G.under&&(d<78||HUB.found.has(p.world));p.g.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});if(!HUB.found.has(p.world)&&d<nd)nd=d});
   const r=$('radar');if(r){const open=nd<1e8;r.classList.toggle('on',G.phase==='play'&&open&&!G.under);if(open){const w=nd<30?'heiß!':nd<65?'warm':nd<115?'lauwarm':'kalt';$('radar-s').textContent=w;$('radar-s').dataset.t=w[0];$('radar-bar').style.setProperty('--p',Math.max(.04,Math.min(1,1-nd/190)))}}
   /* Minikarte */
-  if(HUB.mapn){dayStep(dt);mpMini(dt);return}
+  if(HUB.mapn){dayStep(dt);polStep(dt);mpMini(dt);return}
   const mm=HUB.mm;if(!mm)return;mm.exg.fillStyle='#fff';mm.exg.beginPath();const [ex,ez]=mm.pxz(P.x,P.z);mm.exg.arc(ex,ez,52*mm.S,0,7);mm.exg.fill();if(G.under&&HUB.uw&&HUB.uw.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const [tx,tz]=mm.pxz(HUB.uw.tower.x,HUB.uw.tower.z);mm.exg.beginPath();mm.exg.arc(tx,tz,26*mm.S,0,7);mm.exg.fill()}
   HUB.mmT+=dt;if(HUB.mmT<.12)return;HUB.mmT=0;const cv=$('mini');if(!cv)return;cv.classList.toggle('on',G.phase==='play');const g=cv.getContext('2d'),t=mm.tmp.getContext('2d');
   t.globalCompositeOperation='source-over';t.clearRect(0,0,150,150);t.drawImage(mm.map,0,0);t.globalCompositeOperation='destination-in';t.drawImage(mm.ex,0,0);
@@ -1613,7 +1614,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafRisk,grafCaught,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={POL,polAlert,polStep,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

@@ -199,6 +199,7 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   if(sign&&sbest){const w=Math.min(12,Math.max(5.5,sbest.L*.7)),sg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*.24),signMat(sign,'#ffe066','#1a1030'));sg.position.set(sbest.mx+sbest.nx*.25,1.3+Math.min(h-1.6,5.8),sbest.mz+sbest.nz*.25);sg.rotation.y=Math.atan2(sbest.nx,sbest.nz);sg.userData.noBake=true;sg.userData.noOutline=true;bg.add(sg)}
   /* Eingang: Tür mit Glas und Vordach an der Fassade zur Straße (Bahnhof und große Gebäude breiter) */
   if(sbest){(HUB.doors=HUB.doors||[]).push([sbest.mx+sbest.nx*1.5,sbest.mz+sbest.nz*1.5])}
+  if(sbest&&b.kind==='police'){HUB.policeStation={x:sbest.mx+sbest.nx*4,z:sbest.mz+sbest.nz*4};const bc=new THREE.Mesh(BX,MT('#2a6aff','#2a6aff',.9));bc.scale.set(1.2,.6,2.2);bc.position.set(ring.reduce((a,p)=>a+p[0],0)/ring.length,1.3+h+1.4,ring.reduce((a,p)=>a+p[1],0)/ring.length);bg.add(bc)}
   if(sbest&&b.kind==='station')HUB.station={x:sbest.mx,z:sbest.mz,nx:sbest.nx,nz:sbest.nz};
   if(sbest){const big=/station|casino|shopping|resort|tower/.test(b.kind||''),dw=big?4.6:1.9,ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),px=sbest.mx+sbest.nx*.12,pz=sbest.mz+sbest.nz*.12;
     const part=(m,w,hh,d,x,y,z)=>{const o=new THREE.Mesh(BX,m);o.scale.set(w,hh,d);o.position.set(x,y,z);o.rotation.y=ry;o.castShadow=true;bg.add(o);return o};
@@ -216,11 +217,11 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   return ring}
 function mpBuildings(H){
   const solids=[],groups=[];const L0=MAPD.labels;
-  const kindOf=t=>/P-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':'';
+  const kindOf=t=>/Poli(zei|ce)/i.test(t)?'police':/P-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':'';
   MAPD.buildings.forEach((b,i)=>{b.i=i;b.kind='';b.skip=false;b.cen=mpCentroid(b.c[0]);b.area=Math.abs(mpArea(b.c[0]))});
   L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;MAPD.buildings.forEach(b=>{if(mpInPoly(b.c[0],l.x,l.y)){b.kind=k;b.label=l.t}})});
-  const SIGN={station:'PORT LUPO STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER'};
-  const WALL={station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a'};
+  const SIGN={police:'POLIZEI',station:'PORT LUPO STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER'};
+  const WALL={police:'#9db8e8',station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a'};
   const mkGroup=(x,z)=>{const bg=new THREE.Group();bg.userData.noBake=true;bg.userData.blk={x,z};W0.add(bg);HUB.bgroups.push(bg);return bg};
   MAPD.buildings.forEach(b=>{const aM=b.area*MP.SC*MP.SC,X=mwx(b.cen[0]),Z=mwz(b.cen[1]);
     if(b.kind==='pmart'||b.kind==='lab'||b.kind==='xmas'){
@@ -233,7 +234,7 @@ function mpBuildings(H){
         }
       else{mpStamp(H,()=>buildGingerBlock(),cx,cz,yaw,bg,1);solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:44});const sgp=mpTf(cx,cz,yaw,0,-19.8);HUB.gb={i:0,j:0,cx,cz,sx:sgp[0],sz:sgp[1],yaw}}
       return}
-    const kind=b.kind;let h;switch(kind){case 'tower':h=64;break;case 'resort':h=30;break;case 'casino':h=17;break;case 'shopping':h=13;break;case 'station':h=10;break;
+    const kind=b.kind;let h;switch(kind){case 'tower':h=64;break;case 'resort':h=30;break;case 'casino':h=17;break;case 'shopping':h=13;break;case 'station':h=10;break;case 'police':h=9;break;
       default:h=aM<150?7.2:aM<650?7.5+(b.i*7%3)*3:9+(b.i*5%9)}
     const bg=mkGroup(X,Z);b.bg=bg;mpGenBuilding(bg,b,WALL[kind]||MPPAST[b.i%7],h,b.i,SIGN[kind]||null);b.h=h});
   /* Café Pengu und AstroBurger an den Markern C und B */
@@ -312,6 +313,47 @@ function mpSpotPool(){const R=mulberry(2024),out=[];for(let y=0;y<MP.h;y+=5)for(
   for(let i=out.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
 function mpLamps(){const out=[];let k=0;MAPD.roads.forEach(r=>{const wM=Math.max(r.w,MP.RW)*MP.SC;mpResample(r.pts,26).forEach(s=>{if(!(s.tx||s.tz))return;const side=(k++%2)?1:-1,off=wM/2+MP.SWK*.5,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)===3&&!(HUB.doors||[]).some(d=>Math.hypot(d[0]-x,d[1]-z)<5.5))out.push([x,z])})});return out}
 
+/* ---------- Polizei: kommt nach illegalem Graffiti (1 Minute, nachts 3), Skate-Polizisten verfolgen im Sichtradius, Festnahme = Nahaufnahme und 10 Scoops Strafe ---------- */
+const POL={state:'idle',timer:0,total:0,spot:null,cops:[],cin:null,hud:null,loseT:0,t:0,chaseT:0,search:0,FINE:10,SIGHT:42,SPEED:9.2};
+PRE['#2a4a9a']={skin:'#e0a98a',top:'#2a4a9a',bot:'#1f2a4a',sole:'#f0cf36',hair:'cap',hc:'#1f2a4a',lens:'#141416',frame:'#141416',pack:'#1f2a4a',pads:'#c9d4ff',watch:1,stripe:'#ffffff'};
+PRE['#3a5ab8']={skin:'#c98e6a',top:'#3a5ab8',bot:'#1f2a4a',sole:'#ffffff',hair:'cap',hc:'#1f2a4a',lens:'#141416',frame:'#141416',pack:'#1f2a4a',pads:'#c9d4ff',watch:1,stripe:'#ffffff'};
+function polHud(){if(POL.hud)return POL.hud;const d=document.createElement('div');d.id='pol';d.style.cssText="position:absolute;top:64px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:12px;border:3px solid #0e0b18;background:rgba(26,22,38,.9);color:#fff;font:800 16px/1.2 'Baloo 2',sans-serif;letter-spacing:.04em;display:none;z-index:3;box-shadow:0 4px 0 #0e0b18;pointer-events:none";const ui=document.getElementById('ui');(ui||document.body).appendChild(d);return POL.hud=d}
+function polText(t,col){const h=polHud();h.style.display=t?'block':'none';h.style.borderColor=col||'#0e0b18';h.textContent=t||''}
+function polNight(){return (typeof DAY!=='undefined'&&DAY.dn!==undefined?DAY.dn:1)<.35}
+function polAlert(panel){if(POL.state!=='idle')return;const night=polNight();POL.state='warn';POL.total=POL.timer=night?180:60;POL.spot={x:panel.ax,z:panel.az};
+  toast('Achtung! Die Polizei wurde gerufen',2600);say('e','Jemand hat dein Graffiti gemeldet. Die Polizei ist in '+(night?'drei Minuten':'einer Minute')+' da. Verschwinde besser, sonst gibt es '+POL.FINE+' Scoops Strafe.',5.2);tone(520,.18,'square',.05);tone(390,.22,'square',.05,0,.2)}
+function polSpawnPoint(){if(HUB.policeStation)return {x:HUB.policeStation.x,z:HUB.policeStation.z};let best=null;MAPD.roads.forEach(r=>mpResample(r.pts,20).forEach(s=>{if(!(s.tx||s.tz)||mpAt(s.x,s.z)!==2||s.z>186)return;const d=Math.hypot(s.x-P.x,s.z-P.z);if(d>95&&d<170&&(!best||Math.abs(d-130)<Math.abs(best.d-130)))best={x:s.x,z:s.z,d}}));return best||{x:P.x+60,z:P.z}}
+function polMakeCop(x,z,col,i){const g=skater(x,cityGround(x,z),z,0,col,1.35);g.userData.noBake=true;W0.add(g);addOutlines(g,'actor');const mk=c=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),new THREE.MeshBasicMaterial({color:c}));m.position.set(0,2.55,0);g.add(m);return m},la=mk('#ff2a2a'),lb=mk('#2a6aff');la.position.x=-.22;lb.position.x=.22;
+  return {g,x,z,h:0,la,lb,i,sp:POL.SPEED+(i?.5:0)}}
+function polDispatch(){const sp=polSpawnPoint();POL.cops.forEach(c=>W0.remove(c.g));POL.cops=[polMakeCop(sp.x,sp.z,'#2a4a9a',0),polMakeCop(sp.x+2.4,sp.z+1.2,'#3a5ab8',1)];POL.state='patrol';POL.search=0;POL.t=0;toast('Die Polizei ist da!',1800);polText('POLIZEI IM EINSATZ','#4a7aff')}
+function polMove(c,tx,tz,sp,dt){const dx=tx-c.x,dz=tz-c.z,L=Math.hypot(dx,dz)||1,st=Math.min(L,sp*dt),a0=Math.atan2(dz,dx);
+  /* geradeaus, sonst um Hindernisse herum: Ausweichwinkel probieren, die zuletzt gewählte Seite bevorzugen */
+  const side=c.side||1;for(const off of [0,.5,-.5,1.0,-1.0,1.6,-1.6,2.3,-2.3]){const ang=a0+off*side,nx=c.x+Math.cos(ang)*st,nz=c.z+Math.sin(ang)*st;if(mpWalk(nx,nz)&&mpWalk(c.x+Math.cos(ang)*(st+.8),c.z+Math.sin(ang)*(st+.8))){c.x=nx;c.z=nz;c.h=ang;if(off)c.side=off>0?1:-1;return L}}
+  c.side=-side;return L}
+function polDraw(dt){const flash=Math.floor(POL.t*4)%2===0,up=!G.under&&LV.id===0;POL.cops.forEach(c=>{const g=c.g;g.visible=up;g.position.set(c.x,cityGround(c.x,c.z),c.z);g.rotation.y=Math.PI/2-c.h;la_lb(c,flash)})}
+function la_lb(c,f){c.la.visible=f;c.lb.visible=!f}
+function polEnd(msg,col){POL.cops.forEach(c=>{W0.remove(c.g)});POL.cops=[];POL.state='idle';POL.cin=null;polText('');if(msg)toast(msg,2600)}
+function polCatch(){POL.state='caught';const c0=POL.cops[0],c1=POL.cops[1]||c0;P.speed=0;K.up=K.down=K.left=K.right=0;
+  /* Polizisten stellen sich vor den Spieler, Kamera zoomt auf die Gesichter */
+  const f=[Math.cos(P.h),Math.sin(P.h)];c0.x=P.x+f[0]*2.0-f[1]*.9;c0.z=P.z+f[1]*2.0+f[0]*.9;c1.x=P.x+f[0]*2.0+f[1]*.9;c1.z=P.z+f[1]*2.0-f[0]*.9;c0.h=c1.h=Math.atan2(-f[1],-f[0]);
+  POL.cin={step:0,t:0};polText('ERWISCHT!','#ff2a2a');SFX.thud();tone(300,.3,'sawtooth',.06,-120);polCin(0);
+  dlgStart('Polizei',['Halt! Polizei! Illegales Graffiti.','Das macht '+POL.FINE+' Scoops Strafe. Und jetzt ab nach Hause.'],polRelease)}
+function polCin(step){const c=POL.cops[step%2]||POL.cops[0];const fx=Math.cos(c.h),fz=Math.sin(c.h);
+  POL.cin.pos=new V3(c.x+fx*1.25,cityGround(c.x,c.z)+3.05,c.z+fz*1.25);POL.cin.look=new V3(c.x,cityGround(c.x,c.z)+3.0,c.z);POL.cin.step=step;POL.cin.t=0}
+function polRelease(){const lost=Math.min(POL.FINE,SC.n|0);if(lost>0)scAdd(-lost,'Strafe');polEnd('−'+lost+' Scoops')}
+function polStep(dt){if(!POL.hud&&POL.state==='idle')return;POL.t+=dt;const live=LV.id===0&&!G.under;
+  if(POL.state==='warn'){if(!live)return;POL.timer-=dt;const t=Math.max(0,Math.ceil(POL.timer));polText('POLIZEI IN '+Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),POL.timer<15?'#ff2a2a':'#ffb020');if(POL.timer<=0)polDispatch();return}
+  if(!POL.cops.length)return;polDraw(dt);if(!live)return;
+  if(POL.state==='patrol'||POL.state==='chase'){if(Math.floor(POL.t*2)!==Math.floor((POL.t-dt)*2))tone(Math.floor(POL.t*2)%2?640:860,.22,'square',.018)}
+  const near=POL.cops.reduce((m,c)=>Math.min(m,Math.hypot(c.x-P.x,c.z-P.z)),1e9);
+  if(POL.state==='patrol'){POL.cops.forEach((c,i)=>{const a=POL.t*.5+i*3.1,tx=POL.spot.x+Math.cos(a)*(POL.search>3?10:0),tz=POL.spot.z+Math.sin(a)*(POL.search>3?10:0),L=polMove(c,tx,tz,c.sp*.85,dt);if(L<2.5)POL.search+=dt/POL.cops.length});
+    if(near<POL.SIGHT&&G.phase==='play'){POL.state='chase';POL.chaseT=0;POL.loseT=0;toast('Polizei! Lauf!',1600);polText('VERFOLGUNG!','#ff2a2a');tone(900,.25,'square',.06)}
+    else if(POL.search>20){polEnd('Glück gehabt! Die Polizei zieht ab.')}
+    return}
+  if(POL.state==='chase'){POL.chaseT+=dt;POL.cops.forEach(c=>polMove(c,P.x,P.z,c.sp+Math.min(2.5,POL.chaseT*.15),dt));
+    if(near<2.4&&G.phase==='play')return polCatch();
+    POL.loseT=near>75?POL.loseT+dt:0;if(POL.loseT>4)polEnd('Glück gehabt! Du hast sie abgehängt.');else if(POL.chaseT>70)polEnd('Glück gehabt! Die Polizei gibt auf.');return}
+  if(POL.state==='caught'&&POL.cin){POL.cin.t+=dt;if(POL.cin.t>1.7&&POL.cin.step<3)polCin(POL.cin.step+1)}}
 /* ---------- Tag und Nacht: ein Tag dauert 30 Minuten, Start am Mittag (Pacific-Sim-Look) ---------- */
 const DAY={len:1800,t:0,on:true,grain:null,K:null,last:-1};
 function dayInit(){const C=c=>new THREE.Color(c);
@@ -339,7 +381,7 @@ function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayIn
   DAY.hour=Math.floor(((p*24+12)%24)*10)/10;if(DAY.sea){DAY.sea.uniforms.t.value+=dt;DAY.sea.uniforms.dim.value=Math.max(0,Math.min(1,(sun.intensity+hemi.intensity*.6-.7)/2.6))}}
 /* ---------- Gesamtaufbau ---------- */
 function portLupoNew(H){
-  HUB.doors=[];HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
+  HUB.doors=[];HUB.policeStation=null;HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
   const add=o=>W0.add(o);
   const solids=mpBuildings(H);mpBuildMask(solids);
   mpTerrain(add);
