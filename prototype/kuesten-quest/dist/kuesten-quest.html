@@ -2223,7 +2223,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   let nd=1e9;HUB.portals.forEach(p=>{const d=Math.hypot(P.x-p.x,P.z-p.z);p.beam.material.opacity=Math.max(0,Math.min(.45,(105-d)/75*.45));p.g.visible=!G.under&&(d<78||HUB.found.has(p.world));p.g.children.forEach((c,i)=>{if(i>0)c.rotation.z+=dt*(i%2?1.4:-1.1)});if(!HUB.found.has(p.world)&&d<nd)nd=d});
   const r=$('radar');if(r){const open=nd<1e8;r.classList.toggle('on',G.phase==='play'&&open&&!G.under);if(open){const w=nd<30?'heiß!':nd<65?'warm':nd<115?'lauwarm':'kalt';$('radar-s').textContent=w;$('radar-s').dataset.t=w[0];$('radar-bar').style.setProperty('--p',Math.max(.04,Math.min(1,1-nd/190)))}}
   /* Minikarte */
-  if(HUB.mapn){dayStep(dt);polStep(dt);mpMini(dt);return}
+  if(HUB.mapn){dayStep(dt);polStep(dt);giantStep(dt);mpMini(dt);return}
   const mm=HUB.mm;if(!mm)return;mm.exg.fillStyle='#fff';mm.exg.beginPath();const [ex,ez]=mm.pxz(P.x,P.z);mm.exg.arc(ex,ez,52*mm.S,0,7);mm.exg.fill();if(G.under&&HUB.uw&&HUB.uw.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const [tx,tz]=mm.pxz(HUB.uw.tower.x,HUB.uw.tower.z);mm.exg.beginPath();mm.exg.arc(tx,tz,26*mm.S,0,7);mm.exg.fill()}
   HUB.mmT+=dt;if(HUB.mmT<.12)return;HUB.mmT=0;const cv=$('mini');if(!cv)return;cv.classList.toggle('on',G.phase==='play');const g=cv.getContext('2d'),t=mm.tmp.getContext('2d');
   t.globalCompositeOperation='source-over';t.clearRect(0,0,150,150);t.drawImage(mm.map,0,0);t.globalCompositeOperation='destination-in';t.drawImage(mm.ex,0,0);
@@ -2906,6 +2906,68 @@ function mpKaiju(col){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial
   for(let i=0;i<6;i++){const sp=new THREE.Mesh(new THREE.ConeGeometry(.55-i*.04,1.3,6),yel);sp.position.set(0,11.2-i*1.35,.2-i*.75);sp.rotation.x=-.5-i*.12;sp.castShadow=true;g.add(sp)}
   for(let i=0;i<4;i++)P(SPH,m,0,3.4-i*.5,-3.6-i*1.9,1.7-i*.32,1.5-i*.28,2.0);
   return g}
+/* ---------- Riesen-Saurier als NPCs: drei Wesen mit Mode-Accessoires aus den Moodboards laufen alle 2-3 Minuten über die breiten Straßen (ca. 20 m hoch) ---------- */
+const GIANT={t:40,list:[],pool:{},n:0,roads:null,SPEED:3.6,SCALE:1.62,kinds:['pink','gold','hoodie'],names:{pink:'Pink-Blob',gold:'Goldzilla',hoodie:'Hoodie-Zilla'}};
+function mpBuildGiant(kind){const g=new THREE.Group(),SPH=new THREE.SphereGeometry(1,14,10),CON=new THREE.ConeGeometry(1,1,7),CYL=new THREE.CylinderGeometry(1,1,1,10);
+  const M=(c,o)=>new THREE.MeshStandardMaterial({color:c,roughness:.38,...(o||{})}),skin=kind==='gold'?M('#e6b422',{metalness:.85,roughness:.28}):kind==='pink'?M('#f4a6c8'):M('#b79cf0'),belly=kind==='gold'?M('#f1c84a',{metalness:.8,roughness:.3}):kind==='pink'?M('#ffd6e8'):M('#d8c6ff'),
+    yel=M('#ffd04a'),dark=M('#2a1020',{roughness:.6}),white=M('#ffffff'),black=M('#141416',{roughness:.3});
+  const P=(parent,geo,mat,x,y,z,sx,sy,sz)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;parent.add(o);return o};
+  const body=new THREE.Group();g.add(body);
+  P(body,SPH,skin,0,4.6,0,3.5,4.0,3.1);P(body,SPH,belly,0,4.3,2.1,2.5,3.0,1.2);
+  /* Kopf */
+  const head=new THREE.Group();head.position.set(0,9.2,1.3);body.add(head);P(head,SPH,skin,0,0,0,2.7,2.3,2.4);P(head,SPH,skin,0,-.7,2.0,1.7,1.1,1.5);
+  const open=kind!=='pink';P(head,SPH,dark,0,-.95,2.7,open?1.45:1.3,open?.55:.3,.7);for(let i=-3;i<=3;i++){const t=new THREE.Mesh(new THREE.ConeGeometry(.2,.5,5),white);t.position.set(i*.36,open?-.55:-.72,3.05);t.rotation.x=Math.PI;head.add(t)}
+  [-1,1].forEach(sd=>{P(head,SPH,white,sd*1.25,1.1,1.7,.6,.6,.35);P(head,SPH,dark,sd*1.25,1.1,2.0,.26,.26,.2)});
+  /* Arme und Beine als Gelenke (Pivot an Schulter/Hüfte) */
+  const arms=[],legs=[];
+  [-1,1].forEach((sd,i)=>{const arm=new THREE.Group();arm.position.set(sd*3.1,6.7,.9);body.add(arm);P(arm,SPH,skin,0,-1.5,0,.9,1.9,.9);arms.push(arm);
+    const leg=new THREE.Group();leg.position.set(sd*1.8,3.3,.2);g.add(leg);P(leg,SPH,skin,0,-1.4,0,1.45,1.9,1.5);P(leg,SPH,kind==='hoodie'?M('#ff7ac0'):skin,0,-2.8,1.0,1.55,.65,2.1);legs.push(leg);
+    if(kind==='hoodie'){P(leg,SPH,white,0,-3.25,1.0,1.6,.18,2.2)}});
+  /* Schwanz */
+  const tail=new THREE.Group();tail.position.set(0,3.4,-2.8);body.add(tail);for(let i=0;i<4;i++)P(tail,SPH,skin,0,-i*.5,-i*1.9-.6,1.7-i*.32,1.5-i*.28,2.0);
+  /* Rückenplatten */
+  const spikeMat=kind==='gold'?M('#c99a1c',{metalness:.85,roughness:.3}):yel;for(let i=0;i<7;i++){const sp=new THREE.Mesh(CON,spikeMat);sp.scale.set(.6-i*.03,1.5,.6-i*.03);sp.position.set(0,10.6-i*1.4,.3-i*.7);sp.rotation.x=-.5-i*.12;sp.castShadow=true;body.add(sp)}
+  if(kind==='pink'){
+    [0,1].forEach(i=>{const sd=i?1:-1;P(arms[i],SPH,yel,0,-3.35,.5,1.3,1.3,1.3);P(arms[i],SPH,M('#ff4a4a'),0,-2.5,.2,.95,.35,.95)});  /* Boxhandschuhe mit Bündchen */
+    P(head,BX,black,0,1.1,2.2,2.9,.2,.2);[-1,1].forEach(sd=>P(head,SPH,black,sd*1.0,1.1,2.35,.62,.55,.22));    /* Sonnenbrille */
+    P(head,CYL,M('#ff4a4a'),0,1.6,.4,2.55,.28,2.2)}                                                              /* Stirnband */
+  if(kind==='gold'){
+    for(let i=0;i<4;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(1,.05,6,22),M('#b8870f',{metalness:.7,roughness:.35}));const sc=[3.55,3.62,3.55,3.3][i];t.scale.set(sc,sc*.95,sc*.9);t.position.set(0,3.2+i*1.2,0);t.rotation.x=Math.PI/2;t.castShadow=true;body.add(t)}   /* Nähte der gesteppten Daunenjacke */
+    [-1,1].forEach((sd,i)=>{P(arms[i],SPH,M('#f2c94c',{metalness:.85,roughness:.28}),0,-1.5,0,1.05,2.05,1.05)});
+    const col=new THREE.Mesh(new THREE.TorusGeometry(1,.42,8,18),M('#f5d36a',{metalness:.8,roughness:.3}));col.scale.set(2.0,2.0,1.5);col.position.set(0,8.0,.8);col.rotation.x=Math.PI/2;body.add(col);
+    P(head,BX,black,0,1.1,2.2,2.9,.2,.2);[-1,1].forEach(sd=>P(head,SPH,black,sd*1.0,1.1,2.35,.62,.55,.22));
+    /* Eistüte in der rechten Hand */
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(.55,1.8,8),M('#d9a05a'));cone.position.set(0,-3.9,1.0);cone.rotation.x=Math.PI;arms[1].add(cone);P(arms[1],SPH,M('#ffd6e8'),0,-2.7,1.0,.8,.7,.8);P(arms[1],SPH,white,0,-2.15,1.0,.65,.6,.65)}
+  if(kind==='hoodie'){
+    const hood=M('#4cd9c0');P(body,SPH,hood,0,4.6,0,3.62,4.1,3.22);P(body,SPH,M('#3cbfa8'),0,8.1,-.9,2.5,1.9,1.5);P(body,BX,M('#3cbfa8'),0,3.6,3.12,3.2,1.2,.3);
+    [-1,1].forEach((sd,i)=>{P(body,CYL,white,sd*.6,6.6,3.0,.06,1.6,.06);P(arms[i],CYL,hood,0,-1.2,0,1.0,2.4,1.0)});
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(1,12,8,0,Math.PI*2,0,Math.PI/2),M('#ffd04a'));cap.scale.set(2.3,1.2,2.2);cap.position.set(0,1.0,0);head.add(cap);P(head,BX,M('#ffd04a'),0,1.0,-2.2,2.0,.15,1.4);   /* Kappe verkehrt herum */
+    const bb=new THREE.Group();bb.position.set(3.7,8.4,-.2);body.add(bb);P(bb,BX,black,0,0,0,1.0,1.4,2.6);[-.6,.6].forEach(z=>{P(bb,SPH,white,.55,0,z,.1,.38,.38)});P(bb,BX,M('#ff5fa8'),0,.85,0,.5,.1,1.9)}   /* Boombox */
+  body.userData.rest=body.position.y;
+  g.scale.setScalar(GIANT.SCALE*(kind==='gold'?1.04:kind==='hoodie'?.98:1));g.userData.noBake=true;g.visible=false;
+  return {g,body,head,tail,arms,legs,kind,phase:0}}
+function giantRoads(){if(GIANT.roads)return GIANT.roads;GIANT.roads=[];MAPD.roads.forEach(r=>{if(r.w<14)return;const pts=mpResample(r.pts,4).filter(s=>s.tx||s.tz);if(pts.length<20)return;GIANT.roads.push(pts)});return GIANT.roads}
+function giantSpawn(){const roads=giantRoads();if(!roads.length)return false;const kind=GIANT.kinds[GIANT.n++%3];let best=null;
+  for(let ri=0;ri<roads.length;ri++){const pts=roads[ri];for(let i=0;i<pts.length;i+=3){const d=Math.hypot(pts[i].x-P.x,pts[i].z-P.z);if(d>140&&d<210&&pts[i].z<186){
+      /* Laufrichtung: auf den Spieler zu */const j=Math.min(pts.length-1,i+8),k=Math.max(0,i-8),toward=(Math.hypot(pts[j].x-P.x,pts[j].z-P.z)<Math.hypot(pts[k].x-P.x,pts[k].z-P.z))?1:-1;
+      const room=toward>0?pts.length-1-i:i;if(room>35&&(!best||Math.abs(d-170)<Math.abs(best.d-170)))best={ri,i,dir:toward,d}}}}
+  if(!best)return false;if(!GIANT.pool[kind])GIANT.pool[kind]=mpBuildGiant(kind);const G0=GIANT.pool[kind];if(!G0.g.parent)W0.add(G0.g);
+  G0.ri=best.ri;G0.u=best.i;G0.dir=best.dir;G0.life=0;G0.phase=0;G0.g.visible=true;G0.active=true;GIANT.list.push(G0);GIANT.t=120+Math.random()*60;
+  toast(GIANT.names[kind]+' kommt die Straße entlang!',2200);return true}
+function giantStep(dt){const live=LV.id===0&&!G.under&&G.phase==='play'&&HUB.built;
+  GIANT.list.forEach(o=>{o.g.visible=live&&o.active});if(!live)return;
+  GIANT.t-=dt;if(GIANT.t<=0&&GIANT.list.length<1)giantSpawn();
+  for(const o of GIANT.list.slice()){const pts=giantRoads()[o.ri];o.life+=dt;o.u+=o.dir*GIANT.SPEED*dt/4;const i=Math.max(0,Math.min(pts.length-1,Math.round(o.u))),p=pts[i],q=pts[Math.max(0,Math.min(pts.length-1,i+o.dir))];
+    const tx=(q.x-p.x)*o.dir,tz=(q.z-p.z)*o.dir;const dx=pts[Math.max(0,Math.min(pts.length-1,Math.floor(o.u)))],ex=pts[Math.max(0,Math.min(pts.length-1,Math.ceil(o.u)))],f=o.u-Math.floor(o.u);
+    const x=dx.x+(ex.x-dx.x)*f,z=dx.z+(ex.z-dx.z)*f;const hd=Math.atan2(ex.x-dx.x,ex.z-dx.z)*1;const faceY=o.dir>0?hd:hd+(Math.abs(ex.x-dx.x)+Math.abs(ex.z-dx.z)<.001?0:0);
+    o.g.position.set(x,1.3,z);const ang=Math.atan2((ex.x-dx.x)*o.dir,(ex.z-dx.z)*o.dir);if(Math.abs(ex.x-dx.x)+Math.abs(ex.z-dx.z)>.001)o.g.rotation.y=ang;
+    /* Laufanimation: Beine und Arme gegengleich, Körper wippt, Schwanz wedelt */
+    const prev=o.phase;o.phase+=dt*GIANT.SPEED/5.2*Math.PI;const sw=Math.sin(o.phase);o.legs[0].rotation.x=sw*.5;o.legs[1].rotation.x=-sw*.5;o.arms[0].rotation.x=-sw*.35;o.arms[1].rotation.x=sw*.35;
+    o.body.position.y=Math.abs(Math.cos(o.phase))*.28;o.body.rotation.z=sw*.04;o.head.rotation.y=Math.sin(o.phase*.4)*.18;o.tail.rotation.y=Math.sin(o.phase*.5)*.35;
+    /* Schritt: Grollen und leichtes Beben in der Nähe */
+    if(Math.floor(prev/Math.PI)!==Math.floor(o.phase/Math.PI)){const d=Math.hypot(o.g.position.x-P.x,o.g.position.z-P.z);if(d<130){tone(48+Math.random()*10,.4,'sine',Math.min(.06,.06*(1-d/130)+.01));if(d<45)G.shake=Math.max(G.shake||0,.18*(1-d/45))}}
+    const far=Math.hypot(o.g.position.x-P.x,o.g.position.z-P.z);
+    if((o.dir>0&&o.u>=pts.length-2)||(o.dir<0&&o.u<=1)||o.life>170||(o.life>20&&far>300)){o.active=false;o.g.visible=false;GIANT.list.splice(GIANT.list.indexOf(o),1)}}}
 /* ---------- Leuchtturm (oben) und Tarxarox (unten, an derselben Stelle): der rosa Kreis neben dem Label "Leuchtturm / Tarxarox" ---------- */
 function mpLighthouseSpot(){const labs=MAPD.labels.filter(l=>/Leuchtturm|Tarxarox/i.test(l.t));if(!labs.length||!MAPD.markers.length)return null;let best=null;
   MAPD.markers.forEach(m=>labs.forEach(l=>{const d=Math.hypot(m.x-l.x,m.y-l.y);if(d<120&&(!best||d<best.d))best={d,m}}));return best?{x:mwx(best.m.x),z:mwz(best.m.y),r:best.m.r*MP.SC}:null}
@@ -3620,7 +3682,7 @@ function mpGrindStep(dt){const e=GR.seg;GR.t+=dt;const rx=P.x-e.ax,rz=P.z-e.az,a
   if(al<.5||al>e.L-.5){const nxt=mpGrindEdges().find(q=>q!==e&&Math.hypot(q.ax-(e.ax+e.tx*(GR.dir>0?e.L:0)),q.az-(e.az+e.tz*(GR.dir>0?e.L:0)))<1.6&&q.tx*e.tx+q.tz*e.tz>.9);if(nxt){GR.seg=nxt}else grindEnd(false);return}
   if(P.speed<2.2||(K.left||K.right)&&GR.t>.25)grindEnd(false)}
 
-window.__qa={KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
