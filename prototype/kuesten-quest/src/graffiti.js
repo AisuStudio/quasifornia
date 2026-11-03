@@ -26,7 +26,7 @@ function grafEdges(){if(GF.edges)return GF.edges;const E=[];MAPD.buildings.forEa
   for(let e=0;e<ring.length;e++){const a=ring[e],c=ring[(e+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<6)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
     if(mpInPoly(ring,mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}E.push({bi,e,ax:a[0],az:a[1],ux,uz,nx,nz,L})}});GF.edges=E;return E}
 function grafSlot(id){const m=/^f(\d+)-(\d+)-(\d+)$/.exec(id);if(!m)return null;const E=grafEdges().find(x=>x.bi===+m[1]&&x.e===+m[2]);if(!E)return null;const k=+m[3],t=k*6+3;if(t+2.8>E.L)return null;
-  return {id,k,E,x:E.ax+E.ux*t+E.nx*.26,z:E.az+E.uz*t+E.nz*.26,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
+  return {id,k,E,x:E.ax+E.ux*t+E.nx*.62,z:E.az+E.uz*t+E.nz*.62,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
 function grafFacadeNear(){const px=P.x,pz=P.z;let best=null;for(const E of grafEdges()){const rx=px-E.ax,rz=pz-E.az,t=Math.max(0,Math.min(E.L,rx*E.ux+rz*E.uz)),cx=E.ax+E.ux*t,cz=E.az+E.uz*t,d=Math.hypot(px-cx,pz-cz),side=rx*E.nx+rz*E.nz;
     if(d<3.8&&side>-.3&&(!best||d<best.d))best={d,E,t}}
   if(!best)return null;const E=best.E,k=Math.max(0,Math.min(Math.floor(E.L/6)-1,Math.floor(best.t/6))),id='f'+E.bi+'-'+E.e+'-'+k,sl=grafSlot(id);if(!sl)return null;
