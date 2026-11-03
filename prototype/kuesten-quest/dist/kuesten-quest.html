@@ -2883,6 +2883,43 @@ function mpFitClear(ux,uy,Rm,maxU){const segD=(x,y)=>{let d=1e9;MAPD.rail.forEac
   const ptsOk=(x,y)=>{if(segD(x,y)<Rm+4)return false;const n=mpNearRoad(x,y);if(n&&n.d*MP.SC<Math.max(n.w,MP.RW)*MP.SC/2+MP.SWK+Rm+.4)return false;
   for(let a=0;a<9;a++){const px=a?x+Math.cos(a/8*6.283)*Rm/MP.SC:x,py=a?y+Math.sin(a/8*6.283)*Rm/MP.SC:y;if(!MAPD.land.some(l=>mpInPoly(l.c[0],px,py)))return false;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],px,py)))return false;if([MAPD.courts,MAPD.parks,MAPD.lots,MAPD.water].some(L=>(L||[]).some(it=>it.c&&mpInPoly(it.c[0],px,py))))return false}return true};
   for(let d=0;d<=(maxU||60);d+=3)for(let a=0;a<(d?16:1);a++){const x=ux+Math.cos(a/16*6.283)*d,y=uy+Math.sin(a/16*6.283)*d;if(ptsOk(x,y))return [x,y]}return null}
+/* ---------- Pacific-Sim-Wahrzeichen: Retro-Autos in Pastell und aufblasbare rosa Kaiju-Statuen ---------- */
+const MPCARCOL=['#f6a6c8','#f7de78','#a8d4ee','#a9e6d2','#f6c3a8','#e7b8e8'];
+function mpRetroCar(kind,col){const g=new THREE.Group(),body=MT(col),cream=MT('#fdf6e8'),glass=MT('#355a74'),tire=MT('#1b1b22'),chrome=MT('#e8e8ee'),lamp=MT('#fff0b0','#fff0b0',.7);
+  const P=(geo,mat,x,y,z,sx,sy,sz)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;o.receiveShadow=true;g.add(o);return o},SPH=new THREE.SphereGeometry(1,9,6);
+  const wheel=(x,z)=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,.3,9),tire);t.rotation.z=Math.PI/2;t.position.set(x,.4,z);t.castShadow=true;g.add(t);const h=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.32,6),chrome);h.rotation.z=Math.PI/2;h.position.set(x+(x>0?.03:-.03),.4,z);g.add(h)};
+  if(kind===0){/* Karmann Ghia: flach, rund, zweifarbiges Dach */
+    P(SPH,body,0,.85,0,.95,.62,2.2);P(SPH,body,0,.8,1.25,.9,.45,1.0);P(SPH,cream,0,1.35,-.15,.78,.42,1.05);P(SPH,glass,0,1.3,-.1,.8,.3,.95);
+    [-1,1].forEach(s=>{P(SPH,lamp,s*.62,.95,2.05,.2,.2,.14);P(BX,chrome,s*.55,.42,2.25,.5,.1,.12);P(SPH,body,s*.88,.7,1.6,.28,.4,.8)});P(BX,chrome,0,.45,-2.2,1.5,.1,.12)}
+  else{/* VW-Bus: Kasten, Weiß oben, runde Scheinwerfer, V-Nase */
+    P(BX,body,0,1.0,0,1.9,1.1,4.2);P(BX,cream,0,1.85,0,1.92,.85,4.22);P(BX,glass,0,1.85,0,1.94,.45,3.6);P(BX,cream,0,2.32,0,1.8,.14,4.0);P(BX,body,0,1.0,2.12,1.0,1.0,.16);
+    [-1,1].forEach(s=>{P(SPH,lamp,s*.6,1.1,2.22,.2,.2,.1)});P(BX,chrome,0,.55,2.2,1.9,.12,.12);P(BX,chrome,0,.55,-2.15,1.9,.12,.12)}
+  [[-.95,1.3],[.95,1.3],[-.95,-1.3],[.95,-1.3]].forEach(([x,z])=>wheel(x,z));return g}
+function mpKaiju(col){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:col,roughness:.35,flatShading:false}),belly=new THREE.MeshStandardMaterial({color:'#ffd6e8',roughness:.4}),yel=new THREE.MeshStandardMaterial({color:'#ffd04a',roughness:.4}),dark=new THREE.MeshStandardMaterial({color:'#2a1020',roughness:.6}),white=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.4}),SPH=new THREE.SphereGeometry(1,16,11);
+  const P=(geo,mat,x,y,z,sx,sy,sz)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;g.add(o);return o};
+  P(SPH,m,0,4.6,0,3.5,4.0,3.1);P(SPH,belly,0,4.4,2.1,2.5,3.0,1.2);
+  P(SPH,m,0,9.4,1.4,2.7,2.3,2.4);P(SPH,m,0,8.7,3.3,1.7,1.1,1.5);
+  [-1,1].forEach(s=>{P(SPH,white,s*1.25,10.4,3.0,.6,.6,.35);P(SPH,dark,s*1.25,10.4,3.3,.26,.26,.2);P(SPH,m,s*3.4,6.0,1.0,.9,1.9,.9);P(SPH,yel,s*4.0,4.3,2.3,1.15,1.15,1.15);P(SPH,m,s*1.8,1.6,.2,1.4,1.7,1.5);P(SPH,m,s*1.8,.5,1.4,1.5,.6,2.0);P(SPH,m,s*1.4,11.4,.4,.4,.5,.4)});
+  P(SPH,dark,0,8.45,4.2,1.35,.32,.7);for(let i=-3;i<=3;i++){const t=new THREE.Mesh(new THREE.ConeGeometry(.2,.5,5),white);t.position.set(i*.36,8.75,4.45);t.rotation.x=Math.PI;g.add(t)}
+  for(let i=0;i<6;i++){const sp=new THREE.Mesh(new THREE.ConeGeometry(.55-i*.04,1.3,6),yel);sp.position.set(0,11.2-i*1.35,.2-i*.75);sp.rotation.x=-.5-i*.12;sp.castShadow=true;g.add(sp)}
+  for(let i=0;i<4;i++)P(SPH,m,0,3.4-i*.5,-3.6-i*1.9,1.7-i*.32,1.5-i*.28,2.0);
+  return g}
+function mpDressUp(add){const R=mulberry(2468);
+  /* Autos: auf dem Parkplatz in Reihen und am Straßenrand der breiten Promenade */
+  const car=(x,z,ry,k,col)=>{const c=mpRetroCar(k,col);c.position.set(x,1.3,z);c.rotation.y=ry;add(c);addOutlines(c,'prop');const fx=Math.sin(ry),fz=Math.cos(ry);[-1.4,0,1.4].forEach(d=>mpMarkDisc(x+fx*d,z+fz*d,1.15));HUB.cars=(HUB.cars||[]).concat([{x,z}])};
+  HUB.cars=[];let n=0;
+  MAPD.lots.forEach(l=>{const ring=l.c[0],o=mpObb(ring),cu=Math.cos(o.a),su=Math.sin(o.a),ux=cu,uy=su,vx=-su,vy=cu;
+    for(let u=-o.w/2+7;u<o.w/2-5;u+=6.2)for(let v=-o.h/2+9;v<o.h/2-6;v+=12){const x=o.cx+ux*u+vx*v,y=o.cy+uy*u+vy*v;if(!mpInPoly(ring,x,y)||!mpInPoly(ring,x+vx*6,y+vy*6)||!mpInPoly(ring,x-vx*6,y-vy*6)||R()<.4)continue;
+      const X=mwx(x),Z=mwz(y);if(Z>186||mpAt(X,Z)===5)continue;car(X,Z,Math.atan2(vx,vy)+(R()<.5?0:Math.PI),n%3===2?1:0,MPCARCOL[Math.floor(R()*MPCARCOL.length)]);n++}});
+  MAPD.roads.forEach(r=>{if(r.w<14)return;const wM=Math.max(r.w,MP.RW)*MP.SC;let side=1,last=-99;mpResample(r.pts,16).forEach((s,si)=>{if(!(s.tx||s.tz)||si-last<2)return;side=-side;
+    const off=wM/2-1.25,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)!==2||Z0(z))return;
+    const ok=[-2.4,0,2.4].every(d=>mpAt(x+s.tx*d,z+s.tz*d)===2&&mpAt(x+s.tx*d-s.tz*side*2.1,z+s.tz*d+s.tx*side*2.1)===3);
+    if(!ok||(HUB.doors||[]).some(d=>Math.hypot(d[0]-x,d[1]-z)<7)||(HUB.cars||[]).some(c=>Math.hypot(c.x-x,c.z-z)<14))return;
+    if(mpRailDist(x,z)<3)return;last=si;car(x,z,Math.atan2(s.tx,s.tz),R()<.3?1:0,MPCARCOL[Math.floor(R()*MPCARCOL.length)])})});
+  /* Kaiju-Statuen als Wahrzeichen: Strand, Park, Platz am Resort */
+  const spots=[[1722,1500],[0,0],[2200,1330]],big=MAPD.parks.slice().sort((a,b)=>Math.abs(mpArea(b.c[0]))-Math.abs(mpArea(a.c[0])))[0];if(big){const c=mpCentroid(big.c[0]);spots[1]=[c[0],c[1]]}
+  HUB.kaiju=[];spots.forEach((p,i)=>{let f=null;for(const rr of [7,6,5]){f=mpFindFree(p[0],p[1],rr,90,false);if(f&&mpRailDist(f[0],f[1])>=10)break;f=null}if(!f)return;const k=mpKaiju(['#f4a6c8','#f7a0b8','#f2b0d0'][i%3]);k.position.set(f[0],1.3,f[1]);k.rotation.y=Math.atan2(HUB.sx-f[0],HUB.sz-f[1])+(i-1)*.5;k.scale.setScalar(1.15);add(k);addOutlines(k,'prop');mpMarkDisc(f[0],f[1],4.6);HUB.kaiju.push({x:f[0],z:f[1]})})}
+function Z0(z){return z>186}
 function mpFrontYaw(ux,uy){const n=mpNearRoad(ux,uy);return n?Math.atan2(-(n.x-ux),-(n.y-uy)):0}
 /* Punkt vor einem Gebäude: von der Mitte Richtung Straße, bis er begehbar ist */
 function mpFront(ux,uy,distM){const n=mpNearRoad(ux,uy);if(!n)return [mwx(ux),mwz(uy)];const L=Math.hypot(n.x-ux,n.y-uy)||1,dx=(n.x-ux)/L,dy=(n.y-uy)/L;
@@ -3238,6 +3275,7 @@ function portLupoNew(H){
    const sg=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.6),signMat('BAUSTELLE','#1a1030','#ffd23a'));sg.position.set(SX,1.3+3.3,SZ-.4);sg.rotation.y=Math.PI;sg.userData.noBake=true;add(sg);
    box(pst,.25,3.4,.25,SX-2.2,1.3+1.7,SZ-.4);box(pst,.25,3.4,.25,SX+2.2,1.3+1.7,SZ-.4);
    mpMarkRect(SX,(SZ+330)/2,HW+1.2,(330-SZ)/2+2,0);HUB.southBlocked=true}
+  mpDressUp(add);
   return {rail,lamps}}
 
 /* Gegenstand der Atoll-Quest mit Ring und Strahl */
