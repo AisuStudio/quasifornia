@@ -519,9 +519,11 @@ function stepTrick(dt){
 
 /* ---------- Eingabe ---------- */
 const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+/* Unterwelt: Vorwärts und Rückwärts sind vertauscht (nur vorne/hinten, links/rechts bleibt). KR = tatsächlich gedrückte Tasten, K = wirksame Steuerung. */
+const KR={up:0,down:0};function kSync(){K.up=G.under?KR.down:KR.up;K.down=G.under?KR.up:KR.down}
 addEventListener('keydown',e=>{if(G.phase==='title'&&!TITLE.opened&&!TEST&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&e.code!=='Tab'){e.preventDefault();openerDone();return}
   if(G.phase==='title'&&TITLE.step===1&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD')&&$('cm')){e.preventDefault();stepCarousel(e.code==='ArrowLeft'||e.code==='KeyA'?-1:1);return}
-  const k=KEYMAP[e.code];if(k){K[k]=1;e.preventDefault()}
+  const k=KEYMAP[e.code];if(k){if(k==='up'||k==='down'){KR[k]=1;kSync()}else K[k]=1;e.preventDefault()}
   if(e.code==='Space'){e.preventDefault();jump()}
   if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!e.repeat){e.preventDefault();doTrick('kickflip')}
   if(e.code==='KeyQ'&&!e.repeat){e.preventDefault();doTrick('shove')}
@@ -530,8 +532,8 @@ addEventListener('keydown',e=>{if(G.phase==='title'&&!TITLE.opened&&!TEST&&!e.me
   if(e.code==='KeyM')toggleSnd();
   if(e.code==='KeyN')toggleSfx();
   if(e.code==='Enter'&&G.phase==='title'&&!(e.target&&e.target.closest&&e.target.closest('button'))){e.preventDefault();if(TITLE.step===1)window.__titleStep(2);else if(TITLE.step===2){TITLE.quest=0;$('go').click()}else startChosen()}});
-addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
-addEventListener('blur',()=>{K.up=K.down=K.left=K.right=0});
+addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k){if(k==='up'||k==='down'){KR[k]=0;kSync()}else K[k]=0}});
+addEventListener('blur',()=>{KR.up=KR.down=0;K.up=K.down=K.left=K.right=0});
 function jump(){if(GR.on&&(G.phase==='play'||G.phase==='chase')){grindEnd(true);return}if((G.phase==='play'||G.phase==='chase')&&(P.y<=groundAt(P.x,P.z)+.05||P.coy<.14)){P.vy=7.4;P.coy=1;SFX.jump()}}
 G.muted=G0sfx;
 function musUi(){const b=$('b-snd');if(b){b.setAttribute('aria-pressed',String(!MUSE.paused));b.textContent=(MUSE.paused?'♪ Musik aus':'♪ Musik an')+' · M'}}
@@ -541,7 +543,7 @@ addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GF
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
 $('b-snd').onclick=toggleSnd;musUi();
-[['t-left','left'],['t-right','right'],['t-gas','up']].forEach(([id,k])=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();K[k]=1;b.classList.add('on');ac()});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>{K[k]=0;b.classList.remove('on')}))});
+[['t-left','left'],['t-right','right'],['t-gas','up'],['t-brake','down']].forEach(([id,k])=>{const b=$(id),vert=k==='up'||k==='down',set=v=>{if(vert){KR[k]=v;kSync()}else K[k]=v};b.addEventListener('pointerdown',e=>{e.preventDefault();set(1);b.classList.add('on');ac()});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>{set(0);b.classList.remove('on')}))});
 $('t-jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});
 if(matchMedia('(pointer:coarse)').matches)$('touch').classList.add('on');
 
@@ -1568,14 +1570,14 @@ function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it
   say('e',core===4&&!it.def.bonus?'Das war der Vierte. Genug für ein Atoll. Es gibt nur noch keins.':say1,3.4)}
 /* ---------- Unterwelt: Spiegelstadt, kopfüber, dunkel, fest im Pixel-Look ---------- */
 function shopEnter(){SHOP.in=true;SC.tab='lad';invToggle(true);tone(660,.08,'square',.04);tone(880,.1,'square',.04,0,.08)}
-function underApply(on){if(!!G.under===on)return;G.under=on;if(on){setTimeout(()=>{try{uwSpawn()}catch(e){console.log('uw',e)}},0)}else if(typeof uwClear==='function')uwClear();
+function underApply(on){if(!!G.under===on)return;G.under=on;kSync();if(on){setTimeout(()=>{try{uwSpawn()}catch(e){console.log('uw',e)}},0)}else if(typeof uwClear==='function')uwClear();
   HUB.portals.forEach(p=>{p.g.visible=false;p.beam.visible=!on});
   HUB.items.forEach(it=>{const v=!on&&!it.got;it.g.visible=v;it.ring.visible=v;it.beam.visible=v});
   if(HUB.man)HUB.man.g.visible=!on;if(HUB.atoll){HUB.atoll.g.visible=false;HUB.atoll.beam.visible=false}
   if(!on&&typeof atollRefresh==='function')atollRefresh();
   if(HUB.uw&&HUB.uw.g)HUB.uw.g.visible=on;if(HUB.beggar)HUB.beggar.g.visible=!on;
   applyLevel(0);G.pix=on;pixPass.uniforms.uUW.value=on?1:0;resize();r.domElement.style.transform=on?'scaleY(-1)':''}
-function underReset(){if(!G.under)return;G.under=false;pixPass.uniforms.uUW.value=0;G.pix=false;resize();r.domElement.style.transform='';if(HUB.uw&&HUB.uw.g)HUB.uw.g.visible=false}
+function underReset(){if(!G.under)return;G.under=false;kSync();pixPass.uniforms.uUW.value=0;G.pix=false;resize();r.domElement.style.transform='';if(HUB.uw&&HUB.uw.g)HUB.uw.g.visible=false}
 function underEnter(){if(G.under||!HUB.uw)return;toast('Leiter hinab …',1100);tone(220,.5,'sawtooth',.06,-170);later(.55,()=>{underApply(true);P.x=HUB.uw.bx;P.z=HUB.uw.bz+7;P.h=-Math.PI/2;P.speed=3;P.y=1.3;say('e','Hier unten steht alles kopf. Die Stadt sieht aus wie oben, nur dunkler, und irgendetwas leuchtet türkis. Die Leiter zurück ist dort, wo du gelandet bist.',5.5)})}
 function underExit(){if(!G.under||!HUB.uw)return;toast('Leiter hinauf …',1100);tone(160,.5,'sawtooth',.06,200);later(.55,()=>{underApply(false);P.x=HUB.uw.bx;P.z=HUB.uw.bz+7;P.h=-Math.PI/2;P.speed=3;P.y=1.3})}
 function stepUnder(dt){const U=HUB.uw;if(!U||!U.rain)return;uwStep(dt);
@@ -1614,7 +1616,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

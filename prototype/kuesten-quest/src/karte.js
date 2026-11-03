@@ -119,12 +119,71 @@ void main(){vec2 m=vec2(vW.x/org.z+org.x-geo.x,vW.z/org.z+org.y-geo.y)/geo.zw;fl
 #include <colorspace_fragment>
 #include <fog_fragment>
 }`});DAY.sea=mat;return mat}
+/* ---------- Sportplätze: Basketball (Käfig mit Öffnung, zwei Körbe), X-Fit (Outdoor-Geräte), Beach-Volleyball (Sand und Netz). Daten aus map.json (courts + Labels), nichts an der Karte geändert ---------- */
+function mpCvTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
+function mpCourtKind(c){const lab=MAPD.labels.find(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket/i.test(l.t)||/X-?Fit/i.test(l.t)));return lab?(/Basket/i.test(lab.t)?'basket':'xfit'):'volley'}
+function mpCourts(add){HUB.courts=[];
+  const steel=new THREE.MeshStandardMaterial({color:'#8892a8',roughness:.45,metalness:.5}),yel=new THREE.MeshStandardMaterial({color:'#ffd04a',roughness:.5}),blue=new THREE.MeshStandardMaterial({color:'#4f9ec4',roughness:.5}),white=new THREE.MeshStandardMaterial({color:'#fdf6e8',roughness:.6}),orange=new THREE.MeshStandardMaterial({color:'#ff7a1a',roughness:.5}),rope=new THREE.MeshStandardMaterial({color:'#f6efe6',roughness:.9});
+  const chain=new THREE.MeshBasicMaterial({map:mpCvTex(32,32,(g,w,h)=>{g.strokeStyle='#d6dcea';g.lineWidth=2;g.beginPath();g.moveTo(0,h/2);g.lineTo(w/2,0);g.lineTo(w,h/2);g.lineTo(w/2,h);g.closePath();g.stroke()},[1,1]),transparent:true,side:THREE.DoubleSide,depthWrite:false,alphaTest:.05,color:'#c4cbdc'});
+  const netM=new THREE.MeshBasicMaterial({map:mpCvTex(32,32,(g,w,h)=>{g.strokeStyle='#ffffff';g.lineWidth=2;g.strokeRect(0,0,w,h)},[1,1]),transparent:true,side:THREE.DoubleSide,depthWrite:false,alphaTest:.05});
+  MAPD.courts.forEach(c=>{const kind=mpCourtKind(c),o=mpObb(c.c[0]);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
+    const Lw=w*MP.SC,Hw=h*MP.SC,X=mwx(o.cx),Z=mwz(o.cy),ux=Math.cos(a),uz=Math.sin(a),vx=-Math.sin(a),vz=Math.cos(a),W=(lx,lz)=>[X+ux*lx+vx*lz,Z+uz*lx+vz*lz];
+    const G=new THREE.Group();G.position.set(X,1.3,Z);G.rotation.y=-a;G.userData.noBake=true;add(G);
+    const mesh=(geo,mat,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(sx!==undefined)m.scale.set(sx,sy,sz);m.castShadow=true;G.add(m);return m};
+    const cylY=(x,z,h,r,mat)=>{const m=mesh(new THREE.CylinderGeometry(r,r,h,8),mat,x,h/2,z);return m};
+    const barX=(x,z,len,y,r,mat)=>{const m=mesh(new THREE.CylinderGeometry(r,r,len,8),mat,x,y,z);m.rotation.z=Math.PI/2;return m};
+    const barZ=(x,z,len,y,r,mat)=>{const m=mesh(new THREE.CylinderGeometry(r,r,len,8),mat,x,y,z);m.rotation.x=Math.PI/2;return m};
+    const disc=(lx,lz,r)=>{const p=W(lx,lz);mpMarkDisc(p[0],p[1],Math.max(r,.6))};/* Maske hat 0,5 m Auflösung: dünnere Dinge brauchen eine Mindestdicke */
+    const rectL=(lx,lz,len,dirX,hd0)=>{const hd=Math.max(hd0,.6);/* Kollisionsrechteck in Platzkoordinaten; dirX: Strecke läuft entlang lokalem x (true) oder z (false) */const p=W(lx,lz),tx=dirX?ux:vx,tz=dirX?uz:vz;mpMarkRect(p[0],p[1],len/2,hd,Math.atan2(-tz,tx))};
+    const info={kind,a,x:X,z:Z,Lw,Hw,txt:kind==='basket'?'B':kind==='xfit'?'X':'V',col:kind==='basket'?'#ff9a3d':kind==='xfit'?'#ff5f7a':'#ffe066',posts:0};
+    const base=mpMat('court-'+kind,kind==='basket'?'#d98a5a':kind==='xfit'?'#c9675c':'#ecc872');mpFlat([c],kind==='volley'?1.322:1.316,base,add);
+    const S=40,mk=(draw)=>{const t=mpCvTex(Math.min(2048,Math.round(Lw*S)),Math.min(2048,Math.round(Hw*S)),draw),m=new THREE.Mesh(new THREE.PlaneGeometry(Lw,Hw),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));m.rotation.x=-Math.PI/2;m.position.y=.04;G.add(m)};
+    if(kind==='basket'){
+      const PL=Math.min(Lw-5.5,28),PW=Math.min(Hw-2.5,15),px=m=>(m+Lw/2)*S,pz=m=>(m+Hw/2)*S;
+      mk((g,cw,ch)=>{g.fillStyle='#e7a074';g.fillRect(px(-PL/2),pz(-PW/2),PL*S,PW*S);g.fillStyle='#5aa9c9';[-1,1].forEach(sd=>g.fillRect(px(sd>0?PL/2-5.8:-PL/2),pz(-2.45),5.8*S,4.9*S));
+        g.strokeStyle='#fdf6e8';g.lineWidth=.09*S;g.strokeRect(px(-PL/2),pz(-PW/2),PL*S,PW*S);g.beginPath();g.moveTo(px(0),pz(-PW/2));g.lineTo(px(0),pz(PW/2));g.stroke();g.beginPath();g.arc(px(0),pz(0),1.8*S,0,7);g.stroke();
+        [-1,1].forEach(sd=>{const bx=sd*(PL/2-1.575),ex=sd*(PL/2-5.8);g.strokeRect(px(Math.min(sd*PL/2,ex)),pz(-2.45),5.8*S,4.9*S);g.beginPath();g.arc(px(ex),pz(0),1.8*S,sd>0?Math.PI/2:-Math.PI/2,sd>0?Math.PI*1.5:Math.PI/2,sd<0?false:false);g.stroke();
+          const ang=Math.asin(Math.min(.99,(PW/2-.9)/6.75));g.beginPath();g.arc(px(bx),pz(0),6.75*S,sd>0?Math.PI-ang:-ang,sd>0?Math.PI+ang:ang,false);g.stroke();
+          const ax=bx-sd*6.75*Math.cos(ang);[-1,1].forEach(zz=>{g.beginPath();g.moveTo(px(sd*PL/2),pz(zz*(PW/2-.9)));g.lineTo(px(ax),pz(zz*(PW/2-.9)));g.stroke()})})});
+      info.hoops=0;[-1,1].forEach(sd=>{const hx=sd*(PL/2-.2),poleX=sd*(PL/2+.9);cylY(poleX,0,3.4,.1,steel);barX((hx+poleX)/2,0,Math.abs(poleX-hx),3.1,.05,steel);
+        mesh(BX,white,hx,3.45,0,.06,1.05,1.8);mesh(BX,orange,hx,3.15,0,.07,.5,.9).material=orange;
+        const rim=mesh(new THREE.TorusGeometry(.23,.02,6,16),orange,hx-sd*.45,3.05,0);rim.rotation.x=Math.PI/2;
+        mesh(new THREE.CylinderGeometry(.23,.13,.45,10,1,true),netM,hx-sd*.45,2.8,0).material=netM;disc(poleX,0,.22);info.hoops++});
+      /* Käfig: Maschendrahtzaun rundherum, eine Öffnung zur nächsten Straße */
+      const fx=Lw/2-.3,fz=Hw/2-.3,sides=[[[-fx,-fz],[fx,-fz]],[[fx,-fz],[fx,fz]],[[fx,fz],[-fx,fz]],[[-fx,fz],[-fx,-fz]]];let gi=0,gd=1e9;
+      sides.forEach((sd,i)=>{const mxw=(sd[0][0]+sd[1][0])/2,mzw=(sd[0][1]+sd[1][1])/2,wp=W(mxw,mzw),n=mpNearRoad(mux(wp[0]),muy(wp[1]));if(n&&n.d<gd){gd=n.d;gi=i}});
+      info.gapSide=gi;info.fence=0;info.gap=null;sides.forEach((sd,i)=>{const [p,q]=sd,dx=q[0]-p[0],dz=q[1]-p[1],len=Math.hypot(dx,dz),tx=dx/len,tz=dz/len,gc=len/2+(i%2?4.2:0),spans=i===gi?[[0,gc-2.1],[gc+2.1,len]]:[[0,len]];/* an den kurzen Seiten steht der Korbpfosten in der Mitte: Öffnung seitlich versetzt */
+        if(i===gi){const gp=W(p[0]+tx*gc,p[1]+tz*gc);info.gap=[gp[0],gp[1]];info.gapLocal=[p[0]+tx*gc,p[1]+tz*gc]}
+        spans.forEach(([s0,s1])=>{const L=s1-s0;if(L<.5)return;const mx=p[0]+tx*(s0+s1)/2,mz=p[1]+tz*(s0+s1)/2,pl=new THREE.Mesh(new THREE.PlaneGeometry(L,3.4),chain);pl.position.set(mx,1.7,mz);pl.rotation.y=-Math.atan2(tz,tx);
+          const tt=pl.material.map;G.add(pl);mesh(BX,steel,mx,3.45,mz,L,.07,.07).rotation.y=-Math.atan2(tz,tx);const cp=W(mx,mz),dw=[ux*tx+vx*tz,uz*tx+vz*tz];mpMarkRect(cp[0],cp[1],L/2+.2,.6,Math.atan2(-dw[1],dw[0]));info.fence++;
+          const np=Math.max(1,Math.ceil(L/3));for(let k=0;k<=np;k++)cylY(p[0]+tx*(s0+L*k/np),p[1]+tz*(s0+L*k/np),3.7,.05,steel)})});
+      /* Zaunbahnen kacheln: Texturwiederholung pro Länge */
+      G.children.forEach(m=>{if(m.material===chain&&m.geometry.parameters&&m.geometry.parameters.width){const L=m.geometry.parameters.width,uv=m.geometry.attributes.uv;for(let j=0;j<uv.count;j++)uv.setXY(j,uv.getX(j)*L/.55,uv.getY(j)*3.4/.55);uv.needsUpdate=true}});
+      chain.map.wrapS=chain.map.wrapT=THREE.RepeatWrapping}
+    else if(kind==='xfit'){
+      const s=Math.min(1,Hw/12.5,Lw/12);const P=(x,z)=>[x*s,z*s];info.items=0;
+      mk((g)=>{g.strokeStyle='#fdf6e8';g.lineWidth=.1*S;g.strokeRect(.4*S,.4*S,(Lw-.8)*S,(Hw-.8)*S)});
+      const pull=(x,z)=>{const [a,b]=P(x,z);[-1.2,1.2].forEach(d=>{cylY(a+d,b,2.65,.06,blue);disc(a+d,b,.3);info.posts++});barX(a,b,2.4,2.55,.04,yel);barX(a,b,2.4,2.1,.04,yel);info.items++};
+      const para=(x,z)=>{const [a,b]=P(x,z);[-1.1,1.1].forEach(d=>[-.3,.3].forEach(e=>{cylY(a+d,b+e,1.15,.05,blue);disc(a+d,b+e,.25);info.posts++}));[-.3,.3].forEach(e=>barX(a,b+e,2.4,1.12,.035,yel));info.items++};
+      const rings=(x,z)=>{const [a,b]=P(x,z);[-1.8,1.8].forEach(d=>{cylY(a+d,b,3.4,.07,blue);disc(a+d,b,.3);info.posts++});barX(a,b,3.7,3.35,.05,yel);[-.35,.35].forEach(d=>{const r=mesh(new THREE.CylinderGeometry(.012,.012,1.15,5),rope,a+d,2.75,b);const rg=mesh(new THREE.TorusGeometry(.11,.018,6,14),white,a+d,2.15,b);rg.rotation.x=Math.PI/2});info.items++};
+      const monkey=(x,z)=>{const [a,b]=P(x,z);for(let i=-2;i<=2;i++){[-.3,.3].forEach(e=>{cylY(a+i*1.5,b+e,2.5,.05,blue)});disc(a+i*1.5,b,.3);info.posts++}[-.3,.3].forEach(e=>barX(a,b+e,6.2,2.45,.035,yel));for(let r=-6;r<=6;r++)barZ(a+r*.48,b,.6,2.45,.025,yel);info.items++};
+      const bench=(x,z)=>{const [a,b]=P(x,z);mesh(BX,white,a,.5,b,1.8,.12,.5);[-.7,.7].forEach(d=>{mesh(BX,steel,a+d,.25,b,.08,.5,.4);disc(a+d,b,.25)});info.items++};
+      pull(-3.2,-4.6);pull(3.2,-4.6);monkey(0,-1.9);para(-3.2,0.9);para(3.2,0.9);bench(0,1.6);rings(0,4.4);
+      const sp=W(-Lw/2+1.2,Hw/2-1.2);const post=mesh(new THREE.CylinderGeometry(.06,.06,2.6,6),steel,-Lw/2+1.2,1.3,Hw/2-1.2);const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),signMat('X-FIT','#ffe066','#1a1030'));sg.position.set(-Lw/2+1.2,2.5,Hw/2-1.2+.08);sg.userData.noBake=true;sg.userData.noOutline=true;G.add(sg);mpMarkDisc(sp[0],sp[1],.3)}
+    else{/* Beach-Volleyball */
+      const Lc=Math.min(16,Lw-4),Wc=Math.min(8,Hw-3),px=m=>(m+Lw/2)*S,pz=m=>(m+Hw/2)*S;
+      mk((g)=>{g.strokeStyle='#fdf6e8';g.lineWidth=.09*S;g.strokeRect(px(-Lc/2),pz(-Wc/2),Lc*S,Wc*S)});
+      [-1,1].forEach(d=>{cylY(0,d*(Wc/2+.7),2.6,.06,steel);disc(0,d*(Wc/2+.7),.2);info.posts++});
+      const net=mesh(new THREE.PlaneGeometry(Wc+1.4,.95),netM,0,1.95,0);net.rotation.y=Math.PI/2;const uv=net.geometry.attributes.uv;for(let j=0;j<uv.count;j++)uv.setXY(j,uv.getX(j)*(Wc+1.4)/.12,uv.getY(j)*.95/.12);uv.needsUpdate=true;netM.map.wrapS=netM.map.wrapT=THREE.RepeatWrapping;
+      mesh(BX,white,0,2.43,0,.05,.07,Wc+1.4);rectL(0,0,Wc+1.4,false,.12);info.net=true;
+      const ball=mesh(new THREE.SphereGeometry(.11,10,8),yel,Lc/2-2,.12,1.4);mesh(new THREE.TorusGeometry(.11,.012,5,12),blue,Lc/2-2,.12,1.4)}
+    HUB.courts.push(info)})}
 function mpTerrain(add){
   /* Meer: türkis nahe am Strand, tiefblau draußen, mit Schaumkante, Wellenlinie und Glitzern (Abstand zur Küste aus der Maske) */
   {const m=new THREE.Mesh(new THREE.PlaneGeometry(7000,7000),mpSeaMat());m.rotation.x=-Math.PI/2;m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;add(m)}
   /* Land (angehoben, mit sichtbarer Kante) */
   MAPD.land.forEach(it=>{const geo=new THREE.ExtrudeGeometry(mpShape(it.c),{depth:.7,bevelEnabled:false});geo.rotateX(-Math.PI/2);const m=new THREE.Mesh(geo,mpMat('land','#f1e5c0'));m.position.y=.6;m.receiveShadow=true;m.userData.noBake=true;add(m)});
-  mpFlat(MAPD.parks,1.31,mpMat('park','#4fa874'),add);mpFlat(MAPD.lots,1.31,mpMat('lot','#8d93a0'),add);mpFlat(MAPD.courts,1.315,mpMat('court','#c98a4a'),add);
+  mpFlat(MAPD.parks,1.31,mpMat('park','#4fa874'),add);mpFlat(MAPD.lots,1.31,mpMat('lot','#8d93a0'),add);mpCourts(add);
   mpFlat(MAPD.water,1.34,new THREE.MeshStandardMaterial({color:'#1cafd1',roughness:.3,metalness:.1}),add);
   /* Straßen */
   const asphalt=mpMat('road','#7a7790'),dash=[],sw=[],bridge=[],pier=[];
@@ -583,7 +642,7 @@ function mpMini(dt){const mm=HUB.mapn&&HUB.mm2;if(!mm)return;HUB.mmT+=dt;if(HUB.
   const pp=(X,Z)=>[75+(X-P.x)*.5,75+(Z-P.z)*.5],inside=(x,y)=>x>-4&&y>-4&&x<154&&y<154;
   const dot=(X,Z,col,txt,rad)=>{const [x,y]=pp(X,Z);if(!inside(x,y))return;g.fillStyle=col;g.strokeStyle='#1a1626';g.lineWidth=1.5;g.beginPath();g.arc(x,y,rad||5,0,7);g.fill();g.stroke();if(txt){g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText(txt,x,y+3)}};
   if(!G.under){(HUB.shops||[]).forEach(s=>{const [x,y]=pp(s.x,s.z);if(!inside(x,y))return;g.fillStyle='#2b5fcf';g.strokeStyle='#f4f7ff';g.lineWidth=1.5;g.fillRect(x-5,y-5,10,10);g.strokeRect(x-5,y-5,10,10);g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText('P',x,y+3)});
-    HUB.portals.forEach(p=>{if(HUB.found.has(p.world))dot(p.x,p.z,p.col,p.world,5)});if(HUB.gate)dot(HUB.gate.x,HUB.gate.z,'#ffe066','K',6);
+    HUB.portals.forEach(p=>{if(HUB.found.has(p.world))dot(p.x,p.z,p.col,p.world,5)});if(HUB.gate)dot(HUB.gate.x,HUB.gate.z,'#ffe066','K',6);(HUB.courts||[]).forEach(c=>dot(c.x,c.z,c.col,c.txt,6));
     HUB.items.forEach(it=>{if(it.got){const [x,y]=pp(it.x,it.z);if(!inside(x,y))return;g.fillStyle=it.def.col;g.strokeStyle='#1a1626';g.lineWidth=1;g.beginPath();g.moveTo(x,y-4);g.lineTo(x+4,y);g.lineTo(x,y+4);g.lineTo(x-4,y);g.closePath();g.fill();g.stroke()}})}
   else if(HUB.uw){const U=HUB.uw;dot(U.bx,U.bz,'#2de0d0','L',6);
     if(U.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const pulse=.5+.5*Math.sin(G.t*4),[tx,ty]=pp(U.tower.x,U.tower.z);let X=tx,Y=ty;if(!inside(X,Y)){const dx=tx-75,dy=ty-75,k=66/Math.max(Math.abs(dx),Math.abs(dy));X=75+dx*k;Y=75+dy*k}
