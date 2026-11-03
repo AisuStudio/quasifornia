@@ -2906,7 +2906,7 @@ function mpKaiju(col){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial
   for(let i=0;i<6;i++){const sp=new THREE.Mesh(new THREE.ConeGeometry(.55-i*.04,1.3,6),yel);sp.position.set(0,11.2-i*1.35,.2-i*.75);sp.rotation.x=-.5-i*.12;sp.castShadow=true;g.add(sp)}
   for(let i=0;i<4;i++)P(SPH,m,0,3.4-i*.5,-3.6-i*1.9,1.7-i*.32,1.5-i*.28,2.0);
   return g}
-function mpDressUp(add){const R=mulberry(2468);
+function mpDressUp(add){const R=mulberry(2468);HUB.courtTreesRemoved=HUB.courtTreesRemoved||0;
   /* Autos: auf dem Parkplatz in Reihen und am Straßenrand der breiten Promenade */
   const car=(x,z,ry,k,col)=>{const c=mpRetroCar(k,col);c.position.set(x,1.3,z);c.rotation.y=ry;add(c);addOutlines(c,'prop');const fx=Math.sin(ry),fz=Math.cos(ry);[-1.4,0,1.4].forEach(d=>mpMarkDisc(x+fx*d,z+fz*d,1.15));HUB.cars=(HUB.cars||[]).concat([{x,z}])};
   HUB.cars=[];let n=0;
@@ -2982,6 +2982,8 @@ void main(){vec2 m=vec2(vW.x/org.z+org.x-geo.x,vW.z/org.z+org.y-geo.y)/geo.zw;fl
 #include <fog_fragment>
 }`});DAY.sea=mat;return mat}
 /* ---------- Sportplätze: Basketball (Käfig mit Öffnung, zwei Körbe), X-Fit (Outdoor-Geräte), Beach-Volleyball (Sand und Netz). Daten aus map.json (courts + Labels), nichts an der Karte geändert ---------- */
+/* liegt der Punkt (Welt) auf einer Sportplatz-Fläche? Dort wachsen keine Pflanzen (auch nicht die aus der SVG) */
+function mpInCourt(X,Z){const ux=mux(X),uy=muy(Z);return MAPD.courts.some(c=>mpInPoly(c.c[0],ux,uy))}
 function mpCvTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
 function mpCourtKind(c){const lab=MAPD.labels.find(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket/i.test(l.t)||/X-?Fit/i.test(l.t)));return lab?(/Basket/i.test(lab.t)?'basket':'xfit'):'volley'}
 function mpCourts(add){HUB.courts=[];
@@ -3319,7 +3321,7 @@ function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayIn
   DAY.hour=Math.floor(((p*24+12)%24)*10)/10;if(DAY.sea){DAY.sea.uniforms.t.value+=dt;DAY.sea.uniforms.dim.value=Math.max(0,Math.min(1,(sun.intensity+hemi.intensity*.6-.7)/2.6))}}
 /* ---------- Gesamtaufbau ---------- */
 function portLupoNew(H){
-  HUB.doors=[];HUB.policeStation=null;HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
+  HUB.doors=[];HUB.courtTreesRemoved=0;HUB.policeStation=null;HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
   const add=o=>W0.add(o);
   const solids=mpBuildings(H);mpBuildMask(solids);
   mpTerrain(add);
@@ -3344,7 +3346,7 @@ function portLupoNew(H){
    HUB.streetSigns=placed.length}
   /* Pflanzen: die Bäume der Karte und Parks aus Regeln */
   {const oF=FSP,oH=FW.h,oA=FW.acc;FSP=new THREE.SphereGeometry(1,7,5);FCYL=6;FW.h=.97;FW.lb=.1;FW.sb=.42;FW.acc=.28;CTX='actor';
-   const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed,ht,nat)=>{if(mpRailDist(X,Z)<(kind==='palm'?9:6))return;const R2=mulberry(seed),gp=FLORA[kind](R2,sc2,ht,nat);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};
+   const KS=['balloon','balloon','spiral','vine','mushroom','palm','balloon','spiral'],put=(kind,X,Z,sc2,seed,ht,nat)=>{if(mpInCourt(X,Z)){HUB.courtTreesRemoved=(HUB.courtTreesRemoved||0)+1;return}if(mpRailDist(X,Z)<(kind==='palm'?9:6))return;const R2=mulberry(seed),gp=FLORA[kind](R2,sc2,ht,nat);gp.position.set(X,1.3,Z);gp.rotation.y=R2()*6.28;gp.traverse(o=>{if(o.isMesh)o.castShadow=true});add(gp)};
    MAPD.trees.forEach((t,i)=>{const X=mwx(t.x),Z=mwz(t.y);if(mpAt(X,Z)===0)return;put(KS[i%KS.length],X,Z,t.r>4?1.3:.8,i*17+3)});
    const RP=mulberry(909);MAPD.parks.forEach((pk,pi)=>{const r=pk.c[0],xs=r.map(p=>p[0]),ys=r.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),n=Math.floor(Math.abs(mpArea(r))*MP.SC*MP.SC/260);
      for(let k=0,t=0;k<n&&t<n*20;t++){const ux=x0+RP()*(x1-x0),uy=y0+RP()*(y1-y0);if(!mpInPoly(r,ux,uy))continue;const X=mwx(ux),Z=mwz(uy);if(mpAt(X,Z)!==4||!mpFree(X,Z,1.6))continue;put(KS[Math.floor(RP()*KS.length)],X,Z,.9+RP()*.4,pi*1000+k);k++}});
