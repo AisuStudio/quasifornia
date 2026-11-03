@@ -115,12 +115,42 @@ const MPPAST=['#f1a7c8','#a9e6d2','#f6df73','#a9d8f0','#f6c3a8','#e7b8e8','#c9f0
 function mpStamp(H,fn,X,Z,yaw,bg,scale){const real=W0,tg=new THREE.Group();W0=tg;H.setCur(0,0);try{fn()}finally{W0=real}
   tg.scale.setScalar(scale||1);tg.rotation.y=yaw;tg.position.set(X,-.3,Z);tg.updateMatrixWorld(true);[...tg.children].forEach(ch=>bg.attach(ch));return tg}
 const mpTf=(X,Z,yaw,lx,lz)=>[X+lx*Math.cos(yaw)+lz*Math.sin(yaw),Z-lx*Math.sin(yaw)+lz*Math.cos(yaw)];
+/* ---------- Haus-Looks: Painted Lady (kleine/mittlere Häuser) und Art déco (große) ---------- */
+const MPDSM=new Map();/* beidseitig gezeichnete Variante eines Materials (Gebäude mit verdrehter Außenhaut wären sonst von außen schwarz oder unsichtbar) */
+function mpDS(m){let d=MPDSM.get(m);if(!d){d=m.clone();d.side=THREE.DoubleSide;MPDSM.set(m,d)}return d}
+const MPROOFM={};function mpRoofMat(c){return MPROOFM[c]||(MPROOFM[c]=new THREE.MeshStandardMaterial({color:c,roughness:.8,flatShading:true,side:THREE.DoubleSide}))}
+function mpTris(bg,mat,tris){const pos=[];tris.forEach(t=>t.forEach(v=>pos.push(v[0],v[1],v[2])));const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();const m=new THREE.Mesh(g,mat);m.castShadow=true;m.receiveShadow=true;bg.add(m);return m}
+function mpGableRoof(bg,ring,front,y0,idx,trimCol){if(ring.length!==4)return false;const c=[0,1].map(i=>ring.reduce((a,p)=>a+p[i],0)/4);
+  let fe=0,bd=1e9;for(let e=0;e<4;e++){const a=ring[e],d=ring[(e+1)%4],mx=(a[0]+d[0])/2,mz=(a[1]+d[1])/2,dd=Math.hypot(mx-front.mx,mz-front.mz);if(dd<bd){bd=dd;fe=e}}
+  const out=p=>{const dx=p[0]-c[0],dz=p[1]-c[1],L=Math.hypot(dx,dz)||1;return [c[0]+dx*(1+.55/L),c[1]+dz*(1+.55/L)]};
+  const A=out(ring[fe]),B=out(ring[(fe+1)%4]),C=out(ring[(fe+2)%4]),D=out(ring[(fe+3)%4]);
+  const wdt=Math.hypot(A[0]-B[0],A[1]-B[1]),rh=Math.max(1.6,Math.min(4.8,wdt*.42)),Mf=[(A[0]+B[0])/2,(A[1]+B[1])/2],Mb=[(C[0]+D[0])/2,(C[1]+D[1])/2],y1=y0+rh;
+  const V=(p,y)=>[p[0],y,p[1]],cols=['#b0687e','#7c8fb8','#a07860','#8fa07a'],rm=mpRoofMat(cols[idx%cols.length]);
+  mpTris(bg,rm,[[V(B,y0),V(C,y0),V(Mb,y1)],[V(B,y0),V(Mb,y1),V(Mf,y1)],[V(D,y0),V(A,y0),V(Mf,y1)],[V(D,y0),V(Mf,y1),V(Mb,y1)]]);
+  const o=front.nx*.06,p2=front.nz*.06,tm=mpRoofMat(trimCol);
+  const Ai=[ring[fe][0],ring[fe][1]],Bi=[ring[(fe+1)%4][0],ring[(fe+1)%4][1]];
+  mpTris(bg,tm,[[[Ai[0]+o,y0,Ai[1]+p2],[Bi[0]+o,y0,Bi[1]+p2],[Mf[0]+o,y1-.1,Mf[1]+p2]]]);
+  const wc=new THREE.Mesh(new THREE.CircleGeometry(Math.min(.75,rh*.22),12),new THREE.MeshStandardMaterial({color:'#7fb8d8',emissive:'#7fb8d8',emissiveIntensity:.25}));wc.position.set(Mf[0]+front.nx*.1,y0+rh*.38,Mf[1]+front.nz*.1);wc.rotation.y=Math.atan2(front.nx,front.nz);bg.add(wc);return true}
+function mpTurret(bg,ring,y0,idx,col){let best=0,bd=-1;const c=[0,1].map(i=>ring.reduce((a,p)=>a+p[i],0)/ring.length);ring.forEach((p,i)=>{const d=Math.hypot(p[0]-c[0],p[1]-c[1]);if(d>bd){bd=d;best=i}});
+  const p=ring[best],dx=c[0]-p[0],dz=c[1]-p[1],L=Math.hypot(dx,dz)||1,x=p[0]+dx/L*1.6,z=p[1]+dz/L*1.6;
+  const tw=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,3.2,8),MT(col));tw.position.set(x,y0+1.6,z);tw.castShadow=true;bg.add(tw);
+  const cp=new THREE.Mesh(new THREE.ConeGeometry(2.0,3.0,8),mpRoofMat(['#b0687e','#7c8fb8','#a07860'][idx%3]));cp.position.set(x,y0+3.2+1.5,z);cp.castShadow=true;bg.add(cp)}
+function mpBay(bg,front,wallCol,y0,h,idx){const L=front.L;if(L<7||h<5.5)return;const ux=-front.nz,uz=front.nx,off=L*.27*(idx%2?1:-1),bw=Math.min(3.4,L*.34),bh=Math.min(6.2,h-1.2),px=front.mx+ux*off+front.nx*.5,pz=front.mz+uz*off+front.nz*.5,ry=-Math.atan2(uz,ux);
+  const bx=new THREE.Mesh(BX,MT(wallCol));bx.scale.set(bw,bh,1.0);bx.position.set(px,y0+bh/2,pz);bx.rotation.y=ry;bx.castShadow=true;bg.add(bx);
+  const cap=new THREE.Mesh(new THREE.ConeGeometry(bw*.78,1.4,4),mpRoofMat('#f6efe6'));cap.position.set(px,y0+bh+.7,pz);cap.rotation.y=ry+Math.PI/4;cap.castShadow=true;bg.add(cap);
+  const GL=MT('#7fb8d8','#7fb8d8',.25);for(let f=0;f<Math.floor(bh/3.1);f++)for(let k=-1;k<=1;k++){const w=new THREE.Mesh(BX,GL);w.scale.set(.75,1.6,.1);w.position.set(px+front.nx*.53+ux*k*.95,y0+1.9+f*3.1,pz+front.nz*.53+uz*k*.95);w.rotation.y=ry;bg.add(w)}}
+function mpDecoCrown(bg,b,ring,h,idx){if(b.c.length>1)return;const c=[0,1].map(i=>ring.reduce((a,p)=>a+p[i],0)/ring.length);
+  const ex=(sc,depth,mat,y)=>{const pts=ring.map(p=>new THREE.Vector2(c[0]+(p[0]-c[0])*sc,-(c[1]+(p[1]-c[1])*sc))),g=new THREE.ExtrudeGeometry(new THREE.Shape(pts),{depth,bevelEnabled:false});g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,mpDS(mat));m.position.y=y;m.castShadow=true;m.receiveShadow=true;bg.add(m)};
+  const cream=MT('#fdf6e8'),neon=new THREE.MeshStandardMaterial({color:'#ff7ac0',emissive:'#ff4fa8',emissiveIntensity:.9,roughness:.5}),top=1.3+h+.55;
+  ex(.84,2.4,cream,top);ex(.62,2.2,MT('#f7de78'),top+2.4);ex(.4,1.8,cream,top+4.6);ex(1.02,.32,neon,top-.2);
+  for(let y=1.3+3.3*3;y<1.3+h-1;y+=3.3*3)ex(1.012,.3,cream,y);
+  ring.forEach(p=>{const m=new THREE.Mesh(BX,cream);m.scale.set(.9,h+2.6,.9);m.position.set(p[0],1.3+(h+2.6)/2,p[1]);bg.add(m)})}
 function mpGenBuilding(bg,b,wall,h,idx,sign){
   const ring=b.c[0].map(p=>[mwx(p[0]),mwz(p[1])]),vp=r=>r.map(p=>new THREE.Vector2(p[0],-p[1]));
   const sh=new THREE.Shape(vp(ring));b.c.slice(1).forEach(c=>sh.holes.push(new THREE.Path(vp(c.map(p=>[mwx(p[0]),mwz(p[1])])))));
-  const mk=(depth,mat,y)=>{const g=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:false});g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,mat);m.position.y=y;m.castShadow=true;m.receiveShadow=true;bg.add(m);return m};
+  const mk=(depth,mat,y)=>{const g=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:false});g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,mpDS(mat));m.position.y=y;m.castShadow=true;m.receiveShadow=true;bg.add(m);return m};
   mk(h,MT(wall),1.3);mk(.55,MT('#f6efe6'),1.3+h);
-  const GL=MT('#7fb8d8','#7fb8d8',.25),LT=MT('#ffe9a0','#ffe9a0',.9),nf=Math.max(1,Math.floor((h-1.4)/3.3)),n=ring.length;
+  const GL=MT('#5a8fc4','#5a8fc4',.2),LT=MT('#ffe9a0','#ffe9a0',.9),nf=Math.max(1,Math.floor((h-1.4)/3.3)),n=ring.length;
   const rp=mpNearRoad(b.cen[0],b.cen[1]);let sbest=null;
   for(let e=0;e<n;e++){const a=ring[e],c=ring[(e+1)%n],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<5)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
     if(mpInPoly(ring,mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}
@@ -139,6 +169,13 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
     part(MT('#9fe6f0','#9fe6f0',.35),dw-.3,2.5,.24,px+sbest.nx*.03,1.3+1.3,pz+sbest.nz*.03);
     part(MT('#2a2038'),.14,2.5,.28,px+sbest.nx*.05,1.3+1.3,pz+sbest.nz*.05);
     part(MT('#f6efe6'),dw+1.6,.3,1.5,px+sbest.nx*.7,1.3+3.2,pz+sbest.nz*.7)}
+  /* Look: kleine und mittlere Häuser = Painted Lady (Giebel zur Straße, Erker, Rahmen, Stufen), große und besondere = Art déco (Krone, Neonband, Zierleisten) */
+  {const aM=b.area*MP.SC*MP.SC,special=/station|casino|shopping|resort|tower/.test(b.kind||''),house=!special&&aM<650;
+   if(house&&sbest){const y0=1.3+h+.55,trim='#fdf6e8';
+     if(!mpGableRoof(bg,ring,sbest,y0,idx,trim))mpTurret(bg,ring,y0,idx,wall);
+     mpBay(bg,sbest,wall,1.3,h,idx);
+     const ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),st=MT('#fdf6e8');[0,1].forEach(i=>{const t=new THREE.Mesh(BX,st);t.scale.set(2.8,.22-i*.08,.55);t.position.set(sbest.mx+sbest.nx*(.35+i*.5),1.3+.11,sbest.mz+sbest.nz*(.35+i*.5));t.rotation.y=ry;bg.add(t)})}
+   else if(!house)mpDecoCrown(bg,b,ring,h,idx)}
   return ring}
 function mpBuildings(H){
   const solids=[],groups=[];const L0=MAPD.labels;
@@ -160,7 +197,7 @@ function mpBuildings(H){
       else{mpStamp(H,()=>buildGingerBlock(),cx,cz,yaw,bg,1);solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:44});const sgp=mpTf(cx,cz,yaw,0,-19.8);HUB.gb={i:0,j:0,cx,cz,sx:sgp[0],sz:sgp[1],yaw}}
       return}
     const kind=b.kind;let h;switch(kind){case 'tower':h=64;break;case 'resort':h=30;break;case 'casino':h=17;break;case 'shopping':h=13;break;case 'station':h=10;break;
-      default:h=aM<150?4.6:aM<500?6+(b.i*7%5):9+(b.i*5%9)}
+      default:h=aM<150?7.2:aM<650?7.5+(b.i*7%3)*3:9+(b.i*5%9)}
     const bg=mkGroup(X,Z);b.bg=bg;mpGenBuilding(bg,b,WALL[kind]||MPPAST[b.i%7],h,b.i,SIGN[kind]||null);b.h=h});
   /* Café Pengu und AstroBurger an den Markern C und B */
   MAPD.markers.forEach(m=>{const lab=L0.find(l=>Math.hypot(l.x-m.x,l.y-m.y)<12&&(l.t==='C'||l.t==='B'));if(!lab)return;const yaw=mpFrontYaw(m.x,m.y),X=mwx(m.x),Z=mwz(m.y);
