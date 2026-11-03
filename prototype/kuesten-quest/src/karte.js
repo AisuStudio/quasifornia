@@ -45,7 +45,7 @@ function mpKaiju(col){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial
   for(let i=0;i<4;i++)P(SPH,m,0,3.4-i*.5,-3.6-i*1.9,1.7-i*.32,1.5-i*.28,2.0);
   return g}
 /* ---------- Riesen-Saurier als NPCs: drei Wesen mit Mode-Accessoires aus den Moodboards laufen alle 2-3 Minuten über die breiten Straßen (ca. 20 m hoch) ---------- */
-const GIANT={t:40,list:[],pool:{},n:0,roads:null,SPEED:3.6,SCALE:1.62,kinds:['pink','gold','hoodie'],names:{pink:'Pink-Blob',gold:'Goldzilla',hoodie:'Hoodie-Zilla'}};
+const GIANT={t:40,list:[],pool:{},n:0,roads:null,cur:null,SPEED:3.6,SCALE:1.62,kinds:['pink','gold','hoodie'],names:{pink:'Pink-Blob',gold:'Goldzilla',hoodie:'Hoodie-Zilla'}};
 function mpBuildGiant(kind){const g=new THREE.Group(),SPH=new THREE.SphereGeometry(1,14,10),CON=new THREE.ConeGeometry(1,1,7),CYL=new THREE.CylinderGeometry(1,1,1,10);
   const M=(c,o)=>new THREE.MeshStandardMaterial({color:c,roughness:.38,...(o||{})}),skin=kind==='gold'?M('#e6b422',{metalness:.85,roughness:.28}):kind==='pink'?M('#f4a6c8'):M('#b79cf0'),belly=kind==='gold'?M('#f1c84a',{metalness:.8,roughness:.3}):kind==='pink'?M('#ffd6e8'):M('#d8c6ff'),
     yel=M('#ffd04a'),dark=M('#2a1020',{roughness:.6}),white=M('#ffffff'),black=M('#141416',{roughness:.3});
@@ -85,27 +85,29 @@ function mpBuildGiant(kind){const g=new THREE.Group(),SPH=new THREE.SphereGeomet
   g.scale.setScalar(GIANT.SCALE*(kind==='gold'?1.04:kind==='hoodie'?.98:1));g.userData.noBake=true;g.visible=false;
   return {g,body,head,tail,arms,legs,kind,phase:0}}
 function giantRoads(){if(GIANT.roads)return GIANT.roads;GIANT.roads=[];MAPD.roads.forEach(r=>{if(r.w<14)return;const pts=mpResample(r.pts,4).filter(s=>s.tx||s.tz);if(pts.length<20)return;GIANT.roads.push(pts)});return GIANT.roads}
-function giantSpawn(){const roads=giantRoads();if(!roads.length)return false;const kind=GIANT.kinds[GIANT.n++%3];let best=null;
-  for(let ri=0;ri<roads.length;ri++){const pts=roads[ri];for(let i=0;i<pts.length;i+=3){const d=Math.hypot(pts[i].x-P.x,pts[i].z-P.z);if(d>140&&d<210&&pts[i].z<186){
-      /* Laufrichtung: auf den Spieler zu */const j=Math.min(pts.length-1,i+8),k=Math.max(0,i-8),toward=(Math.hypot(pts[j].x-P.x,pts[j].z-P.z)<Math.hypot(pts[k].x-P.x,pts[k].z-P.z))?1:-1;
-      const room=toward>0?pts.length-1-i:i;if(room>35&&(!best||Math.abs(d-170)<Math.abs(best.d-170)))best={ri,i,dir:toward,d}}}}
-  if(!best)return false;if(!GIANT.pool[kind])GIANT.pool[kind]=mpBuildGiant(kind);const G0=GIANT.pool[kind];if(!G0.g.parent)W0.add(G0.g);
-  G0.ri=best.ri;G0.u=best.i;G0.dir=best.dir;G0.life=0;G0.phase=0;G0.g.visible=true;G0.active=true;GIANT.list.push(G0);GIANT.t=120+Math.random()*60;
-  toast(GIANT.names[kind]+' kommt die Straße entlang!',2200);return true}
-function giantStep(dt){const live=LV.id===0&&!G.under&&G.phase==='play'&&HUB.built;
-  GIANT.list.forEach(o=>{o.g.visible=live&&o.active});if(!live)return;
-  GIANT.t-=dt;if(GIANT.t<=0&&GIANT.list.length<1)giantSpawn();
-  for(const o of GIANT.list.slice()){const pts=giantRoads()[o.ri];o.life+=dt;o.u+=o.dir*GIANT.SPEED*dt/4;const i=Math.max(0,Math.min(pts.length-1,Math.round(o.u))),p=pts[i],q=pts[Math.max(0,Math.min(pts.length-1,i+o.dir))];
-    const tx=(q.x-p.x)*o.dir,tz=(q.z-p.z)*o.dir;const dx=pts[Math.max(0,Math.min(pts.length-1,Math.floor(o.u)))],ex=pts[Math.max(0,Math.min(pts.length-1,Math.ceil(o.u)))],f=o.u-Math.floor(o.u);
-    const x=dx.x+(ex.x-dx.x)*f,z=dx.z+(ex.z-dx.z)*f;const hd=Math.atan2(ex.x-dx.x,ex.z-dx.z)*1;const faceY=o.dir>0?hd:hd+(Math.abs(ex.x-dx.x)+Math.abs(ex.z-dx.z)<.001?0:0);
-    o.g.position.set(x,1.3,z);const ang=Math.atan2((ex.x-dx.x)*o.dir,(ex.z-dx.z)*o.dir);if(Math.abs(ex.x-dx.x)+Math.abs(ex.z-dx.z)>.001)o.g.rotation.y=ang;
-    /* Laufanimation: Beine und Arme gegengleich, Körper wippt, Schwanz wedelt */
-    const prev=o.phase;o.phase+=dt*GIANT.SPEED/5.2*Math.PI;const sw=Math.sin(o.phase);o.legs[0].rotation.x=sw*.5;o.legs[1].rotation.x=-sw*.5;o.arms[0].rotation.x=-sw*.35;o.arms[1].rotation.x=sw*.35;
-    o.body.position.y=Math.abs(Math.cos(o.phase))*.28;o.body.rotation.z=sw*.04;o.head.rotation.y=Math.sin(o.phase*.4)*.18;o.tail.rotation.y=Math.sin(o.phase*.5)*.35;
-    /* Schritt: Grollen und leichtes Beben in der Nähe */
-    if(Math.floor(prev/Math.PI)!==Math.floor(o.phase/Math.PI)){const d=Math.hypot(o.g.position.x-P.x,o.g.position.z-P.z);if(d<130){tone(48+Math.random()*10,.4,'sine',Math.min(.06,.06*(1-d/130)+.01));if(d<45)G.shake=Math.max(G.shake||0,.18*(1-d/45))}}
-    const far=Math.hypot(o.g.position.x-P.x,o.g.position.z-P.z);
-    if((o.dir>0&&o.u>=pts.length-2)||(o.dir<0&&o.u<=1)||o.life>170||(o.life>20&&far>300)){o.active=false;o.g.visible=false;GIANT.list.splice(GIANT.list.indexOf(o),1)}}}
+/* Dino-Fahrplan: nur von der Uhr abhängig, deshalb sieht im Raum jeder denselben Dino am selben Ort (Raum: Server-Uhr, allein: eigene Uhr).
+   Alle 150 Sekunden beginnt ein Zeitfenster, in dem ein Dino (Pink-Blob, Goldzilla, Hoodie-Zilla der Reihe nach) 100 Sekunden lang eine breite Straße entlangläuft. */
+GIANT.PERIOD=150000;GIANT.LIFE=100;GIANT.plans=new Map();GIANT.announced=-1;
+function giantClock(){return (typeof MULTI!=='undefined'&&MULTI.on&&MULTI.synced)?MULTI.now():Date.now()}
+function giantPlan(k){let p=GIANT.plans.get(k);if(p!==undefined)return p;const roads=giantRoads();if(!roads.length){GIANT.plans.set(k,null);return null}
+  const R=mulberry(7000+k*131),ri=Math.floor(R()*roads.length),dir=R()<.5?1:-1,pts=roads[ri],start=dir>0?Math.floor(R()*pts.length*.25):pts.length-1-Math.floor(R()*pts.length*.25);
+  p={k,kind:GIANT.kinds[((k%3)+3)%3],ri,dir,u0:start,s0:R()*40};GIANT.plans.set(k,p);if(GIANT.plans.size>8)GIANT.plans.delete(GIANT.plans.keys().next().value);return p}
+/* Stand des Dinos zur Zeit T (Millisekunden): Position, Blickrichtung, Laufphase, Größe; null, wenn gerade keiner läuft */
+function giantState(T){const k=Math.floor(T/GIANT.PERIOD),pl=giantPlan(k);if(!pl)return null;const t=(T-k*GIANT.PERIOD)/1000-pl.s0;if(t<0||t>GIANT.LIFE)return null;
+  const pts=giantRoads()[pl.ri],u=pl.u0+pl.dir*t*GIANT.SPEED/4;if(u<0||u>pts.length-1.001)return null;
+  const a=pts[Math.floor(u)],b=pts[Math.min(pts.length-1,Math.floor(u)+1)],f=u-Math.floor(u),x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,dx=(b.x-a.x)*pl.dir,dz=(b.z-a.z)*pl.dir;
+  return {k,kind:pl.kind,x,z,yaw:(Math.abs(dx)+Math.abs(dz)>.001)?Math.atan2(dx,dz):0,t,fade:Math.min(1,t/3,(GIANT.LIFE-t)/3),phase:t*GIANT.SPEED/5.2*Math.PI}}
+function giantSpawn(){return false}
+function giantStep(dt){const live=LV.id===0&&!G.under&&G.phase==='play'&&HUB.built;const st=live?giantState(giantClock()):null;
+  GIANT.list.forEach(o=>{o.g.visible=false});if(!st){GIANT.cur=null;return}
+  if(!GIANT.pool[st.kind])GIANT.pool[st.kind]=mpBuildGiant(st.kind);const o=GIANT.pool[st.kind];if(!o.g.parent)W0.add(o.g);if(!GIANT.list.includes(o))GIANT.list.push(o);
+  const base=o.g.userData.baseScale||(o.g.userData.baseScale=o.g.scale.x),pv=o.phase;o.phase=st.phase;GIANT.cur=st;
+  o.g.visible=true;o.g.position.set(st.x,1.3-(1-st.fade)*3,st.z);o.g.rotation.y=st.yaw;o.g.scale.setScalar(base*(.35+.65*st.fade));
+  const sw=Math.sin(o.phase);o.legs[0].rotation.x=sw*.5;o.legs[1].rotation.x=-sw*.5;o.arms[0].rotation.x=-sw*.35;o.arms[1].rotation.x=sw*.35;
+  o.body.position.y=Math.abs(Math.cos(o.phase))*.28;o.body.rotation.z=sw*.04;o.head.rotation.y=Math.sin(o.phase*.4)*.18;o.tail.rotation.y=Math.sin(o.phase*.5)*.35;
+  const d=Math.hypot(st.x-P.x,st.z-P.z);
+  if(GIANT.announced!==st.k){GIANT.announced=st.k;if(d<300)toast(GIANT.names[st.kind]+' kommt die Straße entlang!',2200)}
+  if(Math.floor((pv||0)/Math.PI)!==Math.floor(o.phase/Math.PI)&&d<130){tone(48+Math.random()*10,.4,'sine',Math.min(.06,.06*(1-d/130)+.01));if(d<45)G.shake=Math.max(G.shake||0,.18*(1-d/45))}}
 /* ---------- Leuchtturm (oben) und Tarxarox (unten, an derselben Stelle): der rosa Kreis neben dem Label "Leuchtturm / Tarxarox" ---------- */
 function mpLighthouseSpot(){const labs=MAPD.labels.filter(l=>/Leuchtturm|Tarxarox/i.test(l.t));if(!labs.length||!MAPD.markers.length)return null;let best=null;
   MAPD.markers.forEach(m=>labs.forEach(l=>{const d=Math.hypot(m.x-l.x,m.y-l.y);if(d<120&&(!best||d<best.d))best={d,m}}));return best?{x:mwx(best.m.x),z:mwz(best.m.y),r:best.m.r*MP.SC}:null}
@@ -509,14 +511,61 @@ function mpSpotPool(){const R=mulberry(2024),out=[];for(let y=0;y<MP.h;y+=5)for(
 function mpLamps(){const out=[];let k=0;MAPD.roads.forEach(r=>{const wM=Math.max(r.w,MP.RW)*MP.SC;mpResample(r.pts,26).forEach(s=>{if(!(s.tx||s.tz))return;const side=(k++%2)?1:-1,off=wM/2+MP.SWK*.5,x=s.x-s.tz*side*off,z=s.z+s.tx*side*off;if(mpAt(x,z)===3&&!(HUB.doors||[]).some(d=>Math.hypot(d[0]-x,d[1]-z)<5.5))out.push([x,z])})});return out}
 
 /* ---------- Polizei: kommt nach illegalem Graffiti (1 Minute, nachts 3), Skate-Polizisten verfolgen im Sichtradius, Festnahme = Nahaufnahme und 10 Scoops Strafe ---------- */
-const POL={state:'idle',timer:0,total:0,spot:null,cops:[],cin:null,hud:null,loseT:0,t:0,chaseT:0,search:0,FINE:10,SIGHT:42,SPEED:9.2};
+const POL={state:'idle',role:null,pend:null,g2:null,q2:[],cops1:null,helped:false,timer:0,total:0,spot:null,cops:[],cin:null,hud:null,loseT:0,t:0,chaseT:0,search:0,FINE:10,SIGHT:42,SPEED:9.2};
 PRE['#2a4a9a']={skin:'#e0a98a',top:'#2a4a9a',bot:'#1f2a4a',sole:'#f0cf36',hair:'cap',hc:'#1f2a4a',lens:'#141416',frame:'#141416',pack:'#1f2a4a',pads:'#c9d4ff',watch:1,stripe:'#ffffff'};
 PRE['#3a5ab8']={skin:'#c98e6a',top:'#3a5ab8',bot:'#1f2a4a',sole:'#ffffff',hair:'cap',hc:'#1f2a4a',lens:'#141416',frame:'#141416',pack:'#1f2a4a',pads:'#c9d4ff',watch:1,stripe:'#ffffff'};
+/* ---------- Streifenwagen: fährt von der Wache auf den Straßen zum Ort (A*-Wegfindung auf einem 2-m-Raster der Karte) ---------- */
+const PNAV={cell:2,w:0,h:0,x0:0,z0:0,ok:null};
+function polNavInit(){if(PNAV.ok)return PNAV.ok;const c=PNAV.cell;PNAV.x0=mwx(MP.PLAY.x0);PNAV.z0=mwz(MP.PLAY.y0);PNAV.w=Math.ceil(MP.w*MP.SC/c);PNAV.h=Math.ceil(MP.h*MP.SC/c);
+  const g=new Uint8Array(PNAV.w*PNAV.h);for(let iz=0;iz<PNAV.h;iz++)for(let ix=0;ix<PNAV.w;ix++){const X=PNAV.x0+ix*c+c/2,Z=PNAV.z0+iz*c+c/2;if(mpAt(X,Z)!==2)continue;
+    if(mpAt(X+1,Z)===2&&mpAt(X-1,Z)===2&&mpAt(X,Z+1)===2&&mpAt(X,Z-1)===2)g[iz*PNAV.w+ix]=1}
+  return PNAV.ok=g}
+function polCellOf(X,Z){return [Math.floor((X-PNAV.x0)/PNAV.cell),Math.floor((Z-PNAV.z0)/PNAV.cell)]}
+function polNearestCell(X,Z,maxR){const g=polNavInit(),[cx,cz]=polCellOf(X,Z);for(let r=0;r<=maxR;r++)for(let dz=-r;dz<=r;dz++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dz))!==r)continue;const ix=cx+dx,iz=cz+dz;if(ix>=0&&iz>=0&&ix<PNAV.w&&iz<PNAV.h&&g[iz*PNAV.w+ix])return [ix,iz]}return null}
+function polPath(sx,sz,tx,tz){const g=polNavInit(),W=PNAV.w,c=PNAV.cell,s0=polNearestCell(sx,sz,12),g0=polNearestCell(tx,tz,12);if(!s0||!g0)return null;
+  const idx=(x,z)=>z*W+x,N=W*PNAV.h,gs=new Float32Array(N).fill(1e9),from=new Int32Array(N).fill(-1),closed=new Uint8Array(N),heap=[];
+  const hf=(x,z)=>{const dx=Math.abs(x-g0[0]),dz=Math.abs(z-g0[1]);return (dx+dz)+(1.414-2)*Math.min(dx,dz)};
+  const push=(f,i)=>{heap.push([f,i]);let k=heap.length-1;while(k>0){const p=(k-1)>>1;if(heap[p][0]<=heap[k][0])break;[heap[p],heap[k]]=[heap[k],heap[p]];k=p}};
+  const pop=()=>{const t=heap[0],l=heap.pop();if(heap.length){heap[0]=l;let k=0;for(;;){let a=k*2+1,b=a+1,m=k;if(a<heap.length&&heap[a][0]<heap[m][0])m=a;if(b<heap.length&&heap[b][0]<heap[m][0])m=b;if(m===k)break;[heap[m],heap[k]]=[heap[k],heap[m]];k=m}}return t};
+  const si=idx(s0[0],s0[1]),gi=idx(g0[0],g0[1]);gs[si]=0;push(hf(s0[0],s0[1]),si);let n=0,found=false;
+  while(heap.length&&n++<60000){const [,i]=pop();if(closed[i])continue;closed[i]=1;if(i===gi){found=true;break}const x=i%W,z=(i/W)|0;
+    for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=W||nz>=PNAV.h)continue;const j=idx(nx,nz);if(!g[j]||closed[j])continue;
+      if(dx&&dz&&(!g[idx(x+dx,z)]||!g[idx(x,z+dz)]))continue;const ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[j]){gs[j]=ng;from[j]=i;push(ng+hf(nx,nz),j)}}}
+  if(!found)return null;const cells=[];for(let i=gi;i!==-1;i=from[i])cells.push([i%W,(i/W)|0]);cells.reverse();
+  /* Pfad glätten: Zwischenpunkte weglassen, wenn die gerade Linie frei ist */
+  const clear=(a,b)=>{const n=Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]))*2||1;for(let k=0;k<=n;k++){const x=Math.round(a[0]+(b[0]-a[0])*k/n),z=Math.round(a[1]+(b[1]-a[1])*k/n);if(!g[idx(x,z)])return false}return true};
+  const out=[cells[0]];let i=0;while(i<cells.length-1){let j=cells.length-1;while(j>i+1&&!clear(cells[i],cells[j]))j--;out.push(cells[j]);i=j}
+  return out.map(([x,z])=>({x:PNAV.x0+x*c+c/2,z:PNAV.z0+z*c+c/2}))}
+function mpPoliceCar(){const g=new THREE.Group(),car=mpRetroCar(0,'#fdf6e8'),blue=MT('#2a4a9a'),navy=MT('#1f2a4a');car.scale.setScalar(1.25);g.add(car);
+  const bx=(m,w,h,d,x,y,z)=>{const o=new THREE.Mesh(BX,m);o.scale.set(w,h,d);o.position.set(x,y,z);o.castShadow=true;car.add(o);return o};
+  [-1,1].forEach(sd=>{bx(blue,.07,.28,1.7,sd*.98,.82,.15);bx(navy,.07,.1,2.6,sd*.97,.66,.1)});bx(blue,1.5,.1,1.0,0,1.76,-.15);   /* Türstreifen, blaues Dach-Brett */
+  const mk=(c,x)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),new THREE.MeshBasicMaterial({color:c}));m.scale.set(1.3,1,1);m.position.set(x,1.98,-.15);car.add(m);return m};
+  const la=mk('#ff2a2a',-.26),lb=mk('#2a6aff',.26);bx(navy,.9,.06,.32,0,1.86,-.15);
+  const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.32),signMat('POLIZEI','#ffffff','#2a4a9a'));sg.position.set(0,1.21,1.12);sg.rotation.x=-.05;car.add(sg);
+  g.userData.noBake=true;W0.add(g);addOutlines(g,'prop');return {g,la,lb,x:0,z:0,h:0,v:0,path:[],pi:0,done:false}}
+function polPlaceCar(c,x,z,h){c.x=x;c.z=z;c.h=h;c.g.position.set(x,cityGround(x,z),z);c.g.rotation.y=Math.PI/2-h}
+/* Fahren: dem Weg folgen, in Kurven langsamer */
+function polDriveStep(c,dt){if(c.done||!c.path.length)return;const p=c.path[Math.min(c.pi,c.path.length-1)],dx=p.x-c.x,dz=p.z-c.z,L=Math.hypot(dx,dz);
+  if(L<3.2){c.pi++;if(c.pi>=c.path.length){c.done=true;c.v=0;return}}
+  const want=Math.atan2(dz,dx);let d=want-c.h;d=Math.atan2(Math.sin(d),Math.cos(d));c.h+=Math.max(-3.4*dt,Math.min(3.4*dt,d));
+  const target=Math.abs(d)>.9?5.5:Math.abs(d)>.4?9:13.5;c.v+=(target-c.v)*Math.min(1,dt*3);c.x+=Math.cos(c.h)*c.v*dt;c.z+=Math.sin(c.h)*c.v*dt}
 function polHud(){if(POL.hud)return POL.hud;const d=document.createElement('div');d.id='pol';d.style.cssText="position:absolute;top:64px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:12px;border:3px solid #0e0b18;background:rgba(26,22,38,.9);color:#fff;font:800 16px/1.2 'Baloo 2',sans-serif;letter-spacing:.04em;display:none;z-index:3;box-shadow:0 4px 0 #0e0b18;pointer-events:none";const ui=document.getElementById('ui');(ui||document.body).appendChild(d);return POL.hud=d}
 function polText(t,col){const h=polHud();h.style.display=t?'block':'none';h.style.borderColor=col||'#0e0b18';h.textContent=t||''}
 function polNight(){return (typeof DAY!=='undefined'&&DAY.dn!==undefined?DAY.dn:1)<.35}
-function polAlert(panel){if(POL.state!=='idle')return;const night=polNight();POL.state='warn';POL.total=POL.timer=night?180:60;POL.spot={x:panel.ax,z:panel.az};
+/* Alarm: allein sofort; im Raum fragt der Server, wer als Erster gesprüht hat (Rolle "owner" = wird gejagt, "second" = zweiter Wagen, sonst abgewiesen) */
+function polAlert(panel){if(POL.state!=='idle'||POL.pend)return;
+  if(typeof MULTI!=='undefined'&&MULTI.on){POL.pend={panel};multiSend({t:'pol',a:'start',x:panel.ax,z:panel.az});setTimeout(()=>{if(POL.pend&&POL.pend.panel===panel){POL.pend=null;polAlertGo(panel,'owner')}},3000);return}
+  polAlertGo(panel,'owner')}
+function polAlertGo(panel,role){if(POL.state!=='idle')return;const night=polNight();POL.role=role;POL.helped=false;POL.state='warn';POL.total=POL.timer=night?180:60;POL.spot={x:panel.ax,z:panel.az};
   toast('Achtung! Die Polizei wurde gerufen',2600);say('e','Jemand hat dein Graffiti gemeldet. Die Polizei ist in '+(night?'drei Minuten':'einer Minute')+' da. Verschwinde besser, sonst gibt es '+POL.FINE+' Scoops Strafe.',5.2);tone(520,.18,'square',.05);tone(390,.22,'square',.05,0,.2)}
+function polNetCmd(m){
+  if(m.a==='grant'){if(POL.pend){const pn=POL.pend.panel;POL.pend=null;polAlertGo(pn,m.role)}}
+  else if(m.a==='deny'){POL.pend=null;toast('Die Polizei ist gerade bei jemand anderem im Einsatz.',2800)}
+  else if(m.a==='launch'){POL.q2.push({from:m.from,x:m.x,z:m.z})}
+  else if(m.a==='caught'){polRemoteCaught()}
+  else if(m.a==='free'){if(POL.role==='second'&&POL.state!=='idle'){polEnd('Glück gehabt! Die Polizei zieht ab.')}}
+  else if(m.a==='secondgone'){if(POL.g2&&POL.g2.target!=='me')polG2End(null)}
+  else if(m.a==='gone'){polRemoteHide(true)}}
 function polSpawnPoint(){if(HUB.policeStation)return {x:HUB.policeStation.x,z:HUB.policeStation.z};let best=null;MAPD.roads.forEach(r=>mpResample(r.pts,20).forEach(s=>{if(!(s.tx||s.tz)||mpAt(s.x,s.z)!==2||s.z>186)return;const d=Math.hypot(s.x-P.x,s.z-P.z);if(d>95&&d<170&&(!best||Math.abs(d-130)<Math.abs(best.d-130)))best={x:s.x,z:s.z,d}}));return best||{x:P.x+60,z:P.z}}
 function polMakeCop(x,z,col,i){const g=skater(x,cityGround(x,z),z,0,col,1.35);g.userData.noBake=true;W0.add(g);
   /* Rollschuhe statt Skateboard: Board ausblenden, vier Rollen unter jeden Fuß, Beine pendeln beim Laufen */
@@ -528,15 +577,47 @@ function polMakeCop(x,z,col,i){const g=skater(x,cityGround(x,z),z,0,col,1.35);g.
   g.updateMatrixWorld(true);let low=1e9;wheels.forEach(w=>{const v=new V3();w.getWorldPosition(v);low=Math.min(low,v.y-.05*1.35)});const yadd=isFinite(low)?cityGround(x,z)-low:0;
   addOutlines(g,'actor');const mk=c=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),new THREE.MeshBasicMaterial({color:c}));m.position.set(0,2.55,0);g.add(m);return m},la=mk('#ff2a2a'),lb=mk('#2a6aff');la.position.x=-.22;lb.position.x=.22;
   return {g,x,z,h:0,la,lb,i,sp:POL.SPEED+(i?.5:0),swing,yadd,mv:0}}
-function polDispatch(){const sp=polSpawnPoint();POL.cops.forEach(c=>W0.remove(c.g));POL.cops=[polMakeCop(sp.x,sp.z,'#2a4a9a',0),polMakeCop(sp.x+2.4,sp.z+1.2,'#3a5ab8',1)];POL.state='patrol';POL.search=0;POL.t=0;toast('Die Polizei ist da!',1800);polText('POLIZEI IM EINSATZ','#4a7aff')}
+function polDispatch(){const sp=polSpawnPoint();POL.cops.forEach(c=>W0.remove(c.g));POL.cops=[polMakeCop(sp.x,sp.z,'#2a4a9a',0),polMakeCop(sp.x+2.4,sp.z+1.2,'#3a5ab8',1)];POL.search=0;POL.t=0;
+  const path=polPath(sp.x,sp.z,POL.spot.x,POL.spot.z);
+  if(path&&path.length>1){POL.car=mpPoliceCar();POL.car.path=path;POL.car.pi=1;polPlaceCar(POL.car,path[0].x,path[0].z,Math.atan2(path[1].z-path[0].z,path[1].x-path[0].x));POL.cops.forEach(c=>c.hide=true);POL.state='drive';toast('Der Streifenwagen rückt aus!',1800);polText('POLIZEI UNTERWEGS','#4a7aff')}
+  else{POL.state='patrol';toast('Die Polizei ist da!',1800);polText('POLIZEI IM EINSATZ','#4a7aff')}}
+/* Wagen am Ziel: Polizisten steigen aus, der Wagen bleibt mit Blaulicht stehen */
+function polArrive(){const c=POL.car;if(c){c.v=0;POL.cops.forEach((o,i)=>{const a=c.h+Math.PI/2*(i?-1:1);o.x=c.x+Math.cos(a)*2.4;o.z=c.z+Math.sin(a)*2.4;o.hide=false;o.h=c.h});SFX.thud&&tone(180,.12,'square',.04)}
+  POL.state='patrol';POL.search=0;toast('Die Polizei ist da!',1800);polText('POLIZEI IM EINSATZ','#4a7aff')}
 function polMove(c,tx,tz,sp,dt){const dx=tx-c.x,dz=tz-c.z,L=Math.hypot(dx,dz)||1,st=Math.min(L,sp*dt),a0=Math.atan2(dz,dx);c.moved=(c.moved||0)+st;
   /* geradeaus, sonst um Hindernisse herum: Ausweichwinkel probieren, die zuletzt gewählte Seite bevorzugen */
   const side=c.side||1;for(const off of [0,.5,-.5,1.0,-1.0,1.6,-1.6,2.3,-2.3]){const ang=a0+off*side,nx=c.x+Math.cos(ang)*st,nz=c.z+Math.sin(ang)*st;if(mpWalk(nx,nz)&&mpWalk(c.x+Math.cos(ang)*(st+.8),c.z+Math.sin(ang)*(st+.8))){c.x=nx;c.z=nz;c.h=ang;if(off)c.side=off>0?1:-1;return L}}
   c.side=-side;return L}
-function polDraw(dt){const flash=Math.floor(POL.t*4)%2===0,up=!G.under&&LV.id===0;POL.cops.forEach(c=>{const g=c.g;g.visible=up;g.position.set(c.x,cityGround(c.x,c.z)+(c.yadd||0),c.z);g.rotation.y=Math.PI/2-c.h;la_lb(c,flash);
-  const mv=c.moved||0;c.moved=0;c.mv+=mv*.9;(c.swing||[]).forEach(sw=>{sw.th.rotation.x=sw.base+Math.sin(c.mv*1.1+sw.ph)*Math.min(.55,mv/.4)})})}
+function polDraw(dt){const flash=Math.floor(POL.t*4)%2===0,up=!G.under&&LV.id===0;POL.cops.forEach(c=>{const g=c.g;g.visible=up&&!c.hide;g.position.set(c.x,cityGround(c.x,c.z)+(c.yadd||0),c.z);g.rotation.y=Math.PI/2-c.h;la_lb(c,flash);
+  const mv=c.moved||0;c.moved=0;c.mv+=mv*.9;(c.swing||[]).forEach(sw=>{sw.th.rotation.x=sw.base+Math.sin(c.mv*1.1+sw.ph)*Math.min(.55,mv/.4)})});
+  const car=POL.car;if(car){car.g.visible=up;car.g.position.set(car.x,cityGround(car.x,car.z),car.z);car.g.rotation.y=Math.PI/2-car.h;car.g.rotation.z=0;car.la.visible=flash;car.lb.visible=!flash}}
 function la_lb(c,f){c.la.visible=f;c.lb.visible=!f}
-function polEnd(msg,col){POL.cops.forEach(c=>{W0.remove(c.g)});POL.cops=[];POL.state='idle';POL.cin=null;polText('');if(msg)toast(msg,2600)}
+function polClearGroup1(){(POL.cops1||[]).forEach(c=>W0.remove(c.g));POL.cops1=null;POL.cops.forEach(c=>{if(!c.remote)W0.remove(c.g)});POL.cops=[];if(POL.car){W0.remove(POL.car.g);POL.car=null}}
+function polEnd(msg,col){const wasOwner=POL.role==='owner';polClearGroup1();
+  if(POL.g2&&POL.g2.target==='me')polG2End(null,true);
+  POL.state='idle';POL.cin=null;POL.pend=null;polText('');if(msg)toast(msg,2600);
+  if(wasOwner){POL.hostOnly=!!POL.g2;if(!POL.g2){POL.role=null;if(typeof MULTI!=='undefined'&&MULTI.on)multiSend({t:'pol',a:'end'});POL.q2.length=0}}else POL.role=null}
+/* Zweiter Wagen (nur im Browser des Gejagten gerechnet): fährt zum zweiten Sprüher, sonst hilft er nach 30 Sekunden bei der Jagd */
+function polTargetPos(g){if(g.target==='me')return {x:P.x,z:P.z};const p=typeof MULTI!=='undefined'&&MULTI.peers.get(g.target);return p&&p.has?{x:p.x,z:p.z}:null}
+function polG2Start(target,tx,tz){if(POL.g2)return false;const sp=polSpawnPoint(),path=polPath(sp.x,sp.z,tx,tz),mk=(x,z,c,i)=>{const o=polMakeCop(x,z,c,i);o.hide=true;return o};
+  const g={target,state:'drive',car:null,cops:[mk(sp.x,sp.z,'#3a5ab8',0),mk(sp.x+2.4,sp.z+1.2,'#2a4a9a',1)],t:0,chaseT:0,far:0,rep:0,tx,tz};
+  if(path&&path.length>1){g.car=mpPoliceCar();g.car.path=path;g.car.pi=1;polPlaceCar(g.car,path[0].x,path[0].z,Math.atan2(path[1].z-path[0].z,path[1].x-path[0].x))}else g.state='chase';
+  POL.g2=g;if(target==='me')toast('Ein zweiter Streifenwagen rückt aus!',2000);return true}
+function polG2End(outcome,silent){const g=POL.g2;if(!g)return;g.cops.forEach(c=>W0.remove(c.g));if(g.car)W0.remove(g.car.g);POL.g2=null;
+  if(g.target!=='me'&&outcome!=='caught'&&typeof MULTI!=='undefined'&&MULTI.on)multiSend({t:'pol',a:'free',to:g.target});
+  if(POL.hostOnly&&!POL.g2){POL.hostOnly=false;POL.role=null;if(typeof MULTI!=='undefined'&&MULTI.on)multiSend({t:'pol',a:'end'})}
+  else if(!silent&&POL.q2.length&&POL.state!=='idle'){}}
+function polG2Step(dt){const g=POL.g2;if(!g)return;g.t+=dt;const T=polTargetPos(g);if(!T){polG2End(null);return}const live=LV.id===0;const dist=Math.hypot(g.cops[0].x-T.x,g.cops[0].z-T.z);
+  if(g.state==='drive'&&g.car){const c=g.car;g.rep-=dt;if(g.rep<=0){g.rep=4;if(Math.hypot(T.x-g.tx,T.z-g.tz)>25){const np=polPath(c.x,c.z,T.x,T.z);if(np&&np.length>1){c.path=np;c.pi=1;g.tx=T.x;g.tz=T.z}}}
+    polDriveStep(c,dt);g.cops.forEach(o=>{o.x=c.x;o.z=c.z;o.h=c.h});const dc=Math.hypot(c.x-T.x,c.z-T.z);
+    if(c.done||(dc<26&&polLos(c.x,c.z,T.x,T.z))){c.v=0;g.cops.forEach((o,i)=>{const a=c.h+Math.PI/2*(i?-1:1);o.x=c.x+Math.cos(a)*2.4;o.z=c.z+Math.sin(a)*2.4;o.hide=false;o.h=c.h});g.state='chase'}}
+  else if(g.state==='chase'){g.chaseT+=dt;g.cops.forEach(o=>polMove(o,T.x,T.z,o.sp+Math.min(2.5,g.chaseT*.15),dt));const d=Math.min(...g.cops.map(o=>Math.hypot(o.x-T.x,o.z-T.z)));
+    g.far=d>90?g.far+dt:0;
+    if(d<2.4||(d<5.5&&g.chaseT>5)){if(g.target==='me'){if(G.phase==='play'&&POL.state!=='caught'&&POL.state!=='idle'){POL.cops1=POL.cops;POL.cops=g.cops;POL.helpCatch=true;polCatch()}else if(POL.state==='idle'&&G.phase==='play'){POL.role='owner';POL.cops1=null;POL.cops=g.cops;POL.helpCatch=true;polCatch()}}
+      else{multiSend({t:'pol',a:'caught',to:g.target});setTimeout(()=>polG2End('caught'),6000);g.state='done'}}
+    else if(g.far>5||g.chaseT>45){polG2End(null)}}
+  const flash=Math.floor(g.t*4)%2===0,up=!G.under&&LV.id===0;g.cops.forEach(c=>{const o=c.g;o.visible=up&&!c.hide;o.position.set(c.x,cityGround(c.x,c.z)+(c.yadd||0),c.z);o.rotation.y=Math.PI/2-c.h;la_lb(c,flash);const mv=c.moved||0;c.moved=0;c.mv+=mv*.9;(c.swing||[]).forEach(sw=>{sw.th.rotation.x=sw.base+Math.sin(c.mv*1.1+sw.ph)*Math.min(.55,mv/.4)})});
+  if(g.car){const c=g.car;c.g.visible=up;c.g.position.set(c.x,cityGround(c.x,c.z),c.z);c.g.rotation.y=Math.PI/2-c.h;c.la.visible=flash;c.lb.visible=!flash}}
 function polCatch(){POL.state='caught';const c0=POL.cops[0],c1=POL.cops[1]||c0;P.speed=0;K.up=K.down=K.left=K.right=0;
   /* Polizisten stellen sich vor den Spieler, Kamera zoomt auf die Gesichter */
   const f=[Math.cos(P.h),Math.sin(P.h)];c0.x=P.x+f[0]*2.0-f[1]*.9;c0.z=P.z+f[1]*2.0+f[0]*.9;c1.x=P.x+f[0]*2.0+f[1]*.9;c1.z=P.z+f[1]*2.0-f[0]*.9;c0.h=c1.h=Math.atan2(-f[1],-f[0]);
@@ -544,25 +625,65 @@ function polCatch(){POL.state='caught';const c0=POL.cops[0],c1=POL.cops[1]||c0;P
   dlgStart('Polizei',['Halt! Polizei! Illegales Graffiti.','Das macht '+POL.FINE+' Scoops Strafe. Und jetzt ab nach Hause.'],polRelease)}
 function polCin(step){const c=POL.cops[step%2]||POL.cops[0];const fx=Math.cos(c.h),fz=Math.sin(c.h);
   POL.cin.pos=new V3(c.x+fx*1.25,cityGround(c.x,c.z)+3.05,c.z+fz*1.25);POL.cin.look=new V3(c.x,cityGround(c.x,c.z)+3.0,c.z);POL.cin.step=step;POL.cin.t=0}
-function polRelease(){const lost=Math.min(POL.FINE,SC.n|0);if(lost>0)scAdd(-lost,'Strafe');polEnd('−'+lost+' Scoops')}
+function polRelease(){const lost=Math.min(POL.FINE,SC.n|0);if(lost>0)scAdd(-lost,'Strafe');
+  if(POL.remoteCatch){POL.remoteCatch=false;POL.cops=[];POL.state='idle';POL.role=null;POL.cin=null;polText('');toast('−'+lost+' Scoops',2600);return}
+  if(POL.helpCatch&&POL.g2&&POL.g2.cops===POL.cops){POL.helpCatch=false;POL.cops=POL.cops1||[];POL.cops1=null}
+  polEnd('−'+lost+' Scoops')}
 /* Sichtlinie: nur Häuser, Autos und Statuen (Maske 5) blockieren den Blick */
 function polLos(ax,az,bx,bz){const n=Math.ceil(Math.hypot(bx-ax,bz-az));for(let i=1;i<n;i++){const t=i/n;if(mpAt(ax+(bx-ax)*t,az+(bz-az)*t)===5)return false}return true}
+/* Läuft das Spiel des Gejagten gerade pausiert (Dialog, Rarepod), rechnet der zweite Wagen für den anderen Spieler im Hintergrund weiter */
+function polBg(dt){if(POL.g2&&POL.g2.target!=='me')polG2Step(dt);polQ2()}
+/* Warteschlange: ein zweiter Sprüher hat gemeldet, dass seine Polizei losfährt */
+function polQ2(){if(!POL.q2.length)return;if(POL.role!=='owner'){POL.q2.length=0;return}if(POL.state==='warn')return;if(POL.state==='idle'&&!POL.hostOnly){POL.q2.length=0;return}
+  const q=POL.q2[0];if(!POL.g2){POL.q2.shift();polG2Start(q.from,q.x,q.z)}
+  else if(POL.g2.target==='me'&&POL.g2.state==='drive'){POL.q2.shift();const g=POL.g2;g.target=q.from;g.tx=q.x;g.tz=q.z;if(g.car){const np=polPath(g.car.x,g.car.z,q.x,q.z);if(np&&np.length>1){g.car.path=np;g.car.pi=1;g.car.done=false}}}}
+/* Senden (nur der Gejagte rechnet die Polizei): 10 Mal pro Sekunde Wagen und Polizisten, die anderen zeichnen sie nach */
+const POLR={cars:[],cops:[],c:null,k:null,t:0,e:true,id:null,tz:0,sirenT:0,sent:false};
+function polNetOut(dt){if(typeof MULTI==='undefined'||!MULTI.on)return;const act=POL.cops.length||POL.car||POL.g2;
+  if(!(POL.role==='owner'||POL.hostOnly)){return}
+  POLR.tz-=dt;if(POLR.tz>0)return;POLR.tz=.1;
+  if(!act){if(POLR.sent){POLR.sent=false;multiSend({t:'polz',e:1})}return}
+  POLR.sent=true;const r1=v=>Math.round(v*10)/10,cars=[POL.car,POL.g2&&POL.g2.car].map(c=>c?[r1(c.x),r1(c.z),Math.round(c.h*100)/100]:null);
+  const cops=[...(POL.cops1||POL.cops).slice(0,2),...(POL.g2?POL.g2.cops:[])].slice(0,4);
+  /* bei Hilfsfang sind die ersten zwei die der Gruppe 1 */
+  const g1=(POL.cops1||POL.cops),k=[0,1].map(i=>g1[i]).concat([0,1].map(i=>POL.g2&&POL.g2.cops[i])).map(c=>c?[r1(c.x),r1(c.z),Math.round(c.h*100)/100,c.hide?1:0]:null);
+  multiSend({t:'polz',c:cars,k})}
+function polNetIn(m){if(POL.role==='owner'||POL.hostOnly)return;POLR.id=m.id;POLR.t=performance.now();POLR.e=!!m.e;if(m.e){return}POLR.c=Array.isArray(m.c)?m.c.slice(0,2):[];POLR.k=Array.isArray(m.k)?m.k.slice(0,4):[]}
+function polRemoteHide(clear){POLR.cars.forEach(c=>c&&(c.g.visible=false));POLR.cops.forEach(c=>c&&(c.g.visible=false));if(clear){POLR.c=null;POLR.k=null;POLR.e=true}}
+function polRemoteStep(dt){if(!POLR.c&&!POLR.k)return;const age=(performance.now()-POLR.t)/1000,show=!POLR.e&&age<2&&LV.id===0&&!G.under&&!(POL.role==='owner'||POL.hostOnly);
+  if(!show){polRemoteHide(false);return}
+  const kk=1-Math.exp(-dt*12),flash=Math.floor(performance.now()/250)%2===0;let near=1e9;
+  (POLR.c||[]).forEach((d,i)=>{let c=POLR.cars[i];if(!d){if(c)c.g.visible=false;return}if(!c){c=POLR.cars[i]=mpPoliceCar();c.x=d[0];c.z=d[1];c.h=d[2]}
+    const px=c.x,pz=c.z;c.x+=(d[0]-c.x)*kk;c.z+=(d[1]-c.z)*kk;let dh=d[2]-c.h;dh=Math.atan2(Math.sin(dh),Math.cos(dh));c.h+=dh*kk;
+    c.g.visible=true;c.g.position.set(c.x,cityGround(c.x,c.z),c.z);c.g.rotation.y=Math.PI/2-c.h;c.la.visible=flash;c.lb.visible=!flash;near=Math.min(near,Math.hypot(c.x-P.x,c.z-P.z))});
+  if(!POL.remoteCatch)(POLR.k||[]).forEach((d,i)=>{let c=POLR.cops[i];if(!d){if(c)c.g.visible=false;return}if(!c){c=POLR.cops[i]=polMakeCop(d[0],d[1],i%2?'#3a5ab8':'#2a4a9a',i);c.remote=true;c.x=d[0];c.z=d[1];c.h=d[2]}
+    const px=c.x,pz=c.z;c.x+=(d[0]-c.x)*kk;c.z+=(d[1]-c.z)*kk;let dh=d[2]-c.h;dh=Math.atan2(Math.sin(dh),Math.cos(dh));c.h+=dh*kk;c.moved=Math.hypot(c.x-px,c.z-pz);
+    const o=c.g;o.visible=!d[3];o.position.set(c.x,cityGround(c.x,c.z)+(c.yadd||0),c.z);o.rotation.y=Math.PI/2-c.h;la_lb(c,flash);const mv=c.moved||0;c.moved=0;c.mv+=mv*.9;(c.swing||[]).forEach(sw=>{sw.th.rotation.x=sw.base+Math.sin(c.mv*1.1+sw.ph)*Math.min(.55,mv/.4)})});
+  POLR.sirenT-=dt;if(POLR.sirenT<=0&&near<110){POLR.sirenT=.5;tone(Math.floor(performance.now()/500)%2?640:860,.22,'square',Math.max(.004,.022*(1-near/110)))}}
+/* Der Gejagte aus dem zweiten Wagen wird erwischt: die Polizisten (so wie dieser Browser sie zeichnet) stellen sich vor ihn */
+function polRemoteCaught(){if(POL.state==='caught')return;const ps=[POLR.cops[2],POLR.cops[3]].filter(Boolean);if(ps.length<2){POL.cops=[];const fine=Math.min(POL.FINE,SC.n|0);if(fine>0)scAdd(-fine,'Strafe');toast('Erwischt! −'+fine+' Scoops',2600);POL.state='idle';POL.role=null;polText('');return}
+  POL.remoteCatch=true;POL.cops=ps;POL.role='second';polCatch()}
 function polSees(){return POL.cops.some(c=>Math.hypot(c.x-P.x,c.z-P.z)<POL.SIGHT&&polLos(c.x,c.z,P.x,P.z))}
-function polStep(dt){if(!POL.hud&&POL.state==='idle')return;POL.t+=dt;const live=LV.id===0&&!G.under;
-  if(POL.state==='warn'){if(!live)return;POL.timer-=dt;const t=Math.max(0,Math.ceil(POL.timer));polText('POLIZEI IN '+Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),POL.timer<15?'#ff2a2a':'#ffb020');if(POL.timer<=0)polDispatch();return}
-  if(!POL.cops.length)return;polDraw(dt);if(!live)return;
+function polStep(dt){polRemoteStep(dt);if(POL.g2)polG2Step(dt);polQ2();if(!POL.hud&&POL.state==='idle')return;POL.t+=dt;const live=LV.id===0&&!G.under;
+  if(POL.state==='warn'){if(!live)return;POL.timer-=dt;const t=Math.max(0,Math.ceil(POL.timer));polText('POLIZEI IN '+Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),POL.timer<15?'#ff2a2a':'#ffb020');if(POL.timer<=0){if(POL.role==='second'){multiSend({t:'pol',a:'launch',x:POL.spot.x,z:POL.spot.z});POL.state='wait2';polText('POLIZEI UNTERWEGS','#4a7aff')}else polDispatch()}return}
+  if(!POL.cops.length)return;
+  if(POL.state==='drive'&&POL.car){const c=POL.car;polDriveStep(c,dt);POL.cops.forEach(o=>{o.x=c.x;o.z=c.z;o.h=c.h});polDraw(dt);if(!live)return;
+    if(Math.floor(POL.t*2)!==Math.floor((POL.t-dt)*2))tone(Math.floor(POL.t*2)%2?640:860,.22,'square',.018);
+    const dp=Math.hypot(c.x-P.x,c.z-P.z);if(c.done||(dp<26&&polLos(c.x,c.z,P.x,P.z)))polArrive();return}
+  polDraw(dt);if(!live)return;
   if(POL.state==='patrol'||POL.state==='chase'){if(Math.floor(POL.t*2)!==Math.floor((POL.t-dt)*2))tone(Math.floor(POL.t*2)%2?640:860,.22,'square',.018)}
   const near=POL.cops.reduce((m,c)=>Math.min(m,Math.hypot(c.x-P.x,c.z-P.z)),1e9),seen=polSees();
   if(POL.state==='patrol'){POL.cops.forEach((c,i)=>{const a=POL.t*.5+i*3.1,tx=POL.spot.x+Math.cos(a)*(POL.search>3?10:0),tz=POL.spot.z+Math.sin(a)*(POL.search>3?10:0),L=polMove(c,tx,tz,c.sp*.85,dt);if(L<2.5)POL.search+=dt/POL.cops.length});
     if(seen&&G.phase==='play'){POL.state='chase';POL.chaseT=0;POL.loseT=0;POL.lost=0;POL.hid=0;POL.lostFlag=false;POL.last={x:P.x,z:P.z};toast('Polizei! Lauf!',1600);polText('VERFOLGUNG!','#ff2a2a');tone(900,.25,'square',.06)}
     else if(POL.search>20){polEnd('Glück gehabt! Die Polizei zieht ab.')}
     return}
-  if(POL.state==='chase'){POL.chaseT+=dt;
+  if(POL.state==='chase'){POL.chaseT+=dt;if(POL.chaseT>30&&!POL.g2&&!POL.helped&&POL.role==='owner'&&!POL.q2.length){POL.helped=true;polG2Start('me',P.x,P.z)}
+   
     /* Sichtkontakt: aus dem Blick geraten (mindestens 2,5 s) zählt als "verloren", dreimal verloren = Polizei gibt auf; wer sich ruhig versteckt, wird auch ohne Gas in Ruhe gelassen */
     if(seen){POL.hid=0;POL.lostFlag=false;POL.last={x:P.x,z:P.z}}else{POL.hid+=dt;if(POL.hid>=2.5&&!POL.lostFlag){POL.lostFlag=true;POL.lost++;if(POL.lost<3)toast('Aus dem Sichtfeld! ('+POL.lost+'/3)',1300)}}
     polText(seen?'VERFOLGUNG!':'AUS DEM SICHTFELD '+POL.lost+'/3',seen?'#ff2a2a':'#ffb020');
     const tx=seen?P.x:POL.last.x,tz=seen?P.z:POL.last.z;POL.cops.forEach(c=>{if(Math.hypot(c.x-tx,c.z-tz)>1.8)polMove(c,tx,tz,c.sp+Math.min(2.5,POL.chaseT*.15),dt)});
-    if(near<2.4&&G.phase==='play')return polCatch();
+    if((near<2.4||(near<5.5&&POL.chaseT>5))&&G.phase==='play')return polCatch();
     POL.loseT=near>75?POL.loseT+dt:0;
     if(POL.lost>=3||POL.hid>14||POL.loseT>4)polEnd('Glück gehabt! Du hast sie abgehängt.');else if(POL.chaseT>70)polEnd('Glück gehabt! Die Polizei gibt auf.');return}
   if(POL.state==='caught'&&POL.cin){POL.cin.t+=dt;if(POL.cin.t>1.7&&POL.cin.step<3)polCin(POL.cin.step+1)}}

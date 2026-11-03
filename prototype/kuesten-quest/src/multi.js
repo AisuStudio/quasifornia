@@ -23,7 +23,7 @@ function multiConnect(){if(!MULTI.room||MULTI.ws||MULTI.full)return;MULTI.state=
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}multiMsg(m)};
   ws.onclose=()=>{if(typeof statEv==='function'&&!MULTI.on&&!MULTI.full)statEv('ws','fehler',1);if(MULTI.ws===ws){MULTI.ws=null;MULTI.on=false;MULTI.state=MULTI.full?'voll':'aus';MULTI.tRetry=MULTI.retry;MULTI.retry=Math.min(15,MULTI.retry*1.6);multiClear()}multiUi()};
   ws.onerror=()=>{}}
-function multiClear(){MULTI.peers.forEach(p=>multiRemove(p));MULTI.peers.clear();MULTI.synced=false}
+function multiClear(){MULTI.peers.forEach(p=>multiRemove(p));MULTI.peers.clear();MULTI.synced=false;if(typeof polRemoteHide==='function')polRemoteHide(true)}
 function multiPing(){multiSend({t:'ping',c:performance.now()})}
 function multiMsg(m){
   if(m.t==='welcome'){MULTI.id=m.id;MULTI.max=m.max||5;MULTI.on=true;MULTI.state='on';MULTI.retry=2;MULTI.off=m.now-Date.now();MULTI.synced=true;m.players.forEach(p=>multiAdd(p));multiUi();toast('Im Raum "'+MULTI.room+'"',1600)}
@@ -33,6 +33,8 @@ function multiMsg(m){
   else if(m.t==='name'){const p=MULTI.peers.get(m.id);if(p){p.name=m.name;multiLabel(p)}}
   else if(m.t==='skin'){const p=MULTI.peers.get(m.id);if(p){p.skin=m.skin;multiRemove(p,true)}}
   else if(m.t==='pong'){const rtt=performance.now()-m.c;if(rtt<MULTI.rtt+30){MULTI.rtt=Math.min(MULTI.rtt,rtt);MULTI.off=m.now+rtt/2-Date.now()}}
+  else if(m.t==='pol'){if(typeof polNetCmd==='function')polNetCmd(m)}
+  else if(m.t==='polz'){if(typeof polNetIn==='function')polNetIn(m)}
   else if(m.t==='full'){if(typeof statEv==='function')statEv('ws','voll',1);MULTI.full=true;MULTI.state='voll';toast('Der Raum ist voll (höchstens '+MULTI.max+' Spieler)',3000);multiUi()}}
 function multiAdd(d){if(MULTI.peers.has(d.id)||d.id===MULTI.id)return;const p={id:d.id,name:d.name,skin:d.skin,g:null,label:null,x:0,y:1.3,z:0,h:0,v:0,u:0,tx:0,ty:1.3,tz:0,th:0,seen:0,age:99,has:false};MULTI.peers.set(d.id,p);if(d.s)multiSet(p,d.s)}
 function multiSet(p,m){p.tx=m.x;p.ty=m.y;p.tz=m.z;p.th=m.h;p.v=m.v;p.u=m.u;p.seen=performance.now();if(!p.has){p.x=m.x;p.y=m.y;p.z=m.z;p.h=m.h;p.has=true}}
@@ -49,6 +51,7 @@ function multiStep(dt){
   const now=performance.now(),see=LV.id===0&&G.phase!=='title';
   /* senden: ca. 10 Mal pro Sekunde, nur in Port Lupo */
   MULTI.tSend-=dt;if(MULTI.tSend<=0&&LV.id===0&&(G.phase==='play'||G.phase==='chase'||G.phase==='caught')){MULTI.tSend=.1;multiSend({t:'s',x:P.x,y:P.y,z:P.z,h:P.h,v:P.speed,u:G.under?1:0})}
+  if(typeof polNetOut==='function')polNetOut(dt);
   if(MULTI.sentSkin!==P.preset){MULTI.sentSkin=P.preset;multiSend({t:'skin',skin:P.preset})}
   MULTI.tPing-=dt;if(MULTI.tPing<=0){MULTI.tPing=25;multiPing()}
   /* andere Skater: glätten und zeichnen */

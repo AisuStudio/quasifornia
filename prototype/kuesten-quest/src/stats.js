@@ -41,7 +41,7 @@ addEventListener('pagehide',()=>statFlush(true));addEventListener('visibilitycha
 {const o=releaseTry;releaseTry=function(){const g=BQ.released,r=o.apply(this,arguments);try{if(!g&&BQ.released)statEv('bq','released',1)}catch(e){}return r}}
 {const o=shopEnter;shopEnter=function(){const r=o.apply(this,arguments);try{statEv('shop','enter',1)}catch(e){}return r}}
 {const o=trickScored;trickScored=function(key){const r=o.apply(this,arguments);try{statEv('trick',key,1)}catch(e){}return r}}
-{const o=polAlert;polAlert=function(p){const was=POL.state,r=o.apply(this,arguments);try{if(was==='idle'&&POL.state==='warn')statEv('pol','alarm',1,P.x,P.z)}catch(e){}return r}}
+{const o=polAlertGo;polAlertGo=function(p,role){const was=POL.state,r=o.apply(this,arguments);try{if(was==='idle'&&POL.state==='warn')statEv('pol',role==='second'?'alarm2':'alarm',1,P.x,P.z)}catch(e){}return r}}
 {const o=polCatch;polCatch=function(){const r=o.apply(this,arguments);try{statEv('pol','erwischt',1,P.x,P.z)}catch(e){}return r}}
 {const o=polEnd;polEnd=function(msg){const was=POL.state,r=o.apply(this,arguments);try{statEv('pol',/Glück/.test(msg||'')?'entkommen':was==='caught'?'bezahlt':'ende',1,P.x,P.z)}catch(e){}return r}}
 {const o=grafClose;grafClose=function(save){const p=GF.cur,d=GF.dabs,r=o.apply(this,arguments);try{if(save&&p&&d>0)statEv('gr',grafLegal(p.id)?'legal':'illegal',d,P.x,P.z)}catch(e){}return r}}

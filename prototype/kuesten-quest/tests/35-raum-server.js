@@ -42,6 +42,28 @@ const BASE=process.env.WORKER||'http://localhost:8790',AUTH='Basic '+Buffer.from
  console.log('Fünf Plätze',JSON.stringify({alleFuenf:out.fuenf,sechster:out.sechster}));
  console.log('Verlassen',JSON.stringify({leaveGemeldet:out.leave,nachrueckerKommtRein:out.nachruecken}));
  console.log('Name ändern',JSON.stringify({name:out.name&&out.name.name}));
+ /* Polizei-Regeln im Raum: Rollen, Abweisung, Weiterleitung */
+ const pol=await p.evaluate(async([raum])=>{
+  const W=(name)=>new Promise(res=>{const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/room/'+raum);const o={ws,msgs:[]};ws.onopen=()=>ws.send(JSON.stringify({t:'hello',name,skin:'#d54291'}));ws.onmessage=e=>o.msgs.push(JSON.parse(e.data));setTimeout(()=>res(o),500)});
+  const wait=ms=>new Promise(r=>setTimeout(r,ms)),send=(o,m)=>o.ws.send(JSON.stringify(m)),R={},id=o=>o.msgs.find(m=>m.t==='welcome').id,has=(o,f)=>o.msgs.some(f);
+  const a=await W('A'),b=await W('B'),c=await W('C');
+  send(a,{t:'pol',a:'start',x:1,z:2});await wait(250);R.a=a.msgs.find(m=>m.t==='pol');
+  send(b,{t:'pol',a:'start',x:3,z:4});await wait(250);R.b=b.msgs.find(m=>m.t==='pol');
+  send(c,{t:'pol',a:'start',x:5,z:6});await wait(250);R.c=c.msgs.find(m=>m.t==='pol');
+  R.keineWarnungFuerAndere=!has(b,m=>m.t==='pol'&&m.a==='new')&&!has(c,m=>m.t==='pol'&&m.a==='new');
+  /* nur der Erste darf Polizei-Daten senden */
+  send(b,{t:'polz',c:[[1,2,0]],k:[]});await wait(150);R.fremdeDatenWeg=!has(a,m=>m.t==='polz')&&!has(c,m=>m.t==='polz');
+  send(a,{t:'polz',c:[[1.5,2.5,0.5]],k:[[1,1,0,0]]});await wait(250);R.relay=has(b,m=>m.t==='polz'&&m.id===id(a))&&has(c,m=>m.t==='polz')&&!has(a,m=>m.t==='polz');
+  send(b,{t:'pol',a:'launch',x:7,z:8});await wait(250);R.launch=a.msgs.find(m=>m.t==='pol'&&m.a==='launch');
+  send(c,{t:'pol',a:'launch',x:9,z:9});await wait(150);R.dritterLaunch=a.msgs.filter(m=>m.a==='launch').length;
+  send(a,{t:'pol',a:'caught',to:id(b)});await wait(250);R.caught=has(b,m=>m.t==='pol'&&m.a==='caught');
+  send(c,{t:'pol',a:'end'});await wait(150);R.fremderEnd=!has(a,m=>m.a==='gone');
+  send(a,{t:'pol',a:'end'});await wait(250);R.gone=has(b,m=>m.a==='gone')&&has(c,m=>m.a==='gone');
+  send(c,{t:'pol',a:'start',x:5,z:6});await wait(250);R.neuerErster=c.msgs.filter(m=>m.t==='pol').pop();
+  c.ws.close();await wait(400);R.verlassen=has(a,m=>m.a==='gone');
+  [a,b].forEach(o=>o.ws.close());return {R,idA:id(a),idB:id(b)}},[raum+'pol']);
+ const R=pol.R;console.log('Polizei Erster',JSON.stringify(R.a),'Zweiter',JSON.stringify(R.b),'Dritter',JSON.stringify(R.c));
+ console.log('Polizei Regeln',JSON.stringify({keineWarnungFuerAndere:R.keineWarnungFuerAndere,fremdeDatenWeg:R.fremdeDatenWeg,relay:R.relay,launchBeiErstem:R.launch&&R.launch.from===pol.idB&&R.launch.x===7,dritterLaunchIgnoriert:R.dritterLaunch===1,caughtBeiZweitem:R.caught,fremdesEndeIgnoriert:R.fremderEnd,endeMeldetGone:R.gone,neuerErsterNachEnde:R.neuerErster&&R.neuerErster.role,gonebeiAustritt:R.verlassen}));
  /* fremde Herkunft */
  const r=await ctx.request.get(BASE+'/api/room/'+raum,{headers:{upgrade:'websocket',origin:'https://boese.example','sec-websocket-key':'dGhlIHNhbXBsZSBub25jZQ==','sec-websocket-version':'13',connection:'Upgrade'}});
  console.log('Fremde Herkunft',r.status());
