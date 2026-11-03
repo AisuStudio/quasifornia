@@ -166,6 +166,7 @@ Ein Gebüsch in einer ruhigen Ecke von Port Lupo (Südwest) verbirgt eine Leiter
 - Vektor und Pixel sind klar getrennt: Oben immer glatter Vektor-Look, unten immer fester Pixel-Look. Es gibt keinen Schalter (die P-Taste ist entfernt).
 - Gebaut (Stufe 1, Prototyp): Leiter im Gebüsch, Kopfstand-Ansicht (Bild senkrecht gespiegelt, Steuerung normal), fester Pixel-Look mit eigener Türkis-Lila-Orange-Palette, dunkles Licht, Gräber, Kürbisse, Kabel zwischen den Laternen, türkiser Code-Regen, tiefes Brummen. Quest-Objekte der oberen Stadt (Portale, Gegenstände, Labor) sind unten ausgeblendet. Der Zug der Hochbahn fährt auch unten.
 - Später: Quests (Auftragssystem), Gegner (Zombies, Geister, Fledermäuse, Boss), eigene Gegenstände und echtes 2D (Jump-and-Run im Stil von Ghosts 'n Goblins).
+- Wünsche des Nutzers (2026-11-03, offen): Der Turm Tarxarox ist zu weit weg und soll näher an die Leiter. Die Steuerung unten soll ebenfalls kopfstehen (Richtung noch klären: links/rechts, vorne/hinten oder beides).
 - Name: "Upside Down" gehört zu Stranger Things und sollte nicht der Name sein. Ideen: Kopfstand-Lupo, Unter-Lupo, Spiegel-Lupo.
 
 ### Marktplatz für bezahlte Worldpacks (Idee vom Nutzer, 2026-11-01, später)
@@ -182,6 +183,17 @@ Serafin, ein Bettler, sitzt an der Kanalbrücke in Port Lupo.
 - Tarxarox ist ein hoher Turm in der Unterwelt (Südost-Ecke). Man fährt zum Aufzug am Fuß ("hinab, hinauf"), oben schwebt der gefangene Geist, der Gegenpart von Serafin.
 - Mit dem Releaser lässt man den Geist frei. Belohnung: 30 Scoops (Auftrag "Serafin und sein Geist", einmalig). Danach sagt Serafin, er fühle sich leichter.
 - Offen: Serafins Hintergrundgeschichte, weitere Quests mit ihm, ob der Geist später als Begleiter zurückkehrt.
+
+### Leitthema: Ethical Hacking und systemisches Denken (Idee vom Nutzer, 2026-11-03, Konzept)
+Das ganze Spiel bringt Kindern Schritt für Schritt Ethical Hacking (White Hat) bei: beobachten, Muster erkennen, Vermutung aufstellen, testen, Lücke finden und melden. Ziel ist systemisches und kritisches Denken, spielerisch.
+- **Struktur:** Jeder Bezirk hat eine Hauptquest oder einen Endboss. Jeder Bezirk vermittelt ein Denkprinzip, der Boss ist die Prüfung dazu. Der Nutzer entwickelt die Quests nach und nach.
+- **Mentor: Serafin** (Vorschlag des Nutzers). Der Bettler an der Kanalbrücke entpuppt sich als Hacking-Mentor. Seine Hintergrundgeschichte ist damit die offene Frage aus der Serafin-Quest.
+- **Hackbare Orte:** Computer, Bankautomaten, Parkterminals und Ähnliches.
+- **White-Hat-Rahmen:** Man hackt nicht, um sich zu bereichern. Ein Bösewicht hat ein System manipuliert, man findet die Lücke, meldet sie dem Besitzer und bekommt Belohnung und Ruf (Bug-Bounty-Prinzip). Passt zur Polizei-Mechanik: Illegal bleibt illegal.
+- **Kein Zauberknopf:** Hacken ist ein echtes Rätsel, kein Minispiel mit Tastendruck. Vorbilder: Kinder-CTFs (picoCTF), Human Resource Machine.
+- **Graffiti als Nachricht:** Im Multiplayer können Tags verschlüsselte Nachrichten tragen (Caesar- oder Symbolschlüssel), nur wer den Schlüssel hat, kann sie lesen. Kein Freitext, sondern ein festes Vokabular aus Symbolen und Phrasen (Schutz vor Grooming und Beleidigungen, DSGVO und Jugendschutz).
+- **Lernkurve (Skizze, noch keinen Bezirken zugeordnet):** 1. Beobachten (Muster, Abläufe, Ampelzyklen), 2. Logik (Reihenfolgen, Bedingungen), 3. Passwörter und Social Engineering (Passwort auf dem Post-it im Café), 4. Verschlüsselung (Graffiti-Codes), 5. Netzwerke (das Parkterminal hängt an den Ampeln), 6. Phishing erkennen, 7. verantwortungsvoll melden statt ausnutzen.
+- **Offen:** Welche Bezirke es gibt und welches Prinzip wohin gehört; wer der Bösewicht ist; fachliche Prüfung der Rätsel.
 
 ### Unterwelt: Gegner und Aufträge (im Prototyp gebaut, 2026-11-01)
 Gegner und Sammelobjekte in der Spiegelstadt, nach dem Vorbild von Ghosts 'n Goblins, aber kindgerecht.
