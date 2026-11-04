@@ -219,27 +219,35 @@ void main(){vec2 m=vec2(vW.x/org.z+org.x-geo.x,vW.z/org.z+org.y-geo.y)/geo.zw;fl
 function mpInCourt(X,Z){const ux=mux(X),uy=muy(Z);return MAPD.courts.some(c=>mpInPoly(c.c[0],ux,uy))}
 function mpCvTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
 /* ---- Skatepark: Pool als befahrbare Mulde (Höhenfunktion skateG), Zaun mit offenem Tor ---- */
-const SKATE={on:false,cx:0,cz:0,a:0,rx:0,rz:0,D:1.4,ph:.7,ring:null,gate:null};
+const SKATE={on:false,cx:0,cz:0,a:0,rx:0,rz:0,D:1.6,T0:.4,ph:.7,ring:null,gate:null};
 const skateR=th=>1+.1*Math.sin(2*th+SKATE.ph)+.07*Math.sin(3*th+1.3);
+/* Pool: Boden flach bis T0, dann wächst die Wand nach oben gekrümmt (Parabel, zum Rand hin steiler) wie ein echtes Becken */
 function skateG(x,z){if(!SKATE.on)return 0;const dx=x-SKATE.cx,dz=z-SKATE.cz,R=Math.max(SKATE.rx,SKATE.rz)*1.25;if(Math.abs(dx)>R||Math.abs(dz)>R)return 0;
   const c=Math.cos(SKATE.a),s=Math.sin(SKATE.a),lx=dx*c+dz*s,lz=-dx*s+dz*c,ex=lx/SKATE.rx,ez=lz/SKATE.rz,t=Math.hypot(ex,ez)/skateR(Math.atan2(ez,ex));if(t>=1)return 0;
-  const u=Math.max(0,Math.min(1,(t-.45)/.55)),sm=u*u*(3-2*u);return -SKATE.D*(1-sm)}
+  const u=Math.max(0,Math.min(1,(t-SKATE.T0)/(1-SKATE.T0)));return -SKATE.D*(1-u*u)}
 function mpSkateSetup(){SKATE.on=false;const c=MAPD.courts.find(c=>mpCourtKind(c)==='skate');if(!c)return;const ring=c.c[0],o=mpObb(ring);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
-  const cen=mpCentroid(ring),Lw=w*MP.SC,Hw=h*MP.SC;SKATE.cx=mwx(cen[0]);SKATE.cz=mwz(cen[1]);SKATE.a=a;SKATE.rx=Math.max(4,.32*Lw);SKATE.rz=Math.max(4,.32*Hw);SKATE.on=true;
-  const pts=[];for(let k=0;k<48;k++){const th=k/48*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;pts.push([mux(SKATE.cx+lx*Math.cos(a)-lz*Math.sin(a)),muy(SKATE.cz+lx*Math.sin(a)+lz*Math.cos(a))])}
-  SKATE.ring=pts;const land=MAPD.land.find(l=>mpInPoly(l.c[0],cen[0],cen[1]));if(land&&land.c.length<2)land.c.push(pts)}
+  /* Mitte = Punkt mit dem größten Abstand zum Zaun (Umriss), Größe so, dass das ganze Becken samt Rand mit Abstand innerhalb des Zauns liegt */
+  const xs=ring.map(p=>p[0]),ys=ring.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);let best=null;
+  for(let ux=x0;ux<=x1;ux+=1)for(let uy=y0;uy<=y1;uy+=1){if(!mpInPoly(ring,ux,uy))continue;const d=mpPolyDist(ring,ux,uy);if(!best||d>best.d)best={d,x:ux,y:uy}}
+  if(!best)return;const Lw=w*MP.SC,Hw=h*MP.SC,asp=Math.max(.8,Math.min(1.25,Lw/Hw)),MARG=2.6;
+  SKATE.cx=mwx(best.x);SKATE.cz=mwz(best.y);SKATE.a=a;SKATE.on=true;
+  let R=Math.max(3,best.d*MP.SC-MARG)/1.17,ok=false;
+  for(let k=0;k<30&&!ok;k++,R*=.94){SKATE.rx=R*Math.sqrt(asp);SKATE.rz=R/Math.sqrt(asp);const pts=ringPts();ok=pts.every(q=>mpInPoly(ring,q[0],q[1])&&mpPolyDist(ring,q[0],q[1])*MP.SC>=MARG-.3);SKATE.ring=pts}
+  SKATE.minDist=Math.min(...SKATE.ring.map(q=>mpPolyDist(ring,q[0],q[1])*MP.SC));
+  const cen=[best.x,best.y];const land=MAPD.land.find(l=>mpInPoly(l.c[0],cen[0],cen[1]));if(land&&land.c.length<2)land.c.push(SKATE.ring)}
+function ringPts(){const a=SKATE.a,pts=[];for(let k=0;k<48;k++){const th=k/48*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;pts.push([mux(SKATE.cx+lx*Math.cos(a)-lz*Math.sin(a)),muy(SKATE.cz+lx*Math.sin(a)+lz*Math.cos(a))])}return pts}
 function mpPolyDist(r,x,y){let d=1e9;for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],dx=q[0]-p[0],dy=q[1]-p[1],L2=dx*dx+dy*dy||1e-9;let t=((x-p[0])*dx+(y-p[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-p[0]-dx*t,y-p[1]-dy*t))}return d}
 function mpCourtKind(c){if(!MAPD.labels.some(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket|X-?Fit|Skate/i.test(l.t)))&&MAPD.labels.some(l=>/Skate/i.test(l.t)&&mpPolyDist(c.c[0],l.x,l.y)<=40&&MAPD.courts.every(o=>o===c||mpPolyDist(o.c[0],l.x,l.y)>mpPolyDist(c.c[0],l.x,l.y))))return 'skate';const lab=MAPD.labels.find(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket/i.test(l.t)||/X-?Fit/i.test(l.t)||/Skate/i.test(l.t)));return lab?(/Basket/i.test(lab.t)?'basket':/Skate/i.test(lab.t)?'skate':'xfit'):'volley'}
 function mpSkatePark(c,add,steel,chain){const ring=c.c[0],pts=ring.map(q=>[mwx(q[0]),mwz(q[1])]),n=pts.length,G=new THREE.Group();G.userData.noBake=true;add(G);
   /* Betonfläche mit Loch für den Pool, darin die Mulde */
   mpFlat([{c:[ring,SKATE.ring]}],1.318,mpMat('skate','#cfc9bf'),add);
-  {const K=14,S=48,pos=[],idx=[];for(let k=0;k<=K;k++){const t=k/K;for(let j=0;j<S;j++){const th=j/S*Math.PI*2,r=skateR(th)*t,lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r,x=SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),z=SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a);pos.push(x,1.3+skateG(x,z)+.005,z)}}
+  {const K=22,S=48,pos=[],idx=[];for(let k=0;k<=K;k++){const t=k/K;for(let j=0;j<S;j++){const th=j/S*Math.PI*2,r=skateR(th)*t,lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r,x=SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),z=SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a);pos.push(x,1.3+skateG(x,z)+.005,z)}}
     for(let k=0;k<K;k++)for(let j=0;j<S;j++){const a=k*S+j,b=k*S+(j+1)%S,c2=(k+1)*S+j,d=(k+1)*S+(j+1)%S;idx.push(a,c2,b,b,c2,d)}
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();
     const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:'#d9d4ca',roughness:.8,flatShading:true,side:THREE.DoubleSide}));m.receiveShadow=true;m.userData.noBake=true;m.userData.noOutline=true;add(m);
     /* Rand (Coping) als Ring */
-    const rp=[];for(let j=0;j<=S;j++){const th=j/S*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;rp.push(new THREE.Vector3(SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),1.36,SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a)))}
-    const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp),new THREE.LineBasicMaterial({color:'#8a8a95'}));ln.userData.noBake=true;add(ln)}
+    const rp=[];for(let j=0;j<S;j++){const th=j/S*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;rp.push(new THREE.Vector3(SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),1.34,SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a)))}
+    const cope=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rp,true),S*2,.14,6,true),new THREE.MeshStandardMaterial({color:'#9a9aa6',roughness:.5,metalness:.3}));cope.castShadow=true;cope.userData.noBake=true;add(cope)}
   /* Zaun rundherum, an der Kante zur nächsten Straße ein offenes Tor */
   let gi=0,gd=1e9;pts.forEach((p,i)=>{const q=pts[(i+1)%n],mx=(p[0]+q[0])/2,mz=(p[1]+q[1])/2,nr=mpNearRoad(mux(mx),muy(mz));const d=nr?nr.d:1e9;if(d<gd){gd=d;gi=i}});
   const FH=2.8;chain.map.wrapS=chain.map.wrapT=THREE.RepeatWrapping;

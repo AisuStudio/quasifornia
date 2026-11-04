@@ -19,8 +19,8 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
    q.bauClose(false);q.bauOpen(g);o.titelG=document.getElementById('bld-h').textContent;o.reqG=document.querySelectorAll('#bld-req span').length;q.bauClose(false);q.bauOpen(f);o.titelF=document.getElementById('bld-h').textContent;q.bauClose(false);return o});
  console.log('Typen',JSON.stringify(r),r.titelW==='Wohngrundstück'&&r.titelG==='Gewerbegrundstück'&&r.titelF==='Bauplatz'&&r.innen===true&&r.aussen===false);
  /* Skatepark */
- const sk=await p.evaluate(()=>{const q=__qa,S=q.SKATE;return {an:S.on,tiefeMitte:+q.skateG(S.cx,S.cz).toFixed(2),tiefeRand:+q.skateG(S.cx+S.rx*1.3,S.cz).toFixed(2),tor:!!S.gate,sportplaetze:q.HUB.courts.map(c=>c.kind).sort().join(',')}});
- console.log('Skatepark',JSON.stringify(sk),sk.an&&sk.tiefeMitte<-1&&sk.tiefeRand===0&&sk.tor&&/skate/.test(sk.sportplaetze));
+ const sk=await p.evaluate(()=>{const q=__qa,S=q.SKATE;const gT=t=>{const c=Math.cos(S.a),s=Math.sin(S.a);return q.skateG(S.cx+c*S.rx*t,S.cz+s*S.rx*t)};const dst=gT(.95)-gT(.8),dsm=gT(.6)-gT(.45);return {abstandZumZaun:+S.minDist.toFixed(1),wandSteigtZumRand:dst>dsm,steilRand:+dst.toFixed(2),flachMitte:+dsm.toFixed(2),an:S.on,tiefeMitte:+q.skateG(S.cx,S.cz).toFixed(2),tiefeRand:+q.skateG(S.cx+S.rx*1.3,S.cz).toFixed(2),tor:!!S.gate,sportplaetze:q.HUB.courts.map(c=>c.kind).sort().join(',')}});
+ console.log('Skatepark',JSON.stringify(sk),sk.an&&sk.abstandZumZaun>=2.2&&sk.wandSteigtZumRand&&sk.tiefeMitte<-1&&sk.tiefeRand===0&&sk.tor&&/skate/.test(sk.sportplaetze));
  const ride=await p.evaluate(()=>{const q=__qa,S=q.SKATE,o={};q.G.phase='play';q.P.x=S.cx+S.rx*1.2;q.P.z=S.cz;q.P.y=1.3;q.P.h=Math.PI;q.P.speed=2;q.K.up=1;let miny=9,maxv=0;for(let i=0;i<160;i++){q.step(.03);miny=Math.min(miny,q.P.y);maxv=Math.max(maxv,q.P.speed)}q.K.up=0;o.tiefster=+miny.toFixed(2);o.tempo=+maxv.toFixed(1);return o});
  console.log('Fahrt in den Pool',JSON.stringify(ride),ride.tiefster<.5);
  /* Zaun: von außen kommt man nur durchs Tor hinein */
