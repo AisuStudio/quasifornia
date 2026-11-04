@@ -449,7 +449,7 @@ const THROW_CD=2,SLOW_T=2,SLOW_F=.35;
 const T={state:'ready',cd:0,t:0,said:false};
 const makeBoard=asActor(()=>{const g=new THREE.Group();
   const mk=(geo,col,px,py,pz,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,SM({color:col,roughness:.6}));m.position.set(px,py,pz);m.scale.set(sx,sy,sz);m.castShadow=true;g.add(m);return m};
-  mk(new THREE.BoxGeometry(1,1,1),'#2499bb',0,0,0,.6,.06,2.2);mk(new THREE.BoxGeometry(1,1,1),'#f0cf36',0,.04,0,.42,.02,1.8);
+  boardDeck(g,SM({color:'#2499bb',roughness:.6}),SM({color:'#f0cf36',roughness:.6}),'popsicle',1.42,-.03);
   [[-.24,.8],[.24,.8],[-.24,-.8],[.24,-.8]].forEach(([a,b2])=>{const w=mk(new THREE.CylinderGeometry(.14,.14,.12,12),'#d54291',a*1.3,-.12,b2);w.rotation.z=Math.PI/2});
   g.visible=false;sc.add(g);return dynOf(g)});
 const flyBoard=makeBoard();addOutlines(flyBoard,'actor');
