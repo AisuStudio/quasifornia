@@ -142,7 +142,7 @@ function bauUndo(){const pl=BAU.plot,u=BAU.undo.pop();if(!pl||!u)return;const [k
 /* ---- Zeigen mit der Maus ---- */
 function bauPick(ev){const pl=BAU.plot;if(!pl)return null;const rc=r.domElement.getBoundingClientRect();if(!BAU.ray)BAU.ray=new THREE.Raycaster();
   const ndc=new THREE.Vector2((ev.clientX-rc.left)/rc.width*2-1,-((ev.clientY-rc.top)/rc.height*2-1));BAU.ray.setFromCamera(ndc,cam);
-  const hits=BAU.ray.intersectObjects([pl.pick,...pl.cg.values()],true);if(!hits.length)return null;const h=hits[0],key=bauKeyOf(h.object);
+  pl.g.updateMatrixWorld(true);const hits=BAU.ray.intersectObjects([pl.pick,...pl.cg.values()],true);if(!hits.length)return null;const h=hits[0],key=bauKeyOf(h.object);
   const inv=pl.g.quaternion.clone().invert();
   if(key&&pl.cells.has(key)){const n=h.face.normal.clone().transformDirection(h.object.matrixWorld).applyQuaternion(inv),ax=Math.abs(n.x)>Math.abs(n.y)&&Math.abs(n.x)>Math.abs(n.z)?'x':Math.abs(n.z)>Math.abs(n.y)?'z':'y';
     const [gx,gy,gz]=key.split(',').map(Number),sg=Math.sign(ax==='x'?n.x:ax==='z'?n.z:n.y)||1,face=ax==='z'?(sg>0?0:2):ax==='x'?(sg>0?1:3):-1;
