@@ -137,9 +137,10 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.gb)a.push({x:HUB.gb.sx!==undefined?HUB.gb.sx:HUB.gb.cx,z:HUB.gb.sz!==undefined?HUB.gb.sz:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
-    ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:shopEnter}));
+    ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:()=>pmartEnter(s)}));
     if(NEWMAP&&HUB.gate&&!HUB.coastHit)a.push({x:HUB.gate.x,z:HUB.gate.z,r:HUB.gate.r+2,label:'Küstenrennen starten',fn:startCoastRace});
-    bettlerActs(a);grafActs(a)}
+    bettlerActs(a);grafActs(a);bauActs(a)}
+  else if(LV.id===7)pmartActs(a);
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});
@@ -164,7 +165,7 @@ function stepAtoll(dt){
   else if(m)m.bl.visible=false;
   /* Aktion in der Nähe */
   let best=null,bd=1e9;
-  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
+  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5||LV.id===7))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
   ACT.cur=best;const el=$('act');if(best){el.hidden=false;el.firstElementChild.textContent=best.label}else el.hidden=true;
   if(LV.id===4)stepLevel4(dt);if(LV.id===5)stepIsland(dt)}
 

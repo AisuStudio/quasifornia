@@ -929,7 +929,7 @@ const WIN_X=124,ZMIN=-12.0,ZMAX=-3.2,XMAX=136,XMIN=-138;
 const SPEED_MAX=8.8,SPEED_CRUISE=4.5;
 let respawnX=0;
 function resetRun(){TIMERS.length=0;P.push=0;if(typeof hideRivals!=='undefined')hideRivals();G.tricks=0;G.kinds=new Set();GR.on=false;if(typeof resetTrick!=='undefined')resetTrick();T.state='ready';T.cd=0;if(typeof flyBoard!=='undefined'){flyBoard.visible=false;boardPlayerOn(true)}if(dinoG)dinoG.userData.slow=0;P.x=-134;P.z=-8;P.y=1.3;P.vy=0;P.h=0;P.speed=SPEED_CRUISE;P.turn=0;P.boost=0;G.time=0;G.tries=0;G.front=0;G.chaseT=0;G.warned=false;G.coneSay=false;G.rampSay=false;
-  if(LV.mode==='city'){if(LV.id===4){P.x=L4.start.x;P.z=L4.start.z;P.h=L4.start.h}else if(LV.id===5){P.x=L5.start.x;P.z=L5.start.z;P.h=L5.start.h;islandReset()}else if(HUB.built){const sp=HUB.spawnAt;P.x=sp?sp.x:HUB.sx;P.z=sp?sp.z:HUB.sz;P.h=sp?sp.h:HUB.sh;HUB.spawnAt=null}}
+  if(LV.mode==='city'){if(LV.id===4){P.x=L4.start.x;P.z=L4.start.z;P.h=L4.start.h}else if(LV.id===7){P.x=L7.start.x;P.z=L7.start.z;P.h=L7.start.h}else if(LV.id===5){P.x=L5.start.x;P.z=L5.start.z;P.h=L5.start.h;islandReset()}else if(HUB.built){const sp=HUB.spawnAt;P.x=sp?sp.x:HUB.sx;P.z=sp?sp.z:HUB.sz;P.h=sp?sp.h:HUB.sh;HUB.spawnAt=null}}
   scoops.forEach(s=>{s.got=false;s.g.visible=s.beam.visible=s.pad.visible=true;s.g.scale.setScalar(.9)});
   cones.forEach(c=>{c.hit=0;c.o.visible=true;c.o.position.set(c.x,1.3,c.z);c.o.rotation.set(0,0,0);c.o.scale.setScalar(1)});
   if(dinoG)dinoG.visible=false;if(blobD)blobD.visible=false;
@@ -1481,17 +1481,17 @@ function applyLevel(n){
   LV=LEVELS[n];
   if(!SC_INIT){const KEEP=new Set([P.av,blobP,flyBoard,iceTower,cfPts,sky]);
     SC1=scoops;CN1=cones;K1=KICKERS;PK1=PARKED;CL1=CLAPPERS;L1ITEMS=sc.children.filter(o=>!o.isLight&&!KEEP.has(o)&&o!==sun.target);SC_INIT=true}
-  if(n===0)buildLevel0();if(n===2)buildLevel2();if(n===3)buildLevel3();if(n===4)buildLevel4();if(n===5)buildLevel5();
-  L1ITEMS.forEach(o=>o.visible=n===1);if(W2)W2.visible=n===2;if(W3)W3.visible=n===3;if(W0)W0.visible=n===0;if(W4)W4.visible=n===4;if(W5)W5.visible=n===5;{const mi=$('mini'),ra=$('radar');if(n!==0){if(mi)mi.classList.remove('on');if(ra)ra.classList.remove('on')}}
-  const EV={0:{h:['#ffd9f0','#7a5aa0',1],s:['#ffb870',2.3],f:['#8e7bff',1.0],a:'#3a2a8a',b:'#ff9a78'},1:{h:['#ffffff','#e8a6c8',1],s:['#ffd9a0',2.6],f:['#ff9fd0',1.1],a:'#0f86d6',b:'#f7d3e4'},2:{h:['#b8a8ff','#ff7cc4',.95],s:['#ffe0f5',2.0],f:['#4cc3ff',1.3],a:'#060214',b:'#5a2480'},3:{h:['#7a86ff','#3a1a6a',.85],s:['#b8c8ff',1.5],f:['#ff5fa8',1.5],a:'#02000c',b:'#2a0f55'},4:{h:['#d8ecff','#5a7a8a',1.2],s:['#ffffff',1.1],f:['#7ff0ff',.9],a:'#0a1020',b:'#1a2a3a'},5:{h:['#fff0e0','#6fb8c8',1.05],s:['#ffc890',2.3],f:['#ff9fd0',.9],a:'#2a7fd0',b:'#ffb89a'},6:{h:['#6a5ac0','#102030',1.1],s:['#40f0e0',1.7],f:['#ff7a1a',1.0],a:'#02030a',b:'#0e3a42'}}[n===0&&G.under?6:n];
+  if(n===0)buildLevel0();if(n===2)buildLevel2();if(n===3)buildLevel3();if(n===4)buildLevel4();if(n===5)buildLevel5();if(n===7)buildLevel7();
+  L1ITEMS.forEach(o=>o.visible=n===1);if(W2)W2.visible=n===2;if(W3)W3.visible=n===3;if(W0)W0.visible=n===0;if(W4)W4.visible=n===4;if(W5)W5.visible=n===5;if(W7)W7.visible=n===7;{const mi=$('mini'),ra=$('radar');if(n!==0){if(mi)mi.classList.remove('on');if(ra)ra.classList.remove('on')}}
+  const EV={0:{h:['#ffd9f0','#7a5aa0',1],s:['#ffb870',2.3],f:['#8e7bff',1.0],a:'#3a2a8a',b:'#ff9a78'},1:{h:['#ffffff','#e8a6c8',1],s:['#ffd9a0',2.6],f:['#ff9fd0',1.1],a:'#0f86d6',b:'#f7d3e4'},2:{h:['#b8a8ff','#ff7cc4',.95],s:['#ffe0f5',2.0],f:['#4cc3ff',1.3],a:'#060214',b:'#5a2480'},3:{h:['#7a86ff','#3a1a6a',.85],s:['#b8c8ff',1.5],f:['#ff5fa8',1.5],a:'#02000c',b:'#2a0f55'},4:{h:['#d8ecff','#5a7a8a',1.2],s:['#ffffff',1.1],f:['#7ff0ff',.9],a:'#0a1020',b:'#1a2a3a'},5:{h:['#fff0e0','#6fb8c8',1.05],s:['#ffc890',2.3],f:['#ff9fd0',.9],a:'#2a7fd0',b:'#ffb89a'},6:{h:['#6a5ac0','#102030',1.1],s:['#40f0e0',1.7],f:['#ff7a1a',1.0],a:'#02030a',b:'#0e3a42'},7:{h:['#fff4e6','#c9b8e0',1.25],s:['#ffffff',.9],f:['#ffd9f0',1.0],a:'#bfe6ff',b:'#ffe6f2'}}[n===0&&G.under?6:n];
   hemi.color.set(EV.h[0]);hemi.groundColor.set(EV.h[1]);hemi.intensity=EV.h[2];sun.color.set(EV.s[0]);sun.intensity=EV.s[1];fill.color.set(EV.f[0]);fill.intensity=EV.f[1];
   sky.material.uniforms.a.value.set(EV.a);sky.material.uniforms.b.value.set(EV.b);
-  {const FG={0:[10,150],1:[6,120],2:[50,350],3:[25,200],4:[25,120],5:[18,160],6:[8,135]}[n===0&&G.under?6:n];sc.fog=n===1?FOG1:new THREE.Fog(EV.b,FG[0],FG[1]);if(n===1){FOG1.near=FG[0];FOG1.far=FG[1]}OUTFOG.fc.value.set(EV.b);OUTFOG.fn.value=FG[0];OUTFOG.ff.value=FG[1]}
-  const arr={0:[[],HUB.cones,[],[],HUB.clappers,[]],1:[SC1,CN1,K1,PK1,CL1,[]],2:[L2.scoops,L2.cones,L2.kickers,[],L2.clappers,[]],3:[L3.scoops,L3.cones,L3.kickers,[],L3.clappers,L3.gaps],4:[[],[],[],[],[],[]],5:[[],[],[],[],[],[]]}[n];
+  {const FG={0:[10,150],1:[6,120],2:[50,350],3:[25,200],4:[25,120],5:[18,160],6:[8,135],7:[60,220]}[n===0&&G.under?6:n];sc.fog=n===1?FOG1:new THREE.Fog(EV.b,FG[0],FG[1]);if(n===1){FOG1.near=FG[0];FOG1.far=FG[1]}OUTFOG.fc.value.set(EV.b);OUTFOG.fn.value=FG[0];OUTFOG.ff.value=FG[1]}
+  const arr={0:[[],HUB.cones,[],[],HUB.clappers,[]],1:[SC1,CN1,K1,PK1,CL1,[]],2:[L2.scoops,L2.cones,L2.kickers,[],L2.clappers,[]],3:[L3.scoops,L3.cones,L3.kickers,[],L3.clappers,L3.gaps],4:[[],[],[],[],[],[]],5:[[],[],[],[],[],[]],7:[[],[],[],[],[],[]]}[n];
   [scoops,cones,KICKERS,PARKED,CLAPPERS,GAPS]=arr;
   if(!iceTower.userData.m1){iceTower.userData.m1=[1,2,3].map(i=>iceTower.children[i].material);iceTower.userData.m2=[galMat(5,0),galMat(6,1),galMat(7,2)];
     iceTower.userData.m3=['#ff5fa8','#4cc3ff','#ffe066'].map(c=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.6,roughness:.4}))}
-  [1,2,3].forEach(i=>iceTower.children[i].material=iceTower.userData['m'+(n===0||n===4||n===5?1:n)][i-1]);
+  [1,2,3].forEach(i=>iceTower.children[i].material=iceTower.userData['m'+(n===0||n===4||n===5||n===7?1:n)][i-1]);
   const lbl=$('track').querySelector('.lbl');if(lbl)lbl.lastElementChild.textContent=LV.goal}
 
 /* ================= Welt 3: Nacht-Stadt ================= */
@@ -1732,7 +1732,7 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
   const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">'+(SHOP.in?'Willkommen im P-Mart! Dein Guthaben: <b>'+SC.n+' Scoops</b>.':'Kaufen kannst du im <b>P-Mart</b> (blaues Band, auf der Minikarte als P). Hier kannst du nur ansehen. Guthaben: <b>'+SC.n+' Scoops</b>.')+'</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
     return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)&&SHOP.in?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
     lad.insertAdjacentHTML('beforeend',(()=>{try{return grafShopHTML()}catch(e){return ''}})());lad.querySelectorAll('[data-can]').forEach(b=>b.onclick=()=>{if(grafBuy(b.dataset.can))rpRender()});
-    lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)})}
+    lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)});if(SHOP.focus==='cans'){const h=lad.querySelector('h3.edh');if(h)setTimeout(()=>h.scrollIntoView({block:'start'}),0)}SHOP.focus=''}
   const edi=document.getElementById('rp-edi');if(edi&&SC.tab==='edi'){const pv=edPreview();
     const sw=(slot,title)=>`<h3 class="edh">${title}</h3><div class="swrow">`+`<button type="button" class="swb std${ED.col[slot]?'':' on'}" data-c="${slot}:" aria-label="Standard" title="Standard des Skins">↺</button>`+ED_COLS[slot].map(h=>{const own=slot==='skin'||ED.ownC.has(slot+':'+h),on=ED.col[slot]===h;return `<button type="button" class="swb${on?' on':''}${own?'':' lock'}" style="background:${h}" data-c="${slot}:${h}" aria-label="${title} ${h}" title="${own?'Anziehen':ED_COL_PRICE+' Scoops'}">${own?'':'<small>'+ED_COL_PRICE+'</small>'}</button>`}).join('')+'</div>';
     edi.innerHTML=`<div class="edwrap"><div class="edprev">${pv?`<img src="${pv}" alt="So sieht deine Figur aus">`:''}<b>${SC.n} Scoops</b></div><div class="edlist"><p class="sub">${SHOP.in?'':'Neue Teile und Farben gibt es im <b>P-Mart</b>. '}Farben und Teile für deine Figur. Du siehst sofort, wie sie aussieht. Hautfarbe ist gratis, Pulli- und Hosenfarben kosten ${ED_COL_PRICE} Scoops (einmal kaufen, dann immer wieder nutzen).</p>`
@@ -2181,7 +2181,7 @@ function buildLevel0(){
   const ex=document.createElement('canvas');ex.width=ex.height=150;HUB.mm={map:mc,ex,exg:ex.getContext('2d'),tmp:document.createElement('canvas'),S,pxz};HUB.mm.tmp.width=HUB.mm.tmp.height=150;
   HUB.built=true}
 
-function curCols(){return LV.id===4?L4.colliders:LV.id===5?L5.colliders:HUB.colliders}
+function curCols(){return LV.id===7?L7.colliders:LV.id===4?L4.colliders:LV.id===5?L5.colliders:HUB.colliders}
 function camClamp(from,to){let tmin=1;const dx=to.x-from.x,dz=to.z-from.z;
   for(const c of curCols()){const x0=c.x0-.6,x1=c.x1+.6,z0=c.z0-.6,z1=c.z1+.6;let t0=0,t1=1;
     for(const [o,d,a,b] of [[from.x,dx,x0,x1],[from.z,dz,z0,z1]]){if(Math.abs(d)<1e-6){if(o<a||o>b){t0=2;break}}else{let ta=(a-o)/d,tb=(b-o)/d;if(ta>tb){const q=ta;ta=tb;tb=q}t0=Math.max(t0,ta);t1=Math.min(t1,tb);if(t0>t1){t0=2;break}}}
@@ -2240,7 +2240,7 @@ function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it
   const say1={funk:'Ein Funkzettel. Wer schreibt heute noch in Geheimschrift? Du, ab jetzt.',schraube:'Ein Schraubendreher. Er passt bestimmt irgendwo. Das tun sie immer.',usb:'Ein USB-Stick. Beschriftet mit PATROUILLE. Das klingt nach Ärger.',handbuch:'Ein Handbuch mit abgerissener Seite 12. Natürlich.',losung:'Ein Bon mit einer Geheimlosung. Das Möwen-Menü gibt es also wirklich.'}[it.def.id];
   say('e',core===4&&!it.def.bonus?'Das war der Vierte. Genug für ein Atoll. Es gibt nur noch keins.':say1,3.4)}
 /* ---------- Unterwelt: Spiegelstadt, kopfüber, dunkel, fest im Pixel-Look ---------- */
-function shopEnter(){SHOP.in=true;SC.tab='lad';invToggle(true);tone(660,.08,'square',.04);tone(880,.1,'square',.04,0,.08)}
+function shopEnter(focus){SHOP.in=true;SHOP.focus=typeof focus==='string'?focus:'';SC.tab='lad';invToggle(true);tone(660,.08,'square',.04);tone(880,.1,'square',.04,0,.08)}
 function underApply(on){if(!!G.under===on)return;G.under=on;kSync();if(on){setTimeout(()=>{try{uwSpawn()}catch(e){console.log('uw',e)}},0)}else if(typeof uwClear==='function')uwClear();
   HUB.portals.forEach(p=>{p.g.visible=false;p.beam.visible=!on});
   HUB.items.forEach(it=>{const v=!on&&!it.got;it.g.visible=v;it.ring.visible=v;it.beam.visible=v});
@@ -2426,9 +2426,10 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.gb)a.push({x:HUB.gb.sx!==undefined?HUB.gb.sx:HUB.gb.cx,z:HUB.gb.sz!==undefined?HUB.gb.sz:HUB.gb.cz-21,r:8,label:'Schild am Lebkuchenhaus lesen',fn:()=>say('e','Auf dem Schild steht: "Öffnet am ersten Advent." Aus dem Haus duftet es nach Zimt und Zuckerguss. Santa schläft noch.',4.6)});
     if(HUB.van&&!Q.ice)a.push({x:HUB.van.x,z:HUB.van.z,r:7,label:'Eis holen',fn:vanUse})
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
-    ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:shopEnter}));
+    ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:()=>pmartEnter(s)}));
     if(NEWMAP&&HUB.gate&&!HUB.coastHit)a.push({x:HUB.gate.x,z:HUB.gate.z,r:HUB.gate.r+2,label:'Küstenrennen starten',fn:startCoastRace});
     bettlerActs(a);grafActs(a)}
+  else if(LV.id===7)pmartActs(a);
   else if(LV.id===5)islandActs(a);
   else if(LV.id===4){
     a.push({x:0,z:27.5,r:7,label:'Labor verlassen',fn:leaveLab});
@@ -2453,7 +2454,7 @@ function stepAtoll(dt){
   else if(m)m.bl.visible=false;
   /* Aktion in der Nähe */
   let best=null,bd=1e9;
-  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
+  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5||LV.id===7))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z);if(d<a.r&&d<bd){bd=d;best=a}}
   ACT.cur=best;const el=$('act');if(best){el.hidden=false;el.firstElementChild.textContent=best.label}else el.hidden=true;
   if(LV.id===4)stepLevel4(dt);if(LV.id===5)stepIsland(dt)}
 
@@ -2508,6 +2509,73 @@ function buildLevel4(){
   L4.core=sphm(2.6,2.6,2.6,0,5.6,0,'#c8ffe8','#7fffc8',1.2);L4.core.userData.noBake=true;L4.alarms=[[-41,-8],[41,8],[-41,22],[41,-22]].map(([x,z])=>{const m=sphm(.6,.6,.6,x,8.5,z,'#ff2a4a','#ff2a4a',1);m.userData.noBake=true;return m})}
 function stepLevel4(dt){if(!W4||!W4.visible)return;const t=G.t;if(L4.core)L4.core.scale.setScalar(2.6*(1+.06*Math.sin(t*3)));L4.alarms.forEach((a,i)=>{a.material.emissiveIntensity=.2+.8*Math.max(0,Math.sin(t*5+i*1.6))})}
 invRender();
+
+/* ================= P-Mart-Innenraum (Level 7): erster betretbarer Laden =================
+   Wie das Labor (Level 4) ein eigener Raum mit Wänden und Kollisionen. Man kommt durch die Ladentür in der Stadt hinein und geht durch die Tür unten wieder hinaus.
+   Regale: Sprühdosen, Skins (Farben) und ein leeres Regal für später. Beim Regal oder an der Kasse öffnet sich der Laden im Rarepod (Kaufen mit Scoops).
+   Der Raum ist von vorne offen niedrig gebaut, damit die Kamera darüber schauen kann. */
+LEVELS[7]={id:7,mode:'city',pips:1,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Einkaufen',
+  quest:'Stöbere im P-Mart',goalQuest:'',
+  intro:'Im P-Mart riecht es nach Sprühfarbe und Mochi. Such dir etwas am Regal aus, bezahlt wird an der Kasse.',
+  vendor:'Willkommen im P-Mart!',lines:[],chase:'',eat:'',win:'',winSub:'',badge:''};
+let W7=null;const L7={colliders:[],start:{x:0,z:13,h:-Math.PI/2},acts:[],items:{cans:0,skins:0}};
+const PM_CAN_COLS=['#ff5fa8','#4cc3ff','#ffe066','#47c2a5','#8e5bd6','#ff8a2a','#e5383b','#eae8e8'];
+function buildLevel7(){
+  if(W7)return;W7=new THREE.Group();W7.userData.noBake=true;W7.visible=false;sc.add(W7);
+  const Y=1.3,add=o=>{W7.add(o);return o};
+  const box=(w,h,d,x,y,z,col,em,ei,cast=true)=>{const m=new THREE.Mesh(BX,MT(col,em,ei));m.scale.set(w,h,d);m.position.set(x,Y+y+h/2,z);m.castShadow=cast;m.receiveShadow=true;return add(m)};
+  const cylm=(r,h,x,y,z,col,em,ei)=>{const m=new THREE.Mesh(CY,MT(col,em,ei));m.scale.set(r,h,r);m.position.set(x,Y+y+h/2,z);m.castShadow=true;return add(m)};
+  const col=(x0,x1,z0,z1)=>L7.colliders.push({x0,x1,z0,z1,top:999});
+  const sign=(text,w,h,x,y,z,ry,bg,fg,font)=>{const cv=document.createElement('canvas');cv.width=512;cv.height=Math.round(512*h/w);const g=cv.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,cv.width,cv.height);g.strokeStyle=fg;g.lineWidth=8;g.strokeRect(8,8,cv.width-16,cv.height-16);
+    g.fillStyle=fg;g.font=(font||'800 ')+Math.round(cv.height*.46)+'px "Baloo 2","Trebuchet MS",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,cv.width/2,cv.height/2+4);
+    const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,Y+y,z);m.rotation.y=ry;m.userData.noBake=true;return add(m)};
+  /* Boden: Fliesen in Mint und Weiß */
+  const ft=document.createElement('canvas');ft.width=ft.height=128;{const g=ft.getContext('2d');g.fillStyle='#f6efe6';g.fillRect(0,0,128,128);g.fillStyle='#bfeadb';g.fillRect(0,0,64,64);g.fillRect(64,64,64,64)}
+  const ftx=new THREE.CanvasTexture(ft);ftx.colorSpace=THREE.SRGBColorSpace;ftx.wrapS=ftx.wrapT=THREE.RepeatWrapping;ftx.repeat.set(11,8.5);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(44,34),new THREE.MeshStandardMaterial({map:ftx,roughness:.55}));fl.rotation.x=-Math.PI/2;fl.position.set(0,Y+.02,0);fl.receiveShadow=true;fl.userData.noBake=true;add(fl);
+  /* Wände: hinten und seitlich hoch, vorne niedrig (Kamera schaut darüber). Blaues Band wie draußen. */
+  const wallC='#f6efe6',blue='#2f7fe0';
+  box(48,10,2,0,0,-18,wallC);box(2,10,34,-23,0,0,wallC);box(2,10,34,23,0,0,wallC);box(48,3.2,2,0,0,18,wallC);
+  box(48,1.2,.3,0,3.4,-16.9,blue,blue,.25,false);box(.3,1.2,34,-21.9,3.4,0,blue,blue,.25,false);box(.3,1.2,34,21.9,3.4,0,blue,blue,.25,false);box(44,.7,.3,0,1.9,17.0,blue,blue,.25,false);
+  col(-25,25,-20,-17);col(-25,-22,-20,20);col(22,25,-20,20);col(-25,25,17,20);
+  /* Tür (Ausgang) vorne in der Mitte */
+  box(.5,3,.5,-3.4,0,16.9,'#2f7fe0');box(.5,3,.5,3.4,0,16.9,'#2f7fe0');box(7.3,.5,.5,0,3,16.9,'#2f7fe0');box(6.2,2.9,.12,0,0,17.15,'#9fe8ff','#9fe8ff',.35,false);
+  sign('P-MART',14,3.6,0,6.6,-16.85,0,'#2f7fe0','#ffffff');sign('AUSGANG',5,1.2,0,3.9,16.8,Math.PI,'#e5383b','#ffffff');
+  /* Kühlregale an der Rückwand mit bunten Getränken */
+  for(let u=0;u<5;u++){const x=-17+u*8.5;box(7.6,4.6,1.8,x,0,-15.4,'#dfe7ee');box(7,3.8,.1,x,.5,-14.5,'#9fe8ff','#9fe8ff',.25,false);
+    for(let r=0;r<3;r++)for(let k=0;k<7;k++)cylm(.28,.7,x-3+k*1,.7+r*1.05,-15.0,PM_CAN_COLS[(u*3+r*5+k)%PM_CAN_COLS.length],null,0)}
+  col(-21,21,-17,-14.4);
+  /* Gondelregale: Sprühdosen, Skins, Boards (leer, bald) */
+  const SX=[-14,-2,10],SZ0=-10,SL=12,SW=2.6;
+  SX.forEach((x,si)=>{box(SW,.4,SL,x,0,SZ0+SL/2,'#c9d4de');box(SW,3.6,.3,x,.4,SZ0+SL/2,'#dfe7ee',null,0,false);[.4,1.4,2.4].forEach(y=>box(SW,.15,SL,x,y,SZ0+SL/2,'#eae8e8',null,0,false));
+    box(SW+.2,.5,SL+.2,x,3.7,SZ0+SL/2,blue,blue,.3,false);col(x-SW/2-.2,x+SW/2+.2,SZ0-.2,SZ0+SL+.2);
+    const lab=['SPRÜHDOSEN','SKINS','BOARDS · BALD'][si];[1,-1].forEach(sd=>sign(lab,SW*1.9,1,x+sd*(SW/2+.15),4.9,SZ0+SL/2,sd*Math.PI/2,si===2?'#8a8a95':'#ffffff',si===2?'#ffffff':blue));
+    [-1,1].forEach(side=>{[0,1,2].forEach(lv=>{for(let k=0;k<8;k++){const z=SZ0+.9+k*1.45,y=.55+lv*1+.2,px=x+side*(SW/2-.55);
+      if(si===0){cylm(.3,.85,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length],null,0);L7.items.cans++}
+      else if(si===1){const sk=SKIN_LIST[(k+lv*2+(side>0?3:0))%SKIN_LIST.length];box(.95,.3,1.1,px,y-.15+(k%2)*.3,z,sk[2]);L7.items.skins++}}})})});
+  /* Kasse rechts: Tresen, Kassensystem, Süßigkeiten-Ständer */
+  box(3,1.6,11,18,0,6,'#2f7fe0');box(3.4,.25,11.4,18,1.6,6,'#ffffff');box(.9,.7,.9,18,1.85,3.5,'#2a3a52');box(.9,.5,.08,17.65,2.3,3.5,'#0a1a2a','#7ff0ff',.9,false);
+  for(let k=0;k<5;k++)box(.7,.5,.5,17.4,1.85,8+k*.8,PM_CAN_COLS[k%PM_CAN_COLS.length]);
+  col(16,19.8,.2,11.8);
+  /* Kassierer hinter dem Tresen */
+  const cs=skater(20.6,Y,6,-Math.PI/2,'#47c2a5',1.35);W7.add(cs);cs.userData.noBake=true;if(cs.userData.board)cs.userData.board.visible=false;if(cs.userData.tz)cs.userData.tz.rotation.x=.1;
+  if(cs.userData.arms)cs.userData.arms.forEach(({sg,s})=>{sg.rotation.z=s*.35});L7.cashier=cs;
+  /* Deko: Pflanzen, Fußmatte, Körbe */
+  [[-19.5,14.5],[19.5,14.5]].forEach(([x,z])=>{cylm(1.1,1.2,x,0,z,'#d54291');cylm(.25,2.2,x,1.2,z,'#47c2a5');[0,1,2].forEach(i=>{const s=new THREE.Mesh(SP,MT('#47c2a5'));s.scale.set(1.3,.9,1.3);s.position.set(x+Math.cos(i*2.1)*.6,Y+3.4+i*.2,z+Math.sin(i*2.1)*.6);add(s)});col(x-1.2,x+1.2,z-1.2,z+1.2)});
+  box(6,.08,3,0,0,14.6,'#2f7fe0',null,0,false);
+  /* Aktionen */
+  L7.acts=[
+    {x:0,z:14.8,r:4.5,label:'P-Mart verlassen',fn:()=>pmartLeave()},
+    {x:-10.6,z:-5,r:3.3,label:'Regal ansehen: Sprühdosen',fn:()=>shopEnter('cans')},
+    {x:-5.4,z:-5,r:3.3,label:'Regal ansehen: Skins',fn:()=>shopEnter('skins')},
+    {x:7.2,z:-5,r:3.6,label:'Regal ansehen: Boards',fn:()=>say('e','Das Regal ist noch leer. Hier kommen bald Boards in allen Formen und Farben hin.',3)},
+    {x:15.2,z:6,r:4.6,label:'Mit der Kassiererin sprechen',fn:()=>shopEnter()}];}
+function pmartActs(a){L7.acts.forEach(o=>a.push(o))}
+function pmartEnter(shop){if(typeof POL!=='undefined'&&POL.state&&POL.state!=='idle'){toast('Nicht jetzt: Die Polizei ist hinter dir!',1800);return}
+  HUB.pmShop=shop||(HUB.shops&&HUB.shops[0])||null;HUB.spawnAt=null;applyLevel(7);beginPlay()}
+function pmartLeave(){const s=HUB.pmShop,H=HUB;let sp=null;
+  if(s&&s.cx!==undefined){const dx=s.x-s.cx,dz=s.z-s.cz,l=Math.hypot(dx,dz)||1;sp={x:s.x+dx/l*4,z:s.z+dz/l*4,h:Math.atan2(dz,dx)}}else if(s)sp={x:s.x,z:s.z+4,h:Math.PI/2};
+  H.spawnAt=sp;applyLevel(0);beginPlay()}
 
 /* ================= Atoll: vier gesicherte Systeme, Countdown, Boot ================= */
 LEVELS[5]={id:5,mode:'city',pips:4,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Boot',
@@ -3328,7 +3396,7 @@ function mpBuildings(H){
     if(b.kind==='pmart'||b.kind==='lab'||b.kind==='xmas'){
       const o=mpObb(b.c[0]),cx=mwx(o.cx),cz=mwz(o.cy),bg=mkGroup(cx,cz);b.skip=true;b.bg=bg;
       const yaw=mpFrontYaw(o.cx,o.cy);b.yaw=yaw;b.X=cx;b.Z=cz;
-      if(b.kind==='pmart'){const real=HUB.shops?HUB.shops.length:0;mpStamp(H,()=>H.TYPES[1](0),cx,cz,yaw,bg,1);const sh=HUB.shops.splice(real);const p=mpTf(cx,cz,yaw,0,-10.8);HUB.shops.push({x:p[0],z:p[1]});solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:34})}
+      if(b.kind==='pmart'){const real=HUB.shops?HUB.shops.length:0;mpStamp(H,()=>H.TYPES[1](0),cx,cz,yaw,bg,1);const sh=HUB.shops.splice(real);const p=mpTf(cx,cz,yaw,0,-10.8);HUB.shops.push({x:p[0],z:p[1],cx,cz});solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:34})}
       else if(b.kind==='lab'){mpStamp(H,()=>buildLabBlock(),cx,cz,yaw,bg,1);solids.push({x:o.cx,y:o.cy,a:-yaw,w:62,h:50});
         const dr=mpTf(cx,cz,yaw,-2,-18),mn=mpTf(cx,cz,yaw,9,-18.5),pt=mpTf(cx,cz,yaw,20,-17),st=mpTf(cx,cz,yaw,16,-17),vn=mpTf(cx,cz,yaw,-13,-20),sp=mpTf(cx,cz,yaw,-1,-18);
         HUB.lab={i:0,j:0,cx,cz,a:0,b:0,portalNode:0,doorX:dr[0],doorZ:dr[1],manX:mn[0],manZ:mn[1],portalX:pt[0],portalZ:pt[1],standX:st[0],standZ:st[1],vanX:vn[0],vanZ:vn[1],vanR:yaw+Math.PI/2,spawnX:sp[0],spawnZ:sp[1],spawnH:Math.atan2(cz-sp[1],cx-sp[0]),yaw};
@@ -3936,7 +4004,7 @@ function termJoin(n,pw){const w=MULTI.ws;MULTI.ws=null;if(w){try{w.close()}catch
    Erfasst werden: Spielzeit, Level, gelöste Aufträge, Scoops-Bewegungen mit Grund, gefundene Gegenstände, Portale, Polizei, Graffiti,
    Fehler im Browser, Hänger (Gas gedrückt, aber man kommt nicht weiter), Bildrate und Gerät. Aus ?nostats=1 wird nichts gesendet.
    In den Tests ist es aus (nur mit ?stats=1 an). Die Auswertung steht unter /stats (siehe worker/stats.js). */
-const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1104-1030',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
+const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1104-1123',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
 (function(){const rid=n=>{let s='';const c='abcdefghijklmnopqrstuvwxyz0123456789';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};STAT.sid=rid(12);
   try{STAT.pid=localStorage.getItem('kq-pid')||'';if(!/^[a-z0-9]{8,24}$/.test(STAT.pid)){STAT.pid=rid(12);localStorage.setItem('kq-pid',STAT.pid)}}catch(e){STAT.pid=STAT.sid}})();
 function statEv(ty,k,n,x,z){if(!STAT.on)return;if(STAT.q.length>=60)STAT.q.shift();const inGame=typeof LV!=='undefined';STAT.q.push([ty,String(k==null?'':k).slice(0,120),typeof n==='number'&&isFinite(n)?Math.round(n*100)/100:0,typeof x==='number'?Math.round(x):null,typeof z==='number'?Math.round(z):null,inGame?LV.id:0])}
@@ -3982,7 +4050,7 @@ addEventListener('pagehide',()=>statFlush(true));addEventListener('visibilitycha
 {const o=grafClose;grafClose=function(save){const p=GF.cur,d=GF.dabs,r=o.apply(this,arguments);try{if(save&&p&&d>0)statEv('gr',grafLegal(p.id)?'legal':'illegal',d,P.x,P.z)}catch(e){}return r}}
 {const o=mpUnstick;mpUnstick=function(){const x=P.x,z=P.z,r=o.apply(this,arguments);try{statEv('unstick','',1,x,z)}catch(e){}return r}}
 
-window.__qa={cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

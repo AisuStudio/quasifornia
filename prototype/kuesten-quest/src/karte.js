@@ -139,7 +139,7 @@ function mpWalls(add){HUB.walls=[];const stone=MT('#d6cfe0'),cap=MT('#b8b0c8');(
       const t=new THREE.Mesh(BX,cap);t.scale.set(L+th*.5,.3,th+.5);t.position.set(mx,.6+2.45,mz);t.rotation.y=ry;t.userData.noBake=true;add(t);addOutlines(m,'prop');
       mpMarkRect(mx,mz,L/2+th*.25,Math.max(.7,th/2+.2),Math.atan2(-tz,tx));HUB.walls.push({x:mx,z:mz,len:L})}
     P.forEach(p=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(th*.72,th*.72,2.9,10),cap);c.position.set(p[0],.6+1.45,p[1]);c.castShadow=true;c.userData.noBake=true;add(c)})})}
-function mpDressUp(add){const R=mulberry(2468);mpLighthouse(add);mpBenches(add);mpWalls(add);HUB.courtTreesRemoved=HUB.courtTreesRemoved||0;
+function mpDressUp(add){const R=mulberry(2468);mpLighthouse(add);mpBenches(add);mpWalls(add);if(typeof bauPlotsFromMap==='function')bauPlotsFromMap();HUB.courtTreesRemoved=HUB.courtTreesRemoved||0;
   /* Autos: auf dem Parkplatz in Reihen und am Straßenrand der breiten Promenade */
   const car=(x,z,ry,k,col)=>{const c=mpRetroCar(k,col);c.position.set(x,1.3,z);c.rotation.y=ry;add(c);addOutlines(c,'prop');const fx=Math.sin(ry),fz=Math.cos(ry);[-1.4,0,1.4].forEach(d=>mpMarkDisc(x+fx*d,z+fz*d,1.15));HUB.cars=(HUB.cars||[]).concat([{x,z}])};
   HUB.cars=[];let n=0;
@@ -424,7 +424,7 @@ function mpBuildings(H){
     if(b.kind==='pmart'||b.kind==='lab'||b.kind==='xmas'){
       const o=mpObb(b.c[0]),cx=mwx(o.cx),cz=mwz(o.cy),bg=mkGroup(cx,cz);b.skip=true;b.bg=bg;
       const yaw=mpFrontYaw(o.cx,o.cy);b.yaw=yaw;b.X=cx;b.Z=cz;
-      if(b.kind==='pmart'){const real=HUB.shops?HUB.shops.length:0;mpStamp(H,()=>H.TYPES[1](0),cx,cz,yaw,bg,1);const sh=HUB.shops.splice(real);const p=mpTf(cx,cz,yaw,0,-10.8);HUB.shops.push({x:p[0],z:p[1]});solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:34})}
+      if(b.kind==='pmart'){const real=HUB.shops?HUB.shops.length:0;mpStamp(H,()=>H.TYPES[1](0),cx,cz,yaw,bg,1);const sh=HUB.shops.splice(real);const p=mpTf(cx,cz,yaw,0,-10.8);HUB.shops.push({x:p[0],z:p[1],cx,cz});solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:34})}
       else if(b.kind==='lab'){mpStamp(H,()=>buildLabBlock(),cx,cz,yaw,bg,1);solids.push({x:o.cx,y:o.cy,a:-yaw,w:62,h:50});
         const dr=mpTf(cx,cz,yaw,-2,-18),mn=mpTf(cx,cz,yaw,9,-18.5),pt=mpTf(cx,cz,yaw,20,-17),st=mpTf(cx,cz,yaw,16,-17),vn=mpTf(cx,cz,yaw,-13,-20),sp=mpTf(cx,cz,yaw,-1,-18);
         HUB.lab={i:0,j:0,cx,cz,a:0,b:0,portalNode:0,doorX:dr[0],doorZ:dr[1],manX:mn[0],manZ:mn[1],portalX:pt[0],portalZ:pt[1],standX:st[0],standZ:st[1],vanX:vn[0],vanZ:vn[1],vanR:yaw+Math.PI/2,spawnX:sp[0],spawnZ:sp[1],spawnH:Math.atan2(cz-sp[1],cx-sp[0]),yaw};
