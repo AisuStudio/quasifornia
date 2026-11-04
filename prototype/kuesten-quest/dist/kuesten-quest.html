@@ -3470,42 +3470,76 @@ const skateR=th=>1+.1*Math.sin(2*th+SKATE.ph)+.07*Math.sin(3*th+1.3);
 function skateG(x,z){if(!SKATE.on)return 0;const dx=x-SKATE.cx,dz=z-SKATE.cz,R=Math.max(SKATE.rx,SKATE.rz)*1.25;if(Math.abs(dx)>R||Math.abs(dz)>R)return 0;
   const c=Math.cos(SKATE.a),s=Math.sin(SKATE.a),lx=dx*c+dz*s,lz=-dx*s+dz*c,ex=lx/SKATE.rx,ez=lz/SKATE.rz,t=Math.hypot(ex,ez)/skateR(Math.atan2(ez,ex));if(t>=1)return 0;
   const u=Math.max(0,Math.min(1,(t-SKATE.T0)/(1-SKATE.T0)));return -SKATE.D*(1-u*u)}
-function mpSkateSetup(){SKATE.on=false;const c=MAPD.courts.find(c=>mpCourtKind(c)==='skate');if(!c)return;const ring=c.c[0],o=mpObb(ring);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
-  /* Mitte = Punkt mit dem größten Abstand zum Zaun (Umriss), Größe so, dass das ganze Becken samt Rand mit Abstand innerhalb des Zauns liegt */
-  const xs=ring.map(p=>p[0]),ys=ring.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);let best=null;
-  for(let ux=x0;ux<=x1;ux+=1)for(let uy=y0;uy<=y1;uy+=1){if(!mpInPoly(ring,ux,uy))continue;const d=mpPolyDist(ring,ux,uy);if(!best||d>best.d)best={d,x:ux,y:uy}}
-  if(!best)return;const Lw=w*MP.SC,Hw=h*MP.SC,asp=Math.max(.8,Math.min(1.25,Lw/Hw)),MARG=2.6;
-  SKATE.cx=mwx(best.x);SKATE.cz=mwz(best.y);SKATE.a=a;SKATE.on=true;
-  let R=Math.max(3,best.d*MP.SC-MARG)/1.17,ok=false;
-  for(let k=0;k<30&&!ok;k++,R*=.94){SKATE.rx=R*Math.sqrt(asp);SKATE.rz=R/Math.sqrt(asp);const pts=ringPts();ok=pts.every(q=>mpInPoly(ring,q[0],q[1])&&mpPolyDist(ring,q[0],q[1])*MP.SC>=MARG-.3);SKATE.ring=pts}
-  SKATE.minDist=Math.min(...SKATE.ring.map(q=>mpPolyDist(ring,q[0],q[1])*MP.SC));
-  const cen=[best.x,best.y];const land=MAPD.land.find(l=>mpInPoly(l.c[0],cen[0],cen[1]));if(land&&land.c.length<2)land.c.push(SKATE.ring)}
+/* Block des Skateparks: alle zusammenhängenden Land- und Parkzellen, die von Straße, Gehweg und Häusern begrenzt werden. Der Zaun läuft an der Straße entlang, der Rest ist Aufenthaltsbereich. */
+function mpDPclosed(P,eps){if(P.length<5)return P;let m=0,md=-1;for(let i=1;i<P.length;i++){const d=Math.hypot(P[i][0]-P[0][0],P[i][1]-P[0][1]);if(d>md){md=d;m=i}}
+  const open=(pts)=>{if(pts.length<3)return pts;const keep=new Uint8Array(pts.length);keep[0]=keep[pts.length-1]=1;const st=[[0,pts.length-1]];while(st.length){const [a,c]=st.pop();let mxd=0,mi=-1;const [ax,ay]=pts[a],[cx,cy]=pts[c],dx=cx-ax,dy=cy-ay,L=Math.hypot(dx,dy)||1e-9;for(let i=a+1;i<c;i++){const d=Math.abs((pts[i][0]-ax)*dy-(pts[i][1]-ay)*dx)/L;if(d>mxd){mxd=d;mi=i}}if(mxd>eps&&mi>0){keep[mi]=1;st.push([a,mi],[mi,c])}}return pts.filter((_,i)=>keep[i])};
+  const A=open(P.slice(0,m+1)),B=open(P.slice(m).concat([P[0]]));return A.concat(B.slice(1,-1))}
+function mpSkateBlock(cenMap){const R=150,sx=Math.floor(cenMap[0]-MP.PLAY.x0),sy=Math.floor(cenMap[1]-MP.PLAY.y0),x0=Math.max(1,sx-R),y0=Math.max(1,sy-R),x1=Math.min(MP.w-2,sx+R),y1=Math.min(MP.h-2,sy+R),w=x1-x0+1,h=y1-y0+1;
+  const ok=c=>c===1||c===4,idx=(x,y)=>(y-y0)*w+(x-x0),reg=new Uint8Array(w*h);let st=[];
+  /* Startzelle: Mitte oder die nächste begehbare Land-/Parkzelle */
+  let found=false;for(let d=0;d<20&&!found;d++)for(let dy=-d;dy<=d&&!found;dy++)for(let dx=-d;dx<=d;dx++){const x=sx+dx,y=sy+dy;if(x<x0||x>x1||y<y0||y>y1)continue;if(ok(MP.cls[y*MP.w+x])){st.push([x,y]);reg[idx(x,y)]=1;found=true;break}}
+  if(!found)return null;let n=0,open=false;while(st.length){const [x,y]=st.pop();n++;if(x<=x0||x>=x1||y<=y0||y>=y1){open=true}
+    for(const [ax,ay] of [[1,0],[-1,0],[0,1],[0,-1]]){const X=x+ax,Y=y+ay;if(X<x0||X>x1||Y<y0||Y>y1)continue;if(reg[idx(X,Y)]||!ok(MP.cls[Y*MP.w+X]))continue;reg[idx(X,Y)]=1;st.push([X,Y])}}
+  if(open||n<200)return null;
+  /* Umriss: Randkanten der Region zu Schleifen verketten, größte Schleife = Außenrand */
+  const E=new Map(),key=(i,j)=>i+','+j,add=(a,b,c,d)=>{const k=key(a,b);if(!E.has(k))E.set(k,[]);E.get(k).push([c,d])};
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(!reg[idx(x,y)])continue;const i=x-x0,j=y-y0;
+    if(y===y0||!reg[idx(x,y-1)])add(i,j,i+1,j);if(x===x1||!reg[idx(x+1,y)])add(i+1,j,i+1,j+1);if(y===y1||!reg[idx(x,y+1)])add(i+1,j+1,i,j+1);if(x===x0||!reg[idx(x-1,y)])add(i,j+1,i,j)}
+  let best=null;const used=new Set();for(const [k0,L0] of E){for(let e0=0;e0<L0.length;e0++){const sk=k0+'>'+e0;if(used.has(sk))continue;const [ai,aj]=k0.split(',').map(Number);let loop=[],ci=ai,cj=aj,ek=k0,ee=e0,guard=0;
+      while(guard++<200000){used.add(ek+'>'+ee);loop.push([ci,cj]);const nx=E.get(ek)[ee];ci=nx[0];cj=nx[1];ek=key(ci,cj);if(ci===ai&&cj===aj)break;const L=E.get(ek);if(!L)break;ee=0;while(ee<L.length-1&&used.has(ek+'>'+ee))ee++;if(used.has(ek+'>'+ee))break}
+      if(loop.length>8){let A=0;for(let q=0;q<loop.length;q++){const a=loop[q],b=loop[(q+1)%loop.length];A+=a[0]*b[1]-b[0]*a[1]}A=Math.abs(A)/2;if(!best||A>best.A)best={A,loop}}}}
+  if(!best)return null;
+  const poly=mpDPclosed(best.loop,1.5).map(q=>[q[0]+x0+MP.PLAY.x0,q[1]+y0+MP.PLAY.y0]);
+  /* Abstand jeder Zelle zum Rand (Chamfer, in Zellen) */
+  const D=new Float32Array(w*h).fill(1e9);for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(!reg[idx(x,y)])D[idx(x,y)]=0}
+  const f=(x,y,v)=>{const q=D[idx(x,y)];if(v<q)D[idx(x,y)]=v};for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(y>y0)f(x,y,D[idx(x,y-1)]+1);if(x>x0)f(x,y,D[idx(x-1,y)]+1);if(x>x0&&y>y0)f(x,y,D[idx(x-1,y-1)]+1.4);if(x<x1&&y>y0)f(x,y,D[idx(x+1,y-1)]+1.4)}
+  for(let y=y1;y>=y0;y--)for(let x=x1;x>=x0;x--){if(y<y1)f(x,y,D[idx(x,y+1)]+1);if(x<x1)f(x,y,D[idx(x+1,y)]+1);if(x<x1&&y<y1)f(x,y,D[idx(x+1,y+1)]+1.4);if(x>x0&&y<y1)f(x,y,D[idx(x-1,y+1)]+1.4)}
+  let bd=0,bx=sx,by=sy;for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=D[idx(x,y)];if(d>bd){bd=d;bx=x;by=y}}
+  return {poly,reg,x0,y0,w,h,D,cells:n,bx:bx+MP.PLAY.x0+.5,by:by+MP.PLAY.y0+.5,bd:bd*MP.SC}}
+function skateCellD(X,Z){const B=SKATE.block;if(!B)return 0;const x=Math.floor(mux(X)-MP.PLAY.x0)-B.x0,y=Math.floor(muy(Z)-MP.PLAY.y0)-B.y0;if(x<0||y<0||x>=B.w||y>=B.h)return 0;return B.D[y*B.w+x]*MP.SC}
+function mpSkateSetup(){SKATE.on=false;SKATE.block=null;const c=MAPD.courts.find(c=>mpCourtKind(c)==='skate');if(!c)return;const ring=c.c[0],o=mpObb(ring);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
+  const cen=mpCentroid(ring),B=mpSkateBlock(cen);if(!B)return;SKATE.block=B;const MARG=2.6,asp=Math.max(.8,Math.min(1.25,w/h));
+  SKATE.cx=mwx(B.bx);SKATE.cz=mwz(B.by);SKATE.a=a;SKATE.on=true;
+  let R=Math.min(7.5,Math.max(3,B.bd-MARG)/1.17),okR=false;
+  for(let k=0;k<30&&!okR;k++,R*=.94){SKATE.rx=R*Math.sqrt(asp);SKATE.rz=R/Math.sqrt(asp);const pts=ringPts();okR=pts.every(q=>skateCellD(mwx(q[0]),mwz(q[1]))>=MARG-.3);SKATE.ring=pts}
+  SKATE.minDist=Math.min(...SKATE.ring.map(q=>skateCellD(mwx(q[0]),mwz(q[1]))));
+  const land=MAPD.land.find(l=>mpInPoly(l.c[0],B.bx,B.by));if(land&&land.c.length<2)land.c.push(SKATE.ring)}
 function ringPts(){const a=SKATE.a,pts=[];for(let k=0;k<48;k++){const th=k/48*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;pts.push([mux(SKATE.cx+lx*Math.cos(a)-lz*Math.sin(a)),muy(SKATE.cz+lx*Math.sin(a)+lz*Math.cos(a))])}return pts}
 function mpPolyDist(r,x,y){let d=1e9;for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],dx=q[0]-p[0],dy=q[1]-p[1],L2=dx*dx+dy*dy||1e-9;let t=((x-p[0])*dx+(y-p[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-p[0]-dx*t,y-p[1]-dy*t))}return d}
 function mpCourtKind(c){if(!MAPD.labels.some(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket|X-?Fit|Skate/i.test(l.t)))&&MAPD.labels.some(l=>/Skate/i.test(l.t)&&mpPolyDist(c.c[0],l.x,l.y)<=40&&MAPD.courts.every(o=>o===c||mpPolyDist(o.c[0],l.x,l.y)>mpPolyDist(c.c[0],l.x,l.y))))return 'skate';const lab=MAPD.labels.find(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket/i.test(l.t)||/X-?Fit/i.test(l.t)||/Skate/i.test(l.t)));return lab?(/Basket/i.test(lab.t)?'basket':/Skate/i.test(lab.t)?'skate':'xfit'):'volley'}
-function mpSkatePark(c,add,steel,chain){const ring=c.c[0],pts=ring.map(q=>[mwx(q[0]),mwz(q[1])]),n=pts.length,G=new THREE.Group();G.userData.noBake=true;add(G);
-  /* Betonfläche mit Loch für den Pool, darin die Mulde */
-  mpFlat([{c:[ring,SKATE.ring]}],1.318,mpMat('skate','#cfc9bf'),add);
+function mpSkatePark(c,add,steel,chain){const B=SKATE.block,pts=B.poly.map(q=>[mwx(q[0]),mwz(q[1])]),n=pts.length,G=new THREE.Group();G.userData.noBake=true;add(G);
+  /* Betonfläche des ganzen Blocks mit Loch für den Pool, darin die Mulde */
+  mpFlat([{c:[B.poly,SKATE.ring]}],1.318,mpMat('skate','#cfc9bf'),add);
   {const K=22,S=48,pos=[],idx=[];for(let k=0;k<=K;k++){const t=k/K;for(let j=0;j<S;j++){const th=j/S*Math.PI*2,r=skateR(th)*t,lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r,x=SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),z=SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a);pos.push(x,1.3+skateG(x,z)+.005,z)}}
     for(let k=0;k<K;k++)for(let j=0;j<S;j++){const a=k*S+j,b=k*S+(j+1)%S,c2=(k+1)*S+j,d=(k+1)*S+(j+1)%S;idx.push(a,c2,b,b,c2,d)}
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();
     const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:'#d9d4ca',roughness:.8,flatShading:true,side:THREE.DoubleSide}));m.receiveShadow=true;m.userData.noBake=true;m.userData.noOutline=true;add(m);
-    /* Rand (Coping) als Ring */
     const rp=[];for(let j=0;j<S;j++){const th=j/S*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;rp.push(new THREE.Vector3(SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),1.34,SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a)))}
     const cope=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rp,true),S*2,.14,6,true),new THREE.MeshStandardMaterial({color:'#9a9aa6',roughness:.5,metalness:.3}));cope.castShadow=true;cope.userData.noBake=true;add(cope)}
-  /* Zaun rundherum, an der Kante zur nächsten Straße ein offenes Tor */
-  let gi=0,gd=1e9;pts.forEach((p,i)=>{const q=pts[(i+1)%n],mx=(p[0]+q[0])/2,mz=(p[1]+q[1])/2,nr=mpNearRoad(mux(mx),muy(mz));const d=nr?nr.d:1e9;if(d<gd){gd=d;gi=i}});
-  const FH=2.8;chain.map.wrapS=chain.map.wrapT=THREE.RepeatWrapping;
-  pts.forEach((p,i)=>{const q=pts[(i+1)%n],dx=q[0]-p[0],dz=q[1]-p[1],len=Math.hypot(dx,dz);if(len<.5)return;const tx=dx/len,tz=dz/len;let spans=[[0,len]];
-    if(i===gi){const gw=Math.min(7,len*.8),g0=(len-gw)/2;spans=len>9?[[0,g0],[g0+gw,len]]:[];const gx=p[0]+tx*len/2,gz=p[1]+tz*len/2;SKATE.gate=[gx,gz];
-      [-1,1].forEach(sd=>{const m=new THREE.Mesh(CY,steel);m.scale.set(.14,FH+.9,.14);m.position.set(gx+tx*sd*gw/2,1.3+(FH+.9)/2,gz+tz*sd*gw/2);m.castShadow=true;G.add(m)});
-      const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#8e5bd6';cx.fillRect(0,0,512,128);cx.strokeStyle='#fdf6e8';cx.lineWidth=8;cx.strokeRect(6,6,500,116);cx.fillStyle='#fdf6e8';cx.font='800 66px "Baloo 2","Trebuchet MS",sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('SKATEPARK',256,68);
-      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(gw,gw/4),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));sg.position.set(gx,1.3+FH+.9,gz);sg.rotation.y=-Math.atan2(tz,tx);G.add(sg)}
+  /* Zaun an der Straße entlang (leicht nach innen versetzt), zwei Tore: das größte Randstück und das am weitesten davon entfernte */
+  let cx=0,cz=0;pts.forEach(p=>{cx+=p[0]/n;cz+=p[1]/n});const inset=pts.map(p=>{const dx=cx-p[0],dz=cz-p[1],l=Math.hypot(dx,dz)||1;return [p[0]+dx/l*.45,p[1]+dz/l*.45]});
+  const edges=inset.map((p,i)=>{const q=inset[(i+1)%n],dx=q[0]-p[0],dz=q[1]-p[1],len=Math.hypot(dx,dz);return {i,p,q,len,mx:(p[0]+q[0])/2,mz:(p[1]+q[1])/2,tx:dx/(len||1),tz:dz/(len||1)}});
+  const longest=edges.slice().sort((a,b)=>b.len-a.len),g1=longest.find(e=>e.len>=8)||longest[0];let g2=longest.find(e=>e!==g1&&e.len>=8&&Math.hypot(e.mx-g1.mx,e.mz-g1.mz)>24);
+  const FH=2.8;chain.map.wrapS=chain.map.wrapT=THREE.RepeatWrapping;SKATE.gates=[];SKATE.edges=[];
+  const sign=(gx,gz,tx,tz,gw)=>{const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx2=cv.getContext('2d');cx2.fillStyle='#8e5bd6';cx2.fillRect(0,0,512,128);cx2.strokeStyle='#fdf6e8';cx2.lineWidth=8;cx2.strokeRect(6,6,500,116);cx2.fillStyle='#fdf6e8';cx2.font='800 66px "Baloo 2","Trebuchet MS",sans-serif';cx2.textAlign='center';cx2.textBaseline='middle';cx2.fillText('SKATEPARK',256,68);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(gw,gw/4),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));sg.position.set(gx,1.3+FH+.9,gz);sg.rotation.y=-Math.atan2(tz,tx);G.add(sg)};
+  edges.forEach(e=>{const {p,q,len,tx,tz}=e;if(len<.4)return;let spans=[[0,len]];const isG=(e===g1||e===g2);
+    if(isG){const gw=Math.min(6.5,len*.7),g0=(len-gw)/2;spans=len>8?[[0,g0],[g0+gw,len]]:[];const gx=e.mx,gz=e.mz;SKATE.gates.push([gx,gz]);if(e===g1)SKATE.gate=[gx,gz];
+      [-1,1].forEach(sd=>{const m=new THREE.Mesh(CY,steel);m.scale.set(.14,FH+.9,.14);m.position.set(gx+tx*sd*gw/2,1.3+(FH+.9)/2,gz+tz*sd*gw/2);m.castShadow=true;G.add(m)});sign(gx,gz,tx,tz,gw)}
+    SKATE.edges.push({mx:e.mx,mz:e.mz,nx:-tz,nz:tx,len,gate:isG});
     spans.forEach(([s0,s1])=>{const L=s1-s0;if(L<.4)return;const mx=p[0]+tx*(s0+s1)/2,mz=p[1]+tz*(s0+s1)/2,pl=new THREE.Mesh(new THREE.PlaneGeometry(L,FH),chain);pl.position.set(mx,1.3+FH/2,mz);pl.rotation.y=-Math.atan2(tz,tx);
       const uv=pl.geometry.attributes.uv;for(let j=0;j<uv.count;j++)uv.setXY(j,uv.getX(j)*L/.55,uv.getY(j)*FH/.55);G.add(pl);
       const rail=new THREE.Mesh(BX,steel);rail.scale.set(L,.07,.07);rail.position.set(mx,1.3+FH,mz);rail.rotation.y=-Math.atan2(tz,tx);G.add(rail);
       mpMarkRect(mx,mz,L/2+.2,.6,Math.atan2(-tz,tx));const np=Math.max(1,Math.ceil(L/3));for(let k=0;k<=np;k++){const m=new THREE.Mesh(CY,steel);m.scale.set(.05,FH+.2,.05);m.position.set(p[0]+tx*(s0+L*k/np),1.3+(FH+.2)/2,p[1]+tz*(s0+L*k/np));G.add(m)}})});
-  HUB.courts.push({kind:'skate',x:SKATE.cx,z:SKATE.cz,col:'#c08cff',txt:'S',Lw:0,Hw:0,posts:0,fence:pts.length})}
+  /* Aufenthaltsbereich: Bänke und Pflanzkübel mit Bäumen entlang des Zauns, nicht am Tor und nicht am Pool */
+  const R2=mulberry(4242),wood=new THREE.MeshStandardMaterial({color:'#b98a5a',roughness:.8,flatShading:true}),dark=new THREE.MeshStandardMaterial({color:'#4a4658',roughness:.7,flatShading:true}),pot=new THREE.MeshStandardMaterial({color:'#d54291',roughness:.7,flatShading:true}),leaf=new THREE.MeshStandardMaterial({color:'#47c2a5',roughness:.8,flatShading:true});
+  const farGate=(x,z)=>!SKATE.gates.some(g=>Math.hypot(g[0]-x,g[1]-z)<6),farPool=(x,z,m)=>Math.hypot(x-SKATE.cx,z-SKATE.cz)>Math.max(SKATE.rx,SKATE.rz)*1.2+m;
+  let benches=0,pots=0;edges.forEach(e=>{if(e.len<7)return;const nx=-e.tz,nz=e.tx,sgn=((cx-e.mx)*nx+(cz-e.mz)*nz)>=0?1:-1,inx=nx*sgn,inz=nz*sgn;
+    for(let s=3;s<e.len-2;s+=9+R2()*3){const x=e.p[0]+e.tx*s+inx*1.5,z=e.p[1]+e.tz*s+inz*1.5;if(!farGate(x,z)||!farPool(x,z,1.5)||skateCellD(x,z)<1.2)continue;
+      const bg=new THREE.Group();bg.position.set(x,1.3,z);bg.rotation.y=-Math.atan2(e.tz,e.tx);const seat=new THREE.Mesh(BX,wood);seat.scale.set(2.2,.14,.6);seat.position.y=.5;const back=new THREE.Mesh(BX,wood);back.scale.set(2.2,.5,.1);back.position.set(0,.85,-.25*sgn);[-.9,.9].forEach(px=>{const lg=new THREE.Mesh(BX,dark);lg.scale.set(.12,.5,.5);lg.position.set(px,.25,0);bg.add(lg)});bg.add(seat,back);bg.traverse(o=>{o.castShadow=true});G.add(bg);mpMarkRect(x,z,1.2,.5,Math.atan2(-e.tz,e.tx));benches++}});
+  pts.forEach((p,i)=>{const dx=cx-p[0],dz=cz-p[1],l=Math.hypot(dx,dz)||1,x=p[0]+dx/l*2.2,z=p[1]+dz/l*2.2;if(!farGate(x,z)||!farPool(x,z,1.5)||skateCellD(x,z)<1)return;
+    const pg=new THREE.Group();pg.position.set(x,1.3,z);const potM=new THREE.Mesh(CY,pot);potM.scale.set(.7,.7,.7);potM.position.y=.35;const tr=new THREE.Mesh(CY,dark);tr.scale.set(.1,1.4,.1);tr.position.y=1.3;const top=new THREE.Mesh(SP,leaf);top.scale.set(.9,.8,.9);top.position.y=2.3;pg.add(potM,tr,top);pg.traverse(o=>{o.castShadow=true});G.add(pg);mpMarkDisc(x,z,.8);pots++});
+  HUB.courts.push({kind:'skate',x:SKATE.cx,z:SKATE.cz,col:'#c08cff',txt:'S',Lw:0,Hw:0,posts:0,fence:n,benches,pots})}
 function mpCourts(add){HUB.courts=[];
   const steel=new THREE.MeshStandardMaterial({color:'#8892a8',roughness:.45,metalness:.5}),yel=new THREE.MeshStandardMaterial({color:'#ffd04a',roughness:.5}),blue=new THREE.MeshStandardMaterial({color:'#4f9ec4',roughness:.5}),white=new THREE.MeshStandardMaterial({color:'#fdf6e8',roughness:.6}),orange=new THREE.MeshStandardMaterial({color:'#ff7a1a',roughness:.5}),rope=new THREE.MeshStandardMaterial({color:'#f6efe6',roughness:.9});
   const chain=new THREE.MeshBasicMaterial({map:mpCvTex(32,32,(g,w,h)=>{g.strokeStyle='#d6dcea';g.lineWidth=2;g.beginPath();g.moveTo(0,h/2);g.lineTo(w/2,0);g.lineTo(w,h/2);g.lineTo(w/2,h);g.closePath();g.stroke()},[1,1]),transparent:true,side:THREE.DoubleSide,depthWrite:false,alphaTest:.05,color:'#c4cbdc'});
@@ -4325,7 +4359,7 @@ function termJoin(n,pw){const w=MULTI.ws;MULTI.ws=null;if(w){try{w.close()}catch
    Erfasst werden: Spielzeit, Level, gelöste Aufträge, Scoops-Bewegungen mit Grund, gefundene Gegenstände, Portale, Polizei, Graffiti,
    Fehler im Browser, Hänger (Gas gedrückt, aber man kommt nicht weiter), Bildrate und Gerät. Aus ?nostats=1 wird nichts gesendet.
    In den Tests ist es aus (nur mit ?stats=1 an). Die Auswertung steht unter /stats (siehe worker/stats.js). */
-const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1104-1554',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
+const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1104-1941',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
 (function(){const rid=n=>{let s='';const c='abcdefghijklmnopqrstuvwxyz0123456789';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};STAT.sid=rid(12);
   try{STAT.pid=localStorage.getItem('kq-pid')||'';if(!/^[a-z0-9]{8,24}$/.test(STAT.pid)){STAT.pid=rid(12);localStorage.setItem('kq-pid',STAT.pid)}}catch(e){STAT.pid=STAT.sid}})();
 function statEv(ty,k,n,x,z){if(!STAT.on)return;if(STAT.q.length>=60)STAT.q.shift();const inGame=typeof LV!=='undefined';STAT.q.push([ty,String(k==null?'':k).slice(0,120),typeof n==='number'&&isFinite(n)?Math.round(n*100)/100:0,typeof x==='number'?Math.round(x):null,typeof z==='number'?Math.round(z):null,inGame?LV.id:0])}
