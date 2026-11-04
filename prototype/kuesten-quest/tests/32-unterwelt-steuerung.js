@@ -10,13 +10,13 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const key=async(type,code)=>p.evaluate(([t,c])=>window.dispatchEvent(new KeyboardEvent(t,{code:c,bubbles:true,cancelable:true})),[type,code]);
  /* oben unverändert */
  await key('keydown','KeyW');console.log('oben W',JSON.stringify(await K()));await key('keyup','KeyW');
- await key('keydown','ArrowDown');console.log('oben Pfeil runter',JSON.stringify(await K()));await key('keyup','ArrowDown');
+ await key('keydown','KeyS');console.log('oben Pfeil runter',JSON.stringify(await K()));await key('keyup','KeyS');
  /* unten */
  await p.evaluate(()=>__qa.underApply(true));
  await key('keydown','KeyW');console.log('unten W',JSON.stringify(await K()));await key('keyup','KeyW');
  await key('keydown','KeyS');console.log('unten S',JSON.stringify(await K()));await key('keyup','KeyS');
- await key('keydown','ArrowUp');console.log('unten Pfeil hoch',JSON.stringify(await K()));await key('keyup','ArrowUp');
- await key('keydown','ArrowDown');console.log('unten Pfeil runter',JSON.stringify(await K()));await key('keyup','ArrowDown');
+ await key('keydown','KeyW');console.log('unten Pfeil hoch',JSON.stringify(await K()));await key('keyup','KeyW');
+ await key('keydown','KeyS');console.log('unten Pfeil runter',JSON.stringify(await K()));await key('keyup','KeyS');
  await key('keydown','KeyA');await key('keydown','KeyD');console.log('unten A+D',JSON.stringify(await K()));await key('keyup','KeyA');await key('keyup','KeyD');
  /* Fahrverhalten unten: S beschleunigt, W bremst */
  console.log('Fahren unten',JSON.stringify(await p.evaluate(()=>{const q=__qa;q.P.speed=0;q.KR.down=1;q.kSync();for(let i=0;i<40;i++)q.step(.05);const mitS=q.P.speed;q.KR.down=0;q.KR.up=1;q.kSync();for(let i=0;i<60;i++)q.step(.05);const mitW=q.P.speed;q.KR.up=0;q.kSync();return {nachS:+mitS.toFixed(1),nachW:+mitW.toFixed(1)}})));

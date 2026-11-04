@@ -18,8 +18,10 @@ assert "userData.legs" in dino and "blob(" not in dino
 avatar=seg('// Avatar (','// balloons')
 avatar=avatar.replace("const tz=new THREE.Group();","const tz=new THREE.Group();g.userData.tz=tz;")
 avatar=avatar.replace("tz.add(sg);","tz.add(sg);(g.userData.arms||(g.userData.arms=[])).push({sg,s});")
+avatar=avatar.replace("const P=new THREE.Group();","const P=new THREE.Group();g.userData.skP=P;",1)
+avatar=avatar.replace("const ft=new THREE.Group();","const ft=new THREE.Group();(g.userData.skl||(g.userData.skl=[])).push({th,sh,ft,s,a,b});",1)
 avatar=avatar.replace("blob(x,y,z,k*1.05,k*1.1);","")
-assert "userData.arms" in avatar and "blob(" not in avatar
+assert "userData.arms" in avatar and "userData.skl" in avatar and "userData.skP" in avatar and "blob(" not in avatar
 bal=seg('// balloons','// quest marker beacon')
 cloud=seg('function cloud(','function confetti(')
 decals=seg('function decal(','const AW=')

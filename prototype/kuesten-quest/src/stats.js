@@ -2,7 +2,7 @@
    Erfasst werden: Spielzeit, Level, gelöste Aufträge, Scoops-Bewegungen mit Grund, gefundene Gegenstände, Portale, Polizei, Graffiti,
    Fehler im Browser, Hänger (Gas gedrückt, aber man kommt nicht weiter), Bildrate und Gerät. Aus ?nostats=1 wird nichts gesendet.
    In den Tests ist es aus (nur mit ?stats=1 an). Die Auswertung steht unter /stats (siehe worker/stats.js). */
-const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,ver:'__BUILD__',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
+const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'__BUILD__',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
 (function(){const rid=n=>{let s='';const c='abcdefghijklmnopqrstuvwxyz0123456789';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};STAT.sid=rid(12);
   try{STAT.pid=localStorage.getItem('kq-pid')||'';if(!/^[a-z0-9]{8,24}$/.test(STAT.pid)){STAT.pid=rid(12);localStorage.setItem('kq-pid',STAT.pid)}}catch(e){STAT.pid=STAT.sid}})();
 function statEv(ty,k,n,x,z){if(!STAT.on)return;if(STAT.q.length>=60)STAT.q.shift();const inGame=typeof LV!=='undefined';STAT.q.push([ty,String(k==null?'':k).slice(0,120),typeof n==='number'&&isFinite(n)?Math.round(n*100)/100:0,typeof x==='number'?Math.round(x):null,typeof z==='number'?Math.round(z):null,inGame?LV.id:0])}
@@ -10,7 +10,8 @@ function statErr(msg){if(!STAT.on)return;msg=String(msg||'?').replace(/\s+/g,' '
 addEventListener('error',e=>statErr((e.message||'Fehler')+' @'+String(e.filename||'').split('/').pop()+':'+(e.lineno||0)));
 addEventListener('unhandledrejection',e=>statErr('Versprechen: '+((e.reason&&e.reason.message)||e.reason||'?')));
 function statGpu(){if(STAT.gpu||typeof r==='undefined')return STAT.gpu;try{const gl=r.getContext(),x=gl.getExtension('WEBGL_debug_renderer_info');STAT.gpu=String(gl.getParameter(x?x.UNMASKED_RENDERER_WEBGL:gl.RENDERER)||'').slice(0,80)}catch(e){STAT.gpu='?'}return STAT.gpu}
-function statFlush(final){if(!STAT.on)return;if(document.hidden&&!final)return;
+function statFlush(final){if(!STAT.on||!STAT.started)return;  /* erst senden, wenn ein Spiel wirklich losgeht (nicht schon auf dem Startbildschirm) */
+ if(document.hidden&&!final)return;
   const px=typeof P!=='undefined'?P:{x:0,z:0},fps=STAT.wMs>3000?STAT.wFr/(STAT.wMs/1000):0;
   if(fps>0&&fps<25&&STAT.wMs>5000)statEv('fps','niedrig',fps,px.x,px.z);
   STAT.errs.forEach((n,k)=>statEv('err',k,n,px.x,px.z));STAT.errs.clear();
@@ -30,7 +31,7 @@ addEventListener('pagehide',()=>statFlush(true));addEventListener('visibilitycha
 {const o=scAdd;scAdd=function(d,why){const r=o.apply(this,arguments);try{const w=String(why==null?'?':why);statEv('sc',w,d);if(/^Reise zu Welt/.test(w))statEv('portal',w,1,P.x,P.z)}catch(e){}return r}}
 {const o=auComplete;auComplete=function(id){const first=!(SC.au&&SC.au[id]),r=o.apply(this,arguments);try{if(r)statEv('q',id,first?1:0)}catch(e){}return r}}
 {const o=applyLevel;applyLevel=function(n){const r=o.apply(this,arguments);try{statEv('lvl',String(n),1)}catch(e){}return r}}
-{const o=beginPlay;beginPlay=function(){const r=o.apply(this,arguments);try{statEv('start',String(LV.id),1)}catch(e){}return r}}
+{const o=beginPlay;beginPlay=function(){const r=o.apply(this,arguments);try{STAT.started=true;statEv('start',String(LV.id),1)}catch(e){}return r}}
 {const o=collectItem;collectItem=function(it){const r=o.apply(this,arguments);try{statEv('item',it&&it.def&&it.def.id,1,P.x,P.z)}catch(e){}return r}}
 {const o=startCoastRace;startCoastRace=function(){const r=o.apply(this,arguments);try{statEv('race','start',1,P.x,P.z)}catch(e){}return r}}
 {const o=win;win=function(){const r=o.apply(this,arguments);try{statEv('race','win',G.time||0)}catch(e){}return r}}
