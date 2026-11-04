@@ -218,12 +218,47 @@ void main(){vec2 m=vec2(vW.x/org.z+org.x-geo.x,vW.z/org.z+org.y-geo.y)/geo.zw;fl
 /* liegt der Punkt (Welt) auf einer Sportplatz-Fläche? Dort wachsen keine Pflanzen (auch nicht die aus der SVG) */
 function mpInCourt(X,Z){const ux=mux(X),uy=muy(Z);return MAPD.courts.some(c=>mpInPoly(c.c[0],ux,uy))}
 function mpCvTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
-function mpCourtKind(c){const lab=MAPD.labels.find(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket/i.test(l.t)||/X-?Fit/i.test(l.t)));return lab?(/Basket/i.test(lab.t)?'basket':'xfit'):'volley'}
+/* ---- Skatepark: Pool als befahrbare Mulde (Höhenfunktion skateG), Zaun mit offenem Tor ---- */
+const SKATE={on:false,cx:0,cz:0,a:0,rx:0,rz:0,D:1.4,ph:.7,ring:null,gate:null};
+const skateR=th=>1+.1*Math.sin(2*th+SKATE.ph)+.07*Math.sin(3*th+1.3);
+function skateG(x,z){if(!SKATE.on)return 0;const dx=x-SKATE.cx,dz=z-SKATE.cz,R=Math.max(SKATE.rx,SKATE.rz)*1.25;if(Math.abs(dx)>R||Math.abs(dz)>R)return 0;
+  const c=Math.cos(SKATE.a),s=Math.sin(SKATE.a),lx=dx*c+dz*s,lz=-dx*s+dz*c,ex=lx/SKATE.rx,ez=lz/SKATE.rz,t=Math.hypot(ex,ez)/skateR(Math.atan2(ez,ex));if(t>=1)return 0;
+  const u=Math.max(0,Math.min(1,(t-.45)/.55)),sm=u*u*(3-2*u);return -SKATE.D*(1-sm)}
+function mpSkateSetup(){SKATE.on=false;const c=MAPD.courts.find(c=>mpCourtKind(c)==='skate');if(!c)return;const ring=c.c[0],o=mpObb(ring);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
+  const cen=mpCentroid(ring),Lw=w*MP.SC,Hw=h*MP.SC;SKATE.cx=mwx(cen[0]);SKATE.cz=mwz(cen[1]);SKATE.a=a;SKATE.rx=Math.max(4,.32*Lw);SKATE.rz=Math.max(4,.32*Hw);SKATE.on=true;
+  const pts=[];for(let k=0;k<48;k++){const th=k/48*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;pts.push([mux(SKATE.cx+lx*Math.cos(a)-lz*Math.sin(a)),muy(SKATE.cz+lx*Math.sin(a)+lz*Math.cos(a))])}
+  SKATE.ring=pts;const land=MAPD.land.find(l=>mpInPoly(l.c[0],cen[0],cen[1]));if(land&&land.c.length<2)land.c.push(pts)}
+function mpPolyDist(r,x,y){let d=1e9;for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],dx=q[0]-p[0],dy=q[1]-p[1],L2=dx*dx+dy*dy||1e-9;let t=((x-p[0])*dx+(y-p[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-p[0]-dx*t,y-p[1]-dy*t))}return d}
+function mpCourtKind(c){if(!MAPD.labels.some(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket|X-?Fit|Skate/i.test(l.t)))&&MAPD.labels.some(l=>/Skate/i.test(l.t)&&mpPolyDist(c.c[0],l.x,l.y)<=40&&MAPD.courts.every(o=>o===c||mpPolyDist(o.c[0],l.x,l.y)>mpPolyDist(c.c[0],l.x,l.y))))return 'skate';const lab=MAPD.labels.find(l=>mpInPoly(c.c[0],l.x,l.y)&&(/Basket/i.test(l.t)||/X-?Fit/i.test(l.t)||/Skate/i.test(l.t)));return lab?(/Basket/i.test(lab.t)?'basket':/Skate/i.test(lab.t)?'skate':'xfit'):'volley'}
+function mpSkatePark(c,add,steel,chain){const ring=c.c[0],pts=ring.map(q=>[mwx(q[0]),mwz(q[1])]),n=pts.length,G=new THREE.Group();G.userData.noBake=true;add(G);
+  /* Betonfläche mit Loch für den Pool, darin die Mulde */
+  mpFlat([{c:[ring,SKATE.ring]}],1.318,mpMat('skate','#cfc9bf'),add);
+  {const K=14,S=48,pos=[],idx=[];for(let k=0;k<=K;k++){const t=k/K;for(let j=0;j<S;j++){const th=j/S*Math.PI*2,r=skateR(th)*t,lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r,x=SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),z=SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a);pos.push(x,1.3+skateG(x,z)+.005,z)}}
+    for(let k=0;k<K;k++)for(let j=0;j<S;j++){const a=k*S+j,b=k*S+(j+1)%S,c2=(k+1)*S+j,d=(k+1)*S+(j+1)%S;idx.push(a,c2,b,b,c2,d)}
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();
+    const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:'#d9d4ca',roughness:.8,flatShading:true,side:THREE.DoubleSide}));m.receiveShadow=true;m.userData.noBake=true;m.userData.noOutline=true;add(m);
+    /* Rand (Coping) als Ring */
+    const rp=[];for(let j=0;j<=S;j++){const th=j/S*Math.PI*2,r=skateR(th),lx=Math.cos(th)*SKATE.rx*r,lz=Math.sin(th)*SKATE.rz*r;rp.push(new THREE.Vector3(SKATE.cx+lx*Math.cos(SKATE.a)-lz*Math.sin(SKATE.a),1.36,SKATE.cz+lx*Math.sin(SKATE.a)+lz*Math.cos(SKATE.a)))}
+    const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp),new THREE.LineBasicMaterial({color:'#8a8a95'}));ln.userData.noBake=true;add(ln)}
+  /* Zaun rundherum, an der Kante zur nächsten Straße ein offenes Tor */
+  let gi=0,gd=1e9;pts.forEach((p,i)=>{const q=pts[(i+1)%n],mx=(p[0]+q[0])/2,mz=(p[1]+q[1])/2,nr=mpNearRoad(mux(mx),muy(mz));const d=nr?nr.d:1e9;if(d<gd){gd=d;gi=i}});
+  const FH=2.8;chain.map.wrapS=chain.map.wrapT=THREE.RepeatWrapping;
+  pts.forEach((p,i)=>{const q=pts[(i+1)%n],dx=q[0]-p[0],dz=q[1]-p[1],len=Math.hypot(dx,dz);if(len<.5)return;const tx=dx/len,tz=dz/len;let spans=[[0,len]];
+    if(i===gi){const gw=Math.min(7,len*.8),g0=(len-gw)/2;spans=len>9?[[0,g0],[g0+gw,len]]:[];const gx=p[0]+tx*len/2,gz=p[1]+tz*len/2;SKATE.gate=[gx,gz];
+      [-1,1].forEach(sd=>{const m=new THREE.Mesh(CY,steel);m.scale.set(.14,FH+.9,.14);m.position.set(gx+tx*sd*gw/2,1.3+(FH+.9)/2,gz+tz*sd*gw/2);m.castShadow=true;G.add(m)});
+      const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#8e5bd6';cx.fillRect(0,0,512,128);cx.strokeStyle='#fdf6e8';cx.lineWidth=8;cx.strokeRect(6,6,500,116);cx.fillStyle='#fdf6e8';cx.font='800 66px "Baloo 2","Trebuchet MS",sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('SKATEPARK',256,68);
+      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(gw,gw/4),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));sg.position.set(gx,1.3+FH+.9,gz);sg.rotation.y=-Math.atan2(tz,tx);G.add(sg)}
+    spans.forEach(([s0,s1])=>{const L=s1-s0;if(L<.4)return;const mx=p[0]+tx*(s0+s1)/2,mz=p[1]+tz*(s0+s1)/2,pl=new THREE.Mesh(new THREE.PlaneGeometry(L,FH),chain);pl.position.set(mx,1.3+FH/2,mz);pl.rotation.y=-Math.atan2(tz,tx);
+      const uv=pl.geometry.attributes.uv;for(let j=0;j<uv.count;j++)uv.setXY(j,uv.getX(j)*L/.55,uv.getY(j)*FH/.55);G.add(pl);
+      const rail=new THREE.Mesh(BX,steel);rail.scale.set(L,.07,.07);rail.position.set(mx,1.3+FH,mz);rail.rotation.y=-Math.atan2(tz,tx);G.add(rail);
+      mpMarkRect(mx,mz,L/2+.2,.6,Math.atan2(-tz,tx));const np=Math.max(1,Math.ceil(L/3));for(let k=0;k<=np;k++){const m=new THREE.Mesh(CY,steel);m.scale.set(.05,FH+.2,.05);m.position.set(p[0]+tx*(s0+L*k/np),1.3+(FH+.2)/2,p[1]+tz*(s0+L*k/np));G.add(m)}})});
+  HUB.courts.push({kind:'skate',x:SKATE.cx,z:SKATE.cz,col:'#c08cff',txt:'S',Lw:0,Hw:0,posts:0,fence:pts.length})}
 function mpCourts(add){HUB.courts=[];
   const steel=new THREE.MeshStandardMaterial({color:'#8892a8',roughness:.45,metalness:.5}),yel=new THREE.MeshStandardMaterial({color:'#ffd04a',roughness:.5}),blue=new THREE.MeshStandardMaterial({color:'#4f9ec4',roughness:.5}),white=new THREE.MeshStandardMaterial({color:'#fdf6e8',roughness:.6}),orange=new THREE.MeshStandardMaterial({color:'#ff7a1a',roughness:.5}),rope=new THREE.MeshStandardMaterial({color:'#f6efe6',roughness:.9});
   const chain=new THREE.MeshBasicMaterial({map:mpCvTex(32,32,(g,w,h)=>{g.strokeStyle='#d6dcea';g.lineWidth=2;g.beginPath();g.moveTo(0,h/2);g.lineTo(w/2,0);g.lineTo(w,h/2);g.lineTo(w/2,h);g.closePath();g.stroke()},[1,1]),transparent:true,side:THREE.DoubleSide,depthWrite:false,alphaTest:.05,color:'#c4cbdc'});
   const netM=new THREE.MeshBasicMaterial({map:mpCvTex(32,32,(g,w,h)=>{g.strokeStyle='#ffffff';g.lineWidth=2;g.strokeRect(0,0,w,h)},[1,1]),transparent:true,side:THREE.DoubleSide,depthWrite:false,alphaTest:.05});
   MAPD.courts.forEach(c=>{const kind=mpCourtKind(c),o=mpObb(c.c[0]);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
+    if(kind==='skate'){mpSkatePark(c,add,steel,chain);return}
     const Lw=w*MP.SC,Hw=h*MP.SC,X=mwx(o.cx),Z=mwz(o.cy),ux=Math.cos(a),uz=Math.sin(a),vx=-Math.sin(a),vz=Math.cos(a),W=(lx,lz)=>[X+ux*lx+vx*lz,Z+uz*lx+vz*lz];
     const G=new THREE.Group();G.position.set(X,1.3,Z);G.rotation.y=-a;G.userData.noBake=true;add(G);
     const mesh=(geo,mat,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(sx!==undefined)m.scale.set(sx,sy,sz);m.castShadow=true;G.add(m);return m};
@@ -276,8 +311,9 @@ function mpCourts(add){HUB.courts=[];
       const ball=mesh(new THREE.SphereGeometry(.11,10,8),yel,Lc/2-2,.12,1.4);mesh(new THREE.TorusGeometry(.11,.012,5,12),blue,Lc/2-2,.12,1.4)}
     HUB.courts.push(info)})}
 function mpTerrain(add){
+  mpSkateSetup();
   /* Meer: türkis nahe am Strand, tiefblau draußen, mit Schaumkante, Wellenlinie und Glitzern (Abstand zur Küste aus der Maske) */
-  {const m=new THREE.Mesh(new THREE.PlaneGeometry(7000,7000),mpSeaMat());m.rotation.x=-Math.PI/2;m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;add(m)}
+  {let seaGeo=new THREE.PlaneGeometry(7000,7000);if(SKATE.on){const sh=new THREE.Shape([new THREE.Vector2(-3500,-3500),new THREE.Vector2(3500,-3500),new THREE.Vector2(3500,3500),new THREE.Vector2(-3500,3500)]);sh.holes.push(new THREE.Path(SKATE.ring.map(q=>new THREE.Vector2(mwx(q[0]),-mwz(q[1])))));seaGeo=new THREE.ShapeGeometry(sh)}const m=new THREE.Mesh(seaGeo,mpSeaMat());m.rotation.x=-Math.PI/2;m.position.set(0,1.0,0);m.userData.noBake=true;m.userData.noOutline=true;add(m)}
   /* Land (angehoben, mit sichtbarer Kante) */
   MAPD.land.forEach(it=>{const geo=new THREE.ExtrudeGeometry(mpShape(it.c),{depth:.7,bevelEnabled:false});geo.rotateX(-Math.PI/2);const m=new THREE.Mesh(geo,mpMat('land','#f1e5c0'));m.position.y=.6;m.receiveShadow=true;m.userData.noBake=true;add(m)});
   mpFlat(MAPD.parks,1.31,mpMat('park','#4fa874'),add);mpFlat(MAPD.lots,1.31,mpMat('lot','#8d93a0'),add);mpCourts(add);
@@ -410,15 +446,15 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   return ring}
 function mpBuildings(H){
   const solids=[],groups=[];const L0=MAPD.labels;
-  const kindOf=t=>/Poli(zei|ce)/i.test(t)?'police':/Schule|School/i.test(t)?'school':/Surf/i.test(t)?'surf':/Shack/i.test(t)?'shack':/Warehouse|Lagerhalle/i.test(t)?'warehouse':/P-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':'';
+  const kindOf=t=>/Poli(zei|ce)/i.test(t)?'police':/Schule|School/i.test(t)?'school':/Surf/i.test(t)?'surf':/Shack/i.test(t)?'shack':/Warehouse|Lagerhalle/i.test(t)?'warehouse':/P-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':/Backoffice/i.test(t)?'backoffice':'';
   MAPD.buildings.forEach((b,i)=>{b.i=i;b.kind='';b.skip=false;b.cen=mpCentroid(b.c[0]);b.area=Math.abs(mpArea(b.c[0]))});
   L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;MAPD.buildings.forEach(b=>{if(mpInPoly(b.c[0],l.x,l.y)){b.kind=k;b.label=l.t}})});
   /* Beschriftung steht neben dem Gebäude statt darin (z. B. "Surf Shop", "Beach Shack"): nächstes freies Gebäude bis 45 Karteneinheiten (22 m) */
   const dPoly=(r,x,y)=>{let d=1e9;for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],dx=q[0]-p[0],dy=q[1]-p[1],L2=dx*dx+dy*dy||1e-9;let t=((x-p[0])*dx+(y-p[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-p[0]-dx*t,y-p[1]-dy*t))}return d};
   HUB.labelWarn=[];L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],l.x,l.y)))return;let best=null;MAPD.buildings.forEach(b=>{if(b.kind)return;const d=dPoly(b.c[0],l.x,l.y);if(d<=45&&(!best||d<best.d))best={d,b}});
     if(best){best.b.kind=k;best.b.label=l.t}else HUB.labelWarn.push(l.t)});
-  const SIGN={school:'SCHULE',surf:'SURF SHOP',shack:'BEACH SHACK',warehouse:'WAREHOUSE',police:'POLIZEI',station:'PORT LUPO STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER'};
-  const WALL={school:'#e9a97c',surf:'#7fd8d0',shack:'#ecc888',warehouse:'#9fb0c8',police:'#9db8e8',station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a'};
+  const SIGN={school:'SCHULE',surf:'SURF SHOP',shack:'BEACH SHACK',warehouse:'WAREHOUSE',police:'POLIZEI',station:'PORT LUPO STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER',backoffice:'ANMELDUNG LAGER'};
+  const WALL={school:'#e9a97c',surf:'#7fd8d0',shack:'#ecc888',warehouse:'#9fb0c8',police:'#9db8e8',station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a',backoffice:'#cdd6e0'};
   const mkGroup=(x,z)=>{const bg=new THREE.Group();bg.userData.noBake=true;bg.userData.blk={x,z};W0.add(bg);HUB.bgroups.push(bg);return bg};
   MAPD.buildings.forEach(b=>{const aM=b.area*MP.SC*MP.SC,X=mwx(b.cen[0]),Z=mwz(b.cen[1]);
     if(b.kind==='pmart'||b.kind==='lab'||b.kind==='xmas'){
@@ -431,9 +467,9 @@ function mpBuildings(H){
         }
       else{mpStamp(H,()=>buildGingerBlock(),cx,cz,yaw,bg,1);solids.push({x:o.cx,y:o.cy,a:-yaw,w:54,h:44});const sgp=mpTf(cx,cz,yaw,0,-19.8);HUB.gb={i:0,j:0,cx,cz,sx:sgp[0],sz:sgp[1],yaw}}
       return}
-    const kind=b.kind;let h;switch(kind){case 'tower':h=64;break;case 'resort':h=30;break;case 'casino':h=17;break;case 'shopping':h=13;break;case 'station':h=10;break;case 'police':h=9;break;case 'school':h=11;break;case 'surf':h=6.6;break;case 'shack':h=5.4;break;case 'warehouse':h=9;break;
+    const kind=b.kind;let h;switch(kind){case 'tower':h=64;break;case 'resort':h=30;break;case 'casino':h=17;break;case 'shopping':h=13;break;case 'station':h=10;break;case 'police':h=9;break;case 'school':h=11;break;case 'surf':h=6.6;break;case 'shack':h=5.4;break;case 'warehouse':h=9;break;case 'backoffice':h=6.5;break;
       default:h=aM<150?7.2:aM<650?7.5+(b.i*7%3)*3:9+(b.i*5%9)}
-    const bg=mkGroup(X,Z);b.bg=bg;mpGenBuilding(bg,b,WALL[kind]||MPPAST[b.i%7],h,b.i,SIGN[kind]||null);b.h=h});
+    const bg=mkGroup(X,Z);b.bg=bg;mpGenBuilding(bg,b,WALL[kind]||MPPAST[b.i%7],h,b.i,SIGN[kind]||null);b.h=h;if(kind==='backoffice'){const d=(HUB.doors||[])[(HUB.doors||[]).length-1];if(d)HUB.backoffice={x:d[0],z:d[1]}}});
   /* Café Pengu und AstroBurger an den Markern C und B */
   MAPD.markers.forEach(m=>{const lab=L0.find(l=>Math.hypot(l.x-m.x,l.y-m.y)<12&&(l.t==='C'||l.t==='B'));if(!lab)return;const yaw=mpFrontYaw(m.x,m.y),X=mwx(m.x),Z=mwz(m.y);
     if(lab.t==='C'){let sc=.6,pos=[m.x,m.y];for(const k of [1,.85,.7,.6]){const f=mpFitClear(m.x,m.y,11*k,90);if(f){sc=k;pos=f;break}}
@@ -503,7 +539,11 @@ function mpBuildTrain(rail){
 function mpMarkDisc(X,Z,r){const ux=mux(X)-MP.PLAY.x0,uy=muy(Z)-MP.PLAY.y0,ru=r/MP.SC;for(let y=Math.floor(uy-ru);y<=Math.ceil(uy+ru);y++)for(let x=Math.floor(ux-ru);x<=Math.ceil(ux+ru);x++){if(x<0||y<0||x>=MP.w||y>=MP.h)continue;if((x-ux)**2+(y-uy)**2<=ru*ru)MP.cls[y*MP.w+x]=5}}
 function mpMarkRect(X,Z,hw,hd,yaw){const ru=Math.hypot(hw,hd)/MP.SC,ux=mux(X)-MP.PLAY.x0,uy=muy(Z)-MP.PLAY.y0,c=Math.cos(yaw),s=Math.sin(yaw);
   for(let y=Math.floor(uy-ru);y<=Math.ceil(uy+ru);y++)for(let x=Math.floor(ux-ru);x<=Math.ceil(ux+ru);x++){if(x<0||y<0||x>=MP.w||y>=MP.h)continue;const dx=(x-ux)*MP.SC,dz=(y-uy)*MP.SC,lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<=hw&&Math.abs(lz)<=hd)MP.cls[y*MP.w+x]=5}}
-function mpFree(X,Z,r,allowRoad){for(let a=0;a<12;a++){const ang=a/12*Math.PI*2;for(const rr of [r,r*.5]){const c=mpAt(X+Math.cos(ang)*rr,Z+Math.sin(ang)*rr);if(!(c===1||c===3||c===4||(allowRoad&&c===2)))return false}}const c0=mpAt(X,Z);return c0===1||c0===3||c0===4||(allowRoad&&c0===2)}
+/* Bauplätze (rote Umrisse in der Karte) bleiben frei von Bäumen und Dekoration */
+function mpPlotNear(X,Z,r){const P=MAPD.plots;if(!P||!P.length)return false;const ux=mux(X),uy=muy(Z),ru=r/MP.SC;
+  for(const pl of P){const ring=pl.c[0];for(let a=0;a<9;a++){const x=a?ux+Math.cos(a/8*6.283)*ru:ux,y=a?uy+Math.sin(a/8*6.283)*ru:uy;if(mpInPoly(ring,x,y))return true}}return false}
+function mpFree(X,Z,r,allowRoad){if(mpPlotNear(X,Z,r))return false;return mpFree0(X,Z,r,allowRoad)}
+function mpFree0(X,Z,r,allowRoad){for(let a=0;a<12;a++){const ang=a/12*Math.PI*2;for(const rr of [r,r*.5]){const c=mpAt(X+Math.cos(ang)*rr,Z+Math.sin(ang)*rr);if(!(c===1||c===3||c===4||(allowRoad&&c===2)))return false}}const c0=mpAt(X,Z);return c0===1||c0===3||c0===4||(allowRoad&&c0===2)}
 function mpFindFree(ux,uy,r,maxM,allowRoad){for(let d=0;d<=maxM;d+=2)for(let a=0;a<(d?16:1);a++){const ang=a/16*Math.PI*2+d,X=mwx(ux)+Math.cos(ang)*d,Z=mwz(uy)+Math.sin(ang)*d;if(mpFree(X,Z,r,allowRoad))return [X,Z]}return null}
 /* Punkte auf Bürgersteigen für Gräber, Zuschauer, Zapfsäulen */
 function mpSpotPool(){const R=mulberry(2024),out=[];for(let y=0;y<MP.h;y+=5)for(let x=0;x<MP.w;x+=5){if(MP.cls[y*MP.w+x]===3){const X=mwx(x+MP.PLAY.x0+(R()-.5)*3),Z=mwz(y+MP.PLAY.y0+(R()-.5)*3);if(mpAt(X,Z)===3)out.push([X,Z])}}

@@ -139,6 +139,7 @@ function curActs(){const a=[],L=HUB.lab;
     if(HUB.uw)a.push({x:HUB.uw.bx,z:HUB.uw.bz+3,r:5.5,label:'Leiter hinabsteigen',fn:underEnter})
     ;(HUB.shops||[]).forEach(s=>a.push({x:s.x,z:s.z,r:7.5,label:'P-Mart betreten',fn:()=>pmartEnter(s)}));
     if(NEWMAP&&HUB.gate&&!HUB.coastHit)a.push({x:HUB.gate.x,z:HUB.gate.z,r:HUB.gate.r+2,label:'Küstenrennen starten',fn:startCoastRace});
+    if(HUB.backoffice)a.push({x:HUB.backoffice.x,z:HUB.backoffice.z,r:8,label:'Backoffice: Anmeldung Lagerhalle',fn:()=>dlgStart('',['Backoffice der Lagerhalle. Hier meldest du dich später für Lagerjobs an.','Heute ist niemand da. Am Schalter hängt ein Zettel: "Kommt bald."'])});
     bettlerActs(a);grafActs(a);bauActs(a)}
   else if(LV.id===7)pmartActs(a);
   else if(LV.id===5)islandActs(a);
