@@ -61,7 +61,7 @@ function boardDeck(parent,mDeck,mInlay,key,sc,y){const B=BOARD_SHAPES[key]||BOAR
   const eg=new THREE.ExtrudeGeometry(sh,{depth:T,bevelEnabled:false,curveSegments:8});eg.rotateX(Math.PI/2);eg.translate(0,T,0);
   mk(new THREE.BoxGeometry(W,T,Mi),mDeck,0,y0+T/2,0);
   mk(eg,mDeck,0,y0,Mi/2,-B.kick);mk(eg,mDeck,0,y0,-Mi/2,B.kick,Math.PI);
-  mk(new THREE.BoxGeometry(W*.7,T*.3,Mi*.96),mInlay,0,y0+T+T*.15,0);return parent}
+  const inl=mk(new THREE.BoxGeometry(W*.9,T*.3,Mi*.98),mInlay,0,y0+T+T*.15,0);parent.userData.inlay=inl;inl.userData.inlayMat=mInlay;return parent}
 """
 avatar=avatar.replace("function skater(",DECK+"function skater(",1)
 avatar=avatar.replace(old_b,"const boardG=new THREE.Group();g.add(boardG);g.userData.board=boardG;boardDeck(boardG,M('#2499bb'),MS('#f0cf36'),'popsicle',1,.1525);",1)

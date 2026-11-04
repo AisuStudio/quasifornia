@@ -15,7 +15,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
    q.G.phase='play';q.P.x=w.x;q.P.z=w.z;q.P.speed=0;for(let i=0;i<4;i++)q.step(.03);o.akt=q.curActs().filter(a=>/Bauen/.test(a.label)).map(a=>a.label).slice(0,3);
    q.bauOpen(w);o.titelW=document.getElementById('bld-h').textContent;o.reqW=document.querySelectorAll('#bld-req span').length;
    const kin=[...w.mask][0].split(',').map(Number);let aussen=null;for(let gx=0;gx<w.NX&&!aussen;gx++)for(let gz=0;gz<w.NZ;gz++)if(!w.mask.has(gx+','+gz)){aussen=[gx,gz];break}
-   o.innen=q.bauPutVol(w,kin[0],0,kin[1],'geo',1,3);o.aussen=aussen?q.bauPutVol(w,aussen[0],0,aussen[1],'block',1,0):'(kein Außenfeld)';
+   o.innen=q.bauPutVol(w,kin[0],0,kin[1],'geo',1,3);q.bauClose(false);const sch=q.HUB.plots.find(x=>x.mask.size<x.NX*x.NZ);q.bauOpen(sch);let ao=null;for(let gx=0;gx<sch.NX&&!ao;gx++)for(let gz=0;gz<sch.NZ;gz++)if(!sch.mask.has(gx+','+gz)){ao=[gx,gz];break}o.aussen=q.bauPutVol(sch,ao[0],0,ao[1],'block',1,0);
    q.bauClose(false);q.bauOpen(g);o.titelG=document.getElementById('bld-h').textContent;o.reqG=document.querySelectorAll('#bld-req span').length;q.bauClose(false);q.bauOpen(f);o.titelF=document.getElementById('bld-h').textContent;q.bauClose(false);return o});
  console.log('Typen',JSON.stringify(r),r.titelW==='Wohngrundstück'&&r.titelG==='Gewerbegrundstück'&&r.titelF==='Bauplatz'&&r.innen===true&&r.aussen===false);
  /* Skatepark */

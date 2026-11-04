@@ -12,7 +12,7 @@ srv.listen(8947,async()=>{
  /* zwei kleine WAV-Dateien und eine musik.json in den lokalen Bucket legen */
  const wav=(sec)=>{const n=Math.round(8000*sec),b=Buffer.alloc(44+n,128);b.write('RIFF',0);b.writeUInt32LE(36+n,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(8000,24);b.writeUInt32LE(8000,28);b.writeUInt16LE(1,32);b.writeUInt16LE(8,34);b.write('data',36);b.writeUInt32LE(n,40);return b};
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'musik-')),files={'test-erstes_lied.wav':wav(.6),'zweites lied.wav':wav(.4),'musik.json':Buffer.from(JSON.stringify([{file:'zweites lied.wav',title:'Zweites Lied <b>',artist:'Packed Rich',info:'Album X'}]))};
- let putOk=true;for(const [k,v] of Object.entries(files)){fs.writeFileSync(path.join(dir,k),v);const r=cp.spawnSync('npx',['wrangler','r2','object','put','quasifornia-musik/'+k,'--file',path.join(dir,k),'--local'],{cwd:path.join(__dirname,'..','..','..'),encoding:'utf8'});if(r.status!==0){putOk=false;console.log('put fehlgeschlagen',k,(r.stderr||'').slice(0,200))}}
+ let putOk=true;for(const [k,v] of Object.entries(files)){fs.writeFileSync(path.join(dir,k),v);const r=cp.spawnSync('npx',['wrangler','r2','object','put','sound/'+k,'--file',path.join(dir,k),'--local'],{cwd:path.join(__dirname,'..','..','..'),encoding:'utf8'});if(r.status!==0){putOk=false;console.log('put fehlgeschlagen',k,(r.stderr||'').slice(0,200))}}
  await wait(800);
  const lst=await W('/api/musik').then(r=>r.json()).catch(()=>({tracks:[]}));
  if(!putOk||!lst.tracks.length){console.log('übersprungen: lokaler Worker ohne R2-Bucket (Worker nach Änderung an wrangler.jsonc neu starten)');srv.close();return}
