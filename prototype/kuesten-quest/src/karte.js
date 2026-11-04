@@ -252,7 +252,7 @@ function mpSkateBlock(cenMap){const R=150,sx=Math.floor(cenMap[0]-MP.PLAY.x0),sy
   let bd=0,bx=sx,by=sy;for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=D[idx(x,y)];if(d>bd){bd=d;bx=x;by=y}}
   return {poly,reg,x0,y0,w,h,D,cells:n,bx:bx+MP.PLAY.x0+.5,by:by+MP.PLAY.y0+.5,bd:bd*MP.SC}}
 function skateCellD(X,Z){const B=SKATE.block;if(!B)return 0;const x=Math.floor(mux(X)-MP.PLAY.x0)-B.x0,y=Math.floor(muy(Z)-MP.PLAY.y0)-B.y0;if(x<0||y<0||x>=B.w||y>=B.h)return 0;return B.D[y*B.w+x]*MP.SC}
-function mpSkateSetup(){SKATE.on=false;SKATE.block=null;const c=MAPD.courts.find(c=>mpCourtKind(c)==='skate');if(!c)return;const ring=c.c[0],o=mpObb(ring);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
+function mpSkateSetup(){if(SKATE.done)return;SKATE.done=true;SKATE.on=false;SKATE.block=null;const c=MAPD.courts.find(c=>mpCourtKind(c)==='skate');if(!c)return;const ring=c.c[0],o=mpObb(ring);let a=o.a,w=o.w,h=o.h;if(h>w){a+=Math.PI/2;const t=w;w=h;h=t}
   const cen=mpCentroid(ring),B=mpSkateBlock(cen);if(!B)return;SKATE.block=B;const MARG=2.6,asp=Math.max(.8,Math.min(1.25,w/h));
   SKATE.cx=mwx(B.bx);SKATE.cz=mwz(B.by);SKATE.a=a;SKATE.on=true;
   let R=Math.min(7.5,Math.max(3,B.bd-MARG)/1.17),okR=false;
@@ -521,7 +521,7 @@ function mpBuildings(H){
   return solids}
 
 /* ---------- S-Bahn (oberirdisch, rot durchgezogen) mit Tunnelmund; gestrichelt = unterirdisch ---------- */
-function mpRail(add){
+function mpRail(add){if(typeof mpSkateSetup==='function')mpSkateSetup();
   /* Stücke zu einer Linie verbinden: Start ist das Stück, das am weitesten südlich beginnt */
   const solid=MAPD.rail.filter(r=>!r.dash&&r.pts.length>1&&Math.max(...r.pts.map(p=>p[1]))>1500);
   const near=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<14;let chain=[];
@@ -541,9 +541,10 @@ function mpRail(add){
   add(mpInstanced(BX,trim,rl,r=>({x:r.x,y:r.y,z:r.z,ry:r.ry,rz:r.rz,sx:2.0,sy:.55,sz:.3})));
   /* Pfeiler: auf Wasser, Land oder Bürgersteig, nie auf der Fahrbahn, mit Ausleger zur Gleismitte */
   const col=[],beam=[],sol=[];
-  for(let s=8;s<Lr;s+=24){const p=posAt(s),nx=-Math.sin(p.h),nz=Math.cos(p.h),y=yAt(s);let placed=false;
-    for(const d of [0,5,-5,9,-9,13,-13]){const x=p.x+nx*d,z=p.z+nz*d,c=mpAt(x,z);if(c===2||c===5)continue;if(c===0&&mpIsLand(x,z))continue;
-      col.push({x,z,y:(y-.8+1.0)/2,h:y-.8-1.0});beam.push({x:p.x+nx*d/2,z:p.z+nz*d/2,y:y-1.25,ry:-p.h,len:Math.abs(d)+4.6});if(c!==0)sol.push({x,z});placed=true;break}}
+  for(let s=8;s<Lr;s+=24){let placed=false;for(const sh of [0,-6,6,-12,12]){if(placed)break;const ss=Math.max(2,Math.min(Lr-2,s+sh)),p=posAt(ss),nx=-Math.sin(p.h),nz=Math.cos(p.h),y=yAt(ss);
+    for(const d of [0,5,-5,9,-9,13,-13]){const x=p.x+nx*d,z=p.z+nz*d,c=mpAt(x,z);if(c===2||c===5)continue;if(SKATE.on&&skateCellD(x,z)>0)continue;/* nie mitten im Skatepark (Pool, Aufenthaltsbereich) */if(c===0&&mpIsLand(x,z))continue;
+      col.push({x,z,y:(y-.8+1.0)/2,h:y-.8-1.0});beam.push({x:p.x+nx*d/2,z:p.z+nz*d/2,y:y-1.25,ry:-p.h,len:Math.abs(d)+4.6});if(c!==0)sol.push({x,z});placed=true;break}}}
+  HUB.railPillars=(HUB.railPillars||[]).concat(col.map(c=>({x:c.x,z:c.z})));
   add(mpInstanced(CY,mpMat('pillar','#7a6fa0'),col,c=>({x:c.x,y:c.y,z:c.z,sx:.8,sy:c.h,sz:.8})));
   add(mpInstanced(BX,mpMat('pillar','#7a6fa0'),beam,b=>({x:b.x,y:b.y,z:b.z,ry:b.ry+Math.PI/2*0,sx:1.2,sy:.9,sz:b.len})));
   /* Tunnelmund am Ende: dunkle Öffnung mit Rahmen */

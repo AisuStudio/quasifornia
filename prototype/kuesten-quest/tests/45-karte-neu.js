@@ -31,6 +31,9 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
    const e=S.edges.find(e=>!e.gate&&e.len>=8);const a=out(e.mx,e.mz,5);o.durchsZaun=toIn(a[0],a[1]);
    o.baenke=q.HUB.courts.find(c=>c.kind==='skate').benches;o.kuebel=q.HUB.courts.find(c=>c.kind==='skate').pots;return o});
  console.log('Zaun und Tore',JSON.stringify(zaun),zaun.tore===2&&zaun.torDurch.every(x=>x)&&zaun.durchsZaun===false&&zaun.baenke>=4&&zaun.kuebel>=2);
+ /* Hochbahn-Säulen stehen nie im Skatepark-Block oder im Pool */
+ const sa=await p.evaluate(()=>{const q=__qa,S=q.SKATE,P=q.HUB.railPillars||[];const drin=P.filter(c=>q.skateCellD(c.x,c.z)>0||Math.hypot(c.x-S.cx,c.z-S.cz)<Math.max(S.rx,S.rz)*1.2);return {saeulen:P.length,imPark:drin.length}});
+ console.log('Säulen',JSON.stringify(sa),sa.saeulen>20&&sa.imPark===0);
  /* Backoffice */
  const bo=await p.evaluate(()=>{const q=__qa,b=q.HUB.backoffice;if(!b)return null;q.G.phase='play';q.P.x=b.x;q.P.z=b.z;q.P.speed=0;q.step(.03);const e=document.getElementById('act');return e.hidden?'':e.firstElementChild.textContent});
  console.log('Backoffice',bo,/Lagerhalle/.test(bo||''));
