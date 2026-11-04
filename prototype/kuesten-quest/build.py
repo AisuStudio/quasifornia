@@ -53,7 +53,18 @@ avatar=avatar.replace(tail,ACCB+tail,1)
 
 old_b="const deckM=M('#2499bb');S(BX,deckM,0,.17,0,g,.42,.035,1.55);S(BX,MS('#f0cf36'),0,.19,0,g,.3,.01,1.3);"
 assert old_b in avatar
-avatar=avatar.replace(old_b,"const boardG=new THREE.Group();g.add(boardG);g.userData.board=boardG;const deckM=M('#2499bb');S(BX,deckM,0,.17,0,boardG,.42,.035,1.55);S(BX,MS('#f0cf36'),0,.19,0,boardG,.3,.01,1.3);",1)
+DECK="""/* Boardformen: Eintrag = Breite, Länge, Länge der Kicktails (end), Winkel der Kicktails (kick), Dicke (th). Neue Formen später einfach hier ergänzen. */
+const BOARD_SHAPES={popsicle:{w:.42,len:1.55,end:.26,kick:.34,th:.035}};
+function boardDeck(parent,mDeck,mInlay,key,sc,y){const B=BOARD_SHAPES[key]||BOARD_SHAPES.popsicle,s=sc||1,W=B.w*s,L=B.len*s,E=B.end*s,T=B.th*s,Mi=L-2*E,r=W/2,y0=y||0;
+  const mk=(geo,mat,px,py,pz,rx,ry)=>{const m=new THREE.Mesh(geo,mat);m.position.set(px,py,pz);if(rx)m.rotation.x=rx;if(ry)m.rotation.y=ry;m.castShadow=true;parent.add(m);return m};
+  const sh=new THREE.Shape();sh.moveTo(-r,0);sh.lineTo(r,0);sh.lineTo(r,E-r);sh.absarc(0,E-r,r,0,Math.PI,false);sh.lineTo(-r,0);
+  const eg=new THREE.ExtrudeGeometry(sh,{depth:T,bevelEnabled:false,curveSegments:8});eg.rotateX(Math.PI/2);eg.translate(0,T,0);
+  mk(new THREE.BoxGeometry(W,T,Mi),mDeck,0,y0+T/2,0);
+  mk(eg,mDeck,0,y0,Mi/2,-B.kick);mk(eg,mDeck,0,y0,-Mi/2,B.kick,Math.PI);
+  const inl=mk(new THREE.BoxGeometry(W*.9,T*.3,Mi*.98),mInlay,0,y0+T+T*.15,0);parent.userData.inlay=inl;inl.userData.inlayMat=mInlay;return parent}
+"""
+avatar=avatar.replace("function skater(",DECK+"function skater(",1)
+avatar=avatar.replace(old_b,"const boardG=new THREE.Group();g.add(boardG);g.userData.board=boardG;boardDeck(boardG,M('#2499bb'),MS('#f0cf36'),'popsicle',1,.1525);",1)
 old_w="const w=S(CY,MS(o.sole),a*1.1,.075,b,g,.075,.05,.075);"
 assert old_w in avatar
 avatar=avatar.replace(old_w,"const w=S(CY,MS(o.sole),a*1.1,.075,b,boardG,.075,.05,.075);",1)
@@ -76,7 +87,7 @@ flora=flora.replace("let FSP=","let FCYL=10;let FSP=",1)
 chunks=[flora,villas,sidecar,dino,avatar,bal,decals]
 chunks=[sm(c) for c in chunks]
 setup=open('src/setup.js').read();game=open('src/game.js').read()
-game=game.replace('window.__qa={',open('src/atoll.js').read()+'\n'+open('src/island.js').read()+'\n'+open('src/xmas.js').read()+'\n'+open('src/bettler.js').read()+'\n'+open('src/unter.js').read()+'\n'+open('src/graffiti.js').read()+'\n'+open('src/karte.js').read()+'\n'+open('src/multi.js').read()+'\n'+open('src/stats.js').read().replace('__BUILD__',time.strftime('%m%d-%H%M'))+'\nwindow.__qa={',1)
+game=game.replace('window.__qa={',open('src/atoll.js').read()+'\n'+open('src/pmart.js').read()+'\n'+open('src/bauen.js').read()+'\n'+open('src/island.js').read()+'\n'+open('src/xmas.js').read()+'\n'+open('src/bettler.js').read()+'\n'+open('src/unter.js').read()+'\n'+open('src/graffiti.js').read()+'\n'+open('src/karte.js').read()+'\n'+open('src/multi.js').read()+'\n'+open('src/stats.js').read().replace('__BUILD__',time.strftime('%m%d-%H%M'))+'\nwindow.__qa={',1)
 import json
 logo=re.sub(r'<\?xml[^>]*\?>','',open('src/logo/port36_postcard.svg').read()).replace('<svg ','<svg class="logo-svg" role="img" aria-label="Logo" ',1).strip()
 mapjson=open('src/map/map.json').read()

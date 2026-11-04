@@ -18,7 +18,7 @@
 //     #d8d9d9 Parkplatz  #c3932d Sportplatz  #3b820b Palme  #fed21e Bank  (Text: #231f20 oder #2a338f)
 //   Linienfarbe                                       Bedeutung
 //     weiß: Breite 15 Straße, 7 Straße, 3 Fußweg (nach Teilen durch den Faktor)   #ed1f24 rot: S-Bahn (durchgezogen oben, gestrichelt unten)
-//     #e9cc92 Sandweg   #d8d9d9 grau = Hafenmauer
+//     #e9cc92 Sandweg   #d8d9d9 grau = Hafenmauer   #e26868 rot (Ebene "Bauplatz") = Bauplatz-Umriss (Grundstück; Text darin: Residential/Wohn = Wohngrundstück, Commercial/Gewerbe = Gewerbegrundstück)
 //   BESCHRIFTUNGEN: mehrere <text> untereinander werden zu einem Label zusammengeführt ("Basketball" + "Court").
 //   Gebäude bekommen ihre Art aus dem Label, das im Gebäude steht: Police, Schule, Surf Shop, Beach Shack, Warehouse,
 //   Basketball Court, X-Fit, Beach Volley (Sportplatz), Leuchtturm / Tarxarox (rosa Kreis an der Küste) u. a.
@@ -42,7 +42,7 @@ const SRC=process.argv[2]?path.resolve(process.argv[2]):path.join(R,'src/map/map
   const norm=s=>s.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[^a-z]/g,'');
   const LAYER={palmen:'palm',palme:'palm',palm:'palm',bench:'bench',bank:'bench',parkbank:'bench',hafenmauer:'wall',mauer:'wall',wall:'wall',
     wasser:'water',water:'water',meer:'sea',land:'land',park:'park',parkplatz:'lot',parking:'lot',sportplatz:'court',court:'court',gebaeude:'building',building:'building',
-    strasse:'road',road:'road',weg:'path',path:'path',schiene:'rail',rail:'rail',baum:'tree',tree:'tree'};
+    strasse:'road',road:'road',weg:'path',path:'path',schiene:'rail',rail:'rail',baum:'tree',tree:'tree',bauplatz:'plot',plot:'plot',grundstueck:'plot',parkundlieferzone:'lot',parklieferzone:'lot'};
   const GENERIC=/^(layer|seite|page|clip|group|gruppe|svg|defs|ebene|pfad|path|rect|circle|kreis|rechteck|form|shape|text)?$/;
   const layerOf=el=>{for(const n of names(el)){const k=norm(n);if(LAYER[k])return LAYER[k]}return null};
   const unknownLayer=el=>{for(const n of names(el)){const k=norm(n);if(!LAYER[k]&&!GENERIC.test(k))return n}return null};
@@ -74,7 +74,7 @@ const SRC=process.argv[2]?path.resolve(process.argv[2]):path.join(R,'src/map/map
   const obb=P=>{let best=null;for(let a=0;a<90;a+=1){const c=Math.cos(a*Math.PI/180),s=Math.sin(a*Math.PI/180);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const p of P){const u=p[0]*c+p[1]*s,v=-p[0]*s+p[1]*c;if(u<x0)x0=u;if(u>x1)x1=u;if(v<y0)y0=v;if(v>y1)y1=v}
     const ar=(x1-x0)*(y1-y0);if(!best||ar<best.ar){const uc=(x0+x1)/2,vc=(y0+y1)/2;best={ar,a:a*Math.PI/180,cx:uc*c-vc*s,cy:uc*s+vc*c,w:x1-x0,h:y1-y0}}}
     let {a,w,h}=best;if(h>w){a+=Math.PI/2;[w,h]=[h,w]}return {x:rnd(best.cx),y:rnd(best.cy),w:rnd(w),h:rnd(h),a:Math.round(a*1000)/1000}};
-  const res={W:rnd(VB.width/F),H:rnd(VB.height/F),scale:rnd(F*1000)/1000,sea:[],land:[],water:[],parks:[],trees:[],lots:[],courts:[],buildings:[],markers:[],roads:[],paths:[],rail:[],walls:[],benches:[],palms:[],labels:[],other:[],warnings:[]};
+  const res={W:rnd(VB.width/F),H:rnd(VB.height/F),scale:rnd(F*1000)/1000,sea:[],land:[],water:[],parks:[],trees:[],lots:[],courts:[],buildings:[],markers:[],roads:[],paths:[],rail:[],walls:[],benches:[],palms:[],labels:[],other:[],plots:[],warnings:[]};
   const seenWarn=new Set();const W=(k,m)=>{if(!seenWarn.has(k)){seenWarn.add(k);res.warnings.push(m)}};
   const FILL=[['#15afe6','water'],['#03aee5','water'],['#e9cc92','land'],['#e9cb92','land'],['#6dbe44','park'],['#6cbe45','park'],['#f59ebb','building'],['#d8d9d9','lot'],['#d8d8d8','lot'],['#c3932d','court'],['#c2922c','court'],['#3b820b','palm'],['#fed21e','bench']];
   for(const el of all){const cs=getComputedStyle(el),fc=cs.fill==='none'?null:hex(cs.fill),sc=cs.stroke==='none'?null:hex(cs.stroke);
@@ -93,16 +93,20 @@ const SRC=process.argv[2]?path.resolve(process.argv[2]):path.join(R,'src/map/map
       if(kind==='water'||kind==='sea'){const xs=C[0].map(q=>q[0]),ys=C[0].map(q=>q[1]);const big=kind==='sea'||(Math.max(...xs)-Math.min(...xs)>3000&&Math.max(...ys)-Math.min(...ys)>2400);(big?res.sea:res.water).push(item)}
       else if(kind==='land')res.land.push(item);else if(kind==='park')res.parks.push(item);else if(kind==='building')res.buildings.push(item);else if(kind==='lot')res.lots.push(item);else if(kind==='court')res.courts.push(item);
       else W('shape:'+kind,'Form "'+kind+'" ohne passende Verwendung')}}}
-   if(sc){let kind=lay&&['wall','road','path','rail'].includes(lay)?lay:null;
-    if(!kind){if(near(sc,'#ffffff',20))kind=sw>=5?'road':'path';else if(near(sc,'#ed1f24',28))kind='rail';else if(near(sc,'#e9cc92',20))kind='sand';else if(near(sc,'#d8d9d9',20))kind='wall';else{W('stroke:'+hx(sc),'Unbekannte Linienfarbe '+hx(sc)+', ignoriert')}}
+   if(sc){let kind=lay&&['wall','road','path','rail','plot'].includes(lay)?lay:null;
+    if(!kind){if(near(sc,'#ffffff',20))kind=sw>=5?'road':'path';else if(near(sc,'#ed1f24',28))kind='rail';else if(near(sc,'#e9cc92',20))kind='sand';else if(near(sc,'#d8d9d9',20))kind='wall';else if(near(sc,'#e26868',24))kind='plot';else{W('stroke:'+hx(sc),'Unbekannte Linienfarbe '+hx(sc)+', ignoriert')}}
     if(kind==='road'||kind==='path'){const asRoad=kind==='road'?sw>=5:false}
-    for(const c of cn){if(c.pts.length<2||!kind)continue;const pts=dp(U(c.pts),.6,false);
+    for(const c of cn){if(c.pts.length<2||!kind)continue;if(kind==='plot'){if(c.closed&&c.pts.length>=3)res.plots.push({c:[dp(U(c.pts),.7,true)]});continue}const pts=dp(U(c.pts),.6,false);
      if(kind==='road')(sw>=5?res.roads:res.paths).push({w:rnd(sw),pts,closed:c.closed});else if(kind==='path')res.paths.push({w:rnd(sw),pts,closed:c.closed});
      else if(kind==='rail')res.rail.push({dash:!!dash,w:rnd(sw),pts});else if(kind==='sand')res.paths.push({w:rnd(sw),pts,sand:1});else if(kind==='wall')res.walls.push({w:rnd(sw),pts})}}
   }
   /* Beschriftungen: Texte untereinander zusammenführen */
   const raw=[];for(const t of S.querySelectorAll('text')){if(t.closest('clipPath,defs'))continue;const bb=t.getBBox();const c=tf(t,bb.x+bb.width/2,bb.y+bb.height/2),m=inv.multiply(t.getScreenCTM()),fs=parseFloat(getComputedStyle(t).fontSize)*Math.sqrt(Math.abs(m.a*m.d-m.b*m.c));
-    raw.push({t:t.textContent.normalize('NFKC').replace(/\s+/g,' ').trim(),x:c[0]/F,y:c[1]/F,rot:Math.round(Math.atan2(m.b,m.a)*180/Math.PI),fs:fs/F,col:hex(getComputedStyle(t).fill)})}
+    const q0=tf(t,bb.x,bb.y+bb.height/2),q1=tf(t,bb.x+bb.width,bb.y+bb.height/2),rr=Math.atan2(m.b,m.a),dx=Math.cos(rr),dy=Math.sin(rr);
+    raw.push({t:t.textContent.normalize('NFKC').replace(/\s+/g,' ').trim(),x:c[0]/F,y:c[1]/F,a0:(q0[0]*dx+q0[1]*dy)/F,a1:(q1[0]*dx+q1[1]*dy)/F,pp:(-c[0]*dy+c[1]*dx)/F,rot:Math.round(rr*180/Math.PI),fs:fs/F,col:hex(getComputedStyle(t).fill)})}
+  /* Buchstabenfragmente derselben Zeile (auch gedrehte Texte) zusammenfügen: Affinity zerlegt manche Texte, z. B. "P" + "-Mart" */
+  for(let again=true;again;){again=false;raw.sort((p,q)=>p.rot-q.rot||p.pp-q.pp||p.a0-q.a0);for(let i=0;i<raw.length&&!again;i++){const a=raw[i];if(!a.t)continue;for(let j=0;j<raw.length;j++){const b=raw[j];if(i===j||!b.t||b.rot!==a.rot)continue;const gap=b.a0-a.a1;
+    if(Math.abs(b.pp-a.pp)<a.fs*.45&&gap>=-a.fs*.3&&gap<=a.fs*.7&&b.a0>=a.a0){raw[i]={...a,t:a.t+(gap>a.fs*.28?' ':'')+b.t,x:(a.x+b.x)/2,y:(a.y+b.y)/2,pp:(a.pp+b.pp)/2,a1:Math.max(a.a1,b.a1)};raw.splice(j,1);again=true;break}}}}
   const used=new Set(),labs=[];raw.forEach((a,i)=>{if(used.has(i)||!a.t)return;const grp=[a];used.add(i);let grew=true;
     while(grew){grew=false;raw.forEach((c,j)=>{if(used.has(j)||!c.t||c.rot!==a.rot||a.rot!==0)return;for(const g of grp){const dy=Math.abs(c.y-g.y);/* nächste Zeile: Zeilenabstand ca. 1,2 x Schriftgröße, fast gleiche Mitte */if(dy>=g.fs*.9&&dy<=g.fs*1.7&&Math.abs(c.x-g.x)<=g.fs*2.5){grp.push(c);used.add(j);grew=true;break}}})}
     grp.sort((p,q)=>p.y-q.y);labs.push({t:grp.map(g=>g.t).join(' ').replace(/\s*\/\s*/g,' / ').replace(/ +/g,' ').trim(),x:rnd(grp.reduce((s,g)=>s+g.x,0)/grp.length),y:rnd(grp.reduce((s,g)=>s+g.y,0)/grp.length),rot:a.rot})});
