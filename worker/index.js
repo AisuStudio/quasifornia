@@ -1,3 +1,4 @@
+import {musikList,musikFile} from './musik.js';
 export {Room} from './room.js';
 export {Stats} from './stats.js';
 // Passwortschutz für die ganze Seite (inklusive Song). Läuft in Cloudflare vor den statischen Dateien.
@@ -43,6 +44,9 @@ export default{
       if(!env.GRAF)return new Response('Speicher nicht eingerichtet',{status:503,headers:NOSTORE});
       const stub=env.GRAF.get(env.GRAF.idFromName('main'));
       return stub.fetch(new Request(url,request))}
+    /* Musik aus dem R2-Bucket (nur mit Seitenpasswort) */
+    if(url.pathname==='/api/musik'&&request.method==='GET')return musikList(env);
+    if(url.pathname.startsWith('/musik/')&&(request.method==='GET'||request.method==='HEAD')){let key='';try{key=decodeURIComponent(url.pathname.slice(7))}catch(e){}return musikFile(env,request,key)}
     if(url.pathname==='/'||url.pathname==='/index.html')url.pathname='/kuesten-quest.html';
     const res=await env.ASSETS.fetch(new Request(url,request));
     const out=new Response(res.body,res);

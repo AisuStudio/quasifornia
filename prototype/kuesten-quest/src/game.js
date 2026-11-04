@@ -252,13 +252,27 @@ function setQuest(title,count){[...$('pips').children].forEach((p,i)=>p.style.di
 
 /* ---------- Ton ---------- */
 let AC=null;
-/* Soundtrack: Datei "em-ocean.m4a" liegt neben der Seite (nicht im Repo). Fehlt sie, bleibt es still. */
-let G0sfx=false;const MUSE={paused:false,vol:.7};try{const s=JSON.parse(localStorage.getItem('kq-mus')||'null');if(s){MUSE.paused=!!s.paused;if(typeof s.vol==='number')MUSE.vol=Math.max(0,Math.min(1,s.vol));G0sfx=s.sfx===false}}catch(e){}
-function musSave(){try{localStorage.setItem('kq-mus',JSON.stringify({paused:MUSE.paused,vol:MUSE.vol,sfx:!G.muted}))}catch(e){}}
-const MUS=new Audio();MUS.preload='none';MUS.loop=true;MUS.volume=MUSE.vol;MUS.src='em-ocean.m4a';MUS.started=false;
+/* Soundtrack: Titelliste. Ohne Server gibt es nur "em-ocean.m4a" neben der Seite. Mit dem R2-Bucket (Worker) kommen alle Songs von /api/musik und werden von /musik/<datei> gestreamt. */
+let G0sfx=false;const MUSE={paused:false,vol:.7,key:'',i:0};try{const s=JSON.parse(localStorage.getItem('kq-mus')||'null');if(s){MUSE.paused=!!s.paused;if(typeof s.vol==='number')MUSE.vol=Math.max(0,Math.min(1,s.vol));if(typeof s.key==='string')MUSE.key=s.key;G0sfx=s.sfx===false}}catch(e){}
+function musSave(){try{localStorage.setItem('kq-mus',JSON.stringify({paused:MUSE.paused,vol:MUSE.vol,sfx:!G.muted,key:MUSE.key}))}catch(e){}}
+const MUS_OCEAN={key:'em-ocean.m4a',title:"em'ocean",artist:'Packed Rich feat. you_see, ndfloat, timekilla0118',info:'DJ/Cuts: punch_float · Album: The High End Theory (2023) · Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio',src:'em-ocean.m4a'};
+let MUSL=[MUS_OCEAN];
+const musEsc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MUS=new Audio();MUS.preload='none';MUS.loop=false;MUS.volume=MUSE.vol;MUS.src='em-ocean.m4a';MUS.started=false;
 function musGo(){if(MUS.started||MUS.dead||MUSE.paused)return;MUS.started=true;MUS.play().catch(()=>{MUS.started=false})}
-MUS.addEventListener('error',()=>{if(!MUS.alt){MUS.alt=1;MUS.src='em-ocean.mp3';if(MUS.started){MUS.started=false;musGo()}}else MUS.dead=true});
-MUS.addEventListener('playing',()=>{const n=$('np');if(!n||MUS.credited)return;MUS.credited=true;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),9000)});
+function musSet(i,play){MUSE.i=((i%MUSL.length)+MUSL.length)%MUSL.length;const t=MUSL[MUSE.i];MUS.alt=0;MUS.credited=false;MUS.src=t.src;MUSE.key=t.key;musSave();if(play&&!MUSE.paused){MUS.started=true;MUS.play().catch(()=>{MUS.started=false})}if(typeof rpRender==='function'&&INV.open)rpRender()}
+function musNext(d){if(MUSL.length<2){MUS.currentTime=0;if(!MUSE.paused)MUS.play().catch(()=>{});return}musSet(MUSE.i+d,true)}
+MUS.addEventListener('ended',()=>musNext(1));
+MUS.addEventListener('error',()=>{const t=MUSL[MUSE.i]||MUS_OCEAN;if(t.src==='em-ocean.m4a'&&!MUS.alt){MUS.alt=1;MUS.src='em-ocean.mp3';if(MUS.started){MUS.started=false;musGo()}return}
+  MUS.fail=(MUS.fail||0)+1;if(MUSL.length<2||MUS.fail>MUSL.length+1){MUS.dead=true;return}musNext(1)});
+MUS.addEventListener('playing',()=>{MUS.fail=0;const n=$('np'),t=MUSL[MUSE.i]||MUS_OCEAN;if(!n||MUS.credited)return;MUS.credited=true;n.innerHTML='<b>♪ '+musEsc(t.title)+'</b>'+(t.artist?'<br>'+musEsc(t.artist):'')+(t.info?'<br>'+musEsc(t.info):'');n.classList.add('on');setTimeout(()=>n.classList.remove('on'),9000)});
+/* Titelliste vom Server holen (nur wo der Worker mit R2 läuft). Fehlt sie, bleibt es bei em'ocean. */
+function musLoad(){try{fetch('/api/musik',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!Array.isArray(j.tracks)||!j.tracks.length)return;
+  const L=j.tracks.map(t=>/^em-?ocean\./i.test(t.key)?{...MUS_OCEAN,key:t.key,src:'/musik/'+encodeURIComponent(t.key)}:{key:t.key,title:t.title,artist:t.artist||'Packed Rich',info:t.info||'',src:'/musik/'+encodeURIComponent(t.key)});
+  L.sort((a,b)=>(/^em-?ocean/i.test(b.key)?1:0)-(/^em-?ocean/i.test(a.key)?1:0));
+  const cur=MUSL[MUSE.i]?MUSL[MUSE.i].key:'';MUSL=L;let k=L.findIndex(t=>t.key===MUSE.key);if(k<0)k=L.findIndex(t=>t.key===cur);if(k<0)k=0;MUSE.i=k;
+  /* läuft gerade em-ocean aus der Seite, nicht neu starten: Quelle nur tauschen, wenn noch nichts gespielt wird */
+  if(!MUS.started){MUS.alt=0;MUS.src=L[k].src;MUSE.key=L[k].key}if(typeof rpRender==='function'&&INV.open)rpRender()}).catch(()=>{})}catch(e){}}
 function ac(){musGo();if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=false}}if(AC&&AC.state==='suspended')AC.resume();return AC}
 function tone(f,d=.15,type='square',vol=.06,slide=0,delay=0){if(G.muted)return;const A=ac();if(!A)return;const t=A.currentTime+delay,o=A.createOscillator(),g=A.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(A.destination);o.start(t);o.stop(t+d+.02)}
 const SFX={collect(n){[0,4,7,12].forEach((s,i)=>tone(440*Math.pow(2,(s+n*2)/12),.12,'square',.05,0,i*.06))},jump(){tone(260,.14,'square',.05,320)},boost(){tone(180,.4,'sawtooth',.05,700)},thud(){tone(120,.2,'sine',.14,-80)},
@@ -564,7 +578,7 @@ function toggleSfx(){G.muted=!G.muted;musSave();if(typeof rpRender==='function'&
 addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GFOPEN&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
-$('b-snd').onclick=toggleSnd;musUi();
+$('b-snd').onclick=toggleSnd;musUi();musLoad();
 [['t-left','left'],['t-right','right'],['t-gas','up'],['t-brake','down']].forEach(([id,k])=>{const b=$(id),vert=k==='up'||k==='down',set=v=>{if(vert){KR[k]=v;kSync()}else K[k]=v};b.addEventListener('pointerdown',e=>{e.preventDefault();set(1);b.classList.add('on');ac()});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>{set(0);b.classList.remove('on')}))});
 $('t-jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});
 if(matchMedia('(pointer:coarse)').matches)$('touch').classList.add('on');
@@ -1096,10 +1110,13 @@ function rpRender(){const root=document.getElementById('rp-tabs');if(!root)retur
      +ED_SLOTS.map(([sl,sn])=>`<h3 class="edh">${sn}</h3><div class="skgrid">`+ED_ITEMS.filter(x=>x.slot===sl).map(x=>{const own=ED.owned.has(x.id),on=ED.on[x.slot]===x.id;return `<div class="sk${on?' on':''}"><b>${x.name}</b><span>${own?(on?'Angelegt':'Im Besitz'):x.price+' Scoops'}</span>${own?`<button type="button" data-t="${x.id}">${on?'Ablegen':'Anlegen'}</button>`:`<button type="button" data-y="${x.id}"${scCan(x.price)&&SHOP.in?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>').join('')+'</div></div>';
     edi.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>edToggle(b.dataset.t));edi.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{if(edBuy(b.dataset.y))edToggle(b.dataset.y)});
     edi.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const [sl,hx]=b.dataset.c.split(':');if(hx&&sl!=='skin'&&!ED.ownC.has(sl+':'+hx)&&!SHOP.in){toast('Neue Farben gibt es im P-Mart',1400);return}edColor(sl,hx||null)})}
-  const mus=document.getElementById('rp-mus');if(mus&&SC.tab==='mus'){mus.innerHTML=`<div class="np2"><b>♪ em'ocean</b><span>Packed Rich feat. you_see, ndfloat, timekilla0118</span><span>DJ/Cuts: punch_float</span><span>Album: The High End Theory (2023)</span><span>Engineered/mastered by @_yasu2000 · Cover: Aisu.Studio</span></div>
-   <div class="plr"><button type="button" class="plbtn" id="pl-play" aria-label="${MUSE.paused?'Abspielen':'Pause'}">${MUSE.paused?'▶':'❚❚'}</button><div class="plvol"><label for="pl-vol">Lautstärke</label><input type="range" id="pl-vol" min="0" max="100" value="${Math.round(MUSE.vol*100)}"></div></div>
+  const mus=document.getElementById('rp-mus');if(mus&&SC.tab==='mus'){const mt=MUSL[MUSE.i]||MUS_OCEAN;mus.innerHTML=`<div class="np2"><b>♪ ${musEsc(mt.title)}</b>${mt.artist?'<span>'+musEsc(mt.artist)+'</span>':''}${mt.info?'<span>'+musEsc(mt.info)+'</span>':''}</div>
+   <div class="plr">${MUSL.length>1?'<button type="button" class="plbtn" id="pl-prev" aria-label="Zurück">⏮</button>':''}<button type="button" class="plbtn" id="pl-play" aria-label="${MUSE.paused?'Abspielen':'Pause'}">${MUSE.paused?'▶':'❚❚'}</button>${MUSL.length>1?'<button type="button" class="plbtn" id="pl-next" aria-label="Weiter">⏭</button>':''}<div class="plvol"><label for="pl-vol">Lautstärke</label><input type="range" id="pl-vol" min="0" max="100" value="${Math.round(MUSE.vol*100)}"></div></div>
    <div class="plr"><button type="button" class="plsfx" id="pl-sfx" aria-pressed="${!G.muted}">Effekte (Sprünge, Tricks, Sammeln): ${G.muted?'aus':'an'} · N</button></div>
-   <p class="sub">M schaltet die Musik, N die Effekte. Weitere Songs folgen, wenn die Artists zugestimmt haben.</p>`;
+   ${MUSL.length>1?'<div class="trk">'+MUSL.map((x,i)=>`<button type="button" data-i="${i}" aria-pressed="${i===MUSE.i}">${musEsc(x.title)}</button>`).join('')+'</div>':''}
+   <p class="sub">M schaltet die Musik, N die Effekte.</p>`;
+   mus.querySelectorAll('.trk button').forEach(b=>b.onclick=()=>{MUSE.paused=false;musSet(+b.dataset.i,true);musUi()});
+   const pv=mus.querySelector('#pl-prev'),nx=mus.querySelector('#pl-next');if(pv)pv.onclick=()=>musNext(-1);if(nx)nx.onclick=()=>musNext(1);
    mus.querySelector('#pl-play').onclick=()=>toggleSnd();mus.querySelector('#pl-sfx').onclick=()=>toggleSfx();
    mus.querySelector('#pl-vol').oninput=e=>{MUSE.vol=+e.target.value/100;MUS.volume=MUSE.vol;musSave()}}
   const key=document.getElementById('rp-key');if(key&&SC.tab==='key')key.innerHTML=`<div class="keys2"><kbd>W</kbd><span>Gas geben (S bremsen)</span><kbd>A D</kbd><span>Lenken</span><kbd>Leertaste</kbd><span>Springen (Ollie). An der Bordsteinkante: Curb Grind. Im Grind: abspringen</span><kbd>↑ · Shift</kbd><span>Kickflip</span><kbd>← · Q</kbd><span>Pop Shove-it</span><kbd>→ · R</kbd><span>360 Flip</span><kbd>Klick · F · E</kbd><span>Skateboard werfen (auch auf Zombies und Geister)</span><kbd>Enter</kbd><span>Aktion (reden, einsteigen, Leiter, Aufzug, Wand besprühen)</span><kbd>I</kbd><span>Rarepod öffnen und schließen (pausiert das Spiel)</span><kbd>M</kbd><span>Musik an oder aus</span><kbd>N</kbd><span>Effekte an oder aus</span><kbd>Esc</kbd><span>Fenster schließen</span></div>`}
