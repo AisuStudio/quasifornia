@@ -24,7 +24,7 @@ Veröffentlichte Version: Artifact `https://claude.ai/artifact/CydYVrahez1Fq5JDY
 - Der Snapshot-Branch `snapshot-vor-sohnemann-2026-10-30` zeigt den Stand vorher.
 
 ## Musik
-`dist/em-ocean.m4a`: em'ocean von Packed Rich feat. you_see, ndfloat, timekilla0118. DJ/Cuts: punch_float. Engineered/mastered by @_yasu2000. Album: The High End Theory (2023). Cover: Aisu.Studio. Genutzt mit Zustimmung von Packed Rich; weitere Tracks erst nach Freigabe.
+Die Musik liegt im Cloudflare-R2-Bucket `sound` (nicht im Repo, Worker liefert sie unter `/musik/<datei>`): em'ocean von Packed Rich feat. you_see, ndfloat, timekilla0118. DJ/Cuts: punch_float. Engineered/mastered by @_yasu2000. Album: The High End Theory (2023). Cover: Aisu.Studio. Genutzt mit Zustimmung von Packed Rich; weitere Tracks erst nach Freigabe.
 
 ## Passwortschutz (Cloudflare)
 `worker/index.js` schützt die ganze Seite inklusive Song mit einem Passwort (HTTP-Anmeldung, Benutzername egal). Das Passwort steht nicht im Repo: In Cloudflare unter Workers & Pages > quasifornia > Settings > Variables and Secrets ein Secret namens `SITE_PASSWORD` anlegen. Ohne dieses Secret bleibt die Seite gesperrt (Status 503). Die Startseite ist `/` und zeigt `kuesten-quest.html`.

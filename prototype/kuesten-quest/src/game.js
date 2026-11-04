@@ -252,7 +252,7 @@ function setQuest(title,count){[...$('pips').children].forEach((p,i)=>p.style.di
 
 /* ---------- Ton ---------- */
 let AC=null;
-/* Soundtrack: Titelliste. Ohne Server gibt es nur "em-ocean.m4a" neben der Seite. Mit dem R2-Bucket (Worker) kommen alle Songs von /api/musik und werden von /musik/<datei> gestreamt. */
+/* Soundtrack: Titelliste. Songs liegen im R2-Bucket (nicht im Repo); fehlt der Server oder der Bucket, bleibt es still. Mit dem R2-Bucket (Worker) kommen alle Songs von /api/musik und werden von /musik/<datei> gestreamt. */
 let G0sfx=false;const MUSE={paused:false,vol:.7,key:'',i:0};try{const s=JSON.parse(localStorage.getItem('kq-mus')||'null');if(s){MUSE.paused=!!s.paused;if(typeof s.vol==='number')MUSE.vol=Math.max(0,Math.min(1,s.vol));if(typeof s.key==='string')MUSE.key=s.key;G0sfx=s.sfx===false}}catch(e){}
 /* Deck-Designs (Popsicle-Grafiken aus dem R2-Bucket "designs", Ordner decks/): ein Design wird auf die Deck-Oberseite gelegt */
 const DECK={list:[],key:'',tex:null,mat:null,loaded:false,busy:false};try{DECK.key=localStorage.getItem('kq-deck')||''}catch(e){}

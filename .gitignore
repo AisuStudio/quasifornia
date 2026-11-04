@@ -8,3 +8,8 @@ prototype/kuesten-quest/*.png
 
 # lokaler Cloudflare-Worker (npx wrangler dev)
 .wrangler/
+
+# Songs und Rechte-Dateien gehören nicht ins öffentliche Repo (Cloudflare R2: Buckets sound und designs)
+Uploads/
+prototype/kuesten-quest/dist/*.m4a
+prototype/kuesten-quest/dist/*.mp3
