@@ -15,8 +15,8 @@ function grafInvHTML(){const have=GF_COL.filter(([c])=>(GF.cans[c]||0)>0);
   return have.map(([c,n])=>{const f=GF.cans[c]/GF_INK;return `<div class="slot-i got"><div class="ic">${grafCanSvg(c,f)}</div><b>Sprühdose ${n}</b><span>Farbe: ${Math.max(1,Math.round(f*100))}%</span><em>Wand besprühen (Enter an einer Graffiti-Wand)</em></div>`}).join('')}
 function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port Lupo (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
   return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)&&SHOP.in?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
-/* Graffiti bleiben 48 Stunden (mindestens 24). Mit Server: dort gespeichert und für alle sichtbar; ohne Server: nur im Browser. */
-const GF_TTL=48*3600*1000;
+/* Graffiti bleiben vorerst ein Jahr (früher 48 Stunden). Mit Server: dort gespeichert und für alle sichtbar; ohne Server: nur im Browser. */
+const GF_TTL=365*24*3600*1000;  /* vorerst fast dauerhaft (früher 48 Stunden) */
 function grafDraw(p,d){const im=new Image();im.onload=()=>{p.ctx.clearRect(0,0,GF_W,GF_H);p.ctx.drawImage(im,0,0);p.tex.needsUpdate=true};im.src=d}
 function grafLegal(id){return /^w\d$/.test(id)}
 function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const tk='kq-graf-t-'+p.id;let t=Number(localStorage.getItem(tk))||0;if(!t){t=Date.now();localStorage.setItem(tk,String(t))}

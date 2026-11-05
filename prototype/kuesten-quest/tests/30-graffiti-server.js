@@ -4,7 +4,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const store=new Map();let puts=0;
  const mock=async ctx=>{await ctx.route('**/api/graffiti**',async r=>{const req=r.request(),m=new URL(req.url()).pathname.match(/^\/api\/graffiti(?:\/(.+))?$/),id=m&&m[1],now=Date.now();
-   if(!id){const items={};store.forEach((v,k)=>{if(now-v.t<48*3600*1000)items[k]=v.t});return r.fulfill({json:{now,ttl:48*3600*1000,items}})}
+   if(!id){const items={};store.forEach((v,k)=>{if(now-v.t<365*24*3600*1000)items[k]=v.t});return r.fulfill({json:{now,ttl:365*24*3600*1000,items}})}
    if(req.method()==='PUT'){puts++;store.set(id,{t:now,png:req.postData()});return r.fulfill({json:{t:now}})}
    const v=store.get(id);return v?r.fulfill({body:v.png,contentType:'text/plain'}):r.fulfill({status:404,body:'weg'})})};
  const open=async()=>{const ctx=await b.newContext();await mock(ctx);await ctx.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',e.message));
@@ -19,7 +19,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  /* 3 zweiter Spieler sieht das Bild */
  const p2=await open();
  console.log('Spieler 2',JSON.stringify(await p2.evaluate(async F=>{const q=__qa;await q.grafSync();await new Promise(r=>setTimeout(r,600));const pn=q.HUB.graf.panels.find(x=>x.id===F.id);if(!pn)return {panel:false};const d=pn.ctx.getImageData(0,0,128,64).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>200&&d[i]<80&&d[i+1]>190)n++;return {panel:true,tuerkisPixel:n}},F)));
- /* 4 Ablauf: Server wirft alte Bilder raus */
- store.get(F.id).t=Date.now()-49*3600*1000;
- console.log('Nach 49 h',JSON.stringify(await p2.evaluate(async F=>{const q=__qa;q.GFSRV.retryAt=0;await q.grafSync();return {panelNoch:!!q.HUB.graf.panels.find(x=>x.id===F.id)}},F)));
+ /* 4 Ablauf: Server wirft Bilder nach einem Jahr raus (früher 48 Stunden) */
+ store.get(F.id).t=Date.now()-366*24*3600*1000;
+ console.log('Nach 366 Tagen',JSON.stringify(await p2.evaluate(async F=>{const q=__qa;q.GFSRV.retryAt=0;await q.grafSync();return {panelNoch:!!q.HUB.graf.panels.find(x=>x.id===F.id)}},F)));
  await b.close();srv.close()})

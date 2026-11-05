@@ -60,7 +60,7 @@ export default{
     return out}};
 
 /* ---- Durable Object: speichert die Graffiti-Bilder (PNG als Text) mit Zeitstempel, Ablauf nach 48 Stunden ---- */
-const GRAF_TTL=48*3600*1000,GRAF_MAX=60000,GRAF_ID=/^(w[1-9]|f\d{1,3}-\d{1,2}-\d{1,2})$/,GRAF_PNG=/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/;
+const GRAF_TTL=365*24*3600*1000,/* vorerst fast dauerhaft (früher 48 Stunden); später evtl. Reinigungsjob */GRAF_MAX=60000,GRAF_ID=/^(w[1-9]|f\d{1,3}-\d{1,2}-\d{1,2})$/,GRAF_PNG=/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/;
 export class GrafStore{
   constructor(state){this.state=state}
   async fetch(request){
