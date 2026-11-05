@@ -70,3 +70,5 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 **Karte, Musik, Decks (45, 46, 47):** 45 prüft die neue Karte (17 Bauplätze mit Typ und Umriss, Skatepark mit Pool, Zaun und Tor, Backoffice). 46 und 47 brauchen den lokalen Worker mit lokalen R2-Buckets (nach Änderungen an `wrangler.jsonc` neu starten): 46 prüft Musikliste, Titel, Streaming mit Range, ungültige Namen und Passwortschutz, 47 dasselbe für die Decks und dass das Design auf dem Board liegt.
 
 **UBIQ (48, 37):** 48 prüft Kauf und Nachfüllen im P-Mart, die drei Glitch-Stellen, Reparatur (Ladung, Scoops, Ort, Speicher), leere Dose und die automatische Erkennung einer verschränkten Sammelstelle samt Meldung an `/stats`. 37 prüft zusätzlich die Auswertung der Glitch-Ereignisse.
+
+**Geteilte Glitches (49):** braucht den lokalen Worker. Prüft die Schnittstelle (nur der Erste gewinnt, auch gleichzeitig, ungültige Kennungen, Passwortschutz, Zurücksetzen nur mit Auswertungs-Passwort) und zwei Browser: A repariert und bekommt Scoops, B versucht es zu spät und bekommt nichts, verliert keine Ladung und sieht den Glitch als repariert; der Abgleich zeigt B Reparaturen von A.

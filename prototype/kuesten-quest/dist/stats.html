@@ -112,7 +112,7 @@ svg.map{width:100%;height:auto;background:var(--surface);border:1px solid var(--
 </header>
 <div id="root"><p class="empty">Lade …</p></div>
 <p class="note">Aktualisiert sich alle 30 Sekunden. Gezählt werden Sitzungen, Spielzeit (nur bei sichtbarem Spiel), Aufträge, Scoops mit Grund, Fehler im Browser und Hänger (Gas gedrückt, aber man kommt nicht weiter). Rohdaten: <a id="raw" href="/api/stats/summary?days=14">JSON</a> ·
-<button id="reset" type="button" style="font-size:12px;padding:3px 8px">Alle Daten löschen</button></p>
+<button id="reset" type="button" style="font-size:12px;padding:3px 8px">Alle Daten löschen</button> <button id="glreset" type="button" style="font-size:12px;padding:3px 8px">Glitch-Stände zurücksetzen</button></p>
 </div>
 <div class="tip" id="tip" role="tooltip"></div>
 <script>
@@ -189,6 +189,7 @@ function render(d){
 }
 async function load(){try{const r=await fetch('/api/stats/summary?days='+$('#days').value,{cache:'no-store'});if(!r.ok)throw new Error(r.status);const d=await r.json();render(d);$('#upd').textContent='Stand '+new Date().toLocaleTimeString('de-DE')}catch(e){root.innerHTML='<p class="err">Die Zahlen konnten nicht geladen werden ('+esc(e.message)+'). Ist die Auswertung eingerichtet?</p>'}}
 $('#days').onchange=load;$('#reload').onclick=load;
+$('#glreset').onclick=async()=>{if(!confirm('Alle Glitches wieder als kaputt markieren? Dann können alle sie erneut reparieren.'))return;const r=await fetch('/api/glitch/reset',{method:'POST'});alert(r.ok?'Zurückgesetzt.':'Fehler '+r.status)};
 $('#reset').onclick=async()=>{if(!confirm('Wirklich ALLE gesammelten Daten löschen? Das lässt sich nicht rückgängig machen.'))return;await fetch('/api/stats/reset',{method:'POST'});load()};
 /* Tooltip für Säulen und Balken */
 function showTip(e){const t=e.target.closest('[data-tip]');if(!t){tip.style.display='none';return}tip.textContent=t.dataset.tip;tip.style.display='block';const x=(e.clientX!==undefined&&e.type!=='focusin')?e.clientX:t.getBoundingClientRect().left+10,y=(e.clientY!==undefined&&e.type!=='focusin')?e.clientY:t.getBoundingClientRect().top;tip.style.left=Math.min(innerWidth-tip.offsetWidth-8,x+12)+'px';tip.style.top=Math.max(8,y-tip.offsetHeight-12)+'px'}

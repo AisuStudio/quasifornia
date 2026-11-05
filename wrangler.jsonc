@@ -2,9 +2,9 @@
   "name": "quasifornia",
   "main": "worker/index.js",
   "compatibility_date": "2026-10-01",
-  "durable_objects": { "bindings": [ { "name": "GRAF", "class_name": "GrafStore" }, { "name": "ROOM", "class_name": "Room" }, { "name": "STATS", "class_name": "Stats" } ] },
+  "durable_objects": { "bindings": [ { "name": "GRAF", "class_name": "GrafStore" }, { "name": "ROOM", "class_name": "Room" }, { "name": "STATS", "class_name": "Stats" }, { "name": "GLITCH", "class_name": "Glitch" } ] },
   "r2_buckets": [ { "binding": "MUSIK", "bucket_name": "sound" }, { "binding": "DESIGNS", "bucket_name": "designs" } ],
-  "migrations": [ { "tag": "v1", "new_sqlite_classes": [ "GrafStore" ] }, { "tag": "v2", "new_sqlite_classes": [ "Room" ] }, { "tag": "v3", "new_sqlite_classes": [ "Stats" ] } ],
+  "migrations": [ { "tag": "v1", "new_sqlite_classes": [ "GrafStore" ] }, { "tag": "v2", "new_sqlite_classes": [ "Room" ] }, { "tag": "v3", "new_sqlite_classes": [ "Stats" ] }, { "tag": "v4", "new_sqlite_classes": [ "Glitch" ] } ],
   "assets": {
     "directory": "./prototype/kuesten-quest/dist",
     "binding": "ASSETS",
