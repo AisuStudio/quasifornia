@@ -141,7 +141,7 @@ function mpWalls(add){HUB.walls=[];const stone=MT('#d6cfe0'),cap=MT('#b8b0c8');(
     P.forEach(p=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(th*.72,th*.72,2.9,10),cap);c.position.set(p[0],.6+1.45,p[1]);c.castShadow=true;c.userData.noBake=true;add(c)})})}
 function mpDressUp(add){const R=mulberry(2468);mpLighthouse(add);mpBenches(add);mpWalls(add);if(typeof bauPlotsFromMap==='function')bauPlotsFromMap();HUB.courtTreesRemoved=HUB.courtTreesRemoved||0;
   /* Autos: auf dem Parkplatz in Reihen und am Straßenrand der breiten Promenade */
-  const car=(x,z,ry,k,col)=>{const c=mpRetroCar(k,col);c.position.set(x,1.3,z);c.rotation.y=ry;add(c);addOutlines(c,'prop');const fx=Math.sin(ry),fz=Math.cos(ry);[-1.4,0,1.4].forEach(d=>mpMarkDisc(x+fx*d,z+fz*d,1.15));HUB.cars=(HUB.cars||[]).concat([{x,z}])};
+  const car=(x,z,ry,k,col)=>{const c=mpRetroCar(k,col);c.position.set(x,1.3,z);c.rotation.y=ry;add(c);addOutlines(c,'prop');const fx=Math.sin(ry),fz=Math.cos(ry);[-1.4,0,1.4].forEach(d=>mpMarkDisc(x+fx*d,z+fz*d,1.15));HUB.cars=(HUB.cars||[]).concat([{x,z,k,ry}])};
   HUB.cars=[];let n=0;
   MAPD.lots.forEach(l=>{const ring=l.c[0],o=mpObb(ring),cu=Math.cos(o.a),su=Math.sin(o.a),ux=cu,uy=su,vx=-su,vy=cu;
     for(let u=-o.w/2+7;u<o.w/2-5;u+=6.2)for(let v=-o.h/2+9;v<o.h/2-6;v+=12){const x=o.cx+ux*u+vx*v,y=o.cy+uy*u+vy*v;if(!mpInPoly(ring,x,y)||!mpInPoly(ring,x+vx*6,y+vy*6)||!mpInPoly(ring,x-vx*6,y-vy*6)||R()<.4)continue;
