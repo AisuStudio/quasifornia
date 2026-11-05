@@ -13,6 +13,7 @@ const tmp=path.join(os.tmpdir(),'kq-stats-test.mjs');fs.copyFileSync(path.join(_
  ev('s1','stuck','',5,13,100,-44,0);ev('s1','stuck','',6,14,101,-45,0);ev('s1','unstick','',1,14,100,-44,0);ev('s1','pol','alarm',1,15);ev('s1','pol','erwischt',1,17);ev('s1','gr','illegal',300,14);
  ev('s2','start','0',1,0);ev('s2','q','sammeln',0,12);ev('s2','sc','Auftrag: Küsten-Eis',3,12);ev('s2','err','TypeError: x ist undefiniert',1,5,10,20,0);ev('s2','gr','legal',120,6);
  ev('s3','start','0',1,0);ev('s3','q','sammeln',1,2);ev('s3','q','tricks',1,4);ev('s3','sc','Auftrag: Küsten-Eis',8,2);ev('s3','sc','Auftrag: Trick-Serie',8,4);ev('s3','err','Versprechen: nope',1,3,0,0,1);ev('s3','ws','fehler',1,1);
+ ev('s1','glitch','fund:item',1,8,5,6,0);ev('s1','glitch','fix:wand',1,9,5,6,0);ev('s3','glitch','fix:wand',1,3,5,6,0);ev('s3','glitch','fix:brett',1,4,9,9,0);
  const r=summarize(S,E,now,14),ok=(n,c)=>console.log((c?'OK   ':'FEHLER ')+n);
  console.log('Online',JSON.stringify({n:r.online.count,name:r.online.players[0]&&r.online.players[0].name,raum:r.rooms}));
  ok('Online: genau Anton',r.online.count===1&&r.online.players[0].name==='Anton'&&r.rooms[0].room==='test');
@@ -22,6 +23,7 @@ const tmp=path.join(os.tmpdir(),'kq-stats-test.mjs');fs.copyFileSync(path.join(_
  const heute=r.perDay[r.perDay.length-1];ok('Heute: 2 Spieler, 2 Sitzungen, 25 min',heute.players===2&&heute.sessions===2&&heute.play===1500);
  ok('Gestern: 1 Spieler, 10 min',r.perDay[r.perDay.length-2].players===1&&r.perDay[r.perDay.length-2].play===600);
  ok('14 Tage in der Zeitreihe',r.perDay.length===14);ok('48 Stunden in der Stundenreihe',r.perHour.length===48);
+ ok('Glitches (UBIQ): 1 echter Fund, 3 Reparaturen, Wand durch 2 Spieler',r.glitch&&r.glitch.found===1&&r.glitch.fixed===3&&r.glitch.types.find(t=>t.type==='wand').players===2&&r.glitch.types.find(t=>t.type==='brett').fixed===1);
  const q=Object.fromEntries(r.quests.map(x=>[x.key,x]));ok('Quest "sammeln": 2 Spieler',q.sammeln.players===2);ok('Quest "tricks": 1 Spieler, Median 4 min',q.tricks.players===1&&q.tricks.median===4);
  ok('Quest sammeln: Median der Zeiten (5 und 2 min) = 3,5',q.sammeln.median===3.5);
  const f=Object.fromEntries(r.funnel.map(x=>[x.label,x.n]));ok('Trichter: 2 / 2 / 1 / 1 / 2 / 1 / 1 / 0',[f['Seite geöffnet'],f['Spiel gestartet'],f['Gegenstand gefunden'],f['Portal benutzt'],f['Erster Auftrag gelöst'],f['In der Unterwelt'],f['Serafin bezahlt'],f['Geist befreit']].join()==='2,2,1,1,2,1,1,0');

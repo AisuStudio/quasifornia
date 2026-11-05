@@ -1,7 +1,7 @@
 // Auswertung für die geschlossene Beta: sammelt anonyme Ereignisse der Spiele und rechnet sie für /stats zusammen.
 // Gespeichert wird in einem Durable Object mit SQLite (Sitzungen + Ereignisse), nach 90 Tagen wird aufgeräumt.
 // Das Spiel schickt alle 15 Sekunden ein kleines Paket (POST /api/stats), die Seite /stats holt /api/stats/summary.
-export const EV_TYPES=new Set(['start','lvl','q','sc','item','portal','err','stuck','unstick','fps','pol','gr','ws','trick','lad','bq','tower','shop','race']);
+export const EV_TYPES=new Set(['start','lvl','q','sc','item','portal','err','stuck','unstick','fps','pol','gr','ws','trick','lad','bq','tower','shop','race','glitch']);
 const DAY=86400000,KEEP=90*DAY,ONLINE=45000;
 const num=(v,lim,d)=>typeof v==='number'&&isFinite(v)?Math.max(-lim,Math.min(lim,v)):(d===undefined?null:d);
 const str=(v,n)=>String(v==null?'':v).replace(/[\u0000-\u001f]/g,' ').slice(0,n);
@@ -52,6 +52,8 @@ export function summarize(S,E,now,days){
   /* Hänger */
   const cell=new Map(),pts=[];E.filter(e=>e.type==='stuck'||e.type==='unstick').forEach(e=>{if(e.x==null)return;const cx=Math.round(e.x/16),cz=Math.round(e.z/16),k=cx+','+cz;let o=cell.get(k);if(!o)cell.set(k,o={x:cx*16,z:cz*16,stuck:0,unstick:0,pids:new Set()});o[e.type]++;const s=sess.get(e.sid);if(s)o.pids.add(s.pid);pts.push([Math.round(e.x),Math.round(e.z),e.type==='stuck'?1:2])});
   out.stuck={cells:[...cell.values()].map(o=>({x:o.x,z:o.z,stuck:o.stuck,unstick:o.unstick,players:o.pids.size})).sort((a,b)=>(b.stuck+b.unstick)-(a.stuck+a.unstick)).slice(0,20),points:pts.slice(-400)};
+  {const gm=new Map();E.filter(e=>e.type==='glitch').forEach(e=>{const [k,ty]=String(e.key).split(':');let o=gm.get(ty);if(!o)gm.set(ty,o={type:ty||'?',found:0,fixed:0,pids:new Set()});if(k==='fund')o.found++;else if(k==='fix'){o.fixed++;const s=sess.get(e.sid);if(s)o.pids.add(s.pid)}});
+    const L=[...gm.values()].map(o=>({type:o.type,found:o.found,fixed:o.fixed,players:o.pids.size}));out.glitch={types:L,found:L.reduce((a,o)=>a+o.found,0),fixed:L.reduce((a,o)=>a+o.fixed,0)}}
   /* Leistung */
   const perf={};['m','d'].forEach(d=>{const L=S.filter(s=>s.dev===d&&s.fpsn>0);const f=L.map(s=>s.fpssum/s.fpsn),slow=L.reduce((a,s)=>a+s.slow,0),fr=L.reduce((a,s)=>a+s.fr,0);perf[d]={sessions:L.length,medianFps:Math.round(median(f)*10)/10,lowShare:L.length?Math.round(f.filter(v=>v<30).length/L.length*100):0,slowShare:fr?Math.round(slow/fr*1000)/10:0}});out.perf=perf;
   const gp=new Map();S.forEach(s=>{if(s.gpu)gp.set(s.gpu,(gp.get(s.gpu)||0)+1)});out.gpus=[...gp.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6).map(([g,n])=>({gpu:g,n}));

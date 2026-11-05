@@ -1001,7 +1001,7 @@ function portLupoFinish(H){
   buildAtollQuestObjects();buildGingerLights();
   mpSky();
   HUB.cones.forEach(c=>addOutlines(c.o,'prop'));HUB.portals.forEach(p=>addOutlines(p.g,'actor'));HUB.items.forEach(it=>addOutlines(it.g,'actor'));
-  HUB.mm2=mpMiniBase();HUB.mmT=0;HUB.built=true;try{grafInitWorld()}catch(e){console.log('graf',e)}}
+  HUB.mm2=mpMiniBase();HUB.mmT=0;HUB.built=true;try{grafInitWorld()}catch(e){console.log('graf',e)}try{ubiqInitWorld()}catch(e){console.log('ubiq',e)}}
 
 /* ---------- Bewegung: Wasser und Gebäude über das Raster, Seitwärts-Gleiten an Kanten ---------- */
 function mpOk(X,Z){const r=.9;return mpWalk(X,Z)&&mpWalk(X+r,Z)&&mpWalk(X-r,Z)&&mpWalk(X,Z+r)&&mpWalk(X,Z-r)}

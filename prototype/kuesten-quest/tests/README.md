@@ -68,3 +68,5 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 **Läden und Bauen (43, 44):** 43 prüft den P-Mart-Innenraum (hinein, Regale und Kasse öffnen den Laden, Wände und Regale blockieren, hinaus vor die Tür, bei Polizei gesperrt). 44 prüft den Builder mit echten Mausklicks (setzen, stapeln, Fenster an der Wand, Rechtsklick, Zurück, Pinsel, Kamera ziehen, Speichern, Kollision, Belohnung nur einmal, Abbrechen, Neu laden).
 
 **Karte, Musik, Decks (45, 46, 47):** 45 prüft die neue Karte (17 Bauplätze mit Typ und Umriss, Skatepark mit Pool, Zaun und Tor, Backoffice). 46 und 47 brauchen den lokalen Worker mit lokalen R2-Buckets (nach Änderungen an `wrangler.jsonc` neu starten): 46 prüft Musikliste, Titel, Streaming mit Range, ungültige Namen und Passwortschutz, 47 dasselbe für die Decks und dass das Design auf dem Board liegt.
+
+**UBIQ (48, 37):** 48 prüft Kauf und Nachfüllen im P-Mart, die drei Glitch-Stellen, Reparatur (Ladung, Scoops, Ort, Speicher), leere Dose und die automatische Erkennung einer verschränkten Sammelstelle samt Meldung an `/stats`. 37 prüft zusätzlich die Auswertung der Glitch-Ereignisse.
