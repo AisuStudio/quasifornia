@@ -204,7 +204,7 @@ Die Stadt ist jetzt eine Halbinsel nach dem SVG des Nutzers (`prototype/kuesten-
 - **Vorher:** Rund um Port Lupo (Name noch offen) gibt es weitere Quests; Reihenfolge nicht erzwungen.
 - **Anknüpfungspunkte im Spiel:** Die Karte hat schon eine **Lagerhalle** und das **Backoffice (Anmeldung Lagerhalle)**, die Werkstatt könnte dort liegen. Sammelgegenstände (Funkzettel, Schraubendreher, USB-Stick, Handbuch) und der Baukasten (Teile, Farben) können für die Reparatur wiederverwendet werden. Die Robotik-Lernschritte passen zu "systemisches Denken" (Experiment statt Anleitung).
 - **Vorschlag zur Geschichte:** Emmets Fluchtmaschine schoss über das Ziel hinaus. Regelungstechnisch heißt das **Überschwingen**. Der Spieler lernt beim Bau, sein Fahrzeug **sauber zu regeln**, also das Gegenteil. Das gibt dem Lernpfad eine Bedeutung.
-- **Hinweis zum Namen:** "Mobile Suit" ist ein geschützter Begriff aus Gundam. Für Quasifornia einen eigenen Namen wählen (zum Beispiel Walker, Anzug, Mecha).
+- **Name (entschieden):** Der Roboter heißt **Mekkie** (Mecha). "Mobile Suit" ist ein geschützter Begriff aus Gundam und wird nicht verwendet. Der Name ist, wie alle Namen im Projekt, vorläufig, bis der Gesamtname feststeht.
 - **Offen:** Wo genau die Werkstatt liegt; was die Lernschritte im Einzelnen sind (Schaltkreise, Sensoren, Antriebe, Regelkreise); wie das Megalevel heißt und aussieht; wie viele Quests vorher Pflicht sind.
 
 ### Auswertung der Beta (Analytics, Stand 2026-11-03)
