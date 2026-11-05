@@ -22,4 +22,11 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
    q.P.speed=q.SPEED_MAX?q.SPEED_MAX*1.6:13;for(let i=0;i<40;i++){q.step(.03);q.P.speed=13}o.beiTempo=+q.PUSH.w.toFixed(2);
    q.K.up=0;q.P.speed=0;for(let i=0;i<40;i++)q.step(.03);o.ohneGas=+q.PUSH.w.toFixed(2);return o});
  console.log('Anstoßen',JSON.stringify(pu),pu.anstossBeiStart>.8&&pu.phasen>2&&pu.beiTempo<.05&&pu.ohneGas<.05);
+ /* Positions-Anzeige: Taste V, x, z, Winkel (0° = Norden), Klick kopiert */
+ const hud=await p.evaluate(async()=>{const q=__qa,o={};q.G.phase='play';q.P.x=-21.4;q.P.z=59.2;q.P.h=-Math.PI/2;q.POSH.on=false;q.posHudSet(false);return o});
+ await p.keyboard.press('v');await p.evaluate(()=>{__qa.posHudStep(.2);__qa.posHudStep(.2)});
+ const h1=await p.evaluate(()=>({an:__qa.POSH.on,text:document.getElementById('poshud').textContent,sichtbar:document.getElementById('poshud').style.display}));
+ console.log('Positions-Anzeige an',JSON.stringify(h1.text.split('\n')[0]),h1.an&&h1.sichtbar==='block'&&/x -21\.4\s+z 59\.2\s+Winkel 0° N\b/.test(h1.text)&&/Stand/.test(h1.text));
+ await p.evaluate(()=>{__qa.P.h=0;__qa.posHudStep(.2)});console.log('Blick nach Osten = 90°',/Winkel 90° O\b/.test(await p.evaluate(()=>document.getElementById('poshud').textContent)));
+ await p.keyboard.press('v');await p.evaluate(()=>{__qa.posHudStep(.2)});console.log('Taste V schaltet aus',await p.evaluate(()=>!__qa.POSH.on&&document.getElementById('poshud').style.display==='none'));
  await b.close();srv.close()})

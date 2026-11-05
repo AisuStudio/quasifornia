@@ -72,3 +72,5 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 **UBIQ (48, 37):** 48 prüft Kauf und Nachfüllen im P-Mart, die drei Glitch-Stellen, Reparatur (Ladung, Scoops, Ort, Speicher), leere Dose und die automatische Erkennung einer verschränkten Sammelstelle samt Meldung an `/stats`. 37 prüft zusätzlich die Auswertung der Glitch-Ereignisse.
 
 **Geteilte Glitches (49):** braucht den lokalen Worker. Prüft die Schnittstelle (nur der Erste gewinnt, auch gleichzeitig, ungültige Kennungen, Passwortschutz, Zurücksetzen nur mit Auswertungs-Passwort) und zwei Browser: A repariert und bekommt Scoops, B versucht es zu spät und bekommt nichts, verliert keine Ladung und sieht den Glitch als repariert; der Abgleich zeigt B Reparaturen von A.
+
+**Positions-Anzeige (in 42):** Taste V zeigt x, z, Blickwinkel (0° = Norden, im Uhrzeigersinn), Höhe, Ort und Stand; Klick kopiert die Zeile. Für die Glitch-Inventur.
