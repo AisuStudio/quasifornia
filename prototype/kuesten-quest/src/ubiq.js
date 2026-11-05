@@ -73,7 +73,7 @@ function ubiqStep(dt){UBQ.t+=dt;UBQ.srv.t-=dt;if(UBQ.srv.t<=0){UBQ.srv.t=45;ubqS
       const c=r<.5?'#00ffff':'#ff00ff';g.mats.forEach(o=>{o.m.emissive.set(c);o.m.emissiveIntensity=.35+Math.random()*.9})}}}
 /* ---- Aktion ---- */
 function ubiqActs(a){if(LV.id!==0||G.under)return;for(const g of UBQ.list){if(g.fixed||Math.hypot(P.x-g.x,P.z-g.z)>40)continue;
-  a.push({x:g.x,z:g.z,r:6.5,label:UBQ.ch>0?'UBIQ sprühen: '+g.label:'Glitch: '+g.label,pri:4,fn:()=>ubiqUse(g)})}}
+  a.push({x:g.x,z:g.z,r:6.5,label:UBQ.ch>0?'UBIQ sprühen: '+g.label:'Glitch: '+g.label,pri:9,fn:()=>ubiqUse(g)})}}
 function ubiqUse(g){if(g.fixed)return;if(UBQ.ch<=0){dlgStart('',UBQ.own?['Das flackert. Deine Dose UBIQ ist leer. Im P-Mart gibt es Nachschub.']:g.talkNo||g.talk);return}
   if(g.talk&&!g.seen){g.seen=true;dlgStart('',g.talk,()=>ubiqFix(g));return}ubiqFix(g)}
 function ubiqFix(g){if(g.fixed||g.busy||UBQ.ch<=0)return;g.busy=true;

@@ -31,4 +31,6 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
    it.x=cell[0];it.z=cell[1];q.STAT.q.length=0;q.UBQ.fixed.clear();q.ubiqInitWorld();const g=q.UBQ.list.find(x=>x.type==='item');o.erkannt=!!g;o.gemeldet=q.STAT.q.some(e=>e[0]==='glitch'&&/^fund:item/.test(e[1]));
    q.UBQ.own=true;q.UBQ.ch=3;g.seen=true;q.ubiqUse(g);o.nachher={zelle:q.mpAt(it.x,it.z),frei:q.mpWalk(it.x,it.z)};o.gemeldetFix=q.STAT.q.some(e=>e[0]==='glitch'&&/^fix:item/.test(e[1]));return o});
  console.log('Echte Verschränkung',JSON.stringify(echt),echt.erkannt&&echt.gemeldet&&echt.nachher.frei&&echt.gemeldetFix);
+ /* Stand im Rarepod (Steuerung): zeigt die Versionskennung des Builds */
+ const ver=await p.evaluate(()=>{const q=__qa;q.invToggle(true);q.rpTab('key');const t=document.getElementById('rp-key').textContent;return {zeile:(t.match(/Stand\s+\S+/)||[''])[0]}});console.log('Stand-Zeile',JSON.stringify(ver),/^Stand\s+\S+/.test(ver.zeile)&&!/undefined|\?$/.test(ver.zeile));
  await b.close();srv.close()})

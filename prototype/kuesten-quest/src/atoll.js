@@ -166,7 +166,7 @@ function stepAtoll(dt){
   else if(m)m.bl.visible=false;
   /* Aktion in der Nähe */
   let best=null,bd=1e9;
-  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5||LV.id===7))for(const a of curActs()){const d=Math.hypot(P.x-a.x,P.z-a.z)-(a.pri||0);if(d<a.r&&d<bd){bd=d;best=a}}
+  if(G.phase==='play'&&!ui&&(LV.id===0||LV.id===4||LV.id===5||LV.id===7))for(const a of curActs()){const dr=Math.hypot(P.x-a.x,P.z-a.z),d=dr-(a.pri||0);if(dr<a.r&&d<bd){bd=d;best=a}}
   ACT.cur=best;const el=$('act');if(best){el.hidden=false;el.firstElementChild.textContent=best.label}else el.hidden=true;
   if(LV.id===4)stepLevel4(dt);if(LV.id===5)stepIsland(dt)}
 
