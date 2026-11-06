@@ -10,7 +10,7 @@ const karEsc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function karOk(d){return d&&Array.isArray(d.cards)&&d.cards.length>0&&d.cards.every(c=>c&&Number.isInteger(c.id)&&typeof c.file==='string'&&typeof c.name==='string'&&c.rar>=1&&c.rar<=5)&&Array.isArray(d.tiers)&&d.tiers.length===5}
 async function karLoad(force){if(KAR.state==='lädt'||(KAR.state==='da'&&!force))return;KAR.state='lädt';
   try{const r=await fetch('/api/karten',{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();if(!karOk(d))throw new Error('Format');
-    d.packSize=7;d.packPrice=Math.max(1,Math.min(999,+d.packPrice||30));d.guarantee=Math.max(1,Math.min(5,+d.guarantee||3));KAR.data=d;KAR.state='da';KAR.err=''}
+    d.packSize=7;d.packPrice=Math.max(1,Math.min(999,+d.packPrice||2));d.guarantee=Math.max(1,Math.min(5,+d.guarantee||3));KAR.data=d;KAR.state='da';KAR.err=''}
   catch(e){KAR.data=null;KAR.state='fehlt';KAR.err=String(e&&e.message||e)}
   try{if(typeof rpRender==='function')rpRender()}catch(e){}}
 const karById=id=>KAR.data&&KAR.data.cards.find(c=>c.id===id);
