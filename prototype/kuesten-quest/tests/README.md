@@ -74,3 +74,5 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 **Geteilte Glitches (49):** braucht den lokalen Worker. Prüft die Schnittstelle (nur der Erste gewinnt, auch gleichzeitig, ungültige Kennungen, Passwortschutz, Zurücksetzen nur mit Auswertungs-Passwort) und zwei Browser: A repariert und bekommt Scoops, B versucht es zu spät und bekommt nichts, verliert keine Ladung und sieht den Glitch als repariert; der Abgleich zeigt B Reparaturen von A.
 
 **Positions-Anzeige (in 42):** Taste V zeigt x, z, Blickwinkel (0° = Norden, im Uhrzeigersinn), Höhe, Ort und Stand; Klick kopiert die Zeile. Für die Glitch-Inventur.
+
+**Rarepod-Kamera (50):** Foto mit Polaroid-Rahmen (JPEG, Ort, Datum, Koordinaten, Blickwinkel), Bild nicht leer, Galerie bleibt nach Neuladen (IndexedDB), Taste C, Reiter Fotos, Aktionen, Löschen. Mit lokalem Worker zusätzlich: "An den Raum zeigen" kommt bei anderen an, ungültige und zu große Fotos werden verworfen.

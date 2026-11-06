@@ -34,6 +34,7 @@ function multiMsg(m){
   else if(m.t==='skin'){const p=MULTI.peers.get(m.id);if(p){p.skin=m.skin;multiRemove(p,true)}}
   else if(m.t==='pong'){const rtt=performance.now()-m.c;if(rtt<MULTI.rtt+30){MULTI.rtt=Math.min(MULTI.rtt,rtt);MULTI.off=m.now+rtt/2-Date.now()}}
   else if(m.t==='chat'){if(typeof m.text==='string'&&m.text)termAdd('in',String(m.name||'?').slice(0,12),m.text.slice(0,200))}
+  else if(m.t==='foto'){if(typeof fotPeer==='function')fotPeer(m)}
   else if(m.t==='badpw'){const w=MULTI.ws;MULTI.ws=null;if(w){try{w.close()}catch(e){}}multiClear();const r=MULTI.room;MULTI.room=null;MULTI.pw='';MULTI.on=false;MULTI.state='aus';multiUi();toast('Falsches Passwort',2400);termAdd('sys','','Falsches Passwort für Raum "'+r+'". Mit /chat '+r+' passwort nochmal versuchen.')}
   else if(m.t==='pol'){if(typeof polNetCmd==='function')polNetCmd(m)}
   else if(m.t==='polz'){if(typeof polNetIn==='function')polNetIn(m)}

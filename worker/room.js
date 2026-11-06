@@ -10,7 +10,7 @@ export function cleanState(m){
   if(!m||m.t!=='s'||!num(m.x,3000)||!num(m.z,3000)||!num(m.y,500)||!num(m.h,100)||!num(m.v,100))return null;
   return {x:Math.round(m.x*100)/100,y:Math.round(m.y*100)/100,z:Math.round(m.z*100)/100,h:Math.round(m.h*1000)/1000,v:Math.round(m.v*10)/10,u:m.u?1:0,tr:m.tr&&typeof m.tr==='string'?m.tr.slice(0,10):0}}
 export class Room{
-  constructor(state){this.state=state;this.last=new Map();this.rate=new Map();this.inc=null;this.zrate=0;this.crate=new Map()}
+  constructor(state){this.state=state;this.last=new Map();this.rate=new Map();this.inc=null;this.zrate=0;this.crate=new Map();this.frate=new Map()}
   peers(){const out=[];for(const w of this.state.getWebSockets()){const a=w.deserializeAttachment();if(a&&a.id)out.push({ws:w,a})}return out}
   send(ws,o){try{ws.send(JSON.stringify(o))}catch(e){}}
   async fetch(request){
@@ -19,7 +19,7 @@ export class Room{
     this.state.acceptWebSocket(server);
     return new Response(null,{status:101,webSocket:client})}
   async webSocketMessage(ws,raw){
-    if(typeof raw!=='string'||raw.length>600)return;let m;try{m=JSON.parse(raw)}catch(e){return}
+    if(typeof raw!=='string'||raw.length>(raw.startsWith('{"t":"foto"')?64500:600))return;let m;try{m=JSON.parse(raw)}catch(e){return}
     const me=ws.deserializeAttachment()||{};
     if(m.t==='hello'){
       if(me.id)return;
@@ -40,6 +40,8 @@ export class Room{
       const out=JSON.stringify({...m,id:me.id});for(const p of this.peers())if(p.a.id!==me.id){try{p.ws.send(out)}catch(e){}}return}
     if(m.t==='chat'){const now=Date.now(),lr=this.crate.get(me.id)||0;if(now-lr<400)return;const text=cleanChat(m.text);if(!text)return;this.crate.set(me.id,now);
       const out=JSON.stringify({t:'chat',id:me.id,name:me.name,text});for(const p of this.peers())if(p.a.id!==me.id){try{p.ws.send(out)}catch(e){}}return}
+    if(m.t==='foto'){const now=Date.now(),lr=this.frate.get(me.id)||0;if(now-lr<3000)return;if(typeof m.img!=='string'||m.img.length>64000||!/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(m.img))return;this.frate.set(me.id,now);
+      const out=JSON.stringify({t:'foto',id:me.id,name:me.name,img:m.img});for(const p of this.peers())if(p.a.id!==me.id){try{p.ws.send(out)}catch(e){}}return}
     if(m.t==='ping'){this.send(ws,{t:'pong',now:Date.now(),c:typeof m.c==='number'?m.c:0});return}
     if(m.t==='name'){const a={...me,name:cleanName(m.name)};ws.serializeAttachment(a);for(const p of this.peers())if(p.a.id!==me.id)this.send(p.ws,{t:'name',id:me.id,name:a.name});return}
     if(m.t==='skin'&&SKIN_RE.test(m.skin)){const a={...me,skin:m.skin};ws.serializeAttachment(a);for(const p of this.peers())if(p.a.id!==me.id)this.send(p.ws,{t:'skin',id:me.id,skin:a.skin});return}}
@@ -60,4 +62,4 @@ export class Room{
     if(m.a==='end'){this.inc=null;for(const p of this.peers())if(p.a.id!==me.id)this.send(p.ws,{t:'pol',a:'gone'});return}}
   webSocketClose(ws){this.gone(ws)}
   webSocketError(ws){this.gone(ws)}
-  gone(ws){const a=ws.deserializeAttachment();if(!a||!a.id)return;const I=this.inc;if(I){if(I.owner===a.id){this.inc=null;for(const p of this.peers())if(p.a.id!==a.id)this.send(p.ws,{t:'pol',a:'gone'})}else if(I.second===a.id){I.second=null;this.polSend(I.owner,{t:'pol',a:'secondgone'})}}this.last.delete(a.id);this.rate.delete(a.id);this.crate.delete(a.id);if(!this.peers().some(p=>p.a.id!==a.id)){try{this.state.storage.delete('pw')}catch(e){}}for(const p of this.peers())if(p.a.id!==a.id)this.send(p.ws,{t:'leave',id:a.id})}}
+  gone(ws){const a=ws.deserializeAttachment();if(!a||!a.id)return;const I=this.inc;if(I){if(I.owner===a.id){this.inc=null;for(const p of this.peers())if(p.a.id!==a.id)this.send(p.ws,{t:'pol',a:'gone'})}else if(I.second===a.id){I.second=null;this.polSend(I.owner,{t:'pol',a:'secondgone'})}}this.last.delete(a.id);this.rate.delete(a.id);this.crate.delete(a.id);this.frate.delete(a.id);if(!this.peers().some(p=>p.a.id!==a.id)){try{this.state.storage.delete('pw')}catch(e){}}for(const p of this.peers())if(p.a.id!==a.id)this.send(p.ws,{t:'leave',id:a.id})}}

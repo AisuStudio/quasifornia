@@ -535,3 +535,5 @@ Status: Der Nutzer klärt die folgenden Punkte mit seinem Sohn (Stand 2026-10-29
 4. ~~Kernwert~~ Entschieden: Quests und Entdecken. Offen bleibt die Time to Value: Was ist die erste Quest, die nach wenigen Minuten belohnt?
 5. Skriptsprache: Lua oder JavaScript, wie mächtig?
 6. Ziel des MVP: Lernprojekt, Pitch oder Community-Test?
+
+- **Rarepod-Kamera Version 1 (gebaut, 2026-11-06):** Taste C oder Rarepod-Reiter "Fotos". Foto = aktuelle Ansicht im Polaroid-Rahmen (Ort, Datum, x/z, Blickwinkel, Name). Galerie lokal im Browser (IndexedDB, höchstens 60), mit Löschen. Teilen: Herunterladen, Kopieren, Teilen-Menü des Geräts, "An den Raum zeigen" (kleines JPEG-Vorschaubild über den Raum-WebSocket, 1 pro 3 s, höchstens ~64 KB; der Server leitet nur weiter, speichert nichts; beim Empfänger weg nach Neuladen). Kein Upload auf Server, Filme später. Code: `src/foto.js`.
