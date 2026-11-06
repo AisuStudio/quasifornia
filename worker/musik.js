@@ -2,7 +2,7 @@
 // Optional liegt im Bucket eine Datei musik.json mit Titelangaben: [{"file":"song.m4a","title":"Titel","artist":"Künstler","info":"Album, Jahr"}]
 export const MUSIK_RE=/^(?!.*\.\.)(?!\/)[\w .,'&()+\-\/]{1,160}\.(m4a|mp3|ogg|aac|wav|flac)$/i;
 export const DESIGN_RE=/^(?!.*\.\.)(?!\/)[\w .,'&()+\-\/]{1,160}\.(png|jpe?g|webp)$/i;
-const TYPES={m4a:'audio/mp4',mp3:'audio/mpeg',ogg:'audio/ogg',aac:'audio/aac',wav:'audio/wav',flac:'audio/flac',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp'};
+const TYPES={m4a:'audio/mp4',mp3:'audio/mpeg',ogg:'audio/ogg',aac:'audio/aac',wav:'audio/wav',flac:'audio/flac',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',json:'application/json; charset=utf-8'};
 const J={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store'};
 export function niceTitle(key){return key.split('/').pop().replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim()}
 export async function musikList(env){
@@ -19,7 +19,7 @@ export async function r2File(bucket,request,key,re){
   if(!obj)return new Response('nicht gefunden',{status:404});
   const h=new Headers();try{obj.writeHttpMetadata(h)}catch(e){}
   if(!h.get('content-type'))h.set('content-type',TYPES[key.split('.').pop().toLowerCase()]||'application/octet-stream');
-  h.set('etag',obj.httpEtag);h.set('accept-ranges','bytes');h.set('cache-control','private, max-age=3600');h.set('x-robots-tag','noindex');
+  h.set('etag',obj.httpEtag);h.set('accept-ranges','bytes');h.set('cache-control',key.endsWith('.json')?'private, no-cache':'private, max-age=3600');h.set('x-robots-tag','noindex');
   let status=200;
   if(rng&&obj.range&&typeof obj.range.offset==='number'){const off=obj.range.offset,len=obj.range.length===undefined?obj.size-off:obj.range.length;status=206;h.set('content-range','bytes '+off+'-'+(off+len-1)+'/'+obj.size);h.set('content-length',String(len))}
   else h.set('content-length',String(obj.size));

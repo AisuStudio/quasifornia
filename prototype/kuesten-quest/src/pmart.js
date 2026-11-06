@@ -37,9 +37,10 @@ function buildLevel7(){
   const SX=[-14,-2,10],SZ0=-10,SL=12,SW=2.6;
   SX.forEach((x,si)=>{box(SW,.4,SL,x,0,SZ0+SL/2,'#c9d4de');box(SW,3.6,.3,x,.4,SZ0+SL/2,'#dfe7ee',null,0,false);[.4,1.4,2.4].forEach(y=>box(SW,.15,SL,x,y,SZ0+SL/2,'#eae8e8',null,0,false));
     box(SW+.2,.5,SL+.2,x,3.7,SZ0+SL/2,blue,blue,.3,false);col(x-SW/2-.2,x+SW/2+.2,SZ0-.2,SZ0+SL+.2);
-    const lab=['SPRÜHDOSEN','SKINS','BOARDS · BALD'][si];[1,-1].forEach(sd=>sign(lab,SW*1.9,1,x+sd*(SW/2+.15),4.9,SZ0+SL/2,sd*Math.PI/2,si===2?'#8a8a95':'#ffffff',si===2?'#ffffff':blue));
+    const lab=['SPRÜHDOSEN','SKINS','KARTEN'][si];[1,-1].forEach(sd=>sign(lab,SW*1.9,1,x+sd*(SW/2+.15),4.9,SZ0+SL/2,sd*Math.PI/2,'#ffffff',blue));
     [-1,1].forEach(side=>{[0,1,2].forEach(lv=>{for(let k=0;k<8;k++){const z=SZ0+.9+k*1.45,y=.55+lv*1+.2,px=x+side*(SW/2-.55);
       if(si===0){cylm(.3,.85,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length],null,0);L7.items.cans++}
+      else if(si===2){box(.14,.95,.7,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length]);L7.items.cards=(L7.items.cards||0)+1}
       else if(si===1){const sk=SKIN_LIST[(k+lv*2+(side>0?3:0))%SKIN_LIST.length];box(.95,.3,1.1,px,y-.15+(k%2)*.3,z,sk[2]);L7.items.skins++}}})})});
   /* Kasse rechts: Tresen, Kassensystem, Süßigkeiten-Ständer */
   box(3,1.6,11,18,0,6,'#2f7fe0');box(3.4,.25,11.4,18,1.6,6,'#ffffff');box(.9,.7,.9,18,1.85,3.5,'#2a3a52');box(.9,.5,.08,17.65,2.3,3.5,'#0a1a2a','#7ff0ff',.9,false);
@@ -56,7 +57,7 @@ function buildLevel7(){
     {x:0,z:14.8,r:4.5,label:'P-Mart verlassen',fn:()=>pmartLeave()},
     {x:-10.6,z:-5,r:3.3,label:'Regal ansehen: Sprühdosen',fn:()=>shopEnter('cans')},
     {x:-5.4,z:-5,r:3.3,label:'Regal ansehen: Skins',fn:()=>shopEnter('skins')},
-    {x:7.2,z:-5,r:3.6,label:'Regal ansehen: Boards',fn:()=>say('e','Das Regal ist noch leer. Hier kommen bald Boards in allen Formen und Farben hin.',3)},
+    {x:7.2,z:-5,r:3.6,label:'Regal ansehen: Sammelkarten',fn:()=>shopEnter('cards')},
     {x:15.2,z:6,r:4.6,label:'Mit der Kassiererin sprechen',fn:()=>shopEnter()}];}
 function pmartActs(a){L7.acts.forEach(o=>a.push(o))}
 function pmartEnter(shop){if(typeof POL!=='undefined'&&POL.state&&POL.state!=='idle'){toast('Nicht jetzt: Die Polizei ist hinter dir!',1800);return}

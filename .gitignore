@@ -13,3 +13,6 @@ prototype/kuesten-quest/*.png
 Uploads/
 prototype/kuesten-quest/dist/*.m4a
 prototype/kuesten-quest/dist/*.mp3
+
+# Moodboard und Karten-Bilder liegen privat im Repo AisuStudio/lore
+moodboard/

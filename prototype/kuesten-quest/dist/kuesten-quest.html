@@ -164,6 +164,22 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 details.dev{margin-top:12px;font:400 12px/1.4 var(--mono);color:var(--haze)}details.dev summary{cursor:pointer}details.dev .btn{margin-top:8px;font-size:15px;padding:9px 12px}
 .st2top{display:flex;align-items:center;justify-content:space-between;gap:10px}.st2top h2{margin:6px 0}.back{font:500 12px/1 var(--mono);color:var(--haze);background:transparent;border:2px solid #3a3158;border-radius:8px;padding:6px 9px;cursor:pointer}.back:hover,.back:focus-visible{color:var(--paper);border-color:var(--gold);outline:none}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:10px}.fth{position:relative;padding:0;border:2px solid #0e0b18;border-radius:6px;background:var(--ink-2);cursor:pointer;overflow:hidden}.fth.on{border-color:var(--gold)}.fth img{display:block;width:100%;height:auto}.fth b{position:absolute;left:0;right:0;bottom:0;font:500 11px/1.4 var(--mono);background:rgba(14,11,24,.8);color:var(--paper)}.fbig{margin-top:10px}.fbig img{width:100%;height:auto;border-radius:6px;border:2px solid #0e0b18}.frow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.frow button{font:500 12px/1 var(--mono);padding:7px 10px;border:2px solid #0e0b18;border-radius:6px;background:var(--ink-2);color:var(--paper);cursor:pointer}
+html{font-synthesis:none}
+.kcard{--kw:320px;font-size:calc(var(--kw)/16);width:var(--kw);aspect-ratio:5/7;perspective:1200px;cursor:pointer;position:relative;color:#1a1626}.kc-in{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}.kcard.flip .kc-in{transform:rotateY(180deg)}
+.kc-f,.kc-b{position:absolute;inset:0;border-radius:.9em;border:.2em solid #0e0b18;backface-visibility:hidden;overflow:hidden;padding:.6em;display:flex;flex-direction:column;box-shadow:0 .3em 0 #0e0b18}.kc-f{background:var(--kc)}.kc-b{transform:rotateY(180deg);background-color:#fdf6e8;background-size:cover}
+.kc-pic{flex:1;min-height:0;border-radius:.5em;border:.15em solid #0e0b18;overflow:hidden;background:#000}.kc-pic img{width:100%;height:100%;object-fit:cover;display:block}
+.kc-nm{font-size:1.5em;line-height:1.05;margin-top:.45em}.kc-m{display:flex;justify-content:space-between;align-items:center;margin-top:.3em;font-size:.7em}.kc-fam{letter-spacing:.08em;text-transform:uppercase}
+.kc-rar{display:flex;gap:.25em}.kc-rar i{width:.6em;height:.6em;border:.1em solid #1a1626;transform:rotate(45deg)}.kc-rar i.on{background:#1a1626}
+.kc-new{position:absolute;top:.9em;right:.9em;font-size:.75em;background:#e5383b;color:#fff;border:.15em solid #0e0b18;border-radius:.4em;padding:.15em .5em;letter-spacing:.1em}
+.kc-b h4{margin:.5em 0 .3em;font-size:1.3em;font-weight:400}.kc-b p{font-size:.8em;line-height:1.4;margin:.3em 0}.kc-b dl{margin:auto 0 0;font-size:.7em;display:grid;grid-template-columns:auto 1fr;gap:.2em .6em}.kc-b dt{color:#6b6480}.kc-b dd{margin:0}
+.kc-tag{align-self:flex-start;background:var(--kc);border:.12em solid #0e0b18;border-radius:.3em;padding:.15em .5em;font-size:.6em;letter-spacing:.1em;text-transform:uppercase}
+.kcard.down .kc-b>*{visibility:hidden}.kcard.down .kc-b::after{content:'?';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4em;color:#1a1626;opacity:.55}
+.kbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}.kreveal{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:10px 0}.kslot{width:140px}.kbig{display:flex;justify-content:center;margin:8px 0}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:10px}.kth{position:relative;aspect-ratio:5/7;border:2px solid #0e0b18;border-radius:8px;background:var(--kc,#2a2438);overflow:hidden;padding:0;cursor:pointer;display:block}.kth.on{outline:3px solid var(--gold)}.kth img{width:100%;height:78%;object-fit:cover;display:block}
+.kth span{display:block;font:400 11px/1.2 var(--display);color:#1a1626;padding:3px 4px;text-align:left}.kth b{position:absolute;top:3px;right:3px;font:400 11px/1 var(--display);background:#1a1626;color:var(--gold);border-radius:4px;padding:2px 4px}
+.kth.q{background:var(--ink-2);cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--haze)}.kth.q span{font-size:26px;color:var(--haze);padding:0}.kth.q em{font:400 11px/1 var(--display);font-style:normal}
+.kpack{display:flex;align-items:center;gap:12px;border:2px solid #0e0b18;border-radius:10px;background:var(--ink-2);padding:10px;margin-top:6px}.kpack>div:nth-child(2){flex:1;display:flex;flex-direction:column;gap:2px;font:400 13px/1.3 var(--display)}.kpack button{font:400 13px/1 var(--display);padding:8px 12px;border:2px solid #0e0b18;border-radius:6px;background:var(--gold);color:#1a1626;cursor:pointer}.kpack button:disabled{opacity:.45;cursor:default}
+.kp-ic{position:relative;width:44px;height:58px}.kp-ic i{position:absolute;width:34px;height:48px;border:2px solid #0e0b18;border-radius:5px}.kp-ic i:nth-child(1){left:0;top:6px;background:#ff5fa8;transform:rotate(-10deg)}.kp-ic i:nth-child(2){left:5px;top:3px;background:#ffe066;transform:rotate(2deg)}.kp-ic i:nth-child(3){left:10px;top:6px;background:#47c2a5;transform:rotate(12deg)}
 .keys2{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font:400 12.5px/1.35 var(--mono);color:var(--paper)}
 .keys2 kbd{align-self:start;font:500 12px/1 var(--mono);background:var(--ink-2);border:2px solid #0e0b18;border-radius:6px;padding:3px 7px;color:var(--gold);justify-self:start;white-space:nowrap}
 @media (max-height:780px){#cview{height:176px}#cview .main{width:118px;height:156px}#cview .side{width:70px;height:92px}#card h1{font-size:30px}#card .sub{margin:4px 0 6px;font-size:13px}.card{padding:16px 20px 18px}}
@@ -310,10 +326,10 @@ details.dev{margin-top:12px;font:400 12px/1.4 var(--mono);color:var(--haze)}deta
   <div id="inv" hidden role="dialog" aria-label="Inventar">
     <div class="card">
       <h1>Rarepod <small id="inv-n">0/5</small></h1>
-      <div id="rp-tabs"><button type="button" data-t="inv" aria-pressed="true">Inventar</button><button type="button" data-t="auf" aria-pressed="false">Aufträge</button><button type="button" data-t="sco" aria-pressed="false">Scoops</button><button type="button" data-t="lad" aria-pressed="false">Laden</button><button type="button" data-t="edi" aria-pressed="false">Editor</button><button type="button" data-t="mus" aria-pressed="false">Musik</button><button type="button" data-t="ter" aria-pressed="false">Terminal</button><button type="button" data-t="dck" aria-pressed="false">Decks</button><button type="button" data-t="fot" aria-pressed="false">Fotos</button><button type="button" data-t="key" aria-pressed="false">Steuerung</button></div>
+      <div id="rp-tabs"><button type="button" data-t="inv" aria-pressed="true">Inventar</button><button type="button" data-t="auf" aria-pressed="false">Aufträge</button><button type="button" data-t="sco" aria-pressed="false">Scoops</button><button type="button" data-t="lad" aria-pressed="false">Laden</button><button type="button" data-t="edi" aria-pressed="false">Editor</button><button type="button" data-t="mus" aria-pressed="false">Musik</button><button type="button" data-t="ter" aria-pressed="false">Terminal</button><button type="button" data-t="dck" aria-pressed="false">Decks</button><button type="button" data-t="fot" aria-pressed="false">Fotos</button><button type="button" data-t="kar" aria-pressed="false">Karten</button><button type="button" data-t="key" aria-pressed="false">Steuerung</button></div>
       <div id="rp-inv"><p class="sub">Diese Gegenstände findest du in Port Lupo. Du brauchst sie im Atoll.</p>
       <div id="inv-grid"></div></div>
-      <div id="rp-auf" hidden></div><div id="rp-sco" hidden></div><div id="rp-lad" hidden></div><div id="rp-edi" hidden></div><div id="rp-mus" hidden></div><div id="rp-key" hidden></div><div id="rp-dck" hidden></div><div id="rp-fot" hidden></div><div id="rp-ter" hidden><div id="term-log" aria-live="polite"></div><input id="term-in" type="text" maxlength="200" autocomplete="off" spellcheck="false" placeholder="/hilfe  ·  /chat name passwort  ·  Text + Enter" aria-label="Terminal"></div>
+      <div id="rp-auf" hidden></div><div id="rp-sco" hidden></div><div id="rp-lad" hidden></div><div id="rp-edi" hidden></div><div id="rp-mus" hidden></div><div id="rp-key" hidden></div><div id="rp-dck" hidden></div><div id="rp-fot" hidden></div><div id="rp-kar" hidden></div><div id="rp-ter" hidden><div id="term-log" aria-live="polite"></div><input id="term-in" type="text" maxlength="200" autocomplete="off" spellcheck="false" placeholder="/hilfe  ·  /chat name passwort  ·  Text + Enter" aria-label="Terminal"></div>
       <div class="invbtn"><button class="btn" id="inv-close" type="button">Schließen · I</button><button class="btn sec" id="inv-reset" type="button">Inventar zurücksetzen</button></div>
     </div>
   </div>
@@ -1765,19 +1781,19 @@ function edPreview(){try{const W=360,H=470,rt=new THREE.WebGLRenderTarget(W,H,{s
   const pv=P.av.visible,bv=blobP.visible;P.av.visible=false;blobP.visible=false;cm.position.set(P.x+7,P.y+2.4,P.z-3);cm.lookAt(P.x,P.y+1.55,P.z);cm.updateProjectionMatrix();
   const old=r.getRenderTarget();r.setRenderTarget(rt);r.render(sc,cm);r.readRenderTargetPixels(rt,0,0,W,H,buf);r.setRenderTarget(old);P.av.visible=pv;blobP.visible=bv;sc.remove(av);av.traverse(o=>{if(o.geometry)o.geometry.dispose()});rt.dispose();
   const cc=document.createElement('canvas');cc.width=W;cc.height=H;const cx=cc.getContext('2d'),id=cx.createImageData(W,H);for(let y=0;y<H;y++)id.data.set(buf.subarray((H-1-y)*W*4,(H-y)*W*4),y*W*4);cx.putImageData(id,0,0);return cc.toDataURL('image/png')}catch(e){return ''}}
-function rpTab(t){SC.tab=t;rpRender();if(t==='fot'&&typeof fotRender==='function')fotRender();if(t==='dck')deckLoad();if(t==='ter'){termRender();const i=document.getElementById('term-in');if(i)setTimeout(()=>i.focus({preventScroll:true}),0)}}
+function rpTab(t){SC.tab=t;rpRender();if(t==='fot'&&typeof fotRender==='function')fotRender();if(t==='kar'&&typeof karRender==='function')karRender();if(t==='dck')deckLoad();if(t==='ter'){termRender();const i=document.getElementById('term-in');if(i)setTimeout(()=>i.focus({preventScroll:true}),0)}}
 function termRender(){const L=document.getElementById('term-log');if(!L)return;L.textContent='';TERM.log.forEach(e=>{const d=document.createElement('div');d.className='tl-'+e.k;if(e.w){const b=document.createElement('b');b.textContent=e.w+': ';d.appendChild(b)}else if(e.k==='cmd')d.appendChild(document.createTextNode('> '));d.appendChild(document.createTextNode(e.t));L.appendChild(d)});L.scrollTop=L.scrollHeight}
 (function(){const i=document.getElementById('term-in');if(!i)return;i.addEventListener('keydown',e=>{if(e.code!=='Escape')e.stopPropagation();if(e.code==='Enter'){e.preventDefault();const v=i.value;i.value='';termCmd(v)}});i.addEventListener('keyup',e=>e.stopPropagation())})();
 function rpRender(){const root=document.getElementById('rp-tabs');if(!root)return;
   [...root.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===SC.tab)));
-  ['inv','auf','sco','lad','edi','mus','ter','dck','fot','key'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
+  ['inv','auf','sco','lad','edi','mus','ter','dck','fot','kar','key'].forEach(t=>{const e=document.getElementById('rp-'+t);if(e)e.hidden=SC.tab!==t});
   const auf=document.getElementById('rp-auf');if(auf)auf.innerHTML='<p class="sub">Aufträge geben dir Scoops. Das erste Mal gibt es die volle Belohnung, danach '+AU_REPEAT+' Scoops.</p><div class="aulist">'+AUFTRAEGE.map(a=>{const n=SC.au[a.id]||0;return `<div class="au${n?' done':''}"><span class="zl">${a.ziel}</span><b>${a.titel}</b><span>${a.text} ${(()=>{try{return uwProgText(a.id)}catch(e){return ''}})()}</span><em>${a.ort}</em><span class="rw">${n?'Erledigt'+(n>1?' ×'+n:''):'Offen'} · +${a.reward} Scoops${n?' (jetzt +'+AU_REPEAT+')':''}</span></div>`}).join('')+'</div>';
   const sco=document.getElementById('rp-sco');if(sco)sco.innerHTML=`<div class="bal"><i class="sc"></i><b>${SC.n}</b><span>Scoops</span></div><p class="sub">Scoops kann man nicht kaufen. Man verdient sie mit Eiskugeln und Aufträgen.</p><div class="prices"><span>Reise durch ein Portal</span><b>${PORTAL_COST}</b></div><div class="lg">${SC.log.map(l=>`<div><span>${l[0]}</span><b class="${l[1]>0?'up':'dn'}">${l[1]>0?'+':'−'}${Math.abs(l[1])}</b></div>`).join('')}</div><button class="btn sec" id="sc-reset" type="button">Guthaben zurücksetzen (${SC_START})</button>`;
   const rb=document.getElementById('sc-reset');if(rb)rb.onclick=()=>{SC.n=SC_START;SC.log=[['Zurückgesetzt',SC_START]];SC.au={};scSave();scHud(0);rpRender()};
   const lad=document.getElementById('rp-lad');if(lad){lad.innerHTML='<p class="sub">'+(SHOP.in?'Willkommen im P-Mart! Dein Guthaben: <b>'+SC.n+' Scoops</b>.':'Kaufen kannst du im <b>P-Mart</b> (blaues Band, auf der Minikarte als P). Hier kannst du nur ansehen. Guthaben: <b>'+SC.n+' Scoops</b>.')+'</p><div class="skgrid">'+SKIN_LIST.map(([k,n,c])=>{const own=SKOWN.has(k),wear=PRESETS[k]===P.preset,pr=SKIN_PRICE[k]||0;
     return `<div class="sk${wear?' on':''}"><i style="background:${c}"></i><b>${n}</b><span>${own?(wear?'Getragen':'Im Besitz'):pr+' Scoops'}</span>${own?(wear?'':`<button type="button" data-w="${k}">Anziehen</button>`):`<button type="button" data-b="${k}"${scCan(pr)&&SHOP.in?'':' disabled'}>Kaufen</button>`}</div>`}).join('')+'</div>';
-    lad.insertAdjacentHTML('beforeend',(()=>{try{return grafShopHTML()}catch(e){return ''}})());lad.insertAdjacentHTML('beforeend',(()=>{try{return ubqShopHTML()}catch(e){return ''}})());lad.querySelectorAll('[data-ubq]').forEach(b=>b.onclick=()=>{if(ubqBuy())rpRender()});lad.querySelectorAll('[data-can]').forEach(b=>b.onclick=()=>{if(grafBuy(b.dataset.can))rpRender()});
-    lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)});if(SHOP.focus==='cans'){const h=lad.querySelector('h3.edh');if(h)setTimeout(()=>h.scrollIntoView({block:'start'}),0)}SHOP.focus=''}
+    lad.insertAdjacentHTML('beforeend',(()=>{try{return grafShopHTML()}catch(e){return ''}})());lad.insertAdjacentHTML('beforeend',(()=>{try{return ubqShopHTML()}catch(e){return ''}})());lad.insertAdjacentHTML('beforeend',(()=>{try{return karShopHTML()}catch(e){return ''}})());lad.querySelectorAll('[data-kpack]').forEach(b=>b.onclick=()=>{if(karBuyPack())rpRender()});lad.querySelectorAll('[data-ubq]').forEach(b=>b.onclick=()=>{if(ubqBuy())rpRender()});lad.querySelectorAll('[data-can]').forEach(b=>b.onclick=()=>{if(grafBuy(b.dataset.can))rpRender()});
+    lad.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>skWear(b.dataset.w));lad.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{if(skBuy(b.dataset.b))skWear(b.dataset.b)});if(SHOP.focus==='cans'){const h=lad.querySelector('h3.edh');if(h)setTimeout(()=>h.scrollIntoView({block:'start'}),0)}if(SHOP.focus==='cards'){const h=document.getElementById('kar-shop');if(h)setTimeout(()=>h.scrollIntoView({block:'start'}),0)}SHOP.focus=''}
   const edi=document.getElementById('rp-edi');if(edi&&SC.tab==='edi'){const pv=edPreview();
     const sw=(slot,title)=>`<h3 class="edh">${title}</h3><div class="swrow">`+`<button type="button" class="swb std${ED.col[slot]?'':' on'}" data-c="${slot}:" aria-label="Standard" title="Standard des Skins">↺</button>`+ED_COLS[slot].map(h=>{const own=slot==='skin'||ED.ownC.has(slot+':'+h),on=ED.col[slot]===h;return `<button type="button" class="swb${on?' on':''}${own?'':' lock'}" style="background:${h}" data-c="${slot}:${h}" aria-label="${title} ${h}" title="${own?'Anziehen':ED_COL_PRICE+' Scoops'}">${own?'':'<small>'+ED_COL_PRICE+'</small>'}</button>`}).join('')+'</div>';
     edi.innerHTML=`<div class="edwrap"><div class="edprev">${pv?`<img src="${pv}" alt="So sieht deine Figur aus">`:''}<b>${SC.n} Scoops</b></div><div class="edlist"><p class="sub">${SHOP.in?'':'Neue Teile und Farben gibt es im <b>P-Mart</b>. '}Farben und Teile für deine Figur. Du siehst sofort, wie sie aussieht. Hautfarbe ist gratis, Pulli- und Hosenfarben kosten ${ED_COL_PRICE} Scoops (einmal kaufen, dann immer wieder nutzen).</p>`
@@ -2290,7 +2306,7 @@ function collectItem(it){it.got=true;it.g.visible=false;it.ring.visible=false;it
   const say1={funk:'Ein Funkzettel. Wer schreibt heute noch in Geheimschrift? Du, ab jetzt.',schraube:'Ein Schraubendreher. Er passt bestimmt irgendwo. Das tun sie immer.',usb:'Ein USB-Stick. Beschriftet mit PATROUILLE. Das klingt nach Ärger.',handbuch:'Ein Handbuch mit abgerissener Seite 12. Natürlich.',losung:'Ein Bon mit einer Geheimlosung. Das Möwen-Menü gibt es also wirklich.'}[it.def.id];
   say('e',core===4&&!it.def.bonus?'Das war der Vierte. Genug für ein Atoll. Es gibt nur noch keins.':say1,3.4)}
 /* ---------- Unterwelt: Spiegelstadt, kopfüber, dunkel, fest im Pixel-Look ---------- */
-function shopEnter(focus){SHOP.in=true;SHOP.focus=typeof focus==='string'?focus:'';SC.tab='lad';invToggle(true);tone(660,.08,'square',.04);tone(880,.1,'square',.04,0,.08)}
+function shopEnter(focus){try{karLoad()}catch(e){}SHOP.in=true;SHOP.focus=typeof focus==='string'?focus:'';SC.tab='lad';invToggle(true);tone(660,.08,'square',.04);tone(880,.1,'square',.04,0,.08)}
 function underApply(on){if(!!G.under===on)return;G.under=on;kSync();if(on){setTimeout(()=>{try{uwSpawn()}catch(e){console.log('uw',e)}},0)}else if(typeof uwClear==='function')uwClear();
   HUB.portals.forEach(p=>{p.g.visible=false;p.beam.visible=!on});
   HUB.items.forEach(it=>{const v=!on&&!it.got;it.g.visible=v;it.ring.visible=v;it.beam.visible=v});
@@ -2600,9 +2616,10 @@ function buildLevel7(){
   const SX=[-14,-2,10],SZ0=-10,SL=12,SW=2.6;
   SX.forEach((x,si)=>{box(SW,.4,SL,x,0,SZ0+SL/2,'#c9d4de');box(SW,3.6,.3,x,.4,SZ0+SL/2,'#dfe7ee',null,0,false);[.4,1.4,2.4].forEach(y=>box(SW,.15,SL,x,y,SZ0+SL/2,'#eae8e8',null,0,false));
     box(SW+.2,.5,SL+.2,x,3.7,SZ0+SL/2,blue,blue,.3,false);col(x-SW/2-.2,x+SW/2+.2,SZ0-.2,SZ0+SL+.2);
-    const lab=['SPRÜHDOSEN','SKINS','BOARDS · BALD'][si];[1,-1].forEach(sd=>sign(lab,SW*1.9,1,x+sd*(SW/2+.15),4.9,SZ0+SL/2,sd*Math.PI/2,si===2?'#8a8a95':'#ffffff',si===2?'#ffffff':blue));
+    const lab=['SPRÜHDOSEN','SKINS','KARTEN'][si];[1,-1].forEach(sd=>sign(lab,SW*1.9,1,x+sd*(SW/2+.15),4.9,SZ0+SL/2,sd*Math.PI/2,'#ffffff',blue));
     [-1,1].forEach(side=>{[0,1,2].forEach(lv=>{for(let k=0;k<8;k++){const z=SZ0+.9+k*1.45,y=.55+lv*1+.2,px=x+side*(SW/2-.55);
       if(si===0){cylm(.3,.85,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length],null,0);L7.items.cans++}
+      else if(si===2){box(.14,.95,.7,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length]);L7.items.cards=(L7.items.cards||0)+1}
       else if(si===1){const sk=SKIN_LIST[(k+lv*2+(side>0?3:0))%SKIN_LIST.length];box(.95,.3,1.1,px,y-.15+(k%2)*.3,z,sk[2]);L7.items.skins++}}})})});
   /* Kasse rechts: Tresen, Kassensystem, Süßigkeiten-Ständer */
   box(3,1.6,11,18,0,6,'#2f7fe0');box(3.4,.25,11.4,18,1.6,6,'#ffffff');box(.9,.7,.9,18,1.85,3.5,'#2a3a52');box(.9,.5,.08,17.65,2.3,3.5,'#0a1a2a','#7ff0ff',.9,false);
@@ -2619,7 +2636,7 @@ function buildLevel7(){
     {x:0,z:14.8,r:4.5,label:'P-Mart verlassen',fn:()=>pmartLeave()},
     {x:-10.6,z:-5,r:3.3,label:'Regal ansehen: Sprühdosen',fn:()=>shopEnter('cans')},
     {x:-5.4,z:-5,r:3.3,label:'Regal ansehen: Skins',fn:()=>shopEnter('skins')},
-    {x:7.2,z:-5,r:3.6,label:'Regal ansehen: Boards',fn:()=>say('e','Das Regal ist noch leer. Hier kommen bald Boards in allen Formen und Farben hin.',3)},
+    {x:7.2,z:-5,r:3.6,label:'Regal ansehen: Sammelkarten',fn:()=>shopEnter('cards')},
     {x:15.2,z:6,r:4.6,label:'Mit der Kassiererin sprechen',fn:()=>shopEnter()}];}
 function pmartActs(a){L7.acts.forEach(o=>a.push(o))}
 function pmartEnter(shop){if(typeof POL!=='undefined'&&POL.state&&POL.state!=='idle'){toast('Nicht jetzt: Die Polizei ist hinter dir!',1800);return}
@@ -4511,11 +4528,83 @@ function fotRender(){const el=document.getElementById('rp-fot');if(!el||typeof S
 addEventListener('keydown',e=>{if(e.code!=='KeyC'||e.repeat||e.ctrlKey||e.metaKey||e.altKey||(e.target&&e.target.tagName==='INPUT'))return;if(G.phase==='title'||INV.open||(typeof DLG!=='undefined'&&DLG.open)||(typeof PAD!=='undefined'&&PAD.open)||(typeof PUZ!=='undefined'&&PUZ.open)||GFOPEN||(typeof BAU!=='undefined'&&BAU.open))return;fotSnap()});
 fotLoad();
 
+/* ================= Sammelkarten: Packs mit 7 Karten, Sammlung im Rarepod (Reiter Karten) =================
+   Die Karten (Bild, Name, Familie, Seltenheit, Lore-Text) liegen NICHT im Repo, sondern im R2-Bucket "designs" (karten/karten.json und karten/*.webp)
+   und kommen über /api/karten und /designs/karten/…  (nur mit Seitenpasswort). Ohne diese Daten bleibt der Reiter leer und der Laden verkauft keine Packs.
+   Kaufen: P-Mart, Kartenregal (Scoops). Die Sammlung liegt lokal im Browser (kq-karten). Tauschen kommt später (braucht Login und Server).
+   Ein Pack hat immer 7 Karten. Seltenheitsstufen 1 bis 5 mit Gewichten (data.tiers), die letzte Karte im Pack ist mindestens "guarantee". */
+const KAR={data:null,state:'leer',own:{},packs:0,sel:0,reveal:null,err:''};
+(function(){try{const s=JSON.parse(localStorage.getItem('kq-karten')||'{}');if(s&&typeof s==='object'){KAR.own=s.own&&typeof s.own==='object'?s.own:{};KAR.packs=Math.max(0,Math.floor(+s.packs||0))}}catch(e){}})();
+function karSave(){try{localStorage.setItem('kq-karten',JSON.stringify({own:KAR.own,packs:KAR.packs}))}catch(e){}}
+const karEsc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function karOk(d){return d&&Array.isArray(d.cards)&&d.cards.length>0&&d.cards.every(c=>c&&Number.isInteger(c.id)&&typeof c.file==='string'&&typeof c.name==='string'&&c.rar>=1&&c.rar<=5)&&Array.isArray(d.tiers)&&d.tiers.length===5}
+async function karLoad(force){if(KAR.state==='lädt'||(KAR.state==='da'&&!force))return;KAR.state='lädt';
+  try{const r=await fetch('/api/karten',{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();if(!karOk(d))throw new Error('Format');
+    d.packSize=7;d.packPrice=Math.max(1,Math.min(999,+d.packPrice||30));d.guarantee=Math.max(1,Math.min(5,+d.guarantee||3));KAR.data=d;KAR.state='da';KAR.err=''}
+  catch(e){KAR.data=null;KAR.state='fehlt';KAR.err=String(e&&e.message||e)}
+  try{if(typeof rpRender==='function')rpRender()}catch(e){}}
+const karById=id=>KAR.data&&KAR.data.cards.find(c=>c.id===id);
+const karImg=c=>'/designs/karten/'+encodeURIComponent(c.file);
+const karFam=c=>(KAR.data&&KAR.data.fams&&KAR.data.fams[c.fam])||{name:c.fam||'',col:'#ffe066'};
+function karGot(){return KAR.data?KAR.data.cards.filter(c=>KAR.own[c.id]>0).length:0}
+/* Ziehung: erst die Seltenheitsstufe nach Gewicht, dann gleichverteilt eine Karte der Stufe. Die letzte Karte ist mindestens "guarantee". */
+function karDraw(n,rnd){rnd=rnd||Math.random;const d=KAR.data;if(!d)return[];const by=[1,2,3,4,5].map(t=>d.cards.filter(c=>c.rar===t)),w=d.tiers.map((x,i)=>by[i].length?Math.max(0,+x||0):0);
+  const pickTier=min=>{let tot=0;for(let i=min-1;i<5;i++)tot+=w[i];if(tot<=0){for(let i=0;i<5;i++)if(by[i].length)return i+1;return 0}let r=rnd()*tot;for(let i=min-1;i<5;i++){if(r<w[i])return i+1;r-=w[i]}return 5};
+  const out=[];for(let k=0;k<n;k++){const t=pickTier(k===n-1?d.guarantee:1);const L=by[t-1];if(L.length)out.push(L[Math.floor(rnd()*L.length)])}return out}
+/* Kaufen im P-Mart */
+function karBuyPack(){const d=KAR.data;if(!d){toast('Kartenpacks gibt es gerade nicht',1500);return false}
+  if(!SHOP.in){toast('Packs gibt es im P-Mart',1500);return false}
+  if(!scCan(d.packPrice)){toast('Zu wenig Scoops: '+d.packPrice+' nötig',1500);return false}
+  scAdd(-d.packPrice,'Kartenpack');KAR.packs++;karSave();tone(660,.08,'square',.04);tone(990,.1,'square',.04,0,.08);toast('Kartenpack gekauft (Rarepod, Reiter Karten)',1800);return true}
+function karShopHTML(){const d=KAR.data;if(!d)return '';const can=SHOP.in&&scCan(d.packPrice);
+  return `<h3 class="edh" id="kar-shop">Sammelkarten</h3><div class="kpack"><div class="kp-ic"><i></i><i></i><i></i></div><div><b>Kartenpack</b><span>${d.packSize} Karten · ${d.packPrice} Scoops</span><span>Du hast ${KAR.packs} ungeöffnete${KAR.packs===1?'s Pack':' Packs'}. Öffnen im Reiter Karten.</span></div><button type="button" data-kpack="1"${can?'':' disabled'}>Kaufen</button></div>`}
+/* Pack öffnen */
+function karOpenPack(rnd){if(!KAR.data||KAR.packs<1||KAR.reveal)return null;const cards=karDraw(KAR.data.packSize,rnd);if(cards.length<KAR.data.packSize)return null;
+  KAR.packs--;const items=cards.map(c=>{const neu=!(KAR.own[c.id]>0);KAR.own[c.id]=(KAR.own[c.id]||0)+1;return {id:c.id,neu,up:false}});KAR.reveal={items};karSave();
+  try{statEv('karten','pack',1)}catch(e){}tone(520,.06,'square',.04);tone(780,.08,'square',.04,0,.07);return cards}
+/* Muster für die Rückseite: zufällig, aber je Karte immer gleich */
+const KAR_PAST=['#ffd1e6','#ffeeb0','#c9f0e3','#d9d0f5','#cfe6ff','#ffdcc2','#e4f5c8'],KAR_BASE=['#fff3f8','#fffbe8','#eefaf5'],KAR_PAT={};
+function karPat(id){if(KAR_PAT[id])return KAR_PAT[id];let a=id*7919+13;const rnd=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  let o='<svg xmlns="http://www.w3.org/2000/svg" width="320" height="448"><rect width="100%" height="100%" fill="'+KAR_BASE[id%3]+'"/>';
+  for(let i=0;i<34;i++){const x=(rnd()*320).toFixed(1),y=(rnd()*448).toFixed(1),c=KAR_PAST[Math.floor(rnd()*KAR_PAST.length)],k=Math.floor(rnd()*5),z=6+rnd()*16,rot=(rnd()*360).toFixed(0),tr='transform="translate('+x+' '+y+') rotate('+rot+')"';
+    if(k===0)o+='<circle r="'+z.toFixed(1)+'" cx="'+x+'" cy="'+y+'" fill="'+c+'" opacity=".42"/>';
+    else if(k===1)o+='<rect x="'+(-z/2).toFixed(1)+'" y="'+(-z/2).toFixed(1)+'" width="'+z.toFixed(1)+'" height="'+z.toFixed(1)+'" '+tr+' fill="'+c+'" opacity=".42"/>';
+    else if(k===2)o+='<path d="M0 '+(-z).toFixed(1)+' L'+z.toFixed(1)+' 0 0 '+z.toFixed(1)+' '+(-z).toFixed(1)+' 0Z" '+tr+' fill="'+c+'" opacity=".42"/>';
+    else if(k===3)o+='<path d="M'+(-z).toFixed(1)+' 0 q'+(z/2).toFixed(1)+' '+(-z).toFixed(1)+' '+z.toFixed(1)+' 0 t'+z.toFixed(1)+' 0" fill="none" stroke="'+c+'" stroke-width="2.5" stroke-linecap="round" opacity=".5" '+tr+'/>';
+    else o+='<path d="M'+(-z/2).toFixed(1)+' 0H'+(z/2).toFixed(1)+'M0 '+(-z/2).toFixed(1)+'V'+(z/2).toFixed(1)+'" stroke="'+c+'" stroke-width="2.5" stroke-linecap="round" opacity=".5" transform="translate('+x+' '+y+')"/>'}
+  return KAR_PAT[id]='url("data:image/svg+xml;utf8,'+encodeURIComponent(o+'</svg>')+'")'}
+function karDots(n){let s='';for(let i=0;i<5;i++)s+='<i'+(i<n?' class="on"':'')+'></i>';return '<span class="kc-rar" aria-label="Seltenheit '+n+' von 5">'+s+'</span>'}
+/* Eine Karte mit Vorder- und Rückseite (Klick dreht sie) */
+function karCardHTML(c,w,opt){opt=opt||{};const f=karFam(c),nr=String(c.id).padStart(3,'0')+' / '+String(KAR.data.cards.length).padStart(3,'0');
+  return `<div class="kcard${opt.flip?' flip':''}${opt.down?' down':''}" data-k="${c.id}" style="--kw:${w}px;--kc:${karEsc(f.col)}"><div class="kc-in">`+
+   `<div class="kc-f"><div class="kc-pic"><img src="${karEsc(karImg(c))}" alt="" loading="lazy" decoding="async"></div><div class="kc-nm">${karEsc(c.name)}</div><div class="kc-m"><span class="kc-fam">${karEsc(f.name)}</span>${karDots(c.rar)}</div><div class="kc-m"><span>Nr. ${nr}</span><span>Seltenheit ${c.rar} von 5</span></div>${opt.neu?'<b class="kc-new">NEU</b>':''}</div>`+
+   `<div class="kc-b" style="background-image:${karPat(c.id)}"><span class="kc-tag">${karEsc(f.name)}</span><h4>${karEsc(c.name)}</h4><p>${karEsc(c.lore||'')}</p><dl><dt>Fundort</dt><dd>${karEsc(c.ort||'')}</dd><dt>Stufe</dt><dd>${karEsc(c.stufe||1)}</dd><dt>Nummer</dt><dd>${nr}</dd></dl></div></div></div>`}
+/* Reiter im Rarepod */
+function karRender(){const el=document.getElementById('rp-kar');if(!el||typeof SC==='undefined'||SC.tab!=='kar')return;
+  if(KAR.state==='leer')karLoad();
+  if(!KAR.data){el.innerHTML='<p class="sub">'+(KAR.state==='lädt'?'Karten werden geladen …':'Die Sammelkarten sind gerade nicht erreichbar.')+'</p>';return}
+  const d=KAR.data,got=karGot();
+  let h=`<p class="sub">Sammlung: <b>${got} von ${d.cards.length}</b> Karten. Ein Pack hat immer ${d.packSize} Karten und kostet ${d.packPrice} Scoops im P-Mart.</p><div class="kbar"><span>Ungeöffnete Packs: <b>${KAR.packs}</b></span><button type="button" class="btn" id="kar-open"${KAR.packs>0&&!KAR.reveal?'':' disabled'}>Pack öffnen</button></div>`;
+  if(KAR.reveal){const it=KAR.reveal.items,allUp=it.every(x=>x.up);
+    h+=`<div class="kreveal">`+it.map((x,i)=>{const c=karById(x.id);return `<div class="kslot" data-i="${i}">${karCardHTML(c,140,{flip:!x.up,down:!x.up,neu:x.neu})}</div>`}).join('')+`</div><div class="kbar"><button type="button" class="btn sec" id="kar-all">${allUp?'Fertig':'Alle aufdecken'}</button></div>`}
+  h+=`<div class="kgrid">`+d.cards.map(c=>{const n=KAR.own[c.id]||0,f=karFam(c);return n>0
+    ?`<button type="button" class="kth${KAR.sel===c.id?' on':''}" data-s="${c.id}" style="--kc:${karEsc(f.col)}" title="${karEsc(c.name)}"><img src="${karEsc(karImg(c))}" alt="" loading="lazy" decoding="async"><span>${karEsc(c.name)}</span>${n>1?'<b>×'+n+'</b>':''}</button>`
+    :`<div class="kth q" aria-label="Noch nicht gefunden"><span>?</span><em>${String(c.id).padStart(3,'0')}</em></div>`}).join('')+'</div>';
+  const sc=KAR.sel?karById(KAR.sel):null;if(sc&&KAR.own[sc.id]>0)h+=`<h3 class="edh">${karEsc(sc.name)}</h3><div class="kbig">${karCardHTML(sc,300)}</div><p class="sub">Klick dreht die Karte um.</p>`;
+  el.innerHTML=h;
+  const ob=el.querySelector('#kar-open');if(ob)ob.onclick=()=>{if(karOpenPack())karRender()};
+  el.querySelectorAll('.kslot .kcard').forEach(k=>{const i=+k.parentNode.dataset.i;k.onclick=()=>{const x=KAR.reveal&&KAR.reveal.items[i];if(!x)return;x.up=true;k.classList.remove('flip','down');tone(900+i*60,.05,'square',.03);const ab=document.getElementById('kar-all');if(ab&&KAR.reveal.items.every(y=>y.up))ab.textContent='Fertig'}});
+  const ab=el.querySelector('#kar-all');if(ab)ab.onclick=()=>{const it=KAR.reveal.items;if(it.every(x=>x.up)){KAR.reveal=null;karRender();return}it.forEach(x=>x.up=true);el.querySelectorAll('.kslot .kcard').forEach(k=>k.classList.remove('flip','down'));ab.textContent='Fertig'};
+  el.querySelectorAll('.kth[data-s]').forEach(b=>b.onclick=()=>{KAR.sel=+b.dataset.s;karRender();const t=el.querySelector('.kbig');if(t)t.scrollIntoView({block:'nearest'})});
+  el.querySelectorAll('.kbig .kcard').forEach(k=>k.onclick=()=>k.classList.toggle('flip'))}
+
+karLoad();
+
 /* ================= Auswertung (geschlossene Beta): sammelt anonyme Ereignisse und schickt sie alle 15 s an /api/stats =================
    Erfasst werden: Spielzeit, Level, gelöste Aufträge, Scoops-Bewegungen mit Grund, gefundene Gegenstände, Portale, Polizei, Graffiti,
    Fehler im Browser, Hänger (Gas gedrückt, aber man kommt nicht weiter), Bildrate und Gerät. Aus ?nostats=1 wird nichts gesendet.
    In den Tests ist es aus (nur mit ?stats=1 an). Die Auswertung steht unter /stats (siehe worker/stats.js). */
-const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1106-0805',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
+const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1106-0959',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
 (function(){const rid=n=>{let s='';const c='abcdefghijklmnopqrstuvwxyz0123456789';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};STAT.sid=rid(12);
   try{STAT.pid=localStorage.getItem('kq-pid')||'';if(!/^[a-z0-9]{8,24}$/.test(STAT.pid)){STAT.pid=rid(12);localStorage.setItem('kq-pid',STAT.pid)}}catch(e){STAT.pid=STAT.sid}})();
 function statEv(ty,k,n,x,z){if(!STAT.on)return;if(STAT.q.length>=60)STAT.q.shift();const inGame=typeof LV!=='undefined';STAT.q.push([ty,String(k==null?'':k).slice(0,120),typeof n==='number'&&isFinite(n)?Math.round(n*100)/100:0,typeof x==='number'?Math.round(x):null,typeof z==='number'?Math.round(z):null,inGame?LV.id:0])}
@@ -4561,7 +4650,7 @@ addEventListener('pagehide',()=>statFlush(true));addEventListener('visibilitycha
 {const o=grafClose;grafClose=function(save){const p=GF.cur,d=GF.dabs,r=o.apply(this,arguments);try{if(save&&p&&d>0)statEv('gr',grafLegal(p.id)?'legal':'illegal',d,P.x,P.z)}catch(e){}return r}}
 {const o=mpUnstick;mpUnstick=function(){const x=P.x,z=P.z,r=o.apply(this,arguments);try{statEv('unstick','',1,x,z)}catch(e){}return r}}
 
-window.__qa={FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

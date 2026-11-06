@@ -76,3 +76,5 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 **Positions-Anzeige (in 42):** Taste V zeigt x, z, Blickwinkel (0° = Norden, im Uhrzeigersinn), Höhe, Ort und Stand; Klick kopiert die Zeile. Für die Glitch-Inventur.
 
 **Rarepod-Kamera (50):** Foto mit Polaroid-Rahmen (JPEG, Ort, Datum, Koordinaten, Blickwinkel), Bild nicht leer, Galerie bleibt nach Neuladen (IndexedDB), Taste C, Reiter Fotos, Aktionen, Löschen. Mit lokalem Worker zusätzlich: "An den Raum zeigen" kommt bei anderen an, ungültige und zu große Fotos werden verworfen.
+
+**Sammelkarten (51):** Kein Worker nötig, Karten und Bilder kommen per `page.route`. Prüft die Ziehung (7 Karten je Pack, Seltenheit nach Gewicht, letzte Karte mindestens "guarantee"), Kaufen nur im P-Mart und nur mit genug Scoops, Rarepod-Reiter Karten (Sammlung, Pack öffnen, Karten starten verdeckt, aufdecken, Detailkarte), Speichern nach Neuladen, Kartenpack im Laden, Kartenregal im P-Mart.

@@ -1,4 +1,4 @@
-import {musikList,musikFile,designList,designFile} from './musik.js';
+import {musikList,musikFile,designList,designFile,r2File} from './musik.js';
 export {Room} from './room.js';
 export {Stats} from './stats.js';
 export {Glitch} from './glitch.js';
@@ -51,6 +51,8 @@ export default{
     /* Musik aus dem R2-Bucket (nur mit Seitenpasswort) */
     if(url.pathname==='/api/musik'&&request.method==='GET')return musikList(env);
     if(url.pathname.startsWith('/musik/')&&(request.method==='GET'||request.method==='HEAD')){let key='';try{key=decodeURIComponent(url.pathname.slice(7))}catch(e){}return musikFile(env,request,key)}
+    /* Sammelkarten: Daten (karten/karten.json) und Bilder (/designs/karten/…) liegen nur im Bucket "designs", nicht im Repo */
+    if(url.pathname==='/api/karten'&&(request.method==='GET'||request.method==='HEAD'))return r2File(env.DESIGNS,request,'karten/karten.json',/^karten\/karten\.json$/);
     if(url.pathname==='/api/designs'&&request.method==='GET')return designList(env,'decks/');
     if(url.pathname.startsWith('/designs/')&&(request.method==='GET'||request.method==='HEAD')){let key='';try{key=decodeURIComponent(url.pathname.slice(9))}catch(e){}return designFile(env,request,key)}
     if(url.pathname==='/'||url.pathname==='/index.html')url.pathname='/kuesten-quest.html';
