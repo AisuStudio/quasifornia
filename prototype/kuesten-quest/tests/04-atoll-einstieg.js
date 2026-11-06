@@ -21,7 +21,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.evaluate(()=>{document.getElementById('ui').style.display=''});
  // Tür vor Gespräch
  await T(lab.doorX,lab.doorZ-1);console.log('Tür-Label (vor Gespräch)',await act());
- await p.evaluate(()=>__qa.actGo());console.log('Tür ohne Gespräch: Pad offen?',await p.evaluate(()=>__qa.PAD.open));
+ await p.evaluate(()=>__qa.actGo());console.log('Tür ohne Gespräch bleibt zu',!(await p.evaluate(()=>__qa.PAD.open)));
  // Mann
  await T(lab.manX-1,lab.manZ-3);console.log('Mann-Label',await act());
  const n1=await talk();console.log('Dialog Schritte',n1,'Q',await p.evaluate(()=>JSON.stringify({t:__qa.Q.talked,d:__qa.Q.dictated})));
@@ -53,7 +53,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.evaluate(()=>{for(let i=0;i<10;i++)__qa.step(.05);__qa.render()});await shot('lab_in');
  // Schlüssel: Schaltkasten
  await T(-34,-20,-Math.PI/2);console.log('Kasten-Label',await act());
- await p.evaluate(()=>{__qa.INV.items.delete('schraube')});await talk();console.log('ohne Schraubendreher: Schlüssel?',await p.evaluate(()=>__qa.Q.hasKey));
+ await p.evaluate(()=>{__qa.INV.items.delete('schraube')});await talk();console.log('ohne Schraubendreher kein Schlüssel',!(await p.evaluate(()=>__qa.Q.hasKey)));
  await p.evaluate(()=>{__qa.INV.items.add('schraube')});await talk();console.log('mit Schraubendreher: Schlüssel?',await p.evaluate(()=>__qa.Q.hasKey));
  await p.evaluate(()=>{for(let i=0;i<4;i++)__qa.step(.05);__qa.render()});await shot('lab_key');
  // raus

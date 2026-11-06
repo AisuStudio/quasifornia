@@ -41,7 +41,7 @@ export default{
       const org=request.headers.get('origin');if(org&&new URL(org).host!==url.host)return new Response('Falsche Herkunft',{status:403,headers:NOSTORE});
       if(!env.ROOM)return new Response('Räume nicht eingerichtet',{status:503,headers:NOSTORE});
       return env.ROOM.get(env.ROOM.idFromName(name)).fetch(request)}
-    /* Graffiti-Speicher: Bilder bleiben 48 Stunden auf dem Server (Durable Object), Liste = nur Zeitstempel, Bild einzeln */
+    /* Graffiti-Speicher: Bilder bleiben ein Jahr auf dem Server (Durable Object), Liste = nur Zeitstempel, Bild einzeln */
     if(url.pathname==='/api/graffiti'||url.pathname.startsWith('/api/graffiti/')){
       if(!env.GRAF)return new Response('Speicher nicht eingerichtet',{status:503,headers:NOSTORE});
       const stub=env.GRAF.get(env.GRAF.idFromName('main'));
@@ -61,7 +61,7 @@ export default{
     out.headers.set('cache-control','private, no-store');out.headers.set('x-robots-tag','noindex, nofollow');
     return out}};
 
-/* ---- Durable Object: speichert die Graffiti-Bilder (PNG als Text) mit Zeitstempel, Ablauf nach 48 Stunden ---- */
+/* ---- Durable Object: speichert die Graffiti-Bilder (PNG als Text) mit Zeitstempel, Ablauf nach einem Jahr ---- */
 const GRAF_TTL=365*24*3600*1000,/* vorerst fast dauerhaft (früher 48 Stunden); später evtl. Reinigungsjob */GRAF_MAX=60000,GRAF_ID=/^(w[1-9]|f\d{1,3}-\d{1,2}-\d{1,2})$/,GRAF_PNG=/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/;
 export class GrafStore{
   constructor(state){this.state=state}

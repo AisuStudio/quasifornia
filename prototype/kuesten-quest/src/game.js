@@ -54,7 +54,6 @@ const spectator=asProp((x,z,R,face)=>{const g=new THREE.Group();const top=CROWD_
    const m=new THREE.Mesh(new THREE.PlaneGeometry(.5,.26),BM(cols[Math.floor(R()*6)],{side:THREE.DoubleSide}));m.rotation.set(-Math.PI/2,0,R()*6.28);m.position.set(near,1.335+R()*.01,-12.2+R()*8.4);sc.add(m)}}
 
 /* dynamische Dinge */
-const V=THREE.Vector3;
 const SCOOPS_AT=[[-108,-9.2],[-80,-5.2],[-52,-9.6],[-24,-5.0],[4,-8.4]];
 const CONES_AT=[[-90,-7],[-86,-8.4],[-82,-9.8],[-62,-6.2],[-60,-8.2],[-30,-6],[-27,-8.2],[-24,-10],[14,-5],[22,-9.4],[34,-10],[40,-4.8],[56,-10.4],[64,-5.4],[78,-4.8],[94,-6],[106,-7],[118,-8.6]];
 const coneTpl=()=>{const g=new THREE.Group();const k=.9;
@@ -480,7 +479,6 @@ const makeBoard=asActor(()=>{const g=new THREE.Group();
   g.visible=false;sc.add(g);return dynOf(g)});
 const flyBoard=makeBoard();addOutlines(flyBoard,'actor');
 function boardPlayerOn(on){const bg=P.av&&P.av.userData.board;if(bg)bg.visible=on}
-function resetBoard(){T.state='ready';T.cd=0;flyBoard.visible=false;boardPlayerOn(true);updateThrowHud()}
 function updateThrowHud(){const e=$('throw'),s=$('throw-s'),bar=$('throw-bar');
   const live=(G.phase==='play'||G.phase==='chase'||G.phase==='caught');e.classList.toggle('on',live);
   if(T.state==='ready'&&T.cd<=0){s.textContent='bereit';e.classList.remove('cd');bar.style.setProperty('--p',1)}

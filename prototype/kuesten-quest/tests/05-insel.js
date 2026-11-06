@@ -27,13 +27,13 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await T(43,12);console.log('Alarm-Label',await act());await p.evaluate(()=>__qa.actGo());console.log('Dialog offen (ohne Item)',await p.evaluate(()=>__qa.DLG.open));await talk();
  // P1 Funkspruch
  await T(-42,12);console.log('Funk-Label',await act());await p.evaluate(()=>__qa.actGo());console.log('Puzzle 1 offen',await p.evaluate(()=>__qa.PUZ.open));
- await p.click('#p1-go');console.log('falsch (Shift 0) gelöst?',await p.evaluate(()=>__qa.ISL.s[0]));
+ await p.click('#p1-go');console.log('falsch (Shift 0) nicht gelöst',!(await p.evaluate(()=>__qa.ISL.s[0])));
  await p.click('#p1-p');await p.click('#p1-p');await p.click('#p1-p');await p.evaluate(()=>{__qa.render()});await shot('puz1');
  await p.click('#p1-go');console.log('Shift 3 gelöst?',await p.evaluate(()=>JSON.stringify({s:__qa.ISL.s,open:__qa.PUZ.open})));await talk();
  // P2 mit Item
  await p.evaluate(()=>{__qa.INV.items.add('schraube')});await T(43,12);await p.evaluate(()=>__qa.actGo());
- console.log('Puzzle 2 offen',await p.evaluate(()=>__qa.PUZ.open));await p.click('#p2-go');console.log('Alarm noch an: gelöst?',await p.evaluate(()=>__qa.ISL.s[1]));
- await p.click('#p2-sw button[data-k="C"]');await p.click('#p2-go');console.log('nur C an: gelöst?',await p.evaluate(()=>__qa.ISL.s[1]));await p.click('#p2-sw button[data-k="A"]');await p.evaluate(()=>{__qa.render()});await shot('puz2');await p.click('#p2-go');console.log('C an -> gelöst?',await p.evaluate(()=>JSON.stringify({s:__qa.ISL.s,alarm:__qa.ISL.alarm})));await talk();
+ console.log('Puzzle 2 offen',await p.evaluate(()=>__qa.PUZ.open));await p.click('#p2-go');console.log('Alarm noch an: nicht gelöst',!(await p.evaluate(()=>__qa.ISL.s[1])));
+ await p.click('#p2-sw button[data-k="C"]');await p.click('#p2-go');console.log('nur C an: nicht gelöst',!(await p.evaluate(()=>__qa.ISL.s[1])));await p.click('#p2-sw button[data-k="A"]');await p.evaluate(()=>{__qa.render()});await shot('puz2');await p.click('#p2-go');console.log('C an -> gelöst?',await p.evaluate(()=>JSON.stringify({s:__qa.ISL.s,alarm:__qa.ISL.alarm})));await talk();
  // P3 PIN
  await T(0,21);await p.evaluate(()=>__qa.actGo());
  for(let r=0;r<3;r++){for(const d of '1234')await p.click(`#p3-k button[data-d="${d}"]`);await p.click('#p3-k button[data-a="ok"]')}
@@ -46,7 +46,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await T(-30,-12);await p.evaluate(()=>__qa.actGo());console.log('Dialog ohne USB',await p.evaluate(()=>__qa.DLG.open));await talk();
  await p.evaluate(()=>{__qa.INV.items.add('usb')});await p.evaluate(()=>__qa.actGo());
  await p.evaluate(()=>{__qa.render()});await shot('puz4');
- await p.click('#p4-o button[data-o="10:30"]');console.log('falsche Antwort gelöst?',await p.evaluate(()=>__qa.ISL.s[3]));
+ await p.click('#p4-o button[data-o="10:30"]');console.log('falsche Antwort: nicht gelöst',!(await p.evaluate(()=>__qa.ISL.s[3])));
  await p.click('#p4-o button[data-o="10:40"]');console.log('richtig',await p.evaluate(()=>JSON.stringify({s:__qa.ISL.s,open:__qa.PUZ.open})));await talk();
  // Kiosk
  await T(22,33);console.log('Kiosk-Label ohne Bon',await act());await p.evaluate(()=>__qa.actGo());await talk();

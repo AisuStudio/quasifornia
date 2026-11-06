@@ -7,7 +7,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.goto('http://localhost:8834/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const st=()=>p.evaluate(()=>({under:!!__qa.G.under,pix:__qa.G.pix,flip:document.querySelector('canvas').style.transform,uni:__qa.pixPass.uniforms.uUW.value,portale:__qa.HUB.portals.some(p=>p.g.visible),akt:(__qa.curActs().map(a=>a.label)||[]).join('|').slice(0,60)}));
  console.log('oben',JSON.stringify(await st()));
- await p.keyboard.press('p');console.log('P-Taste ändert nichts',JSON.stringify(await p.evaluate(()=>__qa.G.pix)));
+ await p.keyboard.press('p');console.log('P-Taste ändert nichts (Pixel bleibt aus)',(await p.evaluate(()=>__qa.G.pix))===false);
  console.log('Eingang',JSON.stringify(await p.evaluate(()=>{const q=__qa;q.G.phase='play';q.P.x=-134;q.P.z=116;q.P.speed=0;q.step(.03);return q.curActs().map(a=>a.label)})));
  await p.evaluate(()=>{const q=__qa;q.P.x=-134;q.P.z=116;q.underEnter();for(let i=0;i<40;i++)q.step(.03)});
  console.log('unten',JSON.stringify(await st()));

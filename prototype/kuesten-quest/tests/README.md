@@ -1,7 +1,7 @@
 # Smoke-Tests (Playwright)
 
 Sie laden das Spiel im Headless-Browser (Software-Rendering) und spielen Abläufe über den Test-Hook `window.__qa`.
-Sie sind **Smoke-Tests**: Sie fangen Abstürze und Seitenfehler ab und drucken Zustände aus. Nicht jeder Wert wird automatisch geprüft.
+Sie sind **Smoke-Tests**: Sie fangen Abstürze und Seitenfehler ab und drucken Zustände aus. **Prüfzeilen** enden mit `true` (in Ordnung) oder `false`. `node tests/run.js` lässt einen Test scheitern, wenn er abstürzt, eine `ERR`-Zeile druckt oder eine Zeile mit `false`, `NaN` oder `undefined` endet. Negative Prüfungen werden so geschrieben, dass `true` gut bedeutet (`!(Wert)`). Reine Zustandszeilen werden nicht bewertet.
 
 ## Ausführen
 ```
