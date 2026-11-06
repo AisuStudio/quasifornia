@@ -15,7 +15,7 @@ function buildLevel7(){
   const cylm=(r,h,x,y,z,col,em,ei)=>{const m=new THREE.Mesh(CY,MT(col,em,ei));m.scale.set(r,h,r);m.position.set(x,Y+y+h/2,z);m.castShadow=true;return add(m)};
   const col=(x0,x1,z0,z1)=>L7.colliders.push({x0,x1,z0,z1,top:999});
   const sign=(text,w,h,x,y,z,ry,bg,fg,font)=>{const cv=document.createElement('canvas');cv.width=512;cv.height=Math.round(512*h/w);const g=cv.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,cv.width,cv.height);g.strokeStyle=fg;g.lineWidth=8;g.strokeRect(8,8,cv.width-16,cv.height-16);
-    g.fillStyle=fg;g.font=(font||'800 ')+Math.round(cv.height*.46)+'px "Baloo 2","Trebuchet MS",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,cv.width/2,cv.height/2+4);
+    g.fillStyle=fg;g.font=(font||'800 ')+Math.round(cv.height*.46)+'px "Smarta Nova","Trebuchet MS",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,cv.width/2,cv.height/2+4);
     const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,Y+y,z);m.rotation.y=ry;m.userData.noBake=true;return add(m)};
   /* Boden: Fliesen in Mint und Weiß */
   const ft=document.createElement('canvas');ft.width=ft.height=128;{const g=ft.getContext('2d');g.fillStyle='#f6efe6';g.fillRect(0,0,128,128);g.fillStyle='#bfeadb';g.fillRect(0,0,64,64);g.fillRect(64,64,64,64)}

@@ -2,9 +2,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Küsten-Quest</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=DM+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: Vollbild-Canvas, darüber HUD-Karten. Eine feste visuelle Welt, daher ein Look für beide Themes. */
 :root{
@@ -15,8 +12,8 @@
   --gold:#f0cf36;
   --cyan:#1cafd1;
   --haze:#b7a9d6;
-  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
-  --mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+  --display:"Smarta Nova","Trebuchet MS",system-ui,sans-serif;
+  --mono:"Smarta Nova","Trebuchet MS",system-ui,sans-serif;
   color-scheme:dark;
 }
 html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow:hidden;font-family:var(--display);-webkit-user-select:none;user-select:none;touch-action:none}
@@ -94,7 +91,7 @@ html,body{height:100%;margin:0;background:var(--ink);color:var(--paper);overflow
 #chathud{position:absolute;left:16px;bottom:18px;max-width:380px;display:flex;flex-direction:column;gap:4px;pointer-events:none;z-index:3;font:500 13px/1.35 var(--mono);color:#fff}
 #chathud div{background:rgba(26,22,38,.88);border:2px solid #0e0b18;border-radius:10px;padding:6px 9px;word-break:break-word}#chathud b{color:#8fd0ff}
 #bld{position:absolute;left:14px;top:14px;bottom:14px;width:250px;overflow-y:auto;background:rgba(26,22,38,.94);border:3px solid #0e0b18;border-radius:16px;padding:12px 12px 14px;color:var(--paper);font:500 12.5px/1.35 var(--mono);box-shadow:0 5px 0 #0e0b18;pointer-events:auto;z-index:5;display:flex;flex-direction:column;gap:10px}
-#bld[hidden]{display:none}#bld h2{margin:0;font:800 20px var(--display,'Baloo 2'),sans-serif;color:var(--gold)}
+#bld[hidden]{display:none}#bld h2{margin:0;font:800 20px var(--display,'Smarta Nova'),sans-serif;color:var(--gold)}
 #bld-tabs,#bld-parts,#bld-tools{display:flex;flex-wrap:wrap;gap:6px}#bld-cols{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 #bld button{font:500 12px/1.1 var(--mono);color:var(--paper);background:var(--ink-2);border:2px solid #0e0b18;border-radius:9px;padding:7px 9px;cursor:pointer}
 #bld button[aria-pressed="true"]{background:var(--pink)}#bld-parts button{display:flex;align-items:center;gap:6px}#bld-parts i{width:12px;height:12px;border-radius:3px;border:2px solid #0e0b18;display:inline-block}

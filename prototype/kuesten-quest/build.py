@@ -95,7 +95,7 @@ js=setup+'\n'+'\n'.join(chunks)+'\n'+game.replace('__LOGO_SVG__',json.dumps(logo
 import base64
 head=open('src/head.html').read();body=open('src/body.html').read()
 FONT=base64.b64encode(open('src/fonts/smarta-nova.otf','rb').read()).decode()
-head=head.replace('</style>','@font-face{font-family:"Smarta Nova";src:url(data:font/otf;base64,'+FONT+') format("opentype");font-display:swap}\n</style>',1)
+head=head.replace('</style>','@font-face{font-family:"Smarta Nova";src:url(data:font/otf;base64,'+FONT+') format("opentype");font-weight:100 900;font-display:swap}\n</style>',1)
 def build(prod):
     if prod:
         imap='{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}'

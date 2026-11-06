@@ -429,8 +429,8 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    </div>
    <div id="cinfo" aria-live="polite"><b id="cname"></b><span id="ctag"></span></div>
    <div id="cdots">${SKIN_LIST.map(([k,n],i)=>`<button type="button" data-i="${i}" aria-label="${n}"${SKOWN.has(k)?'':' disabled title="Im Rarepod-Laden freischalten"'}></button>`).join('')}</div>
-   <div class="namerow" style="display:flex;align-items:center;gap:10px;margin:12px 0 4px"><label for="av-name" style="font:700 13px/1.2 'DM Mono',monospace;color:#b7a9d6;white-space:nowrap">Dein Name</label><input id="av-name" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Skater" style="flex:1;min-width:0;box-sizing:border-box;font:700 16px 'Baloo 2',sans-serif;padding:8px 12px;border-radius:10px;border:3px solid #0e0b18;background:#2b2540;color:#fff"></div>
-   <details class="dev" id="friends" hidden><summary>Mit Freunden spielen (bis 5)</summary><p class="sub" style="margin:8px 0">Denkt euch einen Raumnamen aus (Buchstaben, Zahlen, Bindestrich). Alle, die denselben Namen eingeben, sehen sich.</p><input id="raum-in" type="text" maxlength="32" placeholder="raumname" autocomplete="off" style="width:100%;box-sizing:border-box;font:600 15px 'DM Mono',monospace;padding:10px 12px;border-radius:10px;border:3px solid #0e0b18;background:#2b2540;color:#fff"><button class="btn sec" id="raum-go" type="button">Raum öffnen</button></details>
+   <div class="namerow" style="display:flex;align-items:center;gap:10px;margin:12px 0 4px"><label for="av-name" style="font:700 13px/1.2 'Smarta Nova','Trebuchet MS',sans-serif;color:#b7a9d6;white-space:nowrap">Dein Name</label><input id="av-name" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Skater" style="flex:1;min-width:0;box-sizing:border-box;font:700 16px 'Smarta Nova',sans-serif;padding:8px 12px;border-radius:10px;border:3px solid #0e0b18;background:#2b2540;color:#fff"></div>
+   <details class="dev" id="friends" hidden><summary>Mit Freunden spielen (bis 5)</summary><p class="sub" style="margin:8px 0">Denkt euch einen Raumnamen aus (Buchstaben, Zahlen, Bindestrich). Alle, die denselben Namen eingeben, sehen sich.</p><input id="raum-in" type="text" maxlength="32" placeholder="raumname" autocomplete="off" style="width:100%;box-sizing:border-box;font:600 15px 'Smarta Nova','Trebuchet MS',sans-serif;padding:10px 12px;border-radius:10px;border:3px solid #0e0b18;background:#2b2540;color:#fff"><button class="btn sec" id="raum-go" type="button">Raum öffnen</button></details>
    <div class="navrow"><button class="btn" id="next1" type="button">Weiter: Steuerung und Quest ▶</button></div>
    </div>
    <div class="step" id="st2" hidden>
@@ -656,7 +656,7 @@ function updateTrack(gap){const f=x=>Math.max(0,Math.min(1,(x+134)/260))*100+'%'
 const camPos=new V3(-148,6,-8),camLook=new V3(-134,3,-8);let gapNow=60;
 /* Positions-Anzeige für Tester und die Glitch-Inventur: x, z, Blickwinkel (0° = Norden, im Uhrzeigersinn), Höhe und Stand. Taste V schaltet sie, Klick kopiert die Zeile. */
 const POSH={on:false,el:null,t:0,txt:''};try{POSH.on=localStorage.getItem('kq-pos')==='1'}catch(e){}
-function posHudEl(){if(POSH.el)return POSH.el;const d=document.createElement('div');d.id='poshud';d.title='Klick: Position kopieren';d.style.cssText="position:absolute;left:16px;bottom:74px;padding:5px 9px;border-radius:9px;border:2px solid #0e0b18;background:rgba(26,22,38,.82);color:#fff;font:600 12px/1.3 'DM Mono',monospace;z-index:3;pointer-events:auto;cursor:copy;display:none;white-space:pre";(document.getElementById('ui')||document.body).appendChild(d);
+function posHudEl(){if(POSH.el)return POSH.el;const d=document.createElement('div');d.id='poshud';d.title='Klick: Position kopieren';d.style.cssText="position:absolute;left:16px;bottom:74px;padding:5px 9px;border-radius:9px;border:2px solid #0e0b18;background:rgba(26,22,38,.82);color:#fff;font:600 12px/1.3 'Smarta Nova','Trebuchet MS',sans-serif;z-index:3;pointer-events:auto;cursor:copy;display:none;white-space:pre";(document.getElementById('ui')||document.body).appendChild(d);
   d.onclick=()=>{const t=POSH.txt;const ok=()=>toast('Position kopiert',1100);try{navigator.clipboard.writeText(t).then(ok,()=>prompt('Position:',t))}catch(e){prompt('Position:',t)}};return POSH.el=d}
 function posHudSet(on){POSH.on=!!on;try{localStorage.setItem('kq-pos',POSH.on?'1':'0')}catch(e){}posHudEl().style.display=POSH.on&&G.phase!=='title'?'block':'none'}
 function posHudStep(dt){const el=posHudEl();if(!POSH.on||G.phase==='title'){el.style.display='none';return}POSH.t-=dt;if(POSH.t>0)return;POSH.t=.1;
@@ -905,9 +905,9 @@ function winTex(seed){const c=document.createElement('canvas');c.width=64;c.heig
 function signTex(txt,col,sub){const c=document.createElement('canvas');c.width=256;c.height=512;const g=c.getContext('2d');g.fillStyle='rgba(10,4,30,.92)';g.fillRect(0,0,256,512);
   g.strokeStyle=col;g.lineWidth=10;g.shadowColor=col;g.shadowBlur=26;g.strokeRect(14,14,228,484);
   g.fillStyle='#ffffff';g.textAlign='center';g.textBaseline='middle';g.shadowBlur=28;g.shadowColor=col;
-  const parts=txt.split('|');const fs=parts.length>1?92:(txt.length>5?64:110);g.font=`800 ${fs}px "Baloo 2","Trebuchet MS",sans-serif`;
+  const parts=txt.split('|');const fs=parts.length>1?92:(txt.length>5?64:110);g.font=`800 ${fs}px "Smarta Nova","Trebuchet MS",sans-serif`;
   parts.forEach((p,i)=>g.fillText(p,128,256+(i-(parts.length-1)/2)*fs*1.05));
-  if(sub){g.font='700 34px "Baloo 2",sans-serif';g.fillStyle=col;g.fillText(sub,128,462)}
+  if(sub){g.font='700 34px "Smarta Nova",sans-serif';g.fillStyle=col;g.fillText(sub,128,462)}
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
 function gridTex(){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d'),R=mulberry(99);g.fillStyle='#0a0420';g.fillRect(0,0,256,256);
   g.strokeStyle='#ff5fa8';g.globalAlpha=.55;g.lineWidth=3;[0,128].forEach(v=>{g.beginPath();g.moveTo(v,0);g.lineTo(v,256);g.stroke();g.beginPath();g.moveTo(0,v);g.lineTo(256,v);g.stroke()});g.globalAlpha=1;
@@ -1199,7 +1199,7 @@ function genMaze(seed){const R=mulberry(seed),N=6,id=(i,j)=>j*N+i,key=(a,b)=>a<b
   return {N,id,key,open,all,deg,adj,dist,pick,coast}}
 
 function shopTex(txt,fg,bg){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,128);g.strokeStyle=fg;g.lineWidth=8;g.shadowColor=fg;g.shadowBlur=18;g.strokeRect(8,8,496,112);
-  g.fillStyle='#fff';g.shadowBlur=22;let fs=66;g.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif';while(g.measureText(txt).width>450&&fs>20){fs-=2;g.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif'}g.textAlign='center';g.textBaseline='middle';g.fillText(txt,256,68);
+  g.fillStyle='#fff';g.shadowBlur=22;let fs=66;g.font='800 '+fs+'px "Smarta Nova","Trebuchet MS",sans-serif';while(g.measureText(txt).width>450&&fs>20){fs-=2;g.font='800 '+fs+'px "Smarta Nova","Trebuchet MS",sans-serif'}g.textAlign='center';g.textBaseline='middle';g.fillText(txt,256,68);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
 const SIGNM={};function signMat(txt,fg,bg){const k=txt+fg;return SIGNM[k]||(SIGNM[k]=new THREE.MeshBasicMaterial({map:shopTex(txt,fg,bg||'#1a1030'),side:THREE.DoubleSide}))}
 const MTC={};function MT(c,em,ei){const k=c+'|'+em+'|'+ei;return MTC[k]||(MTC[k]=new THREE.MeshStandardMaterial({color:c,roughness:.8,flatShading:true,...(em?{emissive:em,emissiveIntensity:ei||.8}:{})}))}
@@ -1239,9 +1239,9 @@ function buildLevel0(){
     sign('WOHNEN','#f1a7c8',-w*.3,2.2,-d/2-.12,3.6,.9,Math.PI,'#3a2a5a')}
   /* ---- Laden ---- */
   /* ---- P-Mart: Convenience-Store im japanischen Stil, Banderole rundherum ---- */
-  const martTex=(txt,w=1024,h=170,fs=116)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#2b5fcf';x.fillRect(0,0,w,h);x.fillStyle='#f4f7ff';x.textAlign='center';x.textBaseline='middle';x.font='800 '+fs+'px "Baloo 2","Trebuchet MS",sans-serif';if('letterSpacing' in x)x.letterSpacing='8px';x.fillText(txt,w/2,h/2+4);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t})};
+  const martTex=(txt,w=1024,h=170,fs=116)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#2b5fcf';x.fillRect(0,0,w,h);x.fillStyle='#f4f7ff';x.textAlign='center';x.textBaseline='middle';x.font='800 '+fs+'px "Smarta Nova","Trebuchet MS",sans-serif';if('letterSpacing' in x)x.letterSpacing='8px';x.fillText(txt,w/2,h/2+4);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t})};
   const poleTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=220;const x=c.getContext('2d');x.fillStyle='#2b5fcf';x.beginPath();x.roundRect(4,4,248,212,34);x.fill();x.strokeStyle='#f4f7ff';x.lineWidth=7;x.beginPath();x.roundRect(14,14,228,192,26);x.stroke();
-    x.fillStyle='#f4f7ff';x.beginPath();x.arc(128,92,56,0,7);x.fill();x.fillStyle='#2b5fcf';x.textAlign='center';x.textBaseline='middle';x.font='800 84px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('P',128,96);x.fillStyle='#f4f7ff';x.font='800 42px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('P-MART',128,174);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return new THREE.MeshBasicMaterial({map:t,transparent:true})};
+    x.fillStyle='#f4f7ff';x.beginPath();x.arc(128,92,56,0,7);x.fill();x.fillStyle='#2b5fcf';x.textAlign='center';x.textBaseline='middle';x.font='800 84px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('P',128,96);x.fillStyle='#f4f7ff';x.font='800 42px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('P-MART',128,174);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return new THREE.MeshBasicMaterial({map:t,transparent:true})};
   function shop(i){const w=26,d=16,h=6.2,WH=MT('#f4f4ee'),BLU=MT('#2b5fcf'),PNK=MT('#ee7cb8'),GLS=MT('#9fd0e8','#bfe8f4',.3),GREY=MT('#8d93a0'),DK=MT('#1c1f2b');
     (HUB.shops||(HUB.shops=[])).push({x:cur.x,z:cur.z-d/2-2.8});
     bx(WH,w,h,d,0,0,0);bx(MT('#d7dbe3'),w+.7,.5,d+.7,0,h,0);bx(MT('#b9bdc9'),4.4,1.3,3.2,-6,h+.5,2.5);bx(MT('#b9bdc9'),3,1,2.4,6,h+.5,3);
@@ -1283,8 +1283,8 @@ function buildLevel0(){
     [[-2.3,18.0],[2.3,18.0],[-3.0,8.6],[3.0,8.6]].forEach(([x,y])=>{const zz=-Math.sqrt(Math.max(1,rAt(y)**2-x*x))-.15;bx(W,1.9,2.5,.45,x,y,zz);bx(GLS,1.4,2.0,.15,x,y+.25,zz-.26)});
     /* Schild: CAFÉ klein, "Pengu" groß, als gebogene Fläche auf dem Körper */
     {const c=document.createElement('canvas');c.width=512;c.height=256;const x=c.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
-     x.font='900 70px "Baloo 2","Trebuchet MS",sans-serif';x.lineWidth=14;x.strokeStyle='#7a1a1a';x.fillStyle='#ffffff';x.strokeText('CAFÉ',256,62);x.fillText('CAFÉ',256,62);x.fillStyle='#b02a2a';x.fillText('CAFÉ',256,62);
-     x.font='900 150px "Baloo 2","Trebuchet MS",sans-serif';x.lineWidth=22;x.strokeStyle='#4a0f0f';x.strokeText('Pengu',256,176);x.fillStyle='#e8352a';x.fillText('Pengu',256,176);
+     x.font='900 70px "Smarta Nova","Trebuchet MS",sans-serif';x.lineWidth=14;x.strokeStyle='#7a1a1a';x.fillStyle='#ffffff';x.strokeText('CAFÉ',256,62);x.fillText('CAFÉ',256,62);x.fillStyle='#b02a2a';x.fillText('CAFÉ',256,62);
+     x.font='900 150px "Smarta Nova","Trebuchet MS",sans-serif';x.lineWidth=22;x.strokeStyle='#4a0f0f';x.strokeText('Pengu',256,176);x.fillStyle='#e8352a';x.fillText('Pengu',256,176);
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
      const dc=new THREE.Mesh(new THREE.PlaneGeometry(6.6,3.3),new THREE.MeshBasicMaterial({map:t,transparent:true,alphaTest:.05,side:THREE.DoubleSide}));
      dc.position.set(cur.x,Y0+13.4+hillG(cur.x,cur.z),cur.z-rAt(13.4)-.42);dc.rotation.y=Math.PI;dc.userData.noBake=true;dc.userData.noOutline=true;W0.add(dc)}
@@ -1316,8 +1316,8 @@ function buildLevel0(){
     sign('24H','#ff5fa8',0,4.3,-9.95,3.2,1,Math.PI,'#10183a');
     /* Säule (7 m) mit unsymmetrischer 60er-Reklame: Schild seitlich und leicht schief, Sputnik-Stern, Bumerang, Ufo */
     const metal=MT('#cfcfe0'),tex=(()=>{const c=document.createElement('canvas');c.width=1024;c.height=340;const x=c.getContext('2d');x.fillStyle='#fff3d6';x.fillRect(0,0,1024,340);x.strokeStyle='#2fa88a';x.lineWidth=18;x.strokeRect(9,9,1006,322);x.strokeStyle='#e5383b';x.lineWidth=6;x.strokeRect(34,34,956,272);
-      x.textAlign='center';x.textBaseline='middle';x.font='italic 900 150px "Baloo 2","Trebuchet MS",sans-serif';x.lineJoin='round';x.lineWidth=14;x.strokeStyle='#1a1626';x.strokeText('AstroBurger',512,128);x.fillStyle='#e5383b';x.fillText('AstroBurger',512,128);
-      x.font='italic 900 84px "Baloo 2","Trebuchet MS",sans-serif';x.lineWidth=10;x.strokeStyle='#1a1626';x.strokeText('★ 3000 ★',560,250);x.fillStyle='#2fa88a';x.fillText('★ 3000 ★',560,250);
+      x.textAlign='center';x.textBaseline='middle';x.font='italic 900 150px "Smarta Nova","Trebuchet MS",sans-serif';x.lineJoin='round';x.lineWidth=14;x.strokeStyle='#1a1626';x.strokeText('AstroBurger',512,128);x.fillStyle='#e5383b';x.fillText('AstroBurger',512,128);
+      x.font='italic 900 84px "Smarta Nova","Trebuchet MS",sans-serif';x.lineWidth=10;x.strokeStyle='#1a1626';x.strokeText('★ 3000 ★',560,250);x.fillStyle='#2fa88a';x.fillText('★ 3000 ★',560,250);
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})();
     cyl(metal,.38,7,0,13.6,0);
     [0,Math.PI].forEach(ry=>{const bd=new THREE.Mesh(new THREE.PlaneGeometry(11.6,3.85),new THREE.MeshBasicMaterial({map:tex}));bd.position.set(cur.x+3.6,Y0+17.4+hillG(cur.x,cur.z),cur.z+(ry?.12:-.12));bd.rotation.set(0,Math.PI-ry,.11);bd.userData.noBake=true;W0.add(bd)});
@@ -1506,16 +1506,16 @@ function buildLevel0(){
       Die Schrift hat noch keine Umlaute und kein ß: solange SN_NOUML gilt, werden sie als ae, oe, ue, ss geschrieben. */
    const SN_NOUML=true,sn=t=>SN_NOUML?t.replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss'):t;
    const stTex=(t0)=>{const t=sn(t0),c=document.createElement('canvas');c.width=640;c.height=128;const x=c.getContext('2d');x.fillStyle='#0b6b4a';x.fillRect(0,0,640,128);x.strokeStyle='#f4f7f2';x.lineWidth=7;x.beginPath();x.roundRect(7,7,626,114,16);x.stroke();x.fillStyle='#f4f7f2';x.textAlign='center';x.textBaseline='middle';
-     const fam='"Smarta Nova","Baloo 2","Trebuchet MS",sans-serif';let fs=74;x.font=fs+'px '+fam;while(x.measureText(t).width>560&&fs>20){fs-=3;x.font=fs+'px '+fam}x.fillText(t,320,66);
+     const fam='"Smarta Nova","Trebuchet MS",sans-serif';let fs=74;x.font=fs+'px '+fam;while(x.measureText(t).width>560&&fs>20){fs-=3;x.font=fs+'px '+fam}x.fillText(t,320,66);
      const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})};
-   const stickerTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#ffe066';x.beginPath();x.arc(128,128,122,0,7);x.fill();x.strokeStyle='#1a1626';x.lineWidth=8;x.stroke();x.fillStyle='#1a1626';x.textAlign='center';x.textBaseline='middle';x.font='800 27px "Baloo 2","Trebuchet MS",sans-serif';
+   const stickerTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#ffe066';x.beginPath();x.arc(128,128,122,0,7);x.fill();x.strokeStyle='#1a1626';x.lineWidth=8;x.stroke();x.fillStyle='#1a1626';x.textAlign='center';x.textBaseline='middle';x.font='800 27px "Smarta Nova","Trebuchet MS",sans-serif';
      ['Nett hier, aber','waren Sie schon mal','auf Andromeda?'].forEach((l,i)=>x.fillText(l,128,84+i*34));x.font='800 22px sans-serif';x.fillText('★ ✦ ★',128,200);
      const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx,transparent:true})};
    const POLE=MT('#8a8aa0');
    for(let j=0;j<N;j++)for(let i=0;i<N;i++){const nd=nodeXZ(j*N+i);cur={x:nd.x+7.4,z:nd.z+7.4};cyl(POLE,.14,7.4,0,0,0);
      [[ROWN[j],0],[ROWN[j],Math.PI],[COLN[i],Math.PI/2],[COLN[i],-Math.PI/2]].forEach(([t,ry],k)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(6.2,1.24),stTex(t));const off=.16;m.position.set(cur.x+(k===2?off:k===3?-off:0),Y0+6.6-(k>1?1.4:0)+hillG(cur.x,cur.z),cur.z+(k===0?off:k===1?-off:0));m.rotation.y=ry;m.userData.noBake=true;W0.add(m)});
      if(i===2&&j===3){const wt=(()=>{const c=document.createElement('canvas');c.width=1024;c.height=200;const x=c.getContext('2d');x.fillStyle='#ee7cb8';x.fillRect(0,0,1024,200);x.strokeStyle='#fff';x.lineWidth=10;x.strokeRect(10,10,1004,180);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#7a1650';x.shadowBlur=0;x.shadowOffsetY=6;
-       x.font='800 56px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('Willkommen in',512,58);x.font='800 98px "Baloo 2","Trebuchet MS",sans-serif';x.fillText('PORT LUPO',512,142);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})})();
+       x.font='800 56px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('Willkommen in',512,58);x.font='800 98px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('PORT LUPO',512,142);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})})();
        const ws=new THREE.Mesh(new THREE.PlaneGeometry(10,1.95),wt);ws.position.set(nd.x+7.4-.16,Y0+10.4+hillG(nd.x+7.4,nd.z-7.4),nd.z-7.4);ws.rotation.y=-Math.PI/2;ws.userData.noBake=true;W0.add(ws);
        cur={x:nd.x+7.4,z:nd.z-7.4};cyl(POLE,.16,9.6,0,0,0);cur={x:nd.x+7.4,z:nd.z+7.4}}
      if(i===2&&j===3){const s=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.5),stickerTex());s.position.set(cur.x-.17,Y0+2.6+hillG(cur.x,cur.z),cur.z);s.rotation.y=-Math.PI/2;s.userData.noBake=true;W0.add(s)}}}

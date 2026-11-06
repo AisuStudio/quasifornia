@@ -18,8 +18,8 @@ function fotSnap(){if(G.phase==='title')return null;try{render()}catch(e){}
   let wk=Math.atan2(Math.cos(P.h),-Math.sin(P.h))*180/Math.PI;wk=((wk%360)+360)%360;
   const ort=LV.id===0?(G.under?'Unterwelt':'Port Lupo'):'Level '+LV.id,datum=new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
     z1=ort+' · '+datum,z2='x '+P.x.toFixed(1)+'  z '+P.z.toFixed(1)+'  '+Math.round(wk)+'° '+fotDir(wk)+(typeof MULTI!=='undefined'&&MULTI.name?'  ·  '+MULTI.name:'');
-  g.fillStyle='#1a1626';g.font='800 '+Math.round(BB*.3)+'px "Baloo 2","Trebuchet MS",sans-serif';g.textBaseline='middle';g.fillText(z1,B,sh+B+BB*.36);
-  g.fillStyle='#6b6480';g.font='500 '+Math.round(BB*.21)+'px "DM Mono",monospace';g.fillText(z2,B,sh+B+BB*.72);
+  g.fillStyle='#1a1626';g.font='800 '+Math.round(BB*.3)+'px "Smarta Nova","Trebuchet MS",sans-serif';g.textBaseline='middle';g.fillText(z1,B,sh+B+BB*.36);
+  g.fillStyle='#6b6480';g.font='500 '+Math.round(BB*.21)+'px "Smarta Nova","Trebuchet MS",sans-serif';g.fillText(z2,B,sh+B+BB*.72);
   const f={id:'f'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36),t:Date.now(),txt:z1+' | '+z2,img:cv.toDataURL('image/jpeg',.88),th:fotScale(cv,300,.72)};
   FOTO.list.unshift(f);while(FOTO.list.length>FOTO.max){const o=FOTO.list.pop();fotDelDb(o.id)}fotPut(f);
   try{if(typeof statEv==='function')statEv('foto','mach',1,P.x,P.z)}catch(e){}

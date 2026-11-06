@@ -7,7 +7,7 @@ function pickGingerBlock(maze,lab){const R=mulberry(2112),c=[];
 function adventSignMat(){const c=document.createElement('canvas');c.width=512;c.height=256;const g=c.getContext('2d');
   g.fillStyle='#7a4a2a';g.fillRect(0,0,512,256);g.fillStyle='#8a5a34';for(let i=0;i<8;i++)g.fillRect(0,i*32+4,512,3);
   g.strokeStyle='#fff6ea';g.lineWidth=10;g.lineJoin='round';g.strokeRect(14,14,484,228);
-  g.fillStyle='#fff6ea';g.textAlign='center';g.textBaseline='middle';g.font='800 56px "Baloo 2","Trebuchet MS",sans-serif';g.fillText('ÖFFNET AM',256,96);g.font='800 50px "Baloo 2","Trebuchet MS",sans-serif';g.fillText('ERSTEN ADVENT',256,172);
+  g.fillStyle='#fff6ea';g.textAlign='center';g.textBaseline='middle';g.font='800 56px "Smarta Nova","Trebuchet MS",sans-serif';g.fillText('ÖFFNET AM',256,96);g.font='800 50px "Smarta Nova","Trebuchet MS",sans-serif';g.fillText('ERSTEN ADVENT',256,172);
   [[40,40],[472,40],[40,216],[472,216]].forEach(([x,y],k)=>{g.fillStyle=['#e5383b','#2fd66b','#ffd23a','#4cc3ff'][k];g.beginPath();g.arc(x,y,12,0,7);g.fill()});
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide})}
 function buildGingerBlock(){const H=HUB.h,bx=H.bx,cyl=H.cyl,sph=H.sph,MT=H.MT,cur=H.cur(),W=24,D=20,Hh=8;
