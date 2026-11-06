@@ -33,6 +33,10 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  console.log('Fertig, Karten in der Sammlung',JSON.stringify(u3),u3.slots===0&&u3.th===u3.got&&u3.got>=1);
  await p.evaluate(()=>document.querySelector('#rp-kar .kth[data-s]').click());const big=await p.evaluate(()=>document.querySelectorAll('#rp-kar .kbig .kcard').length);console.log('Detailkarte',big===1);
  await p.screenshot({path:require('os').tmpdir()+'/t_karten.png'});
+ /* Zwei Packs hintereinander, ohne dazwischen auf Fertig zu drücken */
+ await p.evaluate(()=>{const q=__qa;q.KAR.packs=2;q.karRender()});await p.evaluate(()=>document.getElementById('kar-open').click());const a1=await p.evaluate(()=>({dis:document.getElementById('kar-open').disabled,slots:document.querySelectorAll('#rp-kar .kslot').length,packs:__qa.KAR.packs}));
+ await p.evaluate(()=>document.getElementById('kar-open').click());const a2=await p.evaluate(()=>({slots:document.querySelectorAll('#rp-kar .kslot').length,down:document.querySelectorAll('#rp-kar .kslot .kcard.down').length,packs:__qa.KAR.packs,total:Object.values(__qa.KAR.own).reduce((a,b)=>a+b,0)}));
+ console.log('Zweites Pack ohne Fertig',JSON.stringify([a1,a2]),!a1.dis&&a1.slots===7&&a1.packs===1&&a2.slots===7&&a2.down===7&&a2.packs===0&&a2.total===21);
  /* Speichern */
  const own=await p.evaluate(()=>JSON.stringify(__qa.KAR.own));await boot();console.log('Nach Neuladen gespeichert',await p.evaluate(()=>JSON.stringify(__qa.KAR.own))===own);
  /* Laden-Anzeige und Regal */

@@ -29,8 +29,8 @@ function karBuyPack(){const d=KAR.data;if(!d){toast('Kartenpacks gibt es gerade 
 function karShopHTML(){const d=KAR.data;if(!d)return '';const can=SHOP.in&&scCan(d.packPrice);
   return `<h3 class="edh" id="kar-shop">Sammelkarten</h3><div class="kpack"><div class="kp-ic"><i></i><i></i><i></i></div><div><b>Kartenpack</b><span>${d.packSize} Karten · ${d.packPrice} Scoops</span><span>Du hast ${KAR.packs} ungeöffnete${KAR.packs===1?'s Pack':' Packs'}. Öffnen im Reiter Karten.</span></div><button type="button" data-kpack="1"${can?'':' disabled'}>Kaufen</button></div>`}
 /* Pack öffnen */
-function karOpenPack(rnd){if(!KAR.data||KAR.packs<1||KAR.reveal)return null;const cards=karDraw(KAR.data.packSize,rnd);if(cards.length<KAR.data.packSize)return null;
-  KAR.packs--;const items=cards.map(c=>{const neu=!(KAR.own[c.id]>0);KAR.own[c.id]=(KAR.own[c.id]||0)+1;return {id:c.id,neu,up:false}});KAR.reveal={items};karSave();
+function karOpenPack(rnd){if(!KAR.data||KAR.packs<1)return null;const cards=karDraw(KAR.data.packSize,rnd);if(cards.length<KAR.data.packSize)return null;
+  KAR.packs--;const items=cards.map(c=>{const neu=!(KAR.own[c.id]>0);KAR.own[c.id]=(KAR.own[c.id]||0)+1;return {id:c.id,neu,up:false}});KAR.reveal={items};KAR.fresh=true;karSave();
   try{statEv('karten','pack',1)}catch(e){}tone(520,.06,'square',.04);tone(780,.08,'square',.04,0,.07);return cards}
 /* Muster für die Rückseite: zufällig, aber je Karte immer gleich */
 const KAR_PAST=['#ffd1e6','#ffeeb0','#c9f0e3','#d9d0f5','#cfe6ff','#ffdcc2','#e4f5c8'],KAR_BASE=['#fff3f8','#fffbe8','#eefaf5'],KAR_PAT={};
@@ -54,7 +54,7 @@ function karRender(){const el=document.getElementById('rp-kar');if(!el||typeof S
   if(KAR.state==='leer')karLoad();
   if(!KAR.data){el.innerHTML='<p class="sub">'+(KAR.state==='lädt'?'Karten werden geladen …':'Die Sammelkarten sind gerade nicht erreichbar.')+'</p>';return}
   const d=KAR.data,got=karGot();
-  let h=`<p class="sub">Sammlung: <b>${got} von ${d.cards.length}</b> Karten. Ein Pack hat immer ${d.packSize} Karten und kostet ${d.packPrice} Scoops im P-Mart.</p><div class="kbar"><span>Ungeöffnete Packs: <b>${KAR.packs}</b></span><button type="button" class="btn" id="kar-open"${KAR.packs>0&&!KAR.reveal?'':' disabled'}>Pack öffnen</button></div>`;
+  let h=`<p class="sub">Sammlung: <b>${got} von ${d.cards.length}</b> Karten. Ein Pack hat immer ${d.packSize} Karten und kostet ${d.packPrice} Scoops im P-Mart.</p><div class="kbar"><span>Ungeöffnete Packs: <b>${KAR.packs}</b></span><button type="button" class="btn" id="kar-open"${KAR.packs>0?'':' disabled'}>Pack öffnen</button></div>`;
   if(KAR.reveal){const it=KAR.reveal.items,allUp=it.every(x=>x.up);
     h+=`<div class="kreveal">`+it.map((x,i)=>{const c=karById(x.id);return `<div class="kslot" data-i="${i}">${karCardHTML(c,140,{flip:!x.up,down:!x.up,neu:x.neu})}</div>`}).join('')+`</div><div class="kbar"><button type="button" class="btn sec" id="kar-all">${allUp?'Fertig':'Alle aufdecken'}</button></div>`}
   h+=`<div class="kgrid">`+d.cards.map(c=>{const n=KAR.own[c.id]||0,f=karFam(c);return n>0
@@ -62,7 +62,7 @@ function karRender(){const el=document.getElementById('rp-kar');if(!el||typeof S
     :`<div class="kth q" aria-label="Noch nicht gefunden"><span>?</span><em>${String(c.id).padStart(3,'0')}</em></div>`}).join('')+'</div>';
   const sc=KAR.sel?karById(KAR.sel):null;if(sc&&KAR.own[sc.id]>0)h+=`<h3 class="edh">${karEsc(sc.name)}</h3><div class="kbig">${karCardHTML(sc,300)}</div><p class="sub">Klick dreht die Karte um.</p>`;
   el.innerHTML=h;
-  const ob=el.querySelector('#kar-open');if(ob)ob.onclick=()=>{if(karOpenPack())karRender()};
+  const ob=el.querySelector('#kar-open');if(ob)ob.onclick=()=>{if(karOpenPack())karRender()};if(KAR.fresh){KAR.fresh=false;const rv=el.querySelector('.kreveal');if(rv)setTimeout(()=>rv.scrollIntoView({block:'nearest'}),0)}
   el.querySelectorAll('.kslot .kcard').forEach(k=>{const i=+k.parentNode.dataset.i;k.onclick=()=>{const x=KAR.reveal&&KAR.reveal.items[i];if(!x)return;x.up=true;k.classList.remove('flip','down');tone(900+i*60,.05,'square',.03);const ab=document.getElementById('kar-all');if(ab&&KAR.reveal.items.every(y=>y.up))ab.textContent='Fertig'}});
   const ab=el.querySelector('#kar-all');if(ab)ab.onclick=()=>{const it=KAR.reveal.items;if(it.every(x=>x.up)){KAR.reveal=null;karRender();return}it.forEach(x=>x.up=true);el.querySelectorAll('.kslot .kcard').forEach(k=>k.classList.remove('flip','down'));ab.textContent='Fertig'};
   el.querySelectorAll('.kth[data-s]').forEach(b=>b.onclick=()=>{KAR.sel=+b.dataset.s;karRender();const t=el.querySelector('.kbig');if(t)t.scrollIntoView({block:'nearest'})});
