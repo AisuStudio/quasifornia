@@ -62,15 +62,25 @@ export default{
     return out}};
 
 /* ---- Durable Object: speichert die Graffiti-Bilder (PNG als Text) mit Zeitstempel, Ablauf nach einem Jahr ---- */
-const GRAF_TTL=365*24*3600*1000,/* vorerst fast dauerhaft (früher 48 Stunden); später evtl. Reinigungsjob */GRAF_MAX=60000,GRAF_ID=/^(w[1-9]|f\d{1,3}-\d{1,2}-\d{1,2})$/,GRAF_PNG=/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/;
+const GRAF_TTL=365*24*3600*1000,/* vorerst fast dauerhaft (früher 48 Stunden); später evtl. Reinigungsjob */GRAF_MAX=60000,GRAF_PNG=/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/;
+/* Gültige Kennungen: w1 bis w9 (Wände) und f<Gebäude 0-80>-<Kante 0-40>-<Feld 0-24> (Fassaden; die echte Karte hat höchstens Gebäude 50, Kante 28, Feld 16). */
+const GRAF_ID=/^(w[1-9]|f(?:[0-9]|[1-7][0-9]|80)-(?:[0-9]|[1-3][0-9]|40)-(?:[0-9]|1[0-9]|2[0-4]))$/,GRAF_W=128,GRAF_H=64,GRAF_MAXN=1500,GRAF_RATE=30;
+/* Prüft Kopf einer PNG-Daten-URL: Signatur, IHDR, genau 128 x 64 Pixel (so groß ist die Malfläche im Spiel). */
+function grafPngOk(body){try{const bin=atob(body.slice(22,22+44)),u=Uint8Array.from(bin,c=>c.charCodeAt(0)),sig=[137,80,78,71,13,10,26,10];for(let i=0;i<8;i++)if(u[i]!==sig[i])return false;if(String.fromCharCode(u[12],u[13],u[14],u[15])!=='IHDR')return false;const dv=new DataView(u.buffer);return dv.getUint32(16)===GRAF_W&&dv.getUint32(20)===GRAF_H}catch(e){return false}}
 export class GrafStore{
-  constructor(state){this.state=state}
+  constructor(state,env){this.state=state;this.max=Math.max(1,parseInt(env&&env.GRAF_MAXN)||GRAF_MAXN);this.rl=new Map()}
   async fetch(request){
     const url=new URL(request.url),st=this.state.storage,now=Date.now(),H={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
     const m=url.pathname.match(/^\/api\/graffiti(?:\/([^/]+))?$/);if(!m)return new Response('?',{status:404});
     const id=m[1]?decodeURIComponent(m[1]):null;
-    if(!id&&request.method==='GET'){const items={},all=await st.list({prefix:'g:'});for(const [k,v] of all){if(now-v.t>GRAF_TTL){await st.delete(k);continue}items[k.slice(2)]=v.t}return new Response(JSON.stringify({now,ttl:GRAF_TTL,items}),{headers:H})}
+    if(!id&&request.method==='GET'){const items={},all=await st.list({prefix:'g:'});let gone=0;for(const [k,v] of all){if(now-v.t>GRAF_TTL){await st.delete(k);gone++;continue}items[k.slice(2)]=v.t}if(gone){const n=(await st.get('n'))||0;await st.put('n',Math.max(0,n-gone))}return new Response(JSON.stringify({now,ttl:GRAF_TTL,items}),{headers:H})}
     if(!id||!GRAF_ID.test(id))return new Response('Ungültige Kennung',{status:400});
     if(request.method==='GET'){const v=await st.get('g:'+id);if(!v||now-v.t>GRAF_TTL)return new Response('weg',{status:404});return new Response(v.png,{headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store','x-graffiti-time':String(v.t)}})}
-    if(request.method==='PUT'){const body=await request.text();if(body.length>GRAF_MAX||!GRAF_PNG.test(body))return new Response('Ungültiges Bild',{status:400});await st.put('g:'+id,{t:now,png:body});return new Response(JSON.stringify({t:now}),{headers:H})}
+    if(request.method==='PUT'){
+      /* Bremse: höchstens GRAF_RATE Speicherungen pro Minute und Adresse (Arbeitsspeicher, reicht gegen Dauerfeuer) */
+      const ip=request.headers.get('cf-connecting-ip')||'?',rl=(this.rl.get(ip)||[]).filter(x=>now-x<60000);if(rl.length>=GRAF_RATE){this.rl.set(ip,rl);return new Response('Zu viele Anfragen',{status:429,headers:{'retry-after':'60'}})}rl.push(now);this.rl.set(ip,rl);if(this.rl.size>500)for(const k of this.rl.keys()){if(!this.rl.get(k).some(x=>now-x<60000))this.rl.delete(k)}
+      const body=await request.text();if(body.length>GRAF_MAX||!GRAF_PNG.test(body)||!grafPngOk(body))return new Response('Ungültiges Bild',{status:400});
+      /* Obergrenze für die Zahl der Bilder (neue Kennung zählt, Überschreiben nicht) */
+      const had=await st.get('g:'+id);if(!had){let n=await st.get('n');if(typeof n!=='number')n=(await st.list({prefix:'g:'})).size;if(n>=this.max)return new Response('Speicher voll',{status:507});await st.put('n',n+1)}
+      await st.put('g:'+id,{t:now,png:body});return new Response(JSON.stringify({t:now}),{headers:H})}
     return new Response('Methode nicht erlaubt',{status:405})}}
