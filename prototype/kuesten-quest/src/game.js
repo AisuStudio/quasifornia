@@ -1237,10 +1237,7 @@ function buildLevel0(){
     sign('WOHNEN','#f1a7c8',-w*.3,2.2,-d/2-.12,3.6,.9,Math.PI,'#3a2a5a')}
   /* ---- Laden ---- */
   /* ---- A-Mart: Convenience-Store im japanischen Stil, Banderole rundherum ---- */
-  const martTex=(txt,w=1024,h=170,fs=116)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#2b5fcf';x.fillRect(0,0,w,h);x.fillStyle='#f4f7ff';x.textAlign='center';x.textBaseline='middle';x.font='800 '+fs+'px "Smarta Nova","Trebuchet MS",sans-serif';if('letterSpacing' in x)x.letterSpacing='8px';x.fillText(txt,w/2,h/2+4);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t})};
-  const poleTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=220;const x=c.getContext('2d');x.fillStyle='#2b5fcf';x.beginPath();x.roundRect(4,4,248,212,34);x.fill();x.strokeStyle='#f4f7ff';x.lineWidth=7;x.beginPath();x.roundRect(14,14,228,192,26);x.stroke();
-    x.fillStyle='#f4f7ff';x.beginPath();x.arc(128,92,56,0,7);x.fill();x.fillStyle='#2b5fcf';x.textAlign='center';x.textBaseline='middle';x.font='800 84px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('P',128,96);x.fillStyle='#f4f7ff';x.font='800 42px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('A-MART',128,174);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return new THREE.MeshBasicMaterial({map:t,transparent:true})};
-  function shop(i){const w=26,d=16,h=6.2,WH=MT('#f4f4ee'),BLU=MT('#2b5fcf'),PNK=MT('#ee7cb8'),GLS=MT('#9fd0e8','#bfe8f4',.3),GREY=MT('#8d93a0'),DK=MT('#1c1f2b');
+  function shop(i){const w=26,d=16,h=6.2,WH=MT('#f4f4ee'),BLU=MT('#667cff'),PNK=MT('#ee7cb8'),GLS=MT('#9fd0e8','#bfe8f4',.3),GREY=MT('#8d93a0'),DK=MT('#1c1f2b');
     (HUB.shops||(HUB.shops=[])).push({x:cur.x,z:cur.z-d/2-2.8});
     bx(WH,w,h,d,0,0,0);bx(MT('#d7dbe3'),w+.7,.5,d+.7,0,h,0);bx(MT('#b9bdc9'),4.4,1.3,3.2,-6,h+.5,2.5);bx(MT('#b9bdc9'),3,1,2.4,6,h+.5,3);
     /* Banderole (Vorlage des Nutzers): Mint mit weißen Streifen und farbigen Balken rundherum, Höhe 1,86 */
@@ -1257,7 +1254,7 @@ function buildLevel0(){
      cyl(GREY,.2,8,-w/2-2.6,0,-d/2-3.4);mk(amartLogoMat(),3.4,3.4,-w/2-2.6,9.2,-d/2-3.4-.06,Math.PI);mk(amartLogoMat(),3.4,3.4,-w/2-2.6,9.2,-d/2-3.4+.06,0)}
     /* ATM-Kästen, Kisten, Fahrrad, Pfeiler */
     [[5.4,'#37a86a'],[6.8,'#ee7cb8'],[8.2,'#ff8a2a']].forEach(([x,c])=>{bx(BLU,1.1,2.2,.95,x,0,-d/2-1.2);bx(MT(c,c,.4),.8,.9,.1,x,1.3,-d/2-1.72)});
-    for(let k=0;k<3;k++)for(let q=0;q<2;q++)bx(MT('#2b6fd0'),1.3,.8,1.3,-w/2+1.4+k*1.4,q*.8,-d/2-1.2);
+    for(let k=0;k<3;k++)for(let q=0;q<2;q++)bx(MT('#8894ff'),1.3,.8,1.3,-w/2+1.4+k*1.4,q*.8,-d/2-1.2);
     {const bk=new THREE.Group();const bm=(geo,mat,x,y,z,sx,sy,sz,rx=0,ry=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx,ry,0);m.castShadow=true;bk.add(m)};
      [-.7,.7].forEach(zz=>bm(new THREE.TorusGeometry(.5,.07,6,16),DK,0,.55,zz,1,1,1,0,Math.PI/2));bm(BX,MT('#47c2a5'),0,.85,0,.12,.1,1.5);bm(BX,MT('#47c2a5'),0,1.05,-.2,.1,.5,.1,.4);bm(BX,DK,0,1.3,-.5,.1,.1,.55);bm(BX,MT('#d9a86a'),0,1.05,.85,.5,.35,.5);
      bk.position.set(cur.x+1.5,Y0+.06+hillG(cur.x,cur.z),cur.z-d/2-3.1);bk.rotation.y=.35;bk.userData.noBake=true;W0.add(bk)}}
