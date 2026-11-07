@@ -26,7 +26,7 @@ function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!
    (Umriss und gezeichnete Wand liegen nicht immer am selben Ort, bei Blöcken wie dem Shopping Court um mehrere Meter). Trifft der Strahl keine senkrechte Wand, gibt es dort keine Sprüh-Stelle.
    Die Kennung bleibt f<Gebäude>-<Kante>-<Platz>, die Kanten zählen über alle Ringe weiter (höchstens 41, wie der Server es erlaubt). */
 function grafEdges(){if(GF.edges)return GF.edges;const E=[],rc=new THREE.Raycaster(),V=THREE.Vector3;
-  MAPD.buildings.forEach((b,bi)=>{if(b.skip||!b.bg)return;b.bg.updateMatrixWorld(true);
+  MAPD.buildings.forEach((b,bi)=>{if(!b.bg||(b.skip&&b.kind!=='lab'&&b.kind!=='xmas'))return;b.bg.updateMatrixWorld(true);   /* Sonderbauten mit eigener Ladenfront (A-Mart, Garage, Arcade) bleiben draußen; Lab und Lebkuchenhaus haben große glatte Wände */
     const rings=b.c.map(r=>r.map(p=>[mwx(p[0]),mwz(p[1])])),inMat=(x,z)=>rings.reduce((n,r)=>n+(mpInPoly(r,x,z)?1:0),0)%2===1;let e=-1;
     rings.forEach(ring=>{for(let i=0;i<ring.length;i++){e++;if(e>40)return;const a=ring[i],c=ring[(i+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<3.2)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
       if(inMat(mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}

@@ -11,6 +11,9 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  /* Shopping Court: an der gelben Außenwand gibt es jetzt einen Sprühplatz (vorher gar keinen) */
  const s=await p.evaluate(()=>{const q=__qa,x0=-99.9,z0=-56.3,out=[];for(const a of [20,40,60]){const rr=a*Math.PI/180,dx=Math.cos(rr),dz=Math.sin(rr),h=q.grafWhatWall(x0,z0,dx,dz,14);if(!h)continue;q.P.x=x0+dx*(h.d-1.6);q.P.z=z0+dz*(h.d-1.6);q.P.speed=0;const f=q.grafFacadeNear();out.push(f&&/^f39-/.test(f.id))}return out});
  console.log('Shopping Court besprühbar',JSON.stringify(s),s.length>0&&s.every(Boolean));
+ /* Lab (Sonderbau): die große glatte Wand ist besprühbar, A-Mart bleibt ohne */
+ const l=await p.evaluate(()=>{const q=__qa,x0=-38.5,z0=-129.4,out=[];for(const a of [90,105,120,135]){const rr=a*Math.PI/180,dx=Math.cos(rr),dz=Math.sin(rr),h=q.grafWhatWall(x0,z0,dx,dz,30);if(!h||h.kind!=='lab')continue;q.P.x=x0+dx*(h.d-1.6);q.P.z=z0+dz*(h.d-1.6);q.P.speed=0;const f=q.grafFacadeNear();out.push(!!(f&&/^f9-/.test(f.id)))}const pm=q.MAPD.buildings.findIndex(b=>b.kind==='pmart');return {lab:out,pmartKanten:q.grafEdges().filter(e=>e.bi===pm).length}});
+ console.log('Lab besprühbar',JSON.stringify(l),l.lab.length>=3&&l.lab.every(Boolean)&&l.pmartKanten===0);
  /* kurze Wandstücke: die Fläche schrumpft und bleibt innerhalb der Wand */
  const k=await p.evaluate(()=>{const q=__qa,E=q.grafEdges().filter(e=>e.L<5.8)[0];if(!E)return {keine:true};const sl=q.grafSlot('f'+E.bi+'-'+E.e+'-0'),sl2=q.grafSlot('f'+E.bi+'-'+E.e+'-1');return {w:+sl.w.toFixed(1),klein:sl.w<=E.L,keinZweiter:sl2===null}});
  console.log('Kurze Wand',JSON.stringify(k),!k.keine&&k.klein&&k.keinZweiter&&k.w>=2.4);
