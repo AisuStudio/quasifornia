@@ -8,7 +8,7 @@ try{const s=JSON.parse(localStorage.getItem('kq-ubiq')||'null');if(s){UBQ.own=!!
 function ubqSave(){try{localStorage.setItem('kq-ubiq',JSON.stringify({own:UBQ.own,ch:UBQ.ch,fixed:[...UBQ.fixed]}))}catch(e){}}
 function ubqStat(ty,g){try{if(typeof statEv==='function')statEv('glitch',ty+':'+g.type,1,g.x,g.z)}catch(e){}}
 /* ---- Laden und Inventar ---- */
-function ubqCanSvg(f){const h=36*Math.max(0,Math.min(1,f)),y=14+36-h;return `<svg viewBox="0 0 40 56" width="44" height="56" aria-hidden="true"><rect x="15" y="1" width="10" height="5" rx="1.5" fill="#cfcfe0" stroke="#0e0b18" stroke-width="1.5"/><rect x="9" y="10" width="22" height="42" rx="5" fill="#2b2540" stroke="#0e0b18" stroke-width="1.5"/><rect x="11" y="${y}" width="18" height="${h}" fill="#7be0e0"/><text x="20" y="34" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="monospace">UBIQ</text></svg>`}
+function ubqCanSvg(f){return doseIcon('ubiq',null,f)}
 function ubqInvHTML(){if(!UBQ.own)return '';return `<div class="slot-i got"><div class="ic">${ubqCanSvg(UBQ.ch/UBQ.max)}</div><b>UBIQ</b><span>Phill's Phantastic Phormula: ${UBQ.ch} von ${UBQ.max} Ladungen</span><em>Wo etwas flackert: Enter</em></div>`}
 function ubqShopHTML(){const full=UBQ.own&&UBQ.ch>=UBQ.max,cost=UBQ.own?UBQ.refill:UBQ.price,can=SHOP.in&&!full&&scCan(cost);
   return `<h3 class="edh">UBIQ</h3><p class="sub">Phill's Phantastic Phormula. Für alles, was flackert.</p><div class="skgrid"><div class="sk"><i style="background:#7be0e0"></i><b>UBIQ</b><span>${UBQ.own?UBQ.ch+' von '+UBQ.max+' Ladungen':cost+' Scoops'}</span><button type="button" data-ubq="1"${can?'':' disabled'}>${UBQ.own?(full?'Voll':'Nachfüllen '+cost):'Kaufen'}</button></div></div>`}

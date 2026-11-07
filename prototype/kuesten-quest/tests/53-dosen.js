@@ -16,4 +16,12 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.evaluate(()=>{__qa.pmartEnter()});await p.waitForTimeout(200);
  const r=await p.evaluate(()=>{const q=__qa;let n=0;q.sc.traverse(o=>{if(o.userData&&o.userData.spray&&o.parent&&o.parent.visible!==false)n++});return {regal:q.L7.items.cans,dosen:n}});
  console.log('Regal im A-Mart voller Sprühdosen',JSON.stringify(r),r.regal===48&&r.dosen>=48);
+ /* Rarepod-Symbole: Dose aus der Vorlage mit Füllstand */
+ const ic=await p.evaluate(async()=>{const q=__qa,h=q.grafCanSvg('#ff5fa8',.5),u=q.ubqCanSvg(.6),url=x=>(x.match(/src="([^"]+)"/)||[])[1];
+   const px=async(src,w,hh)=>{const im=new Image();await new Promise((r,j)=>{im.onload=r;im.onerror=j;im.src=src});const c=document.createElement('canvas');c.width=w;c.height=hh;const g=c.getContext('2d');g.drawImage(im,0,0,w,hh);return g.getImageData(0,0,w,hh).data};
+   const d1=await px(url(h),192,376),d2=await px(url(u),192,376);let rosa=0,gaugeRosa=0,cyan=0,weiss=0,rot=0;
+   for(let y=0;y<376;y++)for(let x=0;x<192;x++){const i=(y*192+x)*4,r=d1[i],g=d1[i+1],b=d1[i+2];if(Math.abs(r-255)<25&&Math.abs(g-95)<30&&Math.abs(b-168)<30){rosa++;if(x>150)gaugeRosa++}if(r>240&&g>240&&b>240)weiss++;if(r>200&&g<70&&b<70)rot++;
+     const j=i,r2=d2[j],g2=d2[j+1],b2=d2[j+2];if(x>150&&Math.abs(r2-123)<25&&Math.abs(g2-224)<25&&Math.abs(b2-224)<25)cyan++}
+   return {img:h.startsWith('<img')&&u.startsWith('<img'),blob:url(h).startsWith('blob:'),rosa,gaugeRosa,cyan,weiss,rot,gleich:q.grafCanSvg('#ff5fa8',.5)===h}});
+ console.log('Rarepod-Symbole als Bild',JSON.stringify(ic),ic.img&&ic.blob&&ic.rosa>300&&ic.gaugeRosa>100&&ic.cyan>100&&ic.rot>300&&ic.gleich);
  }catch(e){console.log('FEHLER',e.message)}try{await b.close()}catch(e){}srv.close()});

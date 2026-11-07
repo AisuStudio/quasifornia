@@ -81,7 +81,7 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 
 **Graffiti-Härtung (52):** Startet einen eigenen lokalen Worker (Port 8791, frischer Speicher, Obergrenze 3 Bilder). Prüft: nur echte Kennungen (Gebäude 0 bis 80, Kante 0 bis 40, Feld 0 bis 24, Wände w1 bis w9), nur PNG mit genau 128 × 64 Pixeln, kein Text, nicht zu groß, Obergrenze für die Zahl der Bilder (507), Überschreiben bleibt möglich, Bremse gegen Dauerfeuer (429).
 
-**Sprühdosen (53):** Form aus der Vorlage (Höhe zu Breite 2,64 wie `PHs_can.svg`), Teile, Material je Farbe geteilt und für UBIQ eigenes, Texturen aus der SVG geladen (Phil's-Rot, Weiß, Farbmarke in der Dosenfarbe, UBIQ-Schriftzug), Regal im A-Mart mit 48 Dosen.
+**Sprühdosen (53):** Form aus der Vorlage (Höhe zu Breite 2,64 wie `PHs_can.svg`), Teile, Material je Farbe geteilt und für UBIQ eigenes, Texturen aus der SVG geladen (Phil's-Rot, Weiß, Farbmarke in der Dosenfarbe, UBIQ-Schriftzug), Regal im A-Mart mit 48 Dosen, Rarepod-Symbole (Dose aus der Vorlage als Bild mit Füllstand für Sprühdosen und UBIQ).
 
 **L’Avateur, Außenseite (54):** Das lachsrote Haus im Süden wird als `avateur` erkannt (per Label "Avateur" in der Karte oder als nächstes freies Haus bei 1812,1588), vier verschiedene Wesen (Pink-Blob, Skater, Dino, Goldzilla) in den Auslagen, ungefähr gleich hoch und innerhalb der Fenster, der Erker ist gesperrt, Weg und Stufe davor sind frei, das Logo ist als Textur geladen.
 

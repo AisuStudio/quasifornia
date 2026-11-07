@@ -9,7 +9,7 @@ function grafBuy(c){if(!scCan(GF_PRICE)){toast('Zu wenig Scoops: '+GF_PRICE+' n�
   const nm=(GF_COL.find(x=>x[0]===c)||[0,'Farbe'])[1];GF.cans[c]=(GF.cans[c]||0)+GF_INK;grafSave();scAdd(-GF_PRICE,'Spr체hdose '+nm);toast('Spr체hdose '+nm+' gekauft',1200);return true}
 
 /* Spr체hdosen im Inventar: Dose in der Farbe, die F체llung zeigt den Rest */
-function grafCanSvg(c,f){const h=36*Math.max(0,Math.min(1,f)),y=14+36-h;return `<svg viewBox="0 0 40 56" width="44" height="56" aria-hidden="true"><rect x="15" y="1" width="10" height="5" rx="1.5" fill="#cfcfe0" stroke="#0e0b18" stroke-width="1.5"/><rect x="17" y="6" width="6" height="4" fill="#8a8aa0" stroke="#0e0b18" stroke-width="1.2"/><rect x="9" y="10" width="22" height="42" rx="5" fill="#3a3a50" stroke="#0e0b18" stroke-width="2"/><clipPath id="gc${c.slice(1)}"><rect x="9" y="10" width="22" height="42" rx="5"/></clipPath><rect x="9" y="${y.toFixed(1)}" width="22" height="${(h+2).toFixed(1)}" fill="${c}" clip-path="url(#gc${c.slice(1)})"/><rect x="9" y="10" width="22" height="42" rx="5" fill="none" stroke="#0e0b18" stroke-width="2"/><rect x="12" y="14" width="3" height="30" rx="1.5" fill="#ffffff" opacity=".28"/></svg>`}
+function grafCanSvg(c,f){return doseIcon('farbe',c,f)}
 function grafInvHTML(){const have=GF_COL.filter(([c])=>(GF.cans[c]||0)>0);
   if(!have.length)return '<div class="slot-i"><div class="ic q">?</div><b>Spr체hdosen</b><span>Noch keine. Im A-Mart gibt es Dosen f체r '+GF_PRICE+' Scoops.</span></div>';
   return have.map(([c,n])=>{const f=GF.cans[c]/GF_INK;return `<div class="slot-i got"><div class="ic">${grafCanSvg(c,f)}</div><b>Spr체hdose ${n}</b><span>Farbe: ${Math.max(1,Math.round(f*100))}%</span><em>Wand bespr체hen (Enter an einer Graffiti-Wand)</em></div>`}).join('')}

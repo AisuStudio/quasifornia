@@ -62,3 +62,14 @@ function makeSprayCan(kind,color,w){
   const add=(geo,mat,cast=true)=>{const m=new THREE.Mesh(geo,mat);m.castShadow=cast;g.add(m);return m};
   add(G.body,bm);add(G.band,DOSE.bandMat,false);add(G.lab,DOSE.mat[key],false);add(G.act,nm);add(G.ring,wm,false);add(G.dot,dm,false);
   g.userData.kind=kind;g.userData.spray=true;return g}
+/* Symbol für das Rarepod (Inventar): die Dose aus der Vorlage als Bild (eigene Datei je Farbe, darum kein Stilkonflikt zwischen mehreren Symbolen) mit Füllstandsanzeige rechts daneben.
+   kind: 'farbe' oder 'ubiq', f: Füllstand 0 bis 1 (in 5-%-Schritten, damit sich die Bilder zwischenspeichern lassen). Liefert einen img-Tag. */
+DOSE.icon={};
+function doseIconUrl(kind,color,f){
+  const st=Math.round(Math.max(0,Math.min(1,f))*20),key=kind+'|'+(color||'')+'|'+st;if(DOSE.icon[key])return DOSE.icon[key];
+  const fillCol=kind==='ubiq'?'#7be0e0':(color||'#7be0e0'),ff=st/20,hh=1268*ff;
+  let s=doseSvg(kind,color).replace(/width="[^"]*" height="[^"]*" viewBox="[^"]*"/,'viewBox="0 0 960 1883.35"');
+  const gauge='<rect x="790" y="420" width="140" height="1300" rx="40" fill="#14101f" stroke="#ffffff" stroke-width="14"/>'+(hh>0?'<rect x="806" y="'+(1704-hh).toFixed(1)+'" width="108" height="'+hh.toFixed(1)+'" rx="26" fill="'+fillCol+'"/>':'');
+  s=s.replace(/<\/svg>\s*$/,gauge+'</svg>');
+  return DOSE.icon[key]=URL.createObjectURL(new Blob([s],{type:'image/svg+xml'}))}
+function doseIcon(kind,color,f){return '<img src="'+doseIconUrl(kind,color,f)+'" width="30" height="59" alt="" aria-hidden="true" style="image-rendering:auto">'}
