@@ -1,11 +1,11 @@
-/* ================= P-Mart-Innenraum (Level 7): erster betretbarer Laden =================
+/* ================= A-Mart-Innenraum (Level 7): erster betretbarer Laden =================
    Wie das Labor (Level 4) ein eigener Raum mit Wänden und Kollisionen. Man kommt durch die Ladentür in der Stadt hinein und geht durch die Tür unten wieder hinaus.
    Regale: Sprühdosen, Skins (Farben) und ein leeres Regal für später. Beim Regal oder an der Kasse öffnet sich der Laden im Rarepod (Kaufen mit Scoops).
    Der Raum ist von vorne offen niedrig gebaut, damit die Kamera darüber schauen kann. */
 LEVELS[7]={id:7,mode:'city',pips:1,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Einkaufen',
-  quest:'Stöbere im P-Mart',goalQuest:'',
-  intro:'Im P-Mart riecht es nach Sprühfarbe und Mochi. Such dir etwas am Regal aus, bezahlt wird an der Kasse.',
-  vendor:'Willkommen im P-Mart!',lines:[],chase:'',eat:'',win:'',winSub:'',badge:''};
+  quest:'Stöbere im A-Mart',goalQuest:'',
+  intro:'Im A-Mart riecht es nach Sprühfarbe und Mochi. Such dir etwas am Regal aus, bezahlt wird an der Kasse.',
+  vendor:'Willkommen im A-Mart!',lines:[],chase:'',eat:'',win:'',winSub:'',badge:''};
 let W7=null;const L7={colliders:[],start:{x:0,z:13,h:-Math.PI/2},acts:[],items:{cans:0,skins:0}};
 const PM_CAN_COLS=['#ff5fa8','#4cc3ff','#ffe066','#47c2a5','#8e5bd6','#ff8a2a','#e5383b','#eae8e8'];
 function buildLevel7(){
@@ -22,13 +22,13 @@ function buildLevel7(){
   const ftx=new THREE.CanvasTexture(ft);ftx.colorSpace=THREE.SRGBColorSpace;ftx.wrapS=ftx.wrapT=THREE.RepeatWrapping;ftx.repeat.set(11,8.5);
   const fl=new THREE.Mesh(new THREE.PlaneGeometry(44,34),new THREE.MeshStandardMaterial({map:ftx,roughness:.55}));fl.rotation.x=-Math.PI/2;fl.position.set(0,Y+.02,0);fl.receiveShadow=true;fl.userData.noBake=true;add(fl);
   /* Wände: hinten und seitlich hoch, vorne niedrig (Kamera schaut darüber). Blaues Band wie draußen. */
-  const wallC='#f6efe6',blue='#2f7fe0';
+  const wallC='#f6efe6',blue='#667cff';
   box(48,10,2,0,0,-18,wallC);box(2,10,34,-23,0,0,wallC);box(2,10,34,23,0,0,wallC);box(48,3.2,2,0,0,18,wallC);
   box(48,1.2,.3,0,3.4,-16.9,blue,blue,.25,false);box(.3,1.2,34,-21.9,3.4,0,blue,blue,.25,false);box(.3,1.2,34,21.9,3.4,0,blue,blue,.25,false);box(44,.7,.3,0,1.9,17.0,blue,blue,.25,false);
   col(-25,25,-20,-17);col(-25,-22,-20,20);col(22,25,-20,20);col(-25,25,17,20);
   /* Tür (Ausgang) vorne in der Mitte */
-  box(.5,3,.5,-3.4,0,16.9,'#2f7fe0');box(.5,3,.5,3.4,0,16.9,'#2f7fe0');box(7.3,.5,.5,0,3,16.9,'#2f7fe0');box(6.2,2.9,.12,0,0,17.15,'#9fe8ff','#9fe8ff',.35,false);
-  sign('P-MART',14,3.6,0,6.6,-16.85,0,'#2f7fe0','#ffffff');sign('AUSGANG',5,1.2,0,3.9,16.8,Math.PI,'#e5383b','#ffffff');
+  box(.5,3,.5,-3.4,0,16.9,'#667cff');box(.5,3,.5,3.4,0,16.9,'#667cff');box(7.3,.5,.5,0,3,16.9,'#667cff');box(6.2,2.9,.12,0,0,17.15,'#9fe8ff','#9fe8ff',.35,false);
+  {const bm=new THREE.Mesh(new THREE.PlaneGeometry(14,3.6),amartBandMat(14,3.6));bm.position.set(0,Y+6.6,-16.86);bm.userData.noBake=true;add(bm);const lg=new THREE.Mesh(new THREE.PlaneGeometry(3.4,3.4),amartLogoMat());lg.position.set(0,Y+6.6,-16.84);lg.userData.noBake=true;add(lg)}sign('AUSGANG',5,1.2,0,3.9,16.8,Math.PI,'#e5383b','#ffffff');
   /* Kühlregale an der Rückwand mit bunten Getränken */
   for(let u=0;u<5;u++){const x=-17+u*8.5;box(7.6,4.6,1.8,x,0,-15.4,'#dfe7ee');box(7,3.8,.1,x,.5,-14.5,'#9fe8ff','#9fe8ff',.25,false);
     for(let r=0;r<3;r++)for(let k=0;k<7;k++)cylm(.28,.7,x-3+k*1,.7+r*1.05,-15.0,PM_CAN_COLS[(u*3+r*5+k)%PM_CAN_COLS.length],null,0)}
@@ -43,7 +43,7 @@ function buildLevel7(){
       else if(si===2){box(.14,.95,.7,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length]);L7.items.cards=(L7.items.cards||0)+1}
       else if(si===1){const sk=SKIN_LIST[(k+lv*2+(side>0?3:0))%SKIN_LIST.length];box(.95,.3,1.1,px,y-.15+(k%2)*.3,z,sk[2]);L7.items.skins++}}})})});
   /* Kasse rechts: Tresen, Kassensystem, Süßigkeiten-Ständer */
-  box(3,1.6,11,18,0,6,'#2f7fe0');box(3.4,.25,11.4,18,1.6,6,'#ffffff');box(.9,.7,.9,18,1.85,3.5,'#2a3a52');box(.9,.5,.08,17.65,2.3,3.5,'#0a1a2a','#7ff0ff',.9,false);
+  box(3,1.6,11,18,0,6,'#667cff');box(3.4,.25,11.4,18,1.6,6,'#ffffff');box(.9,.7,.9,18,1.85,3.5,'#2a3a52');box(.9,.5,.08,17.65,2.3,3.5,'#0a1a2a','#7ff0ff',.9,false);
   for(let k=0;k<5;k++)box(.7,.5,.5,17.4,1.85,8+k*.8,PM_CAN_COLS[k%PM_CAN_COLS.length]);
   col(16,19.8,.2,11.8);
   /* Kassierer hinter dem Tresen */
@@ -51,10 +51,10 @@ function buildLevel7(){
   if(cs.userData.arms)cs.userData.arms.forEach(({sg,s})=>{sg.rotation.z=s*.35});L7.cashier=cs;
   /* Deko: Pflanzen, Fußmatte, Körbe */
   [[-19.5,14.5],[19.5,14.5]].forEach(([x,z])=>{cylm(1.1,1.2,x,0,z,'#d54291');cylm(.25,2.2,x,1.2,z,'#47c2a5');[0,1,2].forEach(i=>{const s=new THREE.Mesh(SP,MT('#47c2a5'));s.scale.set(1.3,.9,1.3);s.position.set(x+Math.cos(i*2.1)*.6,Y+3.4+i*.2,z+Math.sin(i*2.1)*.6);add(s)});col(x-1.2,x+1.2,z-1.2,z+1.2)});
-  box(6,.08,3,0,0,14.6,'#2f7fe0',null,0,false);
+  box(6,.08,3,0,0,14.6,'#667cff',null,0,false);
   /* Aktionen */
   L7.acts=[
-    {x:0,z:14.8,r:4.5,label:'P-Mart verlassen',fn:()=>pmartLeave()},
+    {x:0,z:14.8,r:4.5,label:'A-Mart verlassen',fn:()=>pmartLeave()},
     {x:-10.6,z:-5,r:3.3,label:'Regal ansehen: Sprühdosen',fn:()=>shopEnter('cans')},
     {x:-5.4,z:-5,r:3.3,label:'Regal ansehen: Skins',fn:()=>shopEnter('skins')},
     {x:7.2,z:-5,r:3.6,label:'Regal ansehen: Sammelkarten',fn:()=>shopEnter('cards')},

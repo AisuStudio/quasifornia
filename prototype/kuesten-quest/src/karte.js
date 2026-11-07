@@ -488,7 +488,7 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   return ring}
 function mpBuildings(H){
   const solids=[],groups=[];const L0=MAPD.labels;
-  const kindOf=t=>/Poli(zei|ce)/i.test(t)?'police':/Schule|School/i.test(t)?'school':/Surf/i.test(t)?'surf':/Shack/i.test(t)?'shack':/Warehouse|Lagerhalle/i.test(t)?'warehouse':/P-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':/Backoffice/i.test(t)?'backoffice':'';
+  const kindOf=t=>/Poli(zei|ce)/i.test(t)?'police':/Schule|School/i.test(t)?'school':/Surf/i.test(t)?'surf':/Shack/i.test(t)?'shack':/Warehouse|Lagerhalle/i.test(t)?'warehouse':/[AP]-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':/Backoffice/i.test(t)?'backoffice':'';
   MAPD.buildings.forEach((b,i)=>{b.i=i;b.kind='';b.skip=false;b.cen=mpCentroid(b.c[0]);b.area=Math.abs(mpArea(b.c[0]))});
   L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;MAPD.buildings.forEach(b=>{if(mpInPoly(b.c[0],l.x,l.y)){b.kind=k;b.label=l.t}})});
   /* Beschriftung steht neben dem Gebäude statt darin (z. B. "Surf Shop", "Beach Shack"): nächstes freies Gebäude bis 45 Karteneinheiten (22 m) */
@@ -984,7 +984,7 @@ function mpMini(dt){const mm=HUB.mapn&&HUB.mm2;if(!mm)return;HUB.mmT+=dt;if(HUB.
   if(G.under){g.fillStyle='rgba(8,6,20,.62)';g.fillRect(0,0,150,150)}
   const pp=(X,Z)=>[75+(X-P.x)*.5,75+(Z-P.z)*.5],inside=(x,y)=>x>-4&&y>-4&&x<154&&y<154;
   const dot=(X,Z,col,txt,rad)=>{const [x,y]=pp(X,Z);if(!inside(x,y))return;g.fillStyle=col;g.strokeStyle='#1a1626';g.lineWidth=1.5;g.beginPath();g.arc(x,y,rad||5,0,7);g.fill();g.stroke();if(txt){g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText(txt,x,y+3)}};
-  if(!G.under){(HUB.shops||[]).forEach(s=>{const [x,y]=pp(s.x,s.z);if(!inside(x,y))return;g.fillStyle='#2b5fcf';g.strokeStyle='#f4f7ff';g.lineWidth=1.5;g.fillRect(x-5,y-5,10,10);g.strokeRect(x-5,y-5,10,10);g.fillStyle='#fff';g.font='700 9px sans-serif';g.textAlign='center';g.fillText('P',x,y+3)});
+  if(!G.under){(HUB.shops||[]).forEach(s=>{const [x,y]=pp(s.x,s.z);if(!inside(x,y))return;g.fillStyle='#00e8b6';g.strokeStyle='#f4f7ff';g.lineWidth=1.5;g.fillRect(x-5,y-5,10,10);g.strokeRect(x-5,y-5,10,10);g.fillStyle='#14463a';g.font='700 9px sans-serif';g.textAlign='center';g.fillText('A',x,y+3)});
     HUB.portals.forEach(p=>{if(HUB.found.has(p.world))dot(p.x,p.z,p.col,p.world,5)});if(HUB.gate)dot(HUB.gate.x,HUB.gate.z,'#ffe066','K',6);(HUB.courts||[]).forEach(c=>dot(c.x,c.z,c.col,c.txt,6));(HUB.marks||[]).forEach(m=>dot(m.x,m.z,m.col,m.txt,6));
     if(typeof MULTI!=='undefined')MULTI.peers.forEach(p=>{if(p.has&&p.g&&p.g.visible)dot(p.x,p.z,p.skin&&p.skin[0]==='#'?p.skin:'#e8f0ff','',4)});
     HUB.items.forEach(it=>{if(it.got){const [x,y]=pp(it.x,it.z);if(!inside(x,y))return;g.fillStyle=it.def.col;g.strokeStyle='#1a1626';g.lineWidth=1;g.beginPath();g.moveTo(x,y-4);g.lineTo(x+4,y);g.lineTo(x,y+4);g.lineTo(x-4,y);g.closePath();g.fill();g.stroke()}})}

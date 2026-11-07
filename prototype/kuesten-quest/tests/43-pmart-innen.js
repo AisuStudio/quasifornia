@@ -1,4 +1,4 @@
-// P-Mart-Innenraum (Level 7): hinein durch die Ladentür, Regale und Kasse öffnen den Laden, Wände und Regale blockieren, hinaus vor die Tür, nicht bei Polizei.
+// A-Mart-Innenraum (Level 7): hinein durch die Ladentür, Regale und Kasse öffnen den Laden, Wände und Regale blockieren, hinaus vor die Tür, nicht bei Polizei.
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),path=require('path');
 const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?path.join(__dirname,'..','dist/dev.html'):path.join(__dirname,'..',u);fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);s.end();return}s.writeHead(200,{'content-type':f.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8'});s.end(d)})}).listen(8944,async()=>{
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
@@ -12,9 +12,9 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.evaluate(()=>{const q=__qa,s=q.HUB.shops[0];q.G.phase='play';q.P.x=s.x;q.P.z=s.z;q.P.speed=0;q.step(.03)});
  console.log('Tür draußen',await act());
  /* Polizei blockiert */
- await p.evaluate(()=>{const q=__qa;q.POL.state='chase';q.curActs().find(a=>a.label==='P-Mart betreten').fn()});
+ await p.evaluate(()=>{const q=__qa;q.POL.state='chase';q.curActs().find(a=>a.label==='A-Mart betreten').fn()});
  console.log('Mit Polizei bleibt man draußen',await p.evaluate(()=>__qa.LV.id===0));
- await p.evaluate(()=>{const q=__qa;q.POL.state='idle';q.curActs().find(a=>a.label==='P-Mart betreten').fn();q.G.phase='play'});await free();
+ await p.evaluate(()=>{const q=__qa;q.POL.state='idle';q.curActs().find(a=>a.label==='A-Mart betreten').fn();q.G.phase='play'});await free();
  const st=()=>p.evaluate(()=>{const q=__qa;return {lv:q.LV.id,x:+q.P.x.toFixed(1),z:+q.P.z.toFixed(1),acts:q.curActs().map(a=>a.label)}});
  let s=await st();console.log('Drinnen',JSON.stringify({lv:s.lv,start:[s.x,s.z],aktionen:s.acts.length}));
  /* Regal Sprühdosen */
@@ -33,7 +33,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  console.log('Kollision',JSON.stringify(hit),hit.regalX>-12.5&&hit.wandX<22&&hit.hintenZ>-15&&hit.vorneZ<17);
  /* Hinaus */
  await p.evaluate(()=>{const q=__qa;q.P.x=0;q.P.z=14.8;q.P.speed=0;q.step(.03)});console.log('Am Ausgang',await act());
- await p.evaluate(()=>{__qa.curActs().find(a=>a.label==='P-Mart verlassen').fn()});await free();
+ await p.evaluate(()=>{__qa.curActs().find(a=>a.label==='A-Mart verlassen').fn()});await free();
  const o=await p.evaluate(()=>{const q=__qa,s=q.HUB.shops[0];return {lv:q.LV.id,abstand:+Math.hypot(q.P.x-s.x,q.P.z-s.z).toFixed(1),stadtSichtbar:q.HUB&&true,phase:q.G.phase}});
  console.log('Wieder draußen',JSON.stringify(o),o.lv===0&&o.abstand<8&&o.phase==='play');
  await b.close();srv.close()})

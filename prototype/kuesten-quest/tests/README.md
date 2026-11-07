@@ -38,7 +38,7 @@ Ein einzelnes Skript: `python3 build.py --dev && node tests/05-insel.js`
 - 22 Graffiti: Dosen kaufen, Editor, Wand speichern
 - 23 Opener: Logo-Splash, Tastendruck führt zum Avatar
 - 24 Musik-Player im Rarepod
-- 25 P-Mart: Laden betreten, Kaufen nur im Laden
+- 25 A-Mart: Laden betreten, Kaufen nur im Laden
 - 26 Unterwelt-Minikarte: Leiter, Turm nach Serafins Scoops
 
 Screenshots landen im Temp-Ordner des Systems.
@@ -65,11 +65,11 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 
 **Steuerung (42):** Pfeiltasten fahren nicht mehr, sie lösen Tricks aus (↑ Kickflip, ← Pop Shove-it, → 360 Flip; Shift/Q/R gehen weiter), WASD fährt. Außerdem: Die Anstoß-Animation läuft beim Beschleunigen, nicht bei Reisetempo und nicht ohne Gas.
 
-**Läden und Bauen (43, 44):** 43 prüft den P-Mart-Innenraum (hinein, Regale und Kasse öffnen den Laden, Wände und Regale blockieren, hinaus vor die Tür, bei Polizei gesperrt). 44 prüft den Builder mit echten Mausklicks (setzen, stapeln, Fenster an der Wand, Rechtsklick, Zurück, Pinsel, Kamera ziehen, Speichern, Kollision, Belohnung nur einmal, Abbrechen, Neu laden).
+**Läden und Bauen (43, 44):** 43 prüft den A-Mart-Innenraum (hinein, Regale und Kasse öffnen den Laden, Wände und Regale blockieren, hinaus vor die Tür, bei Polizei gesperrt). 44 prüft den Builder mit echten Mausklicks (setzen, stapeln, Fenster an der Wand, Rechtsklick, Zurück, Pinsel, Kamera ziehen, Speichern, Kollision, Belohnung nur einmal, Abbrechen, Neu laden).
 
 **Karte, Musik, Decks (45, 46, 47):** 45 prüft die neue Karte (17 Bauplätze mit Typ und Umriss, Skatepark mit Pool, Zaun und Tor, Backoffice). 46 und 47 brauchen den lokalen Worker mit lokalen R2-Buckets (nach Änderungen an `wrangler.jsonc` neu starten): 46 prüft Musikliste, Titel, Streaming mit Range, ungültige Namen und Passwortschutz, 47 dasselbe für die Decks und dass das Design auf dem Board liegt.
 
-**UBIQ (48, 37):** 48 prüft Kauf und Nachfüllen im P-Mart, die drei Glitch-Stellen, Reparatur (Ladung, Scoops, Ort, Speicher), leere Dose und die automatische Erkennung einer verschränkten Sammelstelle samt Meldung an `/stats`. 37 prüft zusätzlich die Auswertung der Glitch-Ereignisse.
+**UBIQ (48, 37):** 48 prüft Kauf und Nachfüllen im A-Mart, die drei Glitch-Stellen, Reparatur (Ladung, Scoops, Ort, Speicher), leere Dose und die automatische Erkennung einer verschränkten Sammelstelle samt Meldung an `/stats`. 37 prüft zusätzlich die Auswertung der Glitch-Ereignisse.
 
 **Geteilte Glitches (49):** braucht den lokalen Worker. Prüft die Schnittstelle (nur der Erste gewinnt, auch gleichzeitig, ungültige Kennungen, Passwortschutz, Zurücksetzen nur mit Auswertungs-Passwort) und zwei Browser: A repariert und bekommt Scoops, B versucht es zu spät und bekommt nichts, verliert keine Ladung und sieht den Glitch als repariert; der Abgleich zeigt B Reparaturen von A.
 
@@ -77,8 +77,8 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 
 **Rarepod-Kamera (50):** Foto mit Polaroid-Rahmen (JPEG, Ort, Datum, Koordinaten, Blickwinkel), Bild nicht leer, Galerie bleibt nach Neuladen (IndexedDB), Taste C, Reiter Fotos, Aktionen, Löschen. Mit lokalem Worker zusätzlich: "An den Raum zeigen" kommt bei anderen an, ungültige und zu große Fotos werden verworfen.
 
-**Sammelkarten (51):** Kein Worker nötig, Karten und Bilder kommen per `page.route`. Prüft die Ziehung (7 Karten je Pack, Seltenheit nach Gewicht, letzte Karte mindestens "guarantee"), Kaufen nur im P-Mart und nur mit genug Scoops, Rarepod-Reiter Karten (Sammlung, Pack öffnen, Karten starten verdeckt, aufdecken, Detailkarte), Speichern nach Neuladen, Kartenpack im Laden, Kartenregal im P-Mart.
+**Sammelkarten (51):** Kein Worker nötig, Karten und Bilder kommen per `page.route`. Prüft die Ziehung (7 Karten je Pack, Seltenheit nach Gewicht, letzte Karte mindestens "guarantee"), Kaufen nur im A-Mart und nur mit genug Scoops, Rarepod-Reiter Karten (Sammlung, Pack öffnen, Karten starten verdeckt, aufdecken, Detailkarte), Speichern nach Neuladen, Kartenpack im Laden, Kartenregal im A-Mart.
 
 **Graffiti-Härtung (52):** Startet einen eigenen lokalen Worker (Port 8791, frischer Speicher, Obergrenze 3 Bilder). Prüft: nur echte Kennungen (Gebäude 0 bis 80, Kante 0 bis 40, Feld 0 bis 24, Wände w1 bis w9), nur PNG mit genau 128 × 64 Pixeln, kein Text, nicht zu groß, Obergrenze für die Zahl der Bilder (507), Überschreiben bleibt möglich, Bremse gegen Dauerfeuer (429).
 
-**Sprühdosen (53):** Form aus der Vorlage (Höhe zu Breite 2,64 wie `PHs_can.svg`), Teile, Material je Farbe geteilt und für UBIQ eigenes, Texturen aus der SVG geladen (Phil's-Rot, Weiß, Farbmarke in der Dosenfarbe, UBIQ-Schriftzug), Regal im P-Mart mit 48 Dosen.
+**Sprühdosen (53):** Form aus der Vorlage (Höhe zu Breite 2,64 wie `PHs_can.svg`), Teile, Material je Farbe geteilt und für UBIQ eigenes, Texturen aus der SVG geladen (Phil's-Rot, Weiß, Farbmarke in der Dosenfarbe, UBIQ-Schriftzug), Regal im A-Mart mit 48 Dosen.

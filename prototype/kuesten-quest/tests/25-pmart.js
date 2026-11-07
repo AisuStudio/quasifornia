@@ -1,4 +1,4 @@
-// P-Mart: Laden betreten, Kaufen nur im Laden, Minikarten-Marker.
+// A-Mart: Laden betreten, Kaufen nur im Laden, Minikarten-Marker.
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),path=require('path');
 const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?path.join(__dirname,'..','dist/dev.html'):path.join(__dirname,'..',u);fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);s.end();return}s.writeHead(200,{'content-type':f.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8'});s.end(d)})}).listen(8853,async()=>{
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
@@ -6,7 +6,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
  await p.goto('http://localhost:8853/?test=1&alt=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  console.log('Läden',JSON.stringify(await p.evaluate(()=>__qa.HUB.shops.map(s=>[Math.round(s.x),Math.round(s.z)]))));
- console.log('Aktion am Laden',JSON.stringify(await p.evaluate(()=>{const q=__qa,s=q.HUB.shops[0];q.G.phase='play';q.P.x=s.x;q.P.z=s.z;q.P.speed=0;q.step(.03);return q.curActs().map(a=>a.label).filter(l=>/P-Mart/.test(l))})));
+ console.log('Aktion am Laden',JSON.stringify(await p.evaluate(()=>{const q=__qa,s=q.HUB.shops[0];q.G.phase='play';q.P.x=s.x;q.P.z=s.z;q.P.speed=0;q.step(.03);return q.curActs().map(a=>a.label).filter(l=>/A-Mart/.test(l))})));
  console.log('draußen: Kaufen gesperrt',JSON.stringify(await p.evaluate(()=>{const q=__qa;q.SC.n=40;document.getElementById('b-inv').click();return null})));
  await p.click('#rp-tabs button[data-t=lad]');await p.waitForTimeout(200);
  console.log('  Laden draußen',JSON.stringify(await p.evaluate(()=>({gesperrt:[...document.querySelectorAll('#rp-lad button[data-b],#rp-lad button[data-can]')].every(b=>b.disabled),anz:document.querySelectorAll('#rp-lad button[data-can]').length,titel:document.querySelector('#inv h1').textContent.slice(0,12)}))));

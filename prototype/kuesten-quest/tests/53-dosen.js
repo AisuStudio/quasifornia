@@ -1,4 +1,4 @@
-// Sprühdosen: Form aus der Vorlage (Höhe zu Breite wie PHs_can.svg), Aufdruck aus SVG-Texturen, Farbmarke je Farbe, UBIQ mit Schriftzug, Regal im P-Mart.
+// Sprühdosen: Form aus der Vorlage (Höhe zu Breite wie PHs_can.svg), Aufdruck aus SVG-Texturen, Farbmarke je Farbe, UBIQ mit Schriftzug, Regal im A-Mart.
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..');
 const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?path.join(ROOT,'dist/dev.html'):path.join(ROOT,u);fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);s.end();return}s.writeHead(200,{'content-type':f.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8'});s.end(d)})}).listen(8968,async()=>{let b;try{
  b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});const p=await b.newPage({viewport:{width:900,height:560}});p.on('pageerror',e=>console.log('ERR',e.message));await p.route(/fonts/,r=>r.abort());await p.route('**/api/**',r=>r.fulfill({status:404,body:''}));
@@ -15,5 +15,5 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  console.log('Texturen geladen',JSON.stringify(t.out),t.pending===0&&t.out[fk].rot>200&&t.out[fk].farbig>200&&t.out[fk].weiss>200&&t.out[uk].weiss>t.out[fk].weiss*0.5&&t.out[uk].rot>100);
  await p.evaluate(()=>{__qa.pmartEnter()});await p.waitForTimeout(200);
  const r=await p.evaluate(()=>{const q=__qa;let n=0;q.sc.traverse(o=>{if(o.userData&&o.userData.spray&&o.parent&&o.parent.visible!==false)n++});return {regal:q.L7.items.cans,dosen:n}});
- console.log('Regal im P-Mart voller Sprühdosen',JSON.stringify(r),r.regal===48&&r.dosen>=48);
+ console.log('Regal im A-Mart voller Sprühdosen',JSON.stringify(r),r.regal===48&&r.dosen>=48);
  }catch(e){console.log('FEHLER',e.message)}try{await b.close()}catch(e){}srv.close()});

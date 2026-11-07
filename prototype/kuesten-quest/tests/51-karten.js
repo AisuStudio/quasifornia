@@ -1,4 +1,4 @@
-// Sammelkarten: Packs mit 7 Karten, Ziehung nach Seltenheit, Kaufen im P-Mart, Sammlung im Rarepod, Speichern.
+// Sammelkarten: Packs mit 7 Karten, Ziehung nach Seltenheit, Kaufen im A-Mart, Sammlung im Rarepod, Speichern.
 // Karten und Bilder kommen im Spiel vom Server (R2); der Test liefert sie über page.route aus einer Testdatei (kein Worker nötig).
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..');
@@ -42,5 +42,5 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  /* Laden-Anzeige und Regal */
  await p.evaluate(()=>{const q=__qa;q.SC.n=100;q.shopEnter('cards')});await p.waitForTimeout(300);
  const sp=await p.evaluate(()=>({sec:!!document.getElementById('kar-shop'),btn:!!document.querySelector('[data-kpack]')&&!document.querySelector('[data-kpack]').disabled}));console.log('Kartenpack im Laden',JSON.stringify(sp),sp.sec&&sp.btn);
- await p.evaluate(()=>{const q=__qa;q.applyLevel(7);q.beginPlay()});const acts=await p.evaluate(()=>__qa.L7.acts.map(a=>a.label));console.log('Regal im P-Mart',acts.some(a=>/Sammelkarten/.test(a)));
+ await p.evaluate(()=>{const q=__qa;q.applyLevel(7);q.beginPlay()});const acts=await p.evaluate(()=>__qa.L7.acts.map(a=>a.label));console.log('Regal im A-Mart',acts.some(a=>/Sammelkarten/.test(a)));
  await b.close();srv.close()});

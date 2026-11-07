@@ -1,7 +1,7 @@
 /* ================= Sammelkarten: Packs mit 7 Karten, Sammlung im Rarepod (Reiter Karten) =================
    Die Karten (Bild, Name, Familie, Seltenheit, Lore-Text) liegen NICHT im Repo, sondern im R2-Bucket "designs" (karten/karten.json und karten/*.webp)
    und kommen über /api/karten und /designs/karten/…  (nur mit Seitenpasswort). Ohne diese Daten bleibt der Reiter leer und der Laden verkauft keine Packs.
-   Kaufen: P-Mart, Kartenregal (Scoops). Die Sammlung liegt lokal im Browser (kq-karten). Tauschen kommt später (braucht Login und Server).
+   Kaufen: A-Mart, Kartenregal (Scoops). Die Sammlung liegt lokal im Browser (kq-karten). Tauschen kommt später (braucht Login und Server).
    Ein Pack hat immer 7 Karten. Seltenheitsstufen 1 bis 5 mit Gewichten (data.tiers), die letzte Karte im Pack ist mindestens "guarantee". */
 const KAR={data:null,state:'leer',own:{},packs:0,sel:0,reveal:null,err:''};
 (function(){try{const s=JSON.parse(localStorage.getItem('kq-karten')||'{}');if(s&&typeof s==='object'){KAR.own=s.own&&typeof s.own==='object'?s.own:{};KAR.packs=Math.max(0,Math.floor(+s.packs||0))}}catch(e){}})();
@@ -21,9 +21,9 @@ function karGot(){return KAR.data?KAR.data.cards.filter(c=>KAR.own[c.id]>0).leng
 function karDraw(n,rnd){rnd=rnd||Math.random;const d=KAR.data;if(!d)return[];const by=[1,2,3,4,5].map(t=>d.cards.filter(c=>c.rar===t)),w=d.tiers.map((x,i)=>by[i].length?Math.max(0,+x||0):0);
   const pickTier=min=>{let tot=0;for(let i=min-1;i<5;i++)tot+=w[i];if(tot<=0){for(let i=0;i<5;i++)if(by[i].length)return i+1;return 0}let r=rnd()*tot;for(let i=min-1;i<5;i++){if(r<w[i])return i+1;r-=w[i]}return 5};
   const out=[];for(let k=0;k<n;k++){const t=pickTier(k===n-1?d.guarantee:1);const L=by[t-1];if(L.length)out.push(L[Math.floor(rnd()*L.length)])}return out}
-/* Kaufen im P-Mart */
+/* Kaufen im A-Mart */
 function karBuyPack(){const d=KAR.data;if(!d){toast('Kartenpacks gibt es gerade nicht',1500);return false}
-  if(!SHOP.in){toast('Packs gibt es im P-Mart',1500);return false}
+  if(!SHOP.in){toast('Packs gibt es im A-Mart',1500);return false}
   if(!scCan(d.packPrice)){toast('Zu wenig Scoops: '+d.packPrice+' nötig',1500);return false}
   scAdd(-d.packPrice,'Kartenpack');KAR.packs++;karSave();tone(660,.08,'square',.04);tone(990,.1,'square',.04,0,.08);toast('Kartenpack gekauft (Rarepod, Reiter Karten)',1800);return true}
 function karShopHTML(){const d=KAR.data;if(!d)return '';const can=SHOP.in&&scCan(d.packPrice);
@@ -54,7 +54,7 @@ function karRender(){const el=document.getElementById('rp-kar');if(!el||typeof S
   if(KAR.state==='leer')karLoad();
   if(!KAR.data){el.innerHTML='<p class="sub">'+(KAR.state==='lädt'?'Karten werden geladen …':'Die Sammelkarten sind gerade nicht erreichbar.')+'</p>';return}
   const d=KAR.data,got=karGot();
-  let h=`<p class="sub">Sammlung: <b>${got} von ${d.cards.length}</b> Karten. Ein Pack hat immer ${d.packSize} Karten und kostet ${d.packPrice} Scoops im P-Mart.</p><div class="kbar"><span>Ungeöffnete Packs: <b>${KAR.packs}</b></span><button type="button" class="btn" id="kar-open"${KAR.packs>0?'':' disabled'}>Pack öffnen</button></div>`;
+  let h=`<p class="sub">Sammlung: <b>${got} von ${d.cards.length}</b> Karten. Ein Pack hat immer ${d.packSize} Karten und kostet ${d.packPrice} Scoops im A-Mart.</p><div class="kbar"><span>Ungeöffnete Packs: <b>${KAR.packs}</b></span><button type="button" class="btn" id="kar-open"${KAR.packs>0?'':' disabled'}>Pack öffnen</button></div>`;
   if(KAR.reveal){const it=KAR.reveal.items,allUp=it.every(x=>x.up);
     h+=`<div class="kreveal">`+it.map((x,i)=>{const c=karById(x.id);return `<div class="kslot" data-i="${i}">${karCardHTML(c,140,{flip:!x.up,down:!x.up,neu:x.neu})}</div>`}).join('')+`</div><div class="kbar"><button type="button" class="btn sec" id="kar-all">${allUp?'Fertig':'Alle aufdecken'}</button></div>`}
   h+=`<div class="kgrid">`+d.cards.map(c=>{const n=KAR.own[c.id]||0,f=karFam(c);return n>0

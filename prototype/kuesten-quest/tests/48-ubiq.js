@@ -1,4 +1,4 @@
-// UBIQ (Phill's Phantastic Phormula): Dose im P-Mart kaufen und nachfüllen, Glitches flackern und lassen sich reparieren (Scoops, Ladungen, Speicher), echte Verschränkungen werden erkannt und gemeldet.
+// UBIQ (Phill's Phantastic Phormula): Dose im A-Mart kaufen und nachfüllen, Glitches flackern und lassen sich reparieren (Scoops, Ladungen, Speicher), echte Verschränkungen werden erkannt und gemeldet.
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),path=require('path');
 const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?path.join(__dirname,'..','dist/dev.html'):path.join(__dirname,'..',u);fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);s.end();return}s.writeHead(200,{'content-type':f.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8'});s.end(d)})}).listen(8949,async()=>{
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});

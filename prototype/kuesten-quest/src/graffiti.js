@@ -1,5 +1,5 @@
 /* ================= Graffiti: Sprühdosen und 2D-Paint-Editor ================= */
-/* Dosen kauft man im P-Mart (Scoops). Die Graffiti-Wände stehen an der Mauer. Der Editor hat eine feste Auflösung (128 x 64) und nur Dosenfarben als Palette.
+/* Dosen kauft man im A-Mart (Scoops). Die Graffiti-Wände stehen an der Mauer. Der Editor hat eine feste Auflösung (128 x 64) und nur Dosenfarben als Palette.
    Das Bild bleibt, bis man (später: jemand anderes) drüber sprüht. Es wird im Browser gespeichert. */
 const GFK='kq-cans',GFT='kq-graf-total',GF_COL=[['#2de0d0','Türkis'],['#ee7cb8','Pink'],['#ffe066','Gelb'],['#ff7a1a','Orange'],['#ffffff','Weiß'],['#1a1626','Schwarz']],GF_PRICE=2,GF_INK=2400,GF_W=128,GF_H=64;
 const GF={cans:{},total:0,cur:null,col:null,size:4,open:false,undo:[],down:false,lx:0,ly:0,dabs:0};
@@ -11,7 +11,7 @@ function grafBuy(c){if(!scCan(GF_PRICE)){toast('Zu wenig Scoops: '+GF_PRICE+' n�
 /* Sprühdosen im Inventar: Dose in der Farbe, die Füllung zeigt den Rest */
 function grafCanSvg(c,f){const h=36*Math.max(0,Math.min(1,f)),y=14+36-h;return `<svg viewBox="0 0 40 56" width="44" height="56" aria-hidden="true"><rect x="15" y="1" width="10" height="5" rx="1.5" fill="#cfcfe0" stroke="#0e0b18" stroke-width="1.5"/><rect x="17" y="6" width="6" height="4" fill="#8a8aa0" stroke="#0e0b18" stroke-width="1.2"/><rect x="9" y="10" width="22" height="42" rx="5" fill="#3a3a50" stroke="#0e0b18" stroke-width="2"/><clipPath id="gc${c.slice(1)}"><rect x="9" y="10" width="22" height="42" rx="5"/></clipPath><rect x="9" y="${y.toFixed(1)}" width="22" height="${(h+2).toFixed(1)}" fill="${c}" clip-path="url(#gc${c.slice(1)})"/><rect x="9" y="10" width="22" height="42" rx="5" fill="none" stroke="#0e0b18" stroke-width="2"/><rect x="12" y="14" width="3" height="30" rx="1.5" fill="#ffffff" opacity=".28"/></svg>`}
 function grafInvHTML(){const have=GF_COL.filter(([c])=>(GF.cans[c]||0)>0);
-  if(!have.length)return '<div class="slot-i"><div class="ic q">?</div><b>Sprühdosen</b><span>Noch keine. Im P-Mart gibt es Dosen für '+GF_PRICE+' Scoops.</span></div>';
+  if(!have.length)return '<div class="slot-i"><div class="ic q">?</div><b>Sprühdosen</b><span>Noch keine. Im A-Mart gibt es Dosen für '+GF_PRICE+' Scoops.</span></div>';
   return have.map(([c,n])=>{const f=GF.cans[c]/GF_INK;return `<div class="slot-i got"><div class="ic">${grafCanSvg(c,f)}</div><b>Sprühdose ${n}</b><span>Farbe: ${Math.max(1,Math.round(f*100))}%</span><em>Wand besprühen (Enter an einer Graffiti-Wand)</em></div>`}).join('')}
 function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port 36 (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
   return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)&&SHOP.in?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
@@ -56,7 +56,7 @@ function grafInitWorld(){if(!HUB.graf)return;GF.edges=null;GFSRV.known={};
   try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&/^kq-graf-f\d+-\d+-\d+$/.test(k)){const id=k.slice(8),p=grafEnsurePanel(id);if(p)grafLoadPanel(p)}}}catch(e){}
   grafSync();clearInterval(GFSRV.timer);GFSRV.timer=setInterval(()=>{if(LV.id===0&&!document.hidden)grafSync()},60000)}
 function grafOpen(p){if(!p||GF.open)return;const have=GF_COL.some(([c])=>GF.cans[c]>0);
-  if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im P-Mart (blaues Band, auf der Minikarte als P) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
+  if(!have)return dlgStart('',['Eine leere Wand wartet auf dich. Zum Sprühen brauchst du eine Dose.','Im A-Mart (mintgrünes Band, auf der Minikarte als A) gibt es Sprühdosen für '+GF_PRICE+' Scoops.']);
   GF.cur=p;GF.open=true;GFOPEN=true;K.up=K.down=K.left=K.right=0;GF.dabs=0;GF.undo=[];GF.polQueued=false;
   if(!grafLegal(p.id))toast('Verbotene Wand! Danach kommt die Polizei ('+(polNight()?'nachts nach 3 Minuten':'nach 1 Minute')+'). Strafe: 10 Scoops',3000)
   const cv=$('graf-cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.clearRect(0,0,GF_W,GF_H);cx.drawImage(p.cv,0,0);
