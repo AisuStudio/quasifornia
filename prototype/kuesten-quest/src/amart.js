@@ -13,6 +13,6 @@ function amartTexture(key,svg,w,h,repeat){
   im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.replace('viewBox=','width="'+w+'" height="'+h+'" viewBox='));return tx}
 /* Quadratisches Logo als Material (ohne Beleuchtung, bleibt immer gut lesbar) */
 function amartLogoMat(){if(!AMART.mat.logo)AMART.mat.logo=new THREE.MeshBasicMaterial({map:amartTexture('logo',DECAL_SVG.amartLogo,512,512)});return AMART.mat.logo}
-/* Banderole für eine Fläche der Länge len und Höhe h (Welteinheiten): Das Muster wiederholt sich seitlich und bleibt unverzerrt. */
+/* Banderole (unbeleuchtet wie das Logo, damit die Farben genau der Vorlage entsprechen) für eine Fläche der Länge len und Höhe h (Welteinheiten): Das Muster wiederholt sich seitlich und bleibt unverzerrt. */
 function amartBandMat(len,h){const rep=+(len/(h*AMART.BAND_ASPECT)).toFixed(2),key='band'+rep;
-  if(!AMART.mat[key])AMART.mat[key]=new THREE.MeshStandardMaterial({map:amartTexture(key,DECAL_SVG.amartBand,229,317,rep),roughness:.8});return AMART.mat[key]}
+  if(!AMART.mat[key])AMART.mat[key]=new THREE.MeshBasicMaterial({map:amartTexture(key,DECAL_SVG.amartBand,229,317,rep)});return AMART.mat[key]}
