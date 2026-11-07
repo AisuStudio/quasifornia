@@ -39,7 +39,7 @@ function buildLevel7(){
     box(SW+.2,.5,SL+.2,x,3.7,SZ0+SL/2,blue,blue,.3,false);col(x-SW/2-.2,x+SW/2+.2,SZ0-.2,SZ0+SL+.2);
     const lab=['SPRÜHDOSEN','SKINS','KARTEN'][si];[1,-1].forEach(sd=>sign(lab,SW*1.9,1,x+sd*(SW/2+.15),4.9,SZ0+SL/2,sd*Math.PI/2,'#ffffff',blue));
     [-1,1].forEach(side=>{[0,1,2].forEach(lv=>{for(let k=0;k<8;k++){const z=SZ0+.9+k*1.45,y=.55+lv*1+.2,px=x+side*(SW/2-.55);
-      if(si===0){cylm(.3,.85,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length],null,0);L7.items.cans++}
+      if(si===0){const cn=makeSprayCan('farbe',PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length]);cn.position.set(px,Y+y-.2,z);cn.rotation.y=side*Math.PI/2+((k*7+lv*3)%5-2)*.12;cn.userData.noBake=true;add(cn);L7.items.cans++}
       else if(si===2){box(.14,.95,.7,px,y-.2,z,PM_CAN_COLS[(k+lv*3+(side>0?2:0))%PM_CAN_COLS.length]);L7.items.cards=(L7.items.cards||0)+1}
       else if(si===1){const sk=SKIN_LIST[(k+lv*2+(side>0?3:0))%SKIN_LIST.length];box(.95,.3,1.1,px,y-.15+(k%2)*.3,z,sk[2]);L7.items.skins++}}})})});
   /* Kasse rechts: Tresen, Kassensystem, Süßigkeiten-Ständer */

@@ -87,7 +87,9 @@ flora=flora.replace("let FSP=","let FCYL=10;let FSP=",1)
 chunks=[flora,villas,sidecar,dino,avatar,bal,decals]
 chunks=[sm(c) for c in chunks]
 setup=open('src/setup.js').read();game=open('src/game.js').read()
-game=game.replace('window.__qa={',open('src/atoll.js').read()+'\n'+open('src/pmart.js').read()+'\n'+open('src/bauen.js').read()+'\n'+open('src/ubiq.js').read()+'\n'+open('src/island.js').read()+'\n'+open('src/xmas.js').read()+'\n'+open('src/bettler.js').read()+'\n'+open('src/unter.js').read()+'\n'+open('src/graffiti.js').read()+'\n'+open('src/karte.js').read()+'\n'+open('src/multi.js').read()+'\n'+open('src/foto.js').read()+'\n'+open('src/karten.js').read()+'\n'+open('src/stats.js').read().replace('__BUILD__',time.strftime('%m%d-%H%M'))+'\nwindow.__qa={',1)
+import json as _json
+DECALS='const DECAL_SVG='+_json.dumps({'can':re.sub(r'>\s+<','><',open('src/decals/PHs_can.svg',encoding='utf8').read().replace('<?xml version="1.0" encoding="UTF-8"?>','')).strip(),'ubiq':re.sub(r'>\s+<','><',open('src/decals/PHs_UBIQ.svg',encoding='utf8').read().replace('<?xml version="1.0" encoding="UTF-8"?>','')).strip()})+';\n'
+game=game.replace('window.__qa={',open('src/atoll.js').read()+'\n'+DECALS+open('src/dose.js').read()+'\n'+open('src/pmart.js').read()+'\n'+open('src/bauen.js').read()+'\n'+open('src/ubiq.js').read()+'\n'+open('src/island.js').read()+'\n'+open('src/xmas.js').read()+'\n'+open('src/bettler.js').read()+'\n'+open('src/unter.js').read()+'\n'+open('src/graffiti.js').read()+'\n'+open('src/karte.js').read()+'\n'+open('src/multi.js').read()+'\n'+open('src/foto.js').read()+'\n'+open('src/karten.js').read()+'\n'+open('src/stats.js').read().replace('__BUILD__',time.strftime('%m%d-%H%M'))+'\nwindow.__qa={',1)
 import json
 logo=re.sub(r'<\?xml[^>]*\?>','',open('src/logo/port36_postcard.svg').read()).replace('<svg ','<svg class="logo-svg" role="img" aria-label="Logo" ',1).strip()
 mapjson=open('src/map/map.json').read()

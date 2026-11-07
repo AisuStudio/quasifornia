@@ -80,3 +80,5 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 **Sammelkarten (51):** Kein Worker nötig, Karten und Bilder kommen per `page.route`. Prüft die Ziehung (7 Karten je Pack, Seltenheit nach Gewicht, letzte Karte mindestens "guarantee"), Kaufen nur im P-Mart und nur mit genug Scoops, Rarepod-Reiter Karten (Sammlung, Pack öffnen, Karten starten verdeckt, aufdecken, Detailkarte), Speichern nach Neuladen, Kartenpack im Laden, Kartenregal im P-Mart.
 
 **Graffiti-Härtung (52):** Startet einen eigenen lokalen Worker (Port 8791, frischer Speicher, Obergrenze 3 Bilder). Prüft: nur echte Kennungen (Gebäude 0 bis 80, Kante 0 bis 40, Feld 0 bis 24, Wände w1 bis w9), nur PNG mit genau 128 × 64 Pixeln, kein Text, nicht zu groß, Obergrenze für die Zahl der Bilder (507), Überschreiben bleibt möglich, Bremse gegen Dauerfeuer (429).
+
+**Sprühdosen (53):** Form aus der Vorlage (Höhe zu Breite 2,64 wie `PHs_can.svg`), Teile, Material je Farbe geteilt und für UBIQ eigenes, Texturen aus der SVG geladen (Phil's-Rot, Weiß, Farbmarke in der Dosenfarbe, UBIQ-Schriftzug), Regal im P-Mart mit 48 Dosen.
