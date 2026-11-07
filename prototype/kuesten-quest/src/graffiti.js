@@ -30,10 +30,11 @@ function grafEdges(){if(GF.edges)return GF.edges;const E=[],rc=new THREE.Raycast
     const rings=b.c.map(r=>r.map(p=>[mwx(p[0]),mwz(p[1])])),inMat=(x,z)=>rings.reduce((n,r)=>n+(mpInPoly(r,x,z)?1:0),0)%2===1;let e=-1;
     rings.forEach(ring=>{for(let i=0;i<ring.length;i++){e++;if(e>40)return;const a=ring[i],c=ring[(i+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<3.2)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
       if(inMat(mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}
-      rc.set(new V(mx+nx*26,3.4,mz+nz*26),new V(-nx,0,-nz));rc.far=44;let hit=null;
-      for(const h of rc.intersectObject(b.bg,true)){const o=h.object;if(!o.isMesh||o.userData.outline||!h.face||(o.geometry&&o.geometry.type==='PlaneGeometry'))continue;
-        const w=h.face.normal.clone().transformDirection(o.matrixWorld);if(Math.abs(w.y)>.5||w.x*nx+w.z*nz<.5)continue;hit=h;break}
-      if(!hit)continue;const sh=(hit.point.x-mx)*nx+(hit.point.z-mz)*nz;if(Math.abs(sh)>16)continue;
+      /* drei Höhen: Fensterrahmen und Erker stehen vor der Wand; die mittlere Trefferweite ist die Wand selbst */
+      const shs=[];for(const y of [2.4,3.4,4.6]){rc.set(new V(mx+nx*26,y,mz+nz*26),new V(-nx,0,-nz));rc.far=44;
+        for(const h of rc.intersectObject(b.bg,true)){const o=h.object;if(!o.isMesh||o.userData.outline||!h.face||(o.geometry&&o.geometry.type==='PlaneGeometry'))continue;
+          const w=h.face.normal.clone().transformDirection(o.matrixWorld);if(Math.abs(w.y)>.5||w.x*nx+w.z*nz<.5)continue;shs.push((h.point.x-mx)*nx+(h.point.z-mz)*nz);break}}
+      if(!shs.length)continue;shs.sort((p,q)=>p-q);const sh=shs[Math.floor((shs.length-1)/2)];if(Math.abs(sh)>16)continue;
       E.push({bi,e,ax:a[0]+nx*sh,az:a[1]+nz*sh,ux,uz,nx,nz,L,sh:+sh.toFixed(2)})}})});GF.edges=E;return E}
 /* Diagnose und Test: Was für eine Wand liegt in dieser Richtung? (Strahl gegen die ganze Karte, nur senkrechte Flächen) */
 function grafWhatWall(x,z,dx,dz,far){const rc=new THREE.Raycaster();rc.camera=cam;rc.set(new THREE.Vector3(x,3.4,z),new THREE.Vector3(dx,0,dz).normalize());rc.far=far||30;
@@ -44,7 +45,7 @@ function grafWhatWall(x,z,dx,dz,far){const rc=new THREE.Raycaster();rc.camera=ca
 function grafSlot(id){const m=/^f(\d+)-(\d+)-(\d+)$/.exec(id);if(!m)return null;const E=grafEdges().find(x=>x.bi===+m[1]&&x.e===+m[2]);if(!E)return null;const k=+m[3];
   /* kurze Wandstücke (unter 5,8 m): ein einziger Platz in der Mitte, die Fläche schrumpft mit der Wand; sonst Plätze alle 6 m mit 5,6 m Breite */
   let t,w;if(E.L<5.8){if(k!==0)return null;t=E.L/2;w=Math.max(2.4,E.L-.6)}else{t=k*6+3;w=5.6;if(t+2.8>E.L)return null}
-  return {id,k,E,w,x:E.ax+E.ux*t+E.nx*.62,z:E.az+E.uz*t+E.nz*.62,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
+  return {id,k,E,w,x:E.ax+E.ux*t+E.nx*.1,z:E.az+E.uz*t+E.nz*.1,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
 function grafFacadeNear(){const px=P.x,pz=P.z;let best=null;for(const E of grafEdges()){const rx=px-E.ax,rz=pz-E.az,t=Math.max(0,Math.min(E.L,rx*E.ux+rz*E.uz)),cx=E.ax+E.ux*t,cz=E.az+E.uz*t,d=Math.hypot(px-cx,pz-cz),side=rx*E.nx+rz*E.nz;
     if(d<3.8&&side>-.3&&(!best||d<best.d))best={d,E,t}}
   if(!best)return null;const E=best.E,k=Math.max(0,Math.min(Math.floor(E.L/6)-1,Math.floor(best.t/6))),id='f'+E.bi+'-'+E.e+'-'+k,sl=grafSlot(id);if(!sl)return null;
