@@ -495,6 +495,10 @@ function mpBuildings(H){
   {const AVT=L0.find(l=>/Avateur/i.test(l.t));let tgt=null;if(AVT)tgt=MAPD.buildings.find(b=>mpInPoly(b.c[0],AVT.x,AVT.y));
    if(!tgt){let bd=1e9;MAPD.buildings.forEach(b=>{if(b.kind)return;const d=Math.hypot(b.cen[0]-1812,b.cen[1]-1588);if(d<bd){bd=d;tgt=b}});if(bd>30)tgt=null}
    if(tgt){tgt.kind='avateur';tgt.label='L’Avateur'}}
+  /* Akira’s Garage: Gebäude 6 (neben dem A-Mart, gegenüber vom Bahnhof, 572 m²) und das überlappende kleine Gebäude 8 werden zu einem Gebäude; später reicht ein Label "Garage" in der SVG */
+  {const GL=L0.find(l=>/Garage/i.test(l.t));let g6=null,bd=1e9;if(GL)g6=MAPD.buildings.find(b=>mpInPoly(b.c[0],GL.x,GL.y));
+   if(!g6)MAPD.buildings.forEach(b=>{if(b.kind)return;const d=Math.hypot(b.cen[0]-2088,b.cen[1]-1538);if(d<bd){bd=d;g6=b}});
+   if(g6&&(GL||bd<30)){g6.kind='garage';g6.label='Akira’s Garage';MAPD.buildings.forEach(b=>{if(b===g6||b.kind||b.area*MP.SC*MP.SC>200)return;if(b.c[0].some(p=>mpInPoly(g6.c[0],p[0],p[1]))||g6.c[0].some(p=>mpInPoly(b.c[0],p[0],p[1])))b.kind='garage-teil'})}}
   /* Beschriftung steht neben dem Gebäude statt darin (z. B. "Surf Shop", "Beach Shack"): nächstes freies Gebäude bis 45 Karteneinheiten (22 m) */
   const dPoly=(r,x,y)=>{let d=1e9;for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],dx=q[0]-p[0],dy=q[1]-p[1],L2=dx*dx+dy*dy||1e-9;let t=((x-p[0])*dx+(y-p[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-p[0]-dx*t,y-p[1]-dy*t))}return d};
   HUB.labelWarn=[];L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],l.x,l.y)))return;let best=null;MAPD.buildings.forEach(b=>{if(b.kind)return;const d=dPoly(b.c[0],l.x,l.y);if(d<=45&&(!best||d<best.d))best={d,b}});
@@ -503,6 +507,8 @@ function mpBuildings(H){
   const WALL={school:'#e9a97c',surf:'#7fd8d0',shack:'#ecc888',warehouse:'#9fb0c8',police:'#9db8e8',station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a',backoffice:'#cdd6e0'};
   const mkGroup=(x,z)=>{const bg=new THREE.Group();bg.userData.noBake=true;bg.userData.blk={x,z};W0.add(bg);HUB.bgroups.push(bg);return bg};
   MAPD.buildings.forEach(b=>{const aM=b.area*MP.SC*MP.SC,X=mwx(b.cen[0]),Z=mwz(b.cen[1]);
+    if(b.kind==='garage-teil'){b.skip=true;return}
+    if(b.kind==='garage'){const pts=b.c[0].concat(...MAPD.buildings.filter(x=>x.kind==='garage-teil').map(x=>x.c[0])),o=mpObb(pts),bg=mkGroup(mwx(o.cx),mwz(o.cy));b.skip=true;b.bg=bg;mpGarage(bg,o);solids.push({x:o.cx,y:o.cy,a:o.a,w:o.w,h:o.h});b.h=7.2;return}
     if(b.kind==='pmart'||b.kind==='lab'||b.kind==='xmas'){
       const o=mpObb(b.c[0]),cx=mwx(o.cx),cz=mwz(o.cy),bg=mkGroup(cx,cz);b.skip=true;b.bg=bg;
       const yaw=mpFrontYaw(o.cx,o.cy);b.yaw=yaw;b.X=cx;b.Z=cz;

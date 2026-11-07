@@ -84,3 +84,5 @@ Befund: In Stadt und Küste gehen knapp die Hälfte der Dreiecke auf die Umrissl
 **Sprühdosen (53):** Form aus der Vorlage (Höhe zu Breite 2,64 wie `PHs_can.svg`), Teile, Material je Farbe geteilt und für UBIQ eigenes, Texturen aus der SVG geladen (Phil's-Rot, Weiß, Farbmarke in der Dosenfarbe, UBIQ-Schriftzug), Regal im A-Mart mit 48 Dosen.
 
 **L’Avateur, Außenseite (54):** Das lachsrote Haus im Süden wird als `avateur` erkannt (per Label "Avateur" in der Karte oder als nächstes freies Haus bei 1812,1588), vier verschiedene Wesen (Pink-Blob, Skater, Dino, Goldzilla) in den Auslagen, ungefähr gleich hoch und innerhalb der Fenster, der Erker ist gesperrt, Weg und Stufe davor sind frei, das Logo ist als Textur geladen.
+
+**Akira’s Garage, Außenseite (55):** Gebäude 6 und das überlappende Gebäude 8 werden zu einem Gebäude (Label "Akira’s Garage"), 42 × 17 m, Front nach Osten, vier Rolltore, Innenraum gesperrt, Vorplatz und Kundentür frei, Logo-Textur geladen.
