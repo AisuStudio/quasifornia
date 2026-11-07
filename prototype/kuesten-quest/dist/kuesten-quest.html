@@ -3384,11 +3384,29 @@ function grafLegal(id){return /^w\d$/.test(id)}
 function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const tk='kq-graf-t-'+p.id;let t=Number(localStorage.getItem(tk))||0;if(!t){t=Date.now();localStorage.setItem(tk,String(t))}
   if(Date.now()-t>GF_TTL){localStorage.removeItem('kq-graf-'+p.id);localStorage.removeItem(tk);return}grafDraw(p,d)}catch(e){}}
 /* ---- Fassaden: überall sprühen (verboten, außer an den fünf legalen Wänden) ---- */
-function grafEdges(){if(GF.edges)return GF.edges;const E=[];MAPD.buildings.forEach((b,bi)=>{if(b.skip)return;const ring=b.c[0].map(p=>[mwx(p[0]),mwz(p[1])]);
-  for(let e=0;e<ring.length;e++){const a=ring[e],c=ring[(e+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<6)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
-    if(mpInPoly(ring,mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}E.push({bi,e,ax:a[0],az:a[1],ux,uz,nx,nz,L})}});GF.edges=E;return E}
-function grafSlot(id){const m=/^f(\d+)-(\d+)-(\d+)$/.exec(id);if(!m)return null;const E=grafEdges().find(x=>x.bi===+m[1]&&x.e===+m[2]);if(!E)return null;const k=+m[3],t=k*6+3;if(t+2.8>E.L)return null;
-  return {id,k,E,x:E.ax+E.ux*t+E.nx*.62,z:E.az+E.uz*t+E.nz*.62,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
+/* Sprüh-Kanten: Für jede Kante des Karten-Umrisses (alle Ringe, auch Höfe) wird ein Strahl von außen auf das gezeichnete Gebäude geschossen. Die Kante rückt an die tatsächlich sichtbare Wand
+   (Umriss und gezeichnete Wand liegen nicht immer am selben Ort, bei Blöcken wie dem Shopping Court um mehrere Meter). Trifft der Strahl keine senkrechte Wand, gibt es dort keine Sprüh-Stelle.
+   Die Kennung bleibt f<Gebäude>-<Kante>-<Platz>, die Kanten zählen über alle Ringe weiter (höchstens 41, wie der Server es erlaubt). */
+function grafEdges(){if(GF.edges)return GF.edges;const E=[],rc=new THREE.Raycaster(),V=THREE.Vector3;
+  MAPD.buildings.forEach((b,bi)=>{if(b.skip||!b.bg)return;b.bg.updateMatrixWorld(true);
+    const rings=b.c.map(r=>r.map(p=>[mwx(p[0]),mwz(p[1])])),inMat=(x,z)=>rings.reduce((n,r)=>n+(mpInPoly(r,x,z)?1:0),0)%2===1;let e=-1;
+    rings.forEach(ring=>{for(let i=0;i<ring.length;i++){e++;if(e>40)return;const a=ring[i],c=ring[(i+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<3.2)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
+      if(inMat(mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}
+      rc.set(new V(mx+nx*26,3.4,mz+nz*26),new V(-nx,0,-nz));rc.far=44;let hit=null;
+      for(const h of rc.intersectObject(b.bg,true)){const o=h.object;if(!o.isMesh||o.userData.outline||!h.face||(o.geometry&&o.geometry.type==='PlaneGeometry'))continue;
+        const w=h.face.normal.clone().transformDirection(o.matrixWorld);if(Math.abs(w.y)>.5||w.x*nx+w.z*nz<.5)continue;hit=h;break}
+      if(!hit)continue;const sh=(hit.point.x-mx)*nx+(hit.point.z-mz)*nz;if(Math.abs(sh)>16)continue;
+      E.push({bi,e,ax:a[0]+nx*sh,az:a[1]+nz*sh,ux,uz,nx,nz,L,sh:+sh.toFixed(2)})}})});GF.edges=E;return E}
+/* Diagnose und Test: Was für eine Wand liegt in dieser Richtung? (Strahl gegen die ganze Karte, nur senkrechte Flächen) */
+function grafWhatWall(x,z,dx,dz,far){const rc=new THREE.Raycaster();rc.camera=cam;rc.set(new THREE.Vector3(x,3.4,z),new THREE.Vector3(dx,0,dz).normalize());rc.far=far||30;
+  for(const h of rc.intersectObject(W0,true)){const o=h.object;if(!o.isMesh||o.userData.outline||!h.face)continue;const w=h.face.normal.clone().transformDirection(o.matrixWorld);if(Math.abs(w.y)>.5)continue;
+    let a=o,g=null;while(a&&a!==W0){if(a.userData&&a.userData.blk){g=a;break}a=a.parent}const bi=g?MAPD.buildings.findIndex(b=>b.bg===g):-2;
+    return {d:+h.distance.toFixed(1),x:+h.point.x.toFixed(1),z:+h.point.z.toFixed(1),bi,kind:bi>=0?(MAPD.buildings[bi].kind||'haus'):'?',skip:bi>=0?!!MAPD.buildings[bi].skip:null,geo:o.geometry.type,blk:!!g}}
+  return null}
+function grafSlot(id){const m=/^f(\d+)-(\d+)-(\d+)$/.exec(id);if(!m)return null;const E=grafEdges().find(x=>x.bi===+m[1]&&x.e===+m[2]);if(!E)return null;const k=+m[3];
+  /* kurze Wandstücke (unter 5,8 m): ein einziger Platz in der Mitte, die Fläche schrumpft mit der Wand; sonst Plätze alle 6 m mit 5,6 m Breite */
+  let t,w;if(E.L<5.8){if(k!==0)return null;t=E.L/2;w=Math.max(2.4,E.L-.6)}else{t=k*6+3;w=5.6;if(t+2.8>E.L)return null}
+  return {id,k,E,w,x:E.ax+E.ux*t+E.nx*.62,z:E.az+E.uz*t+E.nz*.62,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
 function grafFacadeNear(){const px=P.x,pz=P.z;let best=null;for(const E of grafEdges()){const rx=px-E.ax,rz=pz-E.az,t=Math.max(0,Math.min(E.L,rx*E.ux+rz*E.uz)),cx=E.ax+E.ux*t,cz=E.az+E.uz*t,d=Math.hypot(px-cx,pz-cz),side=rx*E.nx+rz*E.nz;
     if(d<3.8&&side>-.3&&(!best||d<best.d))best={d,E,t}}
   if(!best)return null;const E=best.E,k=Math.max(0,Math.min(Math.floor(E.L/6)-1,Math.floor(best.t/6))),id='f'+E.bi+'-'+E.e+'-'+k,sl=grafSlot(id);if(!sl)return null;
@@ -3396,7 +3414,7 @@ function grafFacadeNear(){const px=P.x,pz=P.z;let best=null;for(const E of grafE
 function grafEnsurePanel(id){let p=HUB.graf.panels.find(q=>q.id===id);if(p)return p;const sl=grafSlot(id);if(!sl)return null;
   const cv=document.createElement('canvas');cv.width=GF_W;cv.height=GF_H;const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
   const tex=new THREE.CanvasTexture(cv);tex.magFilter=THREE.NearestFilter;tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.colorSpace=THREE.SRGBColorSpace;
-  const pl=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(sl.w,sl.w/2),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
   pl.position.set(sl.x,1.3+2.1,sl.z);pl.rotation.y=sl.yaw;pl.userData.noBake=true;pl.userData.noOutline=true;W0.add(pl);
   p={id,dyn:true,x:sl.x,z:sl.z,ry:sl.yaw,cv,ctx:cx,tex,mesh:pl,ax:sl.x+sl.nx*2.4,az:sl.z+sl.nz*2.4};HUB.graf.panels.push(p);return p}
 function grafRemovePanel(p){if(p.mesh){W0.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose()}const i=HUB.graf.panels.indexOf(p);if(i>=0)HUB.graf.panels.splice(i,1)}
@@ -4852,7 +4870,7 @@ karLoad();
    Erfasst werden: Spielzeit, Level, gelöste Aufträge, Scoops-Bewegungen mit Grund, gefundene Gegenstände, Portale, Polizei, Graffiti,
    Fehler im Browser, Hänger (Gas gedrückt, aber man kommt nicht weiter), Bildrate und Gerät. Aus ?nostats=1 wird nichts gesendet.
    In den Tests ist es aus (nur mit ?stats=1 an). Die Auswertung steht unter /stats (siehe worker/stats.js). */
-const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1107-1043',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
+const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1107-1159',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
 (function(){const rid=n=>{let s='';const c='abcdefghijklmnopqrstuvwxyz0123456789';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};STAT.sid=rid(12);
   try{STAT.pid=localStorage.getItem('kq-pid')||'';if(!/^[a-z0-9]{8,24}$/.test(STAT.pid)){STAT.pid=rid(12);localStorage.setItem('kq-pid',STAT.pid)}}catch(e){STAT.pid=STAT.sid}})();
 function statEv(ty,k,n,x,z){if(!STAT.on)return;if(STAT.q.length>=60)STAT.q.shift();const inGame=typeof LV!=='undefined';STAT.q.push([ty,String(k==null?'':k).slice(0,120),typeof n==='number'&&isFinite(n)?Math.round(n*100)/100:0,typeof x==='number'?Math.round(x):null,typeof z==='number'?Math.round(z):null,inGame?LV.id:0])}
@@ -4898,7 +4916,7 @@ addEventListener('pagehide',()=>statFlush(true));addEventListener('visibilitycha
 {const o=grafClose;grafClose=function(save){const p=GF.cur,d=GF.dabs,r=o.apply(this,arguments);try{if(save&&p&&d>0)statEv('gr',grafLegal(p.id)?'legal':'illegal',d,P.x,P.z)}catch(e){}return r}}
 {const o=mpUnstick;mpUnstick=function(){const x=P.x,z=P.z,r=o.apply(this,arguments);try{statEv('unstick','',1,x,z)}catch(e){}return r}}
 
-window.__qa={doseIcon,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={doseIcon,grafWhatWall,grafSlot,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

@@ -22,11 +22,29 @@ function grafLegal(id){return /^w\d$/.test(id)}
 function grafLoadPanel(p){try{const d=localStorage.getItem('kq-graf-'+p.id);if(!d)return;const tk='kq-graf-t-'+p.id;let t=Number(localStorage.getItem(tk))||0;if(!t){t=Date.now();localStorage.setItem(tk,String(t))}
   if(Date.now()-t>GF_TTL){localStorage.removeItem('kq-graf-'+p.id);localStorage.removeItem(tk);return}grafDraw(p,d)}catch(e){}}
 /* ---- Fassaden: überall sprühen (verboten, außer an den fünf legalen Wänden) ---- */
-function grafEdges(){if(GF.edges)return GF.edges;const E=[];MAPD.buildings.forEach((b,bi)=>{if(b.skip)return;const ring=b.c[0].map(p=>[mwx(p[0]),mwz(p[1])]);
-  for(let e=0;e<ring.length;e++){const a=ring[e],c=ring[(e+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<6)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
-    if(mpInPoly(ring,mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}E.push({bi,e,ax:a[0],az:a[1],ux,uz,nx,nz,L})}});GF.edges=E;return E}
-function grafSlot(id){const m=/^f(\d+)-(\d+)-(\d+)$/.exec(id);if(!m)return null;const E=grafEdges().find(x=>x.bi===+m[1]&&x.e===+m[2]);if(!E)return null;const k=+m[3],t=k*6+3;if(t+2.8>E.L)return null;
-  return {id,k,E,x:E.ax+E.ux*t+E.nx*.62,z:E.az+E.uz*t+E.nz*.62,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
+/* Sprüh-Kanten: Für jede Kante des Karten-Umrisses (alle Ringe, auch Höfe) wird ein Strahl von außen auf das gezeichnete Gebäude geschossen. Die Kante rückt an die tatsächlich sichtbare Wand
+   (Umriss und gezeichnete Wand liegen nicht immer am selben Ort, bei Blöcken wie dem Shopping Court um mehrere Meter). Trifft der Strahl keine senkrechte Wand, gibt es dort keine Sprüh-Stelle.
+   Die Kennung bleibt f<Gebäude>-<Kante>-<Platz>, die Kanten zählen über alle Ringe weiter (höchstens 41, wie der Server es erlaubt). */
+function grafEdges(){if(GF.edges)return GF.edges;const E=[],rc=new THREE.Raycaster(),V=THREE.Vector3;
+  MAPD.buildings.forEach((b,bi)=>{if(b.skip||!b.bg)return;b.bg.updateMatrixWorld(true);
+    const rings=b.c.map(r=>r.map(p=>[mwx(p[0]),mwz(p[1])])),inMat=(x,z)=>rings.reduce((n,r)=>n+(mpInPoly(r,x,z)?1:0),0)%2===1;let e=-1;
+    rings.forEach(ring=>{for(let i=0;i<ring.length;i++){e++;if(e>40)return;const a=ring[i],c=ring[(i+1)%ring.length],dx=c[0]-a[0],dz=c[1]-a[1],L=Math.hypot(dx,dz);if(L<3.2)continue;const ux=dx/L,uz=dz/L;let nx=uz,nz=-ux;const mx=(a[0]+c[0])/2,mz=(a[1]+c[1])/2;
+      if(inMat(mx+nx*.4,mz+nz*.4)){nx=-nx;nz=-nz}
+      rc.set(new V(mx+nx*26,3.4,mz+nz*26),new V(-nx,0,-nz));rc.far=44;let hit=null;
+      for(const h of rc.intersectObject(b.bg,true)){const o=h.object;if(!o.isMesh||o.userData.outline||!h.face||(o.geometry&&o.geometry.type==='PlaneGeometry'))continue;
+        const w=h.face.normal.clone().transformDirection(o.matrixWorld);if(Math.abs(w.y)>.5||w.x*nx+w.z*nz<.5)continue;hit=h;break}
+      if(!hit)continue;const sh=(hit.point.x-mx)*nx+(hit.point.z-mz)*nz;if(Math.abs(sh)>16)continue;
+      E.push({bi,e,ax:a[0]+nx*sh,az:a[1]+nz*sh,ux,uz,nx,nz,L,sh:+sh.toFixed(2)})}})});GF.edges=E;return E}
+/* Diagnose und Test: Was für eine Wand liegt in dieser Richtung? (Strahl gegen die ganze Karte, nur senkrechte Flächen) */
+function grafWhatWall(x,z,dx,dz,far){const rc=new THREE.Raycaster();rc.camera=cam;rc.set(new THREE.Vector3(x,3.4,z),new THREE.Vector3(dx,0,dz).normalize());rc.far=far||30;
+  for(const h of rc.intersectObject(W0,true)){const o=h.object;if(!o.isMesh||o.userData.outline||!h.face)continue;const w=h.face.normal.clone().transformDirection(o.matrixWorld);if(Math.abs(w.y)>.5)continue;
+    let a=o,g=null;while(a&&a!==W0){if(a.userData&&a.userData.blk){g=a;break}a=a.parent}const bi=g?MAPD.buildings.findIndex(b=>b.bg===g):-2;
+    return {d:+h.distance.toFixed(1),x:+h.point.x.toFixed(1),z:+h.point.z.toFixed(1),bi,kind:bi>=0?(MAPD.buildings[bi].kind||'haus'):'?',skip:bi>=0?!!MAPD.buildings[bi].skip:null,geo:o.geometry.type,blk:!!g}}
+  return null}
+function grafSlot(id){const m=/^f(\d+)-(\d+)-(\d+)$/.exec(id);if(!m)return null;const E=grafEdges().find(x=>x.bi===+m[1]&&x.e===+m[2]);if(!E)return null;const k=+m[3];
+  /* kurze Wandstücke (unter 5,8 m): ein einziger Platz in der Mitte, die Fläche schrumpft mit der Wand; sonst Plätze alle 6 m mit 5,6 m Breite */
+  let t,w;if(E.L<5.8){if(k!==0)return null;t=E.L/2;w=Math.max(2.4,E.L-.6)}else{t=k*6+3;w=5.6;if(t+2.8>E.L)return null}
+  return {id,k,E,w,x:E.ax+E.ux*t+E.nx*.62,z:E.az+E.uz*t+E.nz*.62,nx:E.nx,nz:E.nz,yaw:Math.atan2(E.nx,E.nz)}}
 function grafFacadeNear(){const px=P.x,pz=P.z;let best=null;for(const E of grafEdges()){const rx=px-E.ax,rz=pz-E.az,t=Math.max(0,Math.min(E.L,rx*E.ux+rz*E.uz)),cx=E.ax+E.ux*t,cz=E.az+E.uz*t,d=Math.hypot(px-cx,pz-cz),side=rx*E.nx+rz*E.nz;
     if(d<3.8&&side>-.3&&(!best||d<best.d))best={d,E,t}}
   if(!best)return null;const E=best.E,k=Math.max(0,Math.min(Math.floor(E.L/6)-1,Math.floor(best.t/6))),id='f'+E.bi+'-'+E.e+'-'+k,sl=grafSlot(id);if(!sl)return null;
@@ -34,7 +52,7 @@ function grafFacadeNear(){const px=P.x,pz=P.z;let best=null;for(const E of grafE
 function grafEnsurePanel(id){let p=HUB.graf.panels.find(q=>q.id===id);if(p)return p;const sl=grafSlot(id);if(!sl)return null;
   const cv=document.createElement('canvas');cv.width=GF_W;cv.height=GF_H;const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
   const tex=new THREE.CanvasTexture(cv);tex.magFilter=THREE.NearestFilter;tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.colorSpace=THREE.SRGBColorSpace;
-  const pl=new THREE.Mesh(new THREE.PlaneGeometry(5.6,2.8),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(sl.w,sl.w/2),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
   pl.position.set(sl.x,1.3+2.1,sl.z);pl.rotation.y=sl.yaw;pl.userData.noBake=true;pl.userData.noOutline=true;W0.add(pl);
   p={id,dyn:true,x:sl.x,z:sl.z,ry:sl.yaw,cv,ctx:cx,tex,mesh:pl,ax:sl.x+sl.nx*2.4,az:sl.z+sl.nz*2.4};HUB.graf.panels.push(p);return p}
 function grafRemovePanel(p){if(p.mesh){W0.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose()}const i=HUB.graf.panels.indexOf(p);if(i>=0)HUB.graf.panels.splice(i,1)}
