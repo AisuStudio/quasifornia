@@ -5,7 +5,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
 
  const p=await b.newPage({viewport:{width:1000,height:640}});p.on('pageerror',e=>console.log('ERR',e.message));
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
- await p.goto('http://localhost:8949/?test=1&stats=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
+ await p.goto('http://localhost:8949/?test=1&ubiq=1&stats=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const free=()=>p.evaluate(()=>{const q=__qa;q.DLG.open=false;document.getElementById('dlg').hidden=true;return true});
  await p.evaluate(()=>{localStorage.removeItem('kq-ubiq')});
  const g0=await p.evaluate(()=>{const q=__qa;return {n:q.UBQ.list.length,arten:q.UBQ.list.map(g=>g.type).join(','),alleAmWegesrand:q.UBQ.list.every(g=>q.mpWalk(g.tx,g.tz))}});

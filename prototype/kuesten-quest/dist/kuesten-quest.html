@@ -2973,16 +2973,18 @@ function bauFrame(dt){const pl=BAU.plot;if(!pl)return;const c=BAU.cam,cx=pl.x,cz
    ein Brett im Boden. Mit UBIQ wird das Ding "erlöst" und an einen besseren Ort gesetzt, dafür gibt es Scoops.
    Das Spiel erkennt echte Verschränkungen selbst (Position in fester Rasterzelle) und meldet jeden Fund an /stats. Jeder repariert für sich (lokal gespeichert).
    Dose: 30 Scoops im A-Mart, 5 Ladungen, Nachfüllen 25, 15 Scoops pro Reparatur. Das endgültige Design der Dose folgt vom Nutzer (jetzt ein Platzhalter). */
+/* Schalter: UBIQ ist im Spiel AUS (noch nicht für alle gedacht). Anschalten: UBQ_AN auf true setzen, oder die Seite mit ?ubiq=1 öffnen (zum Zeigen und Testen). Ist es aus, gibt es keine Dose im Laden, keinen Eintrag im Rarepod, keine Glitches und keine Meldungen an /stats. */
+const UBQ_AN=false||/[?&]ubiq=1/.test(location.search);
 const UBQ={own:false,ch:0,max:5,price:30,refill:25,reward:15,fixed:new Set(),list:[],t:0,tick:0,srv:{ok:false,busy:0,t:0,pushed:false}};
 try{const s=JSON.parse(localStorage.getItem('kq-ubiq')||'null');if(s){UBQ.own=!!s.own;UBQ.ch=Math.max(0,Math.min(UBQ.max,s.ch|0));(Array.isArray(s.fixed)?s.fixed:[]).forEach(k=>UBQ.fixed.add(String(k)))}}catch(e){}
 function ubqSave(){try{localStorage.setItem('kq-ubiq',JSON.stringify({own:UBQ.own,ch:UBQ.ch,fixed:[...UBQ.fixed]}))}catch(e){}}
 function ubqStat(ty,g){try{if(typeof statEv==='function')statEv('glitch',ty+':'+g.type,1,g.x,g.z)}catch(e){}}
 /* ---- Laden und Inventar ---- */
 function ubqCanSvg(f){return doseIcon('ubiq',null,f)}
-function ubqInvHTML(){if(!UBQ.own)return '';return `<div class="slot-i got"><div class="ic">${ubqCanSvg(UBQ.ch/UBQ.max)}</div><b>UBIQ</b><span>Phill's Phantastic Phormula: ${UBQ.ch} von ${UBQ.max} Ladungen</span><em>Wo etwas flackert: Enter</em></div>`}
-function ubqShopHTML(){const full=UBQ.own&&UBQ.ch>=UBQ.max,cost=UBQ.own?UBQ.refill:UBQ.price,can=SHOP.in&&!full&&scCan(cost);
+function ubqInvHTML(){if(!UBQ_AN||!UBQ.own)return '';return `<div class="slot-i got"><div class="ic">${ubqCanSvg(UBQ.ch/UBQ.max)}</div><b>UBIQ</b><span>Phill's Phantastic Phormula: ${UBQ.ch} von ${UBQ.max} Ladungen</span><em>Wo etwas flackert: Enter</em></div>`}
+function ubqShopHTML(){if(!UBQ_AN)return '';const full=UBQ.own&&UBQ.ch>=UBQ.max,cost=UBQ.own?UBQ.refill:UBQ.price,can=SHOP.in&&!full&&scCan(cost);
   return `<h3 class="edh">UBIQ</h3><p class="sub">Phill's Phantastic Phormula. Für alles, was flackert.</p><div class="skgrid"><div class="sk"><i style="background:#7be0e0"></i><b>UBIQ</b><span>${UBQ.own?UBQ.ch+' von '+UBQ.max+' Ladungen':cost+' Scoops'}</span><button type="button" data-ubq="1"${can?'':' disabled'}>${UBQ.own?(full?'Voll':'Nachfüllen '+cost):'Kaufen'}</button></div></div>`}
-function ubqBuy(){const cost=UBQ.own?UBQ.refill:UBQ.price;if(UBQ.own&&UBQ.ch>=UBQ.max)return false;if(!scCan(cost)){toast('Zu wenig Scoops: '+cost+' nötig',1500);return false}
+function ubqBuy(){if(!UBQ_AN)return false;const cost=UBQ.own?UBQ.refill:UBQ.price;if(UBQ.own&&UBQ.ch>=UBQ.max)return false;if(!scCan(cost)){toast('Zu wenig Scoops: '+cost+' nötig',1500);return false}
   const was=UBQ.own;UBQ.own=true;UBQ.ch=UBQ.max;ubqSave();scAdd(-cost,was?'UBIQ nachgefüllt':'UBIQ');toast(was?'UBIQ nachgefüllt':'UBIQ gekauft: Phill sei Dank',1400);try{invRender()}catch(e){}return true}
 /* ---- Geteilter Stand: Der Server merkt sich, welche Glitches repariert sind (wer zuerst repariert, bekommt die Scoops). Ohne Server bleibt alles lokal. ---- */
 function ubqSync(){if(UBQ.srv.busy)return;UBQ.srv.busy=1;
@@ -3007,7 +3009,7 @@ function ubqNpc(x,z,ry,col){const g=skater(x,cityGround(x,z),z,ry,col||'#47c2a5'
   if(g.userData.arms)g.userData.arms.forEach(({sg,s})=>{sg.rotation.z=s*.35});return g}
 /* Endzustand nach der Reparatur: Ding steht am besseren Ort */
 function ubqSettle(g,silent){g.fixed=true;g.mats.forEach(o=>{o.m.emissive.copy(o.e);o.m.emissiveIntensity=o.i});g.obj.visible=true;g.obj.position.set(g.tx,g.ty,g.tz);if(g.finish)g.finish(g)}
-function ubiqInitWorld(){UBQ.list.length=0;
+function ubiqInitWorld(){UBQ.list.length=0;if(!UBQ_AN)return;
   /* 1) Ein Passant steckt in der Wand nahe der Leiter zur Unterwelt (von dort sickert das Gas) */
   if(HUB.uw){const w=ubqWallSpot(HUB.uw.bx,HUB.uw.bz,60);
     if(w){const h=Math.atan2(w.nz,w.nx),npc=ubqNpc(w.x-w.nx*.32,w.z-w.nz*.32,Math.PI/2-h,'#47c2a5'),t=ubqFree(w.x+w.nx*1.8,w.z+w.nz*1.8,.6);
@@ -3035,14 +3037,14 @@ function ubiqInitWorld(){UBQ.list.length=0;
     talk:['Der Gegenstand steckt in der Wand.'],talkNo:['Der Gegenstand steckt in der Wand. UBIQ würde ihn befreien.'],thanks:['Der Gegenstand liegt wieder frei.'],
     finish:g=>{g.item.x=g.tx;g.item.z=g.tz;[g.item.ring,g.item.beam].forEach(o=>{if(o){o.position.x=g.tx;o.position.z=g.tz}})}})})}
 /* ---- Flackern ---- */
-function ubiqStep(dt){UBQ.t+=dt;UBQ.srv.t-=dt;if(UBQ.srv.t<=0){UBQ.srv.t=45;ubqSync()}UBQ.tick-=dt;const flick=UBQ.tick<=0;if(flick)UBQ.tick=.07;
+function ubiqStep(dt){if(!UBQ_AN)return;UBQ.t+=dt;UBQ.srv.t-=dt;if(UBQ.srv.t<=0){UBQ.srv.t=45;ubqSync()}UBQ.tick-=dt;const flick=UBQ.tick<=0;if(flick)UBQ.tick=.07;
   for(const g of UBQ.list){if(g.fixed){if(g.spin)g.obj.rotation.y+=dt*1.2;continue}
     if(Math.hypot(P.x-g.x,P.z-g.z)>70){g.obj.visible=true;continue}
     if(g.spin)g.obj.rotation.y+=dt*2.4;
     if(flick){const r=Math.random();g.obj.visible=r>.07;const j=(Math.random()-.5)*.14;g.obj.position.x=g.bx+j;g.obj.position.z=g.bz-j*.7;
       const c=r<.5?'#00ffff':'#ff00ff';g.mats.forEach(o=>{o.m.emissive.set(c);o.m.emissiveIntensity=.35+Math.random()*.9})}}}
 /* ---- Aktion ---- */
-function ubiqActs(a){if(LV.id!==0||G.under)return;for(const g of UBQ.list){if(g.fixed||Math.hypot(P.x-g.x,P.z-g.z)>40)continue;
+function ubiqActs(a){if(!UBQ_AN||LV.id!==0||G.under)return;for(const g of UBQ.list){if(g.fixed||Math.hypot(P.x-g.x,P.z-g.z)>40)continue;
   a.push({x:g.x,z:g.z,r:6.5,label:UBQ.ch>0?'UBIQ sprühen: '+g.label:'Glitch: '+g.label,pri:9,fn:()=>ubiqUse(g)})}}
 function ubiqUse(g){if(g.fixed)return;if(UBQ.ch<=0){dlgStart('',UBQ.own?['Das flackert. Deine Dose UBIQ ist leer. Im A-Mart gibt es Nachschub.']:g.talkNo||g.talk);return}
   if(g.talk&&!g.seen){g.seen=true;dlgStart('',g.talk,()=>ubiqFix(g));return}ubiqFix(g)}
@@ -4871,7 +4873,7 @@ karLoad();
    Erfasst werden: Spielzeit, Level, gelöste Aufträge, Scoops-Bewegungen mit Grund, gefundene Gegenstände, Portale, Polizei, Graffiti,
    Fehler im Browser, Hänger (Gas gedrückt, aber man kommt nicht weiter), Bildrate und Gerät. Aus ?nostats=1 wird nichts gesendet.
    In den Tests ist es aus (nur mit ?stats=1 an). Die Auswertung steht unter /stats (siehe worker/stats.js). */
-const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1107-1225',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
+const STAT={on:!(TEST&&!QP.has('stats'))&&!QP.has('nostats'),sid:'',pid:'',q:[],play:0,wFr:0,wMs:0,slow:0,fr:0,t:15,last:performance.now(),stuckT:0,errs:new Map(),errKeys:0,started:false,ver:'1107-1241',gpu:'',sent:0,fail:0,dev:matchMedia('(pointer:coarse)').matches?'m':'d'};
 (function(){const rid=n=>{let s='';const c='abcdefghijklmnopqrstuvwxyz0123456789';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};STAT.sid=rid(12);
   try{STAT.pid=localStorage.getItem('kq-pid')||'';if(!/^[a-z0-9]{8,24}$/.test(STAT.pid)){STAT.pid=rid(12);localStorage.setItem('kq-pid',STAT.pid)}}catch(e){STAT.pid=STAT.sid}})();
 function statEv(ty,k,n,x,z){if(!STAT.on)return;if(STAT.q.length>=60)STAT.q.shift();const inGame=typeof LV!=='undefined';STAT.q.push([ty,String(k==null?'':k).slice(0,120),typeof n==='number'&&isFinite(n)?Math.round(n*100)/100:0,typeof x==='number'?Math.round(x):null,typeof z==='number'?Math.round(z):null,inGame?LV.id:0])}
@@ -4917,7 +4919,7 @@ addEventListener('pagehide',()=>statFlush(true));addEventListener('visibilitycha
 {const o=grafClose;grafClose=function(save){const p=GF.cur,d=GF.dabs,r=o.apply(this,arguments);try{if(save&&p&&d>0)statEv('gr',grafLegal(p.id)?'legal':'illegal',d,P.x,P.z)}catch(e){}return r}}
 {const o=mpUnstick;mpUnstick=function(){const x=P.x,z=P.z,r=o.apply(this,arguments);try{statEv('unstick','',1,x,z)}catch(e){}return r}}
 
-window.__qa={doseIcon,grafWhatWall,grafSlot,grafEnsurePanel,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={doseIcon,ubqShopHTML,ubqInvHTML,ubiqActs,grafWhatWall,grafSlot,grafEnsurePanel,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}

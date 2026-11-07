@@ -3,16 +3,18 @@
    ein Brett im Boden. Mit UBIQ wird das Ding "erlöst" und an einen besseren Ort gesetzt, dafür gibt es Scoops.
    Das Spiel erkennt echte Verschränkungen selbst (Position in fester Rasterzelle) und meldet jeden Fund an /stats. Jeder repariert für sich (lokal gespeichert).
    Dose: 30 Scoops im A-Mart, 5 Ladungen, Nachfüllen 25, 15 Scoops pro Reparatur. Das endgültige Design der Dose folgt vom Nutzer (jetzt ein Platzhalter). */
+/* Schalter: UBIQ ist im Spiel AUS (noch nicht für alle gedacht). Anschalten: UBQ_AN auf true setzen, oder die Seite mit ?ubiq=1 öffnen (zum Zeigen und Testen). Ist es aus, gibt es keine Dose im Laden, keinen Eintrag im Rarepod, keine Glitches und keine Meldungen an /stats. */
+const UBQ_AN=false||/[?&]ubiq=1/.test(location.search);
 const UBQ={own:false,ch:0,max:5,price:30,refill:25,reward:15,fixed:new Set(),list:[],t:0,tick:0,srv:{ok:false,busy:0,t:0,pushed:false}};
 try{const s=JSON.parse(localStorage.getItem('kq-ubiq')||'null');if(s){UBQ.own=!!s.own;UBQ.ch=Math.max(0,Math.min(UBQ.max,s.ch|0));(Array.isArray(s.fixed)?s.fixed:[]).forEach(k=>UBQ.fixed.add(String(k)))}}catch(e){}
 function ubqSave(){try{localStorage.setItem('kq-ubiq',JSON.stringify({own:UBQ.own,ch:UBQ.ch,fixed:[...UBQ.fixed]}))}catch(e){}}
 function ubqStat(ty,g){try{if(typeof statEv==='function')statEv('glitch',ty+':'+g.type,1,g.x,g.z)}catch(e){}}
 /* ---- Laden und Inventar ---- */
 function ubqCanSvg(f){return doseIcon('ubiq',null,f)}
-function ubqInvHTML(){if(!UBQ.own)return '';return `<div class="slot-i got"><div class="ic">${ubqCanSvg(UBQ.ch/UBQ.max)}</div><b>UBIQ</b><span>Phill's Phantastic Phormula: ${UBQ.ch} von ${UBQ.max} Ladungen</span><em>Wo etwas flackert: Enter</em></div>`}
-function ubqShopHTML(){const full=UBQ.own&&UBQ.ch>=UBQ.max,cost=UBQ.own?UBQ.refill:UBQ.price,can=SHOP.in&&!full&&scCan(cost);
+function ubqInvHTML(){if(!UBQ_AN||!UBQ.own)return '';return `<div class="slot-i got"><div class="ic">${ubqCanSvg(UBQ.ch/UBQ.max)}</div><b>UBIQ</b><span>Phill's Phantastic Phormula: ${UBQ.ch} von ${UBQ.max} Ladungen</span><em>Wo etwas flackert: Enter</em></div>`}
+function ubqShopHTML(){if(!UBQ_AN)return '';const full=UBQ.own&&UBQ.ch>=UBQ.max,cost=UBQ.own?UBQ.refill:UBQ.price,can=SHOP.in&&!full&&scCan(cost);
   return `<h3 class="edh">UBIQ</h3><p class="sub">Phill's Phantastic Phormula. Für alles, was flackert.</p><div class="skgrid"><div class="sk"><i style="background:#7be0e0"></i><b>UBIQ</b><span>${UBQ.own?UBQ.ch+' von '+UBQ.max+' Ladungen':cost+' Scoops'}</span><button type="button" data-ubq="1"${can?'':' disabled'}>${UBQ.own?(full?'Voll':'Nachfüllen '+cost):'Kaufen'}</button></div></div>`}
-function ubqBuy(){const cost=UBQ.own?UBQ.refill:UBQ.price;if(UBQ.own&&UBQ.ch>=UBQ.max)return false;if(!scCan(cost)){toast('Zu wenig Scoops: '+cost+' nötig',1500);return false}
+function ubqBuy(){if(!UBQ_AN)return false;const cost=UBQ.own?UBQ.refill:UBQ.price;if(UBQ.own&&UBQ.ch>=UBQ.max)return false;if(!scCan(cost)){toast('Zu wenig Scoops: '+cost+' nötig',1500);return false}
   const was=UBQ.own;UBQ.own=true;UBQ.ch=UBQ.max;ubqSave();scAdd(-cost,was?'UBIQ nachgefüllt':'UBIQ');toast(was?'UBIQ nachgefüllt':'UBIQ gekauft: Phill sei Dank',1400);try{invRender()}catch(e){}return true}
 /* ---- Geteilter Stand: Der Server merkt sich, welche Glitches repariert sind (wer zuerst repariert, bekommt die Scoops). Ohne Server bleibt alles lokal. ---- */
 function ubqSync(){if(UBQ.srv.busy)return;UBQ.srv.busy=1;
@@ -37,7 +39,7 @@ function ubqNpc(x,z,ry,col){const g=skater(x,cityGround(x,z),z,ry,col||'#47c2a5'
   if(g.userData.arms)g.userData.arms.forEach(({sg,s})=>{sg.rotation.z=s*.35});return g}
 /* Endzustand nach der Reparatur: Ding steht am besseren Ort */
 function ubqSettle(g,silent){g.fixed=true;g.mats.forEach(o=>{o.m.emissive.copy(o.e);o.m.emissiveIntensity=o.i});g.obj.visible=true;g.obj.position.set(g.tx,g.ty,g.tz);if(g.finish)g.finish(g)}
-function ubiqInitWorld(){UBQ.list.length=0;
+function ubiqInitWorld(){UBQ.list.length=0;if(!UBQ_AN)return;
   /* 1) Ein Passant steckt in der Wand nahe der Leiter zur Unterwelt (von dort sickert das Gas) */
   if(HUB.uw){const w=ubqWallSpot(HUB.uw.bx,HUB.uw.bz,60);
     if(w){const h=Math.atan2(w.nz,w.nx),npc=ubqNpc(w.x-w.nx*.32,w.z-w.nz*.32,Math.PI/2-h,'#47c2a5'),t=ubqFree(w.x+w.nx*1.8,w.z+w.nz*1.8,.6);
@@ -65,14 +67,14 @@ function ubiqInitWorld(){UBQ.list.length=0;
     talk:['Der Gegenstand steckt in der Wand.'],talkNo:['Der Gegenstand steckt in der Wand. UBIQ würde ihn befreien.'],thanks:['Der Gegenstand liegt wieder frei.'],
     finish:g=>{g.item.x=g.tx;g.item.z=g.tz;[g.item.ring,g.item.beam].forEach(o=>{if(o){o.position.x=g.tx;o.position.z=g.tz}})}})})}
 /* ---- Flackern ---- */
-function ubiqStep(dt){UBQ.t+=dt;UBQ.srv.t-=dt;if(UBQ.srv.t<=0){UBQ.srv.t=45;ubqSync()}UBQ.tick-=dt;const flick=UBQ.tick<=0;if(flick)UBQ.tick=.07;
+function ubiqStep(dt){if(!UBQ_AN)return;UBQ.t+=dt;UBQ.srv.t-=dt;if(UBQ.srv.t<=0){UBQ.srv.t=45;ubqSync()}UBQ.tick-=dt;const flick=UBQ.tick<=0;if(flick)UBQ.tick=.07;
   for(const g of UBQ.list){if(g.fixed){if(g.spin)g.obj.rotation.y+=dt*1.2;continue}
     if(Math.hypot(P.x-g.x,P.z-g.z)>70){g.obj.visible=true;continue}
     if(g.spin)g.obj.rotation.y+=dt*2.4;
     if(flick){const r=Math.random();g.obj.visible=r>.07;const j=(Math.random()-.5)*.14;g.obj.position.x=g.bx+j;g.obj.position.z=g.bz-j*.7;
       const c=r<.5?'#00ffff':'#ff00ff';g.mats.forEach(o=>{o.m.emissive.set(c);o.m.emissiveIntensity=.35+Math.random()*.9})}}}
 /* ---- Aktion ---- */
-function ubiqActs(a){if(LV.id!==0||G.under)return;for(const g of UBQ.list){if(g.fixed||Math.hypot(P.x-g.x,P.z-g.z)>40)continue;
+function ubiqActs(a){if(!UBQ_AN||LV.id!==0||G.under)return;for(const g of UBQ.list){if(g.fixed||Math.hypot(P.x-g.x,P.z-g.z)>40)continue;
   a.push({x:g.x,z:g.z,r:6.5,label:UBQ.ch>0?'UBIQ sprühen: '+g.label:'Glitch: '+g.label,pri:9,fn:()=>ubiqUse(g)})}}
 function ubiqUse(g){if(g.fixed)return;if(UBQ.ch<=0){dlgStart('',UBQ.own?['Das flackert. Deine Dose UBIQ ist leer. Im A-Mart gibt es Nachschub.']:g.talkNo||g.talk);return}
   if(g.talk&&!g.seen){g.seen=true;dlgStart('',g.talk,()=>ubiqFix(g));return}ubiqFix(g)}

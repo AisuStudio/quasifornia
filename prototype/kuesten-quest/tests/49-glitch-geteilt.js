@@ -21,7 +21,7 @@ srv.listen(8950,async()=>{
  /* Zwei Spieler */
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
  const open=async(name)=>{const ctx=await b.newContext({viewport:{width:900,height:560}});await ctx.route(/fonts/,r=>r.abort());await ctx.route('**/api/graffiti**',r=>r.fulfill({status:404,body:''}));const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',name,e.message));
-   await p.goto('http://localhost:8950/?test=1&name='+name);await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
+   await p.goto('http://localhost:8950/?test=1&ubiq=1&name='+name);await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
    await p.evaluate(()=>{localStorage.removeItem('kq-ubiq');const q=__qa;q.G.phase='play';q.DLG.open=false;document.getElementById('dlg').hidden=true;q.UBQ.own=true;q.UBQ.ch=5;q.UBQ.fixed.clear();q.UBQ.list.forEach(g=>{g.seen=true});q.SC.n=50;for(let i=0;i<3;i++)q.step(.03)});await wait(600);return p};
  const A=await open('Anton'),B=await open('Mia');
  const ok=p=>p.evaluate(()=>({server:__qa.UBQ.srv.ok,n:__qa.UBQ.list.length}));console.log('Beide am Server',JSON.stringify(await ok(A)),JSON.stringify(await ok(B)));
