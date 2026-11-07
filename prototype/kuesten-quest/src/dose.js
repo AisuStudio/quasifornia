@@ -55,7 +55,10 @@ function makeSprayCan(kind,color,w){
   kind=kind==='ubiq'?'ubiq':'farbe';w=w||256;const G=doseParts(),key=kind==='ubiq'?'ubiq':'f'+(color||'')+w;
   if(!DOSE.mat[key]){DOSE.mat[key]=new THREE.MeshStandardMaterial({map:doseTexture(key,doseSvg(kind,color),kind==='ubiq'?Math.max(w,384):w),roughness:.55,metalness:.05})}
   if(!DOSE.bandMat)DOSE.bandMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.55,metalness:.05});
-  const bm=MT(DOSE.BLACK),wm=MT('#ffffff'),g=new THREE.Group();
+  /* Düsenkopf in der Farbe der Dose (UBIQ bleibt schwarz). Bei sehr hellen Farben tauschen Ring und Punkt die Farbe, damit das Sprühloch sichtbar bleibt. */
+  const lum=c=>{const h=String(c||'').replace('#','');if(h.length!==6)return 0;const v=[0,2,4].map(i=>parseInt(h.substr(i,2),16)/255);return .299*v[0]+.587*v[1]+.114*v[2]};
+  const hell=kind==='farbe'&&lum(color)>.8,nm=kind==='farbe'&&color?MT(color):MT(DOSE.BLACK);
+  const bm=MT(DOSE.BLACK),wm=MT(hell?DOSE.BLACK:'#ffffff'),dm=MT(hell?'#ffffff':DOSE.BLACK),g=new THREE.Group();
   const add=(geo,mat,cast=true)=>{const m=new THREE.Mesh(geo,mat);m.castShadow=cast;g.add(m);return m};
-  add(G.body,bm);add(G.band,DOSE.bandMat,false);add(G.lab,DOSE.mat[key],false);add(G.act,bm);add(G.ring,wm,false);add(G.dot,bm,false);
+  add(G.body,bm);add(G.band,DOSE.bandMat,false);add(G.lab,DOSE.mat[key],false);add(G.act,nm);add(G.ring,wm,false);add(G.dot,dm,false);
   g.userData.kind=kind;g.userData.spray=true;return g}
