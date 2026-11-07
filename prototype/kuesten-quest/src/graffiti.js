@@ -13,7 +13,7 @@ function grafCanSvg(c,f){const h=36*Math.max(0,Math.min(1,f)),y=14+36-h;return `
 function grafInvHTML(){const have=GF_COL.filter(([c])=>(GF.cans[c]||0)>0);
   if(!have.length)return '<div class="slot-i"><div class="ic q">?</div><b>Sprühdosen</b><span>Noch keine. Im P-Mart gibt es Dosen für '+GF_PRICE+' Scoops.</span></div>';
   return have.map(([c,n])=>{const f=GF.cans[c]/GF_INK;return `<div class="slot-i got"><div class="ic">${grafCanSvg(c,f)}</div><b>Sprühdose ${n}</b><span>Farbe: ${Math.max(1,Math.round(f*100))}%</span><em>Wand besprühen (Enter an einer Graffiti-Wand)</em></div>`}).join('')}
-function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port Lupo (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
+function grafShopHTML(){return '<h3 class="edh">Sprühdosen</h3><p class="sub">Eine Dose kostet '+GF_PRICE+' Scoops und reicht für ein großes Bild. Sprüh an den Graffiti-Wänden an der Mauer von Port 36 (Aktion: Wand besprühen).</p><div class="skgrid">'+GF_COL.map(([c,n])=>{const ink=GF.cans[c]||0;
   return `<div class="sk"><i style="background:${c}"></i><b>${n}</b><span>${ink>0?'Farbe: '+Math.round(ink/GF_INK*100)+'%':'leer'}</span><button type="button" data-can="${c}"${scCan(GF_PRICE)&&SHOP.in?'':' disabled'}>${ink>0?'Nachfüllen':'Kaufen'} (${GF_PRICE})</button></div>`}).join('')+'</div>'}
 /* Graffiti bleiben vorerst ein Jahr (früher 48 Stunden). Mit Server: dort gespeichert und für alle sichtbar; ohne Server: nur im Browser. */
 const GF_TTL=365*24*3600*1000;  /* vorerst fast dauerhaft (früher 48 Stunden) */

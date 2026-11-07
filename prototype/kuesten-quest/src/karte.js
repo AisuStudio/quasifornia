@@ -1,4 +1,4 @@
-/* ================= Neue Karte: Port Lupo nach der Halbinsel-Karte (src/map/Map_1.svg, umgewandelt in src/map/map.json) =================
+/* ================= Neue Karte: Port 36 nach der Halbinsel-Karte (src/map/Map_1.svg, umgewandelt in src/map/map.json) =================
    1 Karteneinheit = 0,5 m (MP.SC). Boden, Wasser, Straßen, Gebäude, Parks und S-Bahn kommen aus den Kartendaten.
    Mit ?alt=1 in der Adresse startet stattdessen die alte Rasterstadt. */
 const MAPD=__MAPDATA__;
@@ -495,7 +495,7 @@ function mpBuildings(H){
   const dPoly=(r,x,y)=>{let d=1e9;for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],dx=q[0]-p[0],dy=q[1]-p[1],L2=dx*dx+dy*dy||1e-9;let t=((x-p[0])*dx+(y-p[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-p[0]-dx*t,y-p[1]-dy*t))}return d};
   HUB.labelWarn=[];L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],l.x,l.y)))return;let best=null;MAPD.buildings.forEach(b=>{if(b.kind)return;const d=dPoly(b.c[0],l.x,l.y);if(d<=45&&(!best||d<best.d))best={d,b}});
     if(best){best.b.kind=k;best.b.label=l.t}else HUB.labelWarn.push(l.t)});
-  const SIGN={school:'SCHULE',surf:'SURF SHOP',shack:'BEACH SHACK',warehouse:'WAREHOUSE',police:'POLIZEI',station:'PORT LUPO STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER',backoffice:'ANMELDUNG LAGER'};
+  const SIGN={school:'SCHULE',surf:'SURF SHOP',shack:'BEACH SHACK',warehouse:'WAREHOUSE',police:'POLIZEI',station:'PORT 36 STATION',casino:'MARINA CLUB CASINO',shopping:'SHOPPING COURT',resort:'BEACH RESORT',tower:'OFFICE TOWER',backoffice:'ANMELDUNG LAGER'};
   const WALL={school:'#e9a97c',surf:'#7fd8d0',shack:'#ecc888',warehouse:'#9fb0c8',police:'#9db8e8',station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a',backoffice:'#cdd6e0'};
   const mkGroup=(x,z)=>{const bg=new THREE.Group();bg.userData.noBake=true;bg.userData.blk={x,z};W0.add(bg);HUB.bgroups.push(bg);return bg};
   MAPD.buildings.forEach(b=>{const aM=b.area*MP.SC*MP.SC,X=mwx(b.cen[0]),Z=mwz(b.cen[1]);

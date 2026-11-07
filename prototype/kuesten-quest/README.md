@@ -11,7 +11,7 @@ Spielbarer Browser-Prototyp (Three.js) mit einem Cloudflare-Worker (Passwortschu
 - `../../worker/`: Cloudflare-Worker (`index.js`, `room.js`, `stats.js`, `glitch.js`, `musik.js`), `../../wrangler.jsonc`.
 
 ## Stand (06.11.2026)
-Stadt Port Lupo (Karte aus SVG, Tag und Nacht), Skaten mit Tricks, Skatepark, Hochbahn, Polizei, Riesen-Dinos, Graffiti (Server), Rarepod (Inventar, Aufträge, Scoops, Laden, Editor, Musik, Terminal, Decks, Fotos, Karten), P-Mart mit Innenraum, Baukasten für Bauplätze, Atoll-Quest, Unterwelt, UBIQ-Glitches (geteilt über den Server), Räume mit bis zu 5 Spielern (Chat, Polizei, Fotos zeigen), Kamera, Sammelkarten, Auswertung. Details und offene Fragen: `CONCEPT.md`.
+Stadt Port 36 (Karte aus SVG, Tag und Nacht), Skaten mit Tricks, Skatepark, Hochbahn, Polizei, Riesen-Dinos, Graffiti (Server), Rarepod (Inventar, Aufträge, Scoops, Laden, Editor, Musik, Terminal, Decks, Fotos, Karten), P-Mart mit Innenraum, Baukasten für Bauplätze, Atoll-Quest, Unterwelt, UBIQ-Glitches (geteilt über den Server), Räume mit bis zu 5 Spielern (Chat, Polizei, Fotos zeigen), Kamera, Sammelkarten, Auswertung. Details und offene Fragen: `CONCEPT.md`.
 
 ## Hinweise
 - Läuft getestet im Headless-Browser (Software-Rendering), nicht auf Handys.

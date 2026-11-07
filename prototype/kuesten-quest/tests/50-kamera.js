@@ -14,7 +14,7 @@ srv.listen(8951,async()=>{
  const A=await open('Anton');
  const s1=await A.evaluate(async()=>{const q=__qa;await new Promise(r=>setTimeout(r,300));const f=q.fotSnap();await new Promise(r=>setTimeout(r,300));
    const im=new Image();im.src=f.img;await new Promise(r=>im.onload=r);return {n:q.FOTO.list.length,w:im.naturalWidth,h:im.naturalHeight,jpeg:f.img.startsWith('data:image/jpeg'),thKB:Math.round(f.th.length/1024),txt:f.txt}});
- console.log('Foto gemacht',JSON.stringify(s1),s1.n===1&&s1.jpeg&&s1.w>300&&s1.h>200&&s1.thKB<60&&/Port Lupo|Level|Unterwelt/.test(s1.txt));
+ console.log('Foto gemacht',JSON.stringify(s1),s1.n===1&&s1.jpeg&&s1.w>300&&s1.h>200&&s1.thKB<60&&/Port 36|Level|Unterwelt/.test(s1.txt));
  const px=await A.evaluate(async()=>{const f=__qa.FOTO.list[0],im=new Image();im.src=f.img;await new Promise(r=>im.onload=r);const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');g.drawImage(im,0,0);
    const mid=g.getImageData(c.width/2,c.height/2-40,1,1).data,rim=g.getImageData(4,4,1,1).data;return {mid:[...mid],rim:[...rim]}});
  console.log('Bild nicht leer, Rahmen hell',JSON.stringify(px),px.rim[0]>230&&!(px.mid[0]>250&&px.mid[1]>240&&px.mid[2]>225));

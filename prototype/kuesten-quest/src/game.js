@@ -413,13 +413,13 @@ function openerDone(){if(TITLE.opened)return;TITLE.opened=true;ac();tone(392,.12
 function startChosen(){ac();const q=TITLE.quest;
   if(q===1){applyLevel(1);beginPlay();return}
   applyLevel(0);beginPlay();
-  if(q===5){setQuest('Rette die Insel: Gegenstände finden, dann zum Labor',null);later(.8,()=>say('e','Rette die Insel: Auf der Insel droht ein Unglück. Such in Port Lupo nach Gegenständen und sprich mit dem Mann am Labor. Von dort führt ein Portal zum Atoll.',6.5))}
+  if(q===5){setQuest('Rette die Insel: Gegenstände finden, dann zum Labor',null);later(.8,()=>say('e','Rette die Insel: Auf der Insel droht ein Unglück. Such in Port 36 nach Gegenständen und sprich mit dem Mann am Labor. Von dort führt ein Portal zum Atoll.',6.5))}
   else setQuest('Erkunde die Stadt: Gegenstände, Portale, Küste',null)}
 function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv').hidden=true;try{const sk=localStorage.getItem('kq-skin');if(sk&&PRESETS[sk]&&!showTitle.done){P.preset=PRESETS[sk]}}catch(e){}showTitle.done=1;applyLevel(1);resetRun();G.phase='title';$('quest').hidden=true;narr.el.classList.remove('on');$('overlay').hidden=false;$('boom').classList.remove('on');
   P.av.scale.setScalar(1.35);
   $('card').innerHTML=`<div class="logo">${logoSvg()}</div><h1 class="gt">Küsten-Quest</h1>
    <div class="step" id="st1">
-   <p class="sub">Willkommen in Port Lupo. Such dir zuerst deine Figur aus.</p>
+   <p class="sub">Willkommen in Port 36. Such dir zuerst deine Figur aus.</p>
    <h2>Dein Avatar</h2>
    <div id="car" role="group" aria-roledescription="Karussell" aria-label="Avatar auswählen">
      <button class="cb" id="cprev" type="button" aria-label="Vorheriger Avatar">◀</button>
@@ -435,9 +435,9 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
    <div class="step" id="st2" hidden>
    <div class="st2top"><h2>Wähle deine Quest</h2><button class="back" id="back2" type="button">◀ Avatar ändern</button></div>
    <div class="qlist">
-    <button class="qbtn" id="go" type="button"><span class="qn">1</span><span class="qt"><b>Erkunde die Stadt</b><small>Port Lupo entdecken, Gegenstände finden, Portale suchen.</small></span><span class="diff l">Leicht</span></button>
+    <button class="qbtn" id="go" type="button"><span class="qn">1</span><span class="qt"><b>Erkunde die Stadt</b><small>Port 36 entdecken, Gegenstände finden, Portale suchen.</small></span><span class="diff l">Leicht</span></button>
     <button class="qbtn" id="go1" type="button"><span class="qn">2</span><span class="qt"><b>Skate Contest</b><small>Das Küsten-Rennen: Eiskugeln sammeln und vor dem Riesenvieh davonfahren.</small></span><span class="diff m">Mittel</span></button>
-    <button class="qbtn" id="go5" type="button"><span class="qn">3</span><span class="qt"><b>Rette die Insel</b><small>Sammle in Port Lupo Gegenstände, befreie den Mann am Labor und rette dann das Atoll: vier Rätsel in zehn Minuten.</small></span><span class="diff s">Schwer</span></button>
+    <button class="qbtn" id="go5" type="button"><span class="qn">3</span><span class="qt"><b>Rette die Insel</b><small>Sammle in Port 36 Gegenstände, befreie den Mann am Labor und rette dann das Atoll: vier Rätsel in zehn Minuten.</small></span><span class="diff s">Schwer</span></button>
    </div>
    <details class="dev"><summary>Weitere Welten (zum Ausprobieren)</summary><button class="btn sec" id="go2" type="button">Welt 2: Eis-Galaxie</button> <button class="btn sec" id="go3" type="button">Welt 3: Nacht-Stadt</button></details>
    </div>
@@ -453,7 +453,7 @@ function showTitle(){underReset();INV.open=false;$('inv').hidden=true;$('b-inv')
   [...$('cdots').children].forEach(b=>b.onclick=()=>{if(SKOWN.has(SKIN_LIST[+b.dataset.i][0]))setCarousel(+b.dataset.i)});
   const cv=$('cview');let sx=null;cv.onpointerdown=e=>{sx=e.clientX};cv.onpointerup=e=>{if(sx!==null&&Math.abs(e.clientX-sx)>28)stepCarousel(e.clientX<sx?1:-1);sx=null};cv.onpointercancel=()=>{sx=null};
   makeThumbs();
-  const QN={0:['Erkunde die Stadt','Entdecke Port Lupo auf eigene Faust.'],1:['Skate Contest','Sammle die fünf Eiskugeln an der Küste und fahr dem Riesenvieh davon.'],5:['Rette die Insel','Finde die Gegenstände in Port Lupo, befreie den Mann am Labor und rette dann das Atoll.']};
+  const QN={0:['Erkunde die Stadt','Entdecke Port 36 auf eigene Faust.'],1:['Skate Contest','Sammle die fünf Eiskugeln an der Küste und fahr dem Riesenvieh davon.'],5:['Rette die Insel','Finde die Gegenstände in Port 36, befreie den Mann am Labor und rette dann das Atoll.']};
   const stepTo=n=>{$('st1').hidden=n!==1;$('st2').hidden=n!==2;$('st3').hidden=n!==3;TITLE.step=n;$('card').scrollTop=0;(n===1?$('next1'):n===2?$('go'):$('start')).focus({preventScroll:true})};TITLE.step=1;TITLE.quest=0;
   /* Die Questauswahl entfällt: man startet direkt in der Stadt (mit ?quests=1 und in den Tests gibt es sie weiter) */
   const SKIPQ=!TEST&&!QP.has('quests');
@@ -597,7 +597,7 @@ if(matchMedia('(pointer:coarse)').matches)$('touch').classList.add('on');
 let GAPS=[];
 function rampAt(x,z){for(const [kx,kz] of KICKERS){if(Math.abs(z-kz)<1.8&&x>kx-2.1&&x<kx+2.1)return 1.3+1.3*((x-(kx-2.1))/4.2)}return 1.3}
 function gapAt(x){for(const gp of GAPS)if(x>gp[0]&&x<gp[1])return {u:(x-gp[0])/(gp[1]-gp[0])};return null}
-/* ---------- Hügel in Port Lupo: Blöcke stehen auf Terrassen, die Straßen dazwischen steigen und fallen (San-Francisco-Stil) ---------- */
+/* ---------- Hügel in Port 36: Blöcke stehen auf Terrassen, die Straßen dazwischen steigen und fallen (San-Francisco-Stil) ---------- */
 const HILL={cx:3,cz:3,R:2.1,H:6,off:false};
 HILL.hb=Array.from({length:5},(_,j)=>Array.from({length:5},(_,i)=>{const d=Math.hypot(i-HILL.cx,j-HILL.cz);return d<HILL.R?HILL.H*(.5+.5*Math.cos(Math.PI*d/HILL.R)):0}));
 function hillCell(u){if(u<=-82)return [0,0,0];const s=(u+82)/50,k=Math.min(4,Math.floor(s)),f=s-k;if(k>=4)return [4,4,0];if(f<.28){const t=f/.28;return [k,k+1,t*t*(3-2*t)]}return [k+1,k+1,0]}
@@ -1049,14 +1049,14 @@ const AUFTRAEGE=[
  {id:'gruft',ziel:'Kämpfen',titel:'Grabwächter',text:'Wirf in der Unterwelt dein Skateboard (Mausklick, F oder E) auf 6 Kürbis-Zombies.',ort:'Unterwelt',reward:10},
  {id:'geister',ziel:'Kämpfen',titel:'Geisterjagd',text:'Vertreibe in der Unterwelt 4 Geister mit dem Skateboard.',ort:'Unterwelt',reward:10},
  {id:'kuerbis',ziel:'Sammeln',titel:'Kürbisernte',text:'Sammle in der Unterwelt 8 leuchtende Kürbis-Laternen.',ort:'Unterwelt',reward:12},
- {id:'bettler',ziel:'Rätsel',titel:'Serafin und sein Geist',text:'Hilf Serafin, dem Bettler an der Kanalbrücke. Er hat ein Gedicht für dich. Lass seinen Geist in der Unterwelt frei.',ort:'Port Lupo und Unterwelt',reward:30},
+ {id:'bettler',ziel:'Rätsel',titel:'Serafin und sein Geist',text:'Hilf Serafin, dem Bettler an der Kanalbrücke. Er hat ein Gedicht für dich. Lass seinen Geist in der Unterwelt frei.',ort:'Port 36 und Unterwelt',reward:30},
  {id:'blitz',ziel:'Sammeln',titel:'Blitz-Eis',text:'Alle 5 Eiskugeln an der Küste in 60 Sekunden.',ort:'Welt 1 · Küste',reward:8},
  {id:'tricks',ziel:'Tricks',titel:'Trick-Serie',text:'Lande 5 Tricks in einem Lauf: Kickflip (Shift), Pop Shove-it (Q), 360 Flip (R) oder Curb Grind.',ort:'Überall',reward:8},
- {id:'vielfalt',ziel:'Tricks',titel:'Trick-Mix',text:'Kickflip, Pop Shove-it, 360 Flip und ein Curb Grind in einem Lauf. Das Grinden geht nur in Port Lupo.',ort:'Port Lupo',reward:12},
+ {id:'vielfalt',ziel:'Tricks',titel:'Trick-Mix',text:'Kickflip, Pop Shove-it, 360 Flip und ein Curb Grind in einem Lauf. Das Grinden geht nur in Port 36.',ort:'Port 36',reward:12},
  {id:'rennen',ziel:'Ankommen',titel:'Küsten-Rennen',text:'Erreiche das Ziel-Portal, bevor dich der Dino schnappt.',ort:'Welt 1 · Küste',reward:10},
- {id:'galaxie',ziel:'Ankommen',titel:'Eis-Galaxie',text:'Sammle die Kugeln und erreiche den Eiswagen.',ort:'Welt 2 · Portal in Port Lupo',reward:10},
- {id:'nacht',ziel:'Ankommen',titel:'Nacht-Stadt',text:'Spring über die Dächer zum Eiswagen.',ort:'Welt 3 · Portal in Port Lupo',reward:10},
- {id:'atoll',ziel:'Rätsel',titel:'Rette die Insel',text:'Vier Rätsel, zehn Minuten. Dafür brauchst du Gegenstände aus der Stadt.',ort:'Atoll · Labor in Port Lupo',reward:20}];
+ {id:'galaxie',ziel:'Ankommen',titel:'Eis-Galaxie',text:'Sammle die Kugeln und erreiche den Eiswagen.',ort:'Welt 2 · Portal in Port 36',reward:10},
+ {id:'nacht',ziel:'Ankommen',titel:'Nacht-Stadt',text:'Spring über die Dächer zum Eiswagen.',ort:'Welt 3 · Portal in Port 36',reward:10},
+ {id:'atoll',ziel:'Rätsel',titel:'Rette die Insel',text:'Vier Rätsel, zehn Minuten. Dafür brauchst du Gegenstände aus der Stadt.',ort:'Atoll · Labor in Port 36',reward:20}];
 const AU_REPEAT=2;
 function scHud(d){const n=document.getElementById('sc-n');if(n)n.textContent=SC.n;const h=document.getElementById('sc-hud');
   if(d&&h){h.classList.remove('pulse');void h.offsetWidth;h.classList.add('pulse');const p=document.getElementById('sc-d');if(p){p.textContent=(d>0?'+':'−')+Math.abs(d);p.className=d>0?'up':'dn';p.classList.remove('on');void p.offsetWidth;p.classList.add('on')}}}
@@ -1174,7 +1174,7 @@ addEventListener('keydown',e=>{if(e.code==='KeyI'&&!e.repeat){e.preventDefault()
 /* ================= Welt 0: Die Stadt (Labyrinth, 5×5 Blöcke) ================= */
 LEVELS[0]={id:0,mode:'city',pips:2,boss:'',bossColor:'#f0cf36',bossSpeed:0,grav:20,goal:'Portal',
   quest:'Zur Küste: Rennen. Portale finden',goalQuest:'',
-  intro:'Willkommen in Port Lupo. Im Westen liegt die Küste: Wer sie erreicht, startet das Rennen.',
+  intro:'Willkommen in Port 36. Im Westen liegt die Küste: Wer sie erreicht, startet das Rennen.',
   vendor:'Stadtfunk: Zwei Portale zu anderen Welten sind in der Stadt versteckt. Sie funkeln erst, wenn du nah dran bist. Sackgassen sind ein guter Anfang.',
   lines:[],chase:'',eat:'',win:'',winSub:'',badge:''};
 const HUB={sx:0,sz:0,sh:0,found:new Set(),portals:[],items:[],colliders:[],clappers:[],cones:[],maze:null,built:false,mm:null,mmT:0,rd:0};
@@ -1513,7 +1513,7 @@ function buildLevel0(){
    for(let j=0;j<N;j++)for(let i=0;i<N;i++){const nd=nodeXZ(j*N+i);cur={x:nd.x+7.4,z:nd.z+7.4};cyl(POLE,.14,7.4,0,0,0);
      [[ROWN[j],0],[ROWN[j],Math.PI],[COLN[i],Math.PI/2],[COLN[i],-Math.PI/2]].forEach(([t,ry],k)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(6.2,1.24),stTex(t));const off=.16;m.position.set(cur.x+(k===2?off:k===3?-off:0),Y0+6.6-(k>1?1.4:0)+hillG(cur.x,cur.z),cur.z+(k===0?off:k===1?-off:0));m.rotation.y=ry;m.userData.noBake=true;W0.add(m)});
      if(i===2&&j===3){const wt=(()=>{const c=document.createElement('canvas');c.width=1024;c.height=200;const x=c.getContext('2d');x.fillStyle='#ee7cb8';x.fillRect(0,0,1024,200);x.strokeStyle='#fff';x.lineWidth=10;x.strokeRect(10,10,1004,180);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#7a1650';x.shadowBlur=0;x.shadowOffsetY=6;
-       x.font='800 56px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('Willkommen in',512,58);x.font='800 98px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('PORT LUPO',512,142);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})})();
+       x.font='800 56px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('Willkommen in',512,58);x.font='800 98px "Smarta Nova","Trebuchet MS",sans-serif';x.fillText('PORT 36',512,142);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tx})})();
        const ws=new THREE.Mesh(new THREE.PlaneGeometry(10,1.95),wt);ws.position.set(nd.x+7.4-.16,Y0+10.4+hillG(nd.x+7.4,nd.z-7.4),nd.z-7.4);ws.rotation.y=-Math.PI/2;ws.userData.noBake=true;W0.add(ws);
        cur={x:nd.x+7.4,z:nd.z-7.4};cyl(POLE,.16,9.6,0,0,0);cur={x:nd.x+7.4,z:nd.z+7.4}}
      if(i===2&&j===3){const s=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.5),stickerTex());s.position.set(cur.x-.17,Y0+2.6+hillG(cur.x,cur.z),cur.z);s.rotation.y=-Math.PI/2;s.userData.noBake=true;W0.add(s)}}}

@@ -48,7 +48,7 @@ Dreiecke pro Frame inklusive Schattendurchgang:
 
 | Welt | Dreiecke | Zeichenaufrufe |
 |---|---|---|
-| 0 Port Lupo (Stadt) | 1,32 Mio. | 1060 |
+| 0 Port 36 (Stadt) | 1,32 Mio. | 1060 |
 | 1 Küste | 2,88 Mio. | 1509 |
 | 2 Eis-Galaxie | 0,25 Mio. | 1323 |
 | 3 Nacht-Stadt | 0,18 Mio. | 1584 |

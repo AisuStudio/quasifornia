@@ -1,4 +1,4 @@
-// Ausblenden entfernter Häuserblöcke in Port Lupo: Dreiecke und Zeichenaufrufe mit und ohne Ausblenden an drei Orten.
+// Ausblenden entfernter Häuserblöcke in Port 36: Dreiecke und Zeichenaufrufe mit und ohne Ausblenden an drei Orten.
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),path=require('path');
 const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?path.join(__dirname,'..','dist/dev.html'):path.join(__dirname,'..',u);fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);s.end();return}s.writeHead(200,{'content-type':f.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8'});s.end(d)})}).listen(8826,async()=>{
  const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});

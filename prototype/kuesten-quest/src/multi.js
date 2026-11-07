@@ -52,7 +52,7 @@ function multiStep(dt){
   if(!MULTI.ws&&!MULTI.full&&(G.phase==='play'||G.phase==='chase'||G.phase==='caught')){MULTI.tRetry-=dt;if(MULTI.tRetry<=0){MULTI.tRetry=99;multiConnect()}}
   multiUi();if(!MULTI.on)return;
   const now=performance.now(),see=LV.id===0&&G.phase!=='title';
-  /* senden: ca. 10 Mal pro Sekunde, nur in Port Lupo */
+  /* senden: ca. 10 Mal pro Sekunde, nur in Port 36 */
   MULTI.tSend-=dt;if(MULTI.tSend<=0&&LV.id===0&&(G.phase==='play'||G.phase==='chase'||G.phase==='caught')){MULTI.tSend=.1;multiSend({t:'s',x:P.x,y:P.y,z:P.z,h:P.h,v:P.speed,u:G.under?1:0})}
   if(typeof polNetOut==='function')polNetOut(dt);
   if(MULTI.sentSkin!==P.preset){MULTI.sentSkin=P.preset;multiSend({t:'skin',skin:P.preset})}
