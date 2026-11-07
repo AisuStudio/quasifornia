@@ -43,16 +43,19 @@ function doseParts(){
   const rB=334.1*S,hB=(DOSE_BODY_BOT-DOSE_BODY_TOP)*S;
   /* Gebogener Aufdruck vorne: 2 rad (rund 115 Grad), genau so breit wie die Vorlage, damit nichts gestaucht wird */
   const lab=new THREE.CylinderGeometry(rB*1.004,rB*1.004,hB,14,1,true,-1,2);lab.translate(0,(DOSE_SVG_H-(DOSE_BODY_TOP+DOSE_BODY_BOT)/2)*S,0);
+  /* Weißer Streifen hinter dem Phil's-Oval (Vorlage: y 747.5, Höhe 27.75): läuft ganz um die Dose, unter dem gebogenen Aufdruck */
+  const band=new THREE.CylinderGeometry(rB*1.002,rB*1.002,27.75*S,20,1,true);band.translate(0,(DOSE_SVG_H-(747.54+27.75/2))*S,0);
   /* Düsenkopf: oben breiter als unten, wie in der Vorlage */
   const act=new THREE.CylinderGeometry(67*S,50*S,169*S,12);act.translate(0,(DOSE_SVG_H-84.6)*S,0);
   const ring=new THREE.CircleGeometry(36.9*S,16);ring.translate(0,(DOSE_SVG_H-84.5)*S,60*S);
   const dot=new THREE.CircleGeometry(9.8*S,10);dot.translate(0,(DOSE_SVG_H-84.5)*S,60.5*S);
-  return DOSE.geo={body,lab,act,ring,dot,S,rB}}
+  return DOSE.geo={body,lab,band,act,ring,dot,S,rB}}
 /* Eine Dose. kind: 'farbe' (mit Farbmarke in der Farbe color) oder 'ubiq' (Schriftzug UBIQ). w: Texturbreite in Pixeln. */
 function makeSprayCan(kind,color,w){
   kind=kind==='ubiq'?'ubiq':'farbe';w=w||256;const G=doseParts(),key=kind==='ubiq'?'ubiq':'f'+(color||'')+w;
   if(!DOSE.mat[key]){DOSE.mat[key]=new THREE.MeshStandardMaterial({map:doseTexture(key,doseSvg(kind,color),kind==='ubiq'?Math.max(w,384):w),roughness:.55,metalness:.05})}
+  if(!DOSE.bandMat)DOSE.bandMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.55,metalness:.05});
   const bm=MT(DOSE.BLACK),wm=MT('#ffffff'),g=new THREE.Group();
   const add=(geo,mat,cast=true)=>{const m=new THREE.Mesh(geo,mat);m.castShadow=cast;g.add(m);return m};
-  add(G.body,bm);add(G.lab,DOSE.mat[key],false);add(G.act,bm);add(G.ring,wm,false);add(G.dot,bm,false);
+  add(G.body,bm);add(G.band,DOSE.bandMat,false);add(G.lab,DOSE.mat[key],false);add(G.act,bm);add(G.ring,wm,false);add(G.dot,bm,false);
   g.userData.kind=kind;g.userData.spray=true;return g}
