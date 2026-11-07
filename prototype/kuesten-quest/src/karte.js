@@ -507,6 +507,7 @@ function mpBuildings(H){
   const WALL={school:'#e9a97c',surf:'#7fd8d0',shack:'#ecc888',warehouse:'#9fb0c8',police:'#9db8e8',station:'#f6efe6',casino:'#ff5fa8',shopping:'#f6df73',resort:'#fff0d8',tower:'#2a3a6a',backoffice:'#cdd6e0'};
   const mkGroup=(x,z)=>{const bg=new THREE.Group();bg.userData.noBake=true;bg.userData.blk={x,z};W0.add(bg);HUB.bgroups.push(bg);return bg};
   MAPD.buildings.forEach(b=>{const aM=b.area*MP.SC*MP.SC,X=mwx(b.cen[0]),Z=mwz(b.cen[1]);
+    if(b.kind==='shopping'&&!HUB.arcade)mpArcade(mkGroup,b);
     if(b.kind==='garage-teil'){b.skip=true;return}
     if(b.kind==='garage'){const pts=b.c[0].concat(...MAPD.buildings.filter(x=>x.kind==='garage-teil').map(x=>x.c[0])),o=mpObb(pts),bg=mkGroup(mwx(o.cx),mwz(o.cy));b.skip=true;b.bg=bg;mpGarage(bg,o);solids.push({x:o.cx,y:o.cy,a:o.a,w:o.w,h:o.h});b.h=7.2;return}
     if(b.kind==='pmart'||b.kind==='lab'||b.kind==='xmas'){
@@ -806,7 +807,7 @@ function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayIn
   hemi.color.copy(a[3]).lerp(b[3],e);hemi.groundColor.copy(a[4]).lerp(b[4],e);hemi.intensity=L(a[5],b[5]);
   sun.color.copy(a[6]).lerp(b[6],e);sun.intensity=L(a[7],b[7]);DAY.sunY=L(a[8],b[8]);fill.color.copy(a[9]).lerp(b[9],e);fill.intensity=L(a[10],b[10]);
   const bc=sky.material.uniforms.b.value,dn=Math.max(0,Math.min(1,(sun.intensity-1)/1.8)),fn=10+18*dn,ff=150+170*dn;DAY.dn=dn;if(sc.fog){if(sc.fog.color)sc.fog.color.copy(bc);sc.fog.near=fn;sc.fog.far=ff}OUTFOG.fc.value.copy(bc);OUTFOG.fn.value=fn;OUTFOG.ff.value=ff;
-  DAY.hour=Math.floor(((p*24+12)%24)*10)/10;if(HUB.lighthouse)HUB.lighthouse.beam.visible=DAY.dn<.55;if(DAY.sea){DAY.sea.uniforms.t.value+=dt;DAY.sea.uniforms.dim.value=Math.max(0,Math.min(1,(sun.intensity+hemi.intensity*.6-.7)/2.6))}}
+  DAY.hour=Math.floor(((p*24+12)%24)*10)/10;if(typeof mpArcadeGlow==='function')mpArcadeGlow();if(HUB.lighthouse)HUB.lighthouse.beam.visible=DAY.dn<.55;if(DAY.sea){DAY.sea.uniforms.t.value+=dt;DAY.sea.uniforms.dim.value=Math.max(0,Math.min(1,(sun.intensity+hemi.intensity*.6-.7)/2.6))}}
 /* ---------- Gesamtaufbau ---------- */
 function portLupoNew(H){
   HUB.doors=[];HUB.marks=[];HUB.courtTreesRemoved=0;HUB.policeStation=null;HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
