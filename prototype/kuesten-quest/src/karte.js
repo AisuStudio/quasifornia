@@ -471,7 +471,7 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
   if(sbest){(HUB.doors=HUB.doors||[]).push([sbest.mx+sbest.nx*1.5,sbest.mz+sbest.nz*1.5])}
   if(sbest&&b.kind==='police'){HUB.policeStation={x:sbest.mx+sbest.nx*4,z:sbest.mz+sbest.nz*4};const bc=new THREE.Mesh(BX,MT('#2a6aff','#2a6aff',.9));bc.scale.set(1.2,.6,2.2);bc.position.set(ring.reduce((a,p)=>a+p[0],0)/ring.length,1.3+h+1.4,ring.reduce((a,p)=>a+p[1],0)/ring.length);bg.add(bc)}
   if(sbest&&b.kind==='station')HUB.station={x:sbest.mx,z:sbest.mz,nx:sbest.nx,nz:sbest.nz};
-  if(sbest){const big=/station|casino|shopping|resort|tower/.test(b.kind||''),dw=big?4.6:1.9,ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),px=sbest.mx+sbest.nx*(.12+DO),pz=sbest.mz+sbest.nz*(.12+DO);
+  if(sbest&&b.kind!=='avateur'){const big=/station|casino|shopping|resort|tower/.test(b.kind||''),dw=big?4.6:1.9,ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),px=sbest.mx+sbest.nx*(.12+DO),pz=sbest.mz+sbest.nz*(.12+DO);
     const part=(m,w,hh,d,x,y,z)=>{const o=new THREE.Mesh(BX,m);o.scale.set(w,hh,d);o.position.set(x,y,z);o.rotation.y=ry;o.castShadow=true;bg.add(o);return o};
     part(MT('#2a2038'),dw+.5,2.9,.2,px,1.3+1.45,pz);
     part(MT('#9fe6f0','#9fe6f0',.35),dw-.3,2.5,.24,px+sbest.nx*.03,1.3+1.3,pz+sbest.nz*.03);
@@ -482,8 +482,8 @@ function mpGenBuilding(bg,b,wall,h,idx,sign){
    mpKindExtras(bg,b,ring,h,sbest);
    if(house&&sbest){const y0=1.3+h+.55,trim='#fdf6e8';
      if(!mpGableRoof(bg,ring,sbest,y0,idx,trim))mpTurret(bg,ring,y0,idx,wall);
-     mpBay(bg,sbest,wall,1.3,h,idx);
-     const ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),st=MT('#fdf6e8');[0,1].forEach(i=>{const t=new THREE.Mesh(BX,st);t.scale.set(2.8,.22-i*.08,.55);t.position.set(sbest.mx+sbest.nx*(.35+DO+i*.5),1.3+.11,sbest.mz+sbest.nz*(.35+DO+i*.5));t.rotation.y=ry;bg.add(t)})}
+     if(b.kind==='avateur')mpAvateurFront(bg,b,sbest,h);else{mpBay(bg,sbest,wall,1.3,h,idx);
+     const ux=-sbest.nz,uz=sbest.nx,ry=-Math.atan2(uz,ux),st=MT('#fdf6e8');[0,1].forEach(i=>{const t=new THREE.Mesh(BX,st);t.scale.set(2.8,.22-i*.08,.55);t.position.set(sbest.mx+sbest.nx*(.35+DO+i*.5),1.3+.11,sbest.mz+sbest.nz*(.35+DO+i*.5));t.rotation.y=ry;bg.add(t)})}}
    else if(!house&&!civic)mpDecoCrown(bg,b,ring,h,idx)}
   return ring}
 function mpBuildings(H){
@@ -491,6 +491,10 @@ function mpBuildings(H){
   const kindOf=t=>/Poli(zei|ce)/i.test(t)?'police':/Schule|School/i.test(t)?'school':/Surf/i.test(t)?'surf':/Shack/i.test(t)?'shack':/Warehouse|Lagerhalle/i.test(t)?'warehouse':/[AP]-Mart/.test(t)?'pmart':/Station/.test(t)?'station':/^Lab$/.test(t)?'lab':/X-Mas/.test(t)?'xmas':/Resort/.test(t)?'resort':/Casino/.test(t)?'casino':/Shopping/.test(t)?'shopping':/Tower/.test(t)?'tower':/Backoffice/i.test(t)?'backoffice':'';
   MAPD.buildings.forEach((b,i)=>{b.i=i;b.kind='';b.skip=false;b.cen=mpCentroid(b.c[0]);b.area=Math.abs(mpArea(b.c[0]))});
   L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;MAPD.buildings.forEach(b=>{if(mpInPoly(b.c[0],l.x,l.y)){b.kind=k;b.label=l.t}})});
+  /* L’Avateur: das lachsrote Haus im Süden (Gebäude bei Karte 1812,1588); später reicht ein Label "Avateur" in der SVG */
+  {const AVT=L0.find(l=>/Avateur/i.test(l.t));let tgt=null;if(AVT)tgt=MAPD.buildings.find(b=>mpInPoly(b.c[0],AVT.x,AVT.y));
+   if(!tgt){let bd=1e9;MAPD.buildings.forEach(b=>{if(b.kind)return;const d=Math.hypot(b.cen[0]-1812,b.cen[1]-1588);if(d<bd){bd=d;tgt=b}});if(bd>30)tgt=null}
+   if(tgt){tgt.kind='avateur';tgt.label='L’Avateur'}}
   /* Beschriftung steht neben dem Gebäude statt darin (z. B. "Surf Shop", "Beach Shack"): nächstes freies Gebäude bis 45 Karteneinheiten (22 m) */
   const dPoly=(r,x,y)=>{let d=1e9;for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],dx=q[0]-p[0],dy=q[1]-p[1],L2=dx*dx+dy*dy||1e-9;let t=((x-p[0])*dx+(y-p[1])*dy)/L2;t=Math.max(0,Math.min(1,t));d=Math.min(d,Math.hypot(x-p[0]-dx*t,y-p[1]-dy*t))}return d};
   HUB.labelWarn=[];L0.forEach(l=>{const k=kindOf(l.t);if(!k)return;if(MAPD.buildings.some(b=>mpInPoly(b.c[0],l.x,l.y)))return;let best=null;MAPD.buildings.forEach(b=>{if(b.kind)return;const d=dPoly(b.c[0],l.x,l.y);if(d<=45&&(!best||d<best.d))best={d,b}});
@@ -801,7 +805,7 @@ function dayStep(dt){if(!DAY.on||typeof sun==='undefined')return;if(!DAY.K)dayIn
 function portLupoNew(H){
   HUB.doors=[];HUB.marks=[];HUB.courtTreesRemoved=0;HUB.policeStation=null;HUB.bgroups=[];HUB.cones=[];HUB.portals=[];HUB.items=[];HUB.clappers=[];HUB.colliders=[];HUB.mm=null;HUB.mapn=true;
   const add=o=>W0.add(o);
-  const solids=mpBuildings(H);mpBuildMask(solids);
+  HUB.markQ=[];const solids=mpBuildings(H);mpBuildMask(solids);HUB.markQ.forEach(m=>mpMarkRect(...m));
   mpTerrain(add);
   const rail=mpRail(add);if(rail)HUB.railPts=rail.pts;if(rail)mpStationHall(rail);if(rail){rail.sol.forEach(p=>mpMarkDisc(p.x,p.z,1.1));mpBuildTrain(rail)}
   /* Start auf der Straße zwischen Café und Büroturm, Blick nach Norden */
