@@ -3,8 +3,8 @@
    ein Brett im Boden. Mit UBIQ wird das Ding "erlöst" und an einen besseren Ort gesetzt, dafür gibt es Scoops.
    Das Spiel erkennt echte Verschränkungen selbst (Position in fester Rasterzelle) und meldet jeden Fund an /stats. Jeder repariert für sich (lokal gespeichert).
    Dose: 30 Scoops im A-Mart, 5 Ladungen, Nachfüllen 25, 15 Scoops pro Reparatur. Das endgültige Design der Dose folgt vom Nutzer (jetzt ein Platzhalter). */
-/* Schalter: UBIQ ist im Spiel AUS (noch nicht für alle gedacht). Anschalten: UBQ_AN auf true setzen, oder die Seite mit ?ubiq=1 öffnen (zum Zeigen und Testen). Ist es aus, gibt es keine Dose im Laden, keinen Eintrag im Rarepod, keine Glitches und keine Meldungen an /stats. */
-const UBQ_AN=false||/[?&]ubiq=1/.test(location.search);
+/* Schalter: UBIQ ist im Spiel AN. Ausschalten: UBQ_AN auf false setzen, oder die Seite mit ?ubiq=0 öffnen (zum Testen). Ist es aus, gibt es keine Dose im Laden, keinen Eintrag im Rarepod, keine Glitches und keine Meldungen an /stats. */
+const UBQ_AN=true&&!/[?&]ubiq=0/.test(location.search);
 const UBQ={own:false,ch:0,max:5,price:30,refill:25,reward:15,fixed:new Set(),list:[],t:0,tick:0,srv:{ok:false,busy:0,t:0,pushed:false}};
 try{const s=JSON.parse(localStorage.getItem('kq-ubiq')||'null');if(s){UBQ.own=!!s.own;UBQ.ch=Math.max(0,Math.min(UBQ.max,s.ch|0));(Array.isArray(s.fixed)?s.fixed:[]).forEach(k=>UBQ.fixed.add(String(k)))}}catch(e){}
 function ubqSave(){try{localStorage.setItem('kq-ubiq',JSON.stringify({own:UBQ.own,ch:UBQ.ch,fixed:[...UBQ.fixed]}))}catch(e){}}
