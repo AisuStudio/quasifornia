@@ -47,6 +47,8 @@ button,select,input,textarea{font:inherit;color:var(--text);background:var(--pan
 button{cursor:pointer}
 button:hover{border-color:var(--text2)}
 button.danger{color:var(--crit)}
+button:disabled{opacity:.4;cursor:default}
+button:disabled:hover{border-color:var(--axis)}
 #status{font-size:12px;color:var(--muted);min-width:90px}
 #status.bad{color:var(--crit)}
 main{flex:1;display:flex;min-height:0;position:relative}
@@ -111,6 +113,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
   <h1>Planner</h1>
   <nav class="tabs" aria-label="Bereiche"><a href="/stats">Auswertung</a><a href="/planner" aria-current="page">Planner</a></nav>
   <div class="bar">
+    <button id="undo" type="button" aria-label="Rückgängig (Strg+Z)" title="Rückgängig (Strg+Z)" disabled>↶</button><button id="redo" type="button" aria-label="Wiederholen (Strg+Umschalt+Z)" title="Wiederholen (Strg+Umschalt+Z)" disabled>↷</button>
     <button id="add-scene" type="button">+ Szene</button>
     <button id="add-branch" type="button">+ Verzweigung</button>
     <button id="add-note" type="button">+ Notiz</button>
@@ -145,7 +148,21 @@ const G=()=>doc.graphs[gid];
 /* ---------- Speichern ---------- */
 function setStatus(t,bad){status.textContent=t;status.className=bad?'bad':''}
 function backup(){try{localStorage.setItem('planner-backup',JSON.stringify({t:Date.now(),doc}))}catch(e){}}
-function changed(){backup();setStatus('Ungespeichert …');clearTimeout(timer);timer=setTimeout(save,800)}
+/* Rückgängig: Schnappschüsse des ganzen Dokuments. changed() vergleicht mit dem letzten Stand, so muss keine Aktion etwas davon wissen.
+   Tippen in einem Feld zählt als ein Schritt, solange man nicht länger als 1,5 s pausiert. */
+let last='',undo=[],redo=[],undoSize=0,lastKey='',lastT=0;
+function histBtns(){$('#undo').disabled=!undo.length;$('#redo').disabled=!redo.length}
+function sched(){backup();setStatus('Ungespeichert …');clearTimeout(timer);timer=setTimeout(save,800)}
+function changed(){
+  const cur=JSON.stringify(doc);
+  if(cur!==last){
+    const ae=document.activeElement,typing=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&/^f-/.test(ae.id),key=typing?ae.id+'|'+(sel?sel.id:''):'',now=Date.now();
+    if(!(typing&&key===lastKey&&now-lastT<1500)){undo.push(last);undoSize+=last.length;while(undo.length>100||undoSize>3e7)undoSize-=undo.shift().length}
+    lastKey=key;lastT=now;last=cur;redo=[];histBtns()}
+  sched()}
+function restore(snap){doc=JSON.parse(snap);if(!doc.graphs[gid])gid=doc.root;sel=null;for(const k in views)if(!doc.graphs[k])delete views[k];render();inspect();last=snap;lastKey='';histBtns();sched()}
+function doUndo(){if(!undo.length)return;const x=undo.pop();undoSize-=x.length;redo.push(last);restore(x)}
+function doRedo(){if(!redo.length)return;const x=redo.pop();undo.push(last);undoSize+=last.length;restore(x)}
 async function save(){
   if(stale)return;if(saving){pending=true;return}
   saving=true;pending=false;setStatus('Speichert …');
@@ -281,12 +298,13 @@ window.addEventListener('pointerup',endPtr);window.addEventListener('pointercanc
 stage.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.clientX,ev.clientY,Math.exp(-ev.deltaY*(ev.ctrlKey?.01:.0015)))},{passive:false});
 stage.addEventListener('dblclick',ev=>{const cn=ev.target.closest('.node');if(cn&&cn.classList.contains('chapter')){openChapter(cn.dataset.id);return}if(ev.target.closest('.node')||ev.target.closest('[data-edge]')||ev.target.closest('#zoomctl'))return;const p=toWorld(ev.clientX,ev.clientY);addNode('scene',p.x-W/2,p.y-24)});
 window.addEventListener('keydown',ev=>{
+  if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key.toLowerCase();if(k==='z'){ev.preventDefault();ev.shiftKey?doRedo():doUndo();return}if(k==='y'){ev.preventDefault();doRedo();return}}
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
   else if(ev.key==='Escape'&&sel)select(null)});
 $('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');
 $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute('aria-pressed',String(onlyMand));render()};
-$('#fit').onclick=fit;
+$('#fit').onclick=fit;$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
 $('#zin').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25)};
 $('#zout').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,.8)};
 /* ---------- Export und Import ---------- */
@@ -304,8 +322,8 @@ async function init(){
   catch(e){setStatus('Server nicht erreichbar',true);let bk=null;try{bk=JSON.parse(localStorage.getItem('planner-backup')||'null')}catch(_){}
     doc=bk&&bk.doc?bk.doc:blank();stale=true;warn('Der Server ist nicht erreichbar. Es wird nicht gespeichert.')}
   if(j){rev=j.rev;doc=j.doc||blank();setStatus(j.doc?'Gespeichert':'Neu')}
-  gid=doc.root;render();fit();inspect();
-  window.__planner={doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,save}}
+  gid=doc.root;render();fit();inspect();last=JSON.stringify(doc);histBtns();
+  window.__planner={doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
 init();
 window.addEventListener('resize',()=>renderEdges());
 })();
