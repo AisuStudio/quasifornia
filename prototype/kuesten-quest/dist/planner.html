@@ -11,7 +11,7 @@
   --surface:#fcfcfb;--panel:#ffffff;--page:#f3f2ee;
   --text:#0b0b0b;--text2:#52514e;--muted:#7b7a74;
   --grid:#e3e2dd;--axis:#cfcec8;
-  --s1:#2a78d6;--s2:#eb6834;--s3:#7a5bd0;
+  --s1:#2a78d6;--s2:#eb6834;--s3:#7a5bd0;--s4:#0e8f8a;
   --good:#0ca30c;--warn:#b57600;--crit:#d03b3b;
 }
 @media (prefers-color-scheme:dark){
@@ -20,7 +20,7 @@
     --surface:#1a1a19;--panel:#222221;--page:#141413;
     --text:#f0efec;--text2:#c3c2b7;--muted:#97968c;
     --grid:#34332f;--axis:#46453f;
-    --s1:#3987e5;--s2:#d95926;--s3:#9a82e6;
+    --s1:#3987e5;--s2:#d95926;--s3:#9a82e6;--s4:#2fb8b2;
     --good:#2bc02b;--warn:#fab219;--crit:#ec6a6a;
   }
 }
@@ -29,7 +29,7 @@
   --surface:#1a1a19;--panel:#222221;--page:#141413;
   --text:#f0efec;--text2:#c3c2b7;--muted:#97968c;
   --grid:#34332f;--axis:#46453f;
-  --s1:#3987e5;--s2:#d95926;--s3:#9a82e6;
+  --s1:#3987e5;--s2:#d95926;--s3:#9a82e6;--s4:#2fb8b2;
   --good:#2bc02b;--warn:#fab219;--crit:#ec6a6a;
 }
 *{box-sizing:border-box}
@@ -70,7 +70,7 @@ main{flex:1;display:flex;min-height:0;position:relative}
 #stage.pan{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #edges{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
-#edges path.e{fill:none;stroke:var(--text2);stroke-width:2}
+#edges path.e{fill:none;stroke:var(--text2);stroke-width:2;stroke-linejoin:round}
 #edges path.hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
 #edges g.sel path.e{stroke:var(--s1);stroke-width:3}
 #edges text{font-size:12px;fill:var(--text2);paint-order:stroke;stroke:var(--surface);stroke-width:4px;text-anchor:middle}
@@ -81,6 +81,18 @@ main{flex:1;display:flex;min-height:0;position:relative}
 .node.scene .ty{color:var(--s1)}.node.branch .ty{color:var(--s2)}.node.note .ty{color:var(--s3)}
 .node.note{background:color-mix(in srgb,var(--s3) 10%,var(--panel));border-style:dashed}
 .node.branch{border-radius:22px}
+.node.character{border-color:color-mix(in srgb,var(--s4) 60%,var(--axis));border-radius:20px 20px 10px 10px}
+.node.character .ty{color:var(--s4)}
+.node .cd{font-size:12px;font-weight:600;color:var(--s4);margin-top:1px}
+.node .cd.dup{color:var(--warn)}
+#cards{display:flex;flex-wrap:wrap;gap:3px;padding:6px 16px;border-bottom:1px solid var(--grid);background:var(--panel)}
+#cards[hidden]{display:none}
+#cards .cell{min-width:34px;padding:2px 6px;font-size:12px;border-radius:6px;position:relative;font-variant-numeric:tabular-nums}
+#cards .cell.none{color:var(--muted);border-style:dashed}
+#cards .cell.empty{border-color:var(--s1);color:var(--s1)}
+#cards .cell.full{background:var(--s1);border-color:var(--s1);color:#fff}
+#cards .cell sup{font-size:9px;margin-left:2px;font-weight:700}
+#cards .cell.cur{outline:2px solid var(--s4);outline-offset:1px}
 .node.chapter{border-color:var(--s1);box-shadow:5px 5px 0 -1px var(--panel),5px 5px 0 0 var(--axis),10px 10px 0 -1px var(--panel),10px 10px 0 0 var(--axis)}
 .node.chapter .ty{color:var(--s1)}
 .node.chapter.sel{box-shadow:5px 5px 0 -1px var(--panel),5px 5px 0 0 var(--axis),10px 10px 0 -1px var(--panel),10px 10px 0 0 var(--axis),0 0 0 3px color-mix(in srgb,var(--s1) 30%,transparent)}
@@ -131,6 +143,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
     <button id="add-scene" type="button">+ Szene</button>
     <button id="add-branch" type="button">+ Verzweigung</button>
     <button id="add-note" type="button">+ Notiz</button>
+    <button id="add-character" type="button">+ Charakter</button>
     <button id="add-chapter" type="button">+ Kapitel</button>
     <button id="fit" type="button">Einpassen</button>
     <button id="versions" type="button">Versionen</button>
@@ -147,7 +160,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
   <h2 id="dh">Dokumente</h2>
   <div id="d-list" aria-live="polite"></div>
   <h2 style="margin-top:14px">Neuer Entwurf</h2>
-  <div class="vnew"><input id="d-name" type="text" maxlength="60" placeholder="Name, z. B. Antons Entwurf" aria-label="Name des Entwurfs"><select id="d-from" aria-label="Ausgangspunkt"><option value="blank">Leer</option><option value="copy">Kopie dieses Dokuments</option></select><button id="d-new" type="button">Anlegen</button></div>
+  <div class="vnew"><input id="d-name" type="text" maxlength="60" placeholder="Name, z. B. Antons Entwurf" aria-label="Name des Entwurfs"><select id="d-from" aria-label="Ausgangspunkt"><option value="blank">Leer</option><option value="copy">Kopie dieses Dokuments</option><option value="heldenreise">Vorlage: Heldenreise (22 Karten)</option></select><button id="d-new" type="button">Anlegen</button></div>
   <div class="vfoot"><span id="d-msg">Entwürfe haben eigenen Stand und eigene Versionen. Der Hauptplan bleibt unberührt.</span><button id="d-close" type="button">Schließen</button></div>
 </dialog>
 <dialog id="adlg" aria-labelledby="ah">
@@ -166,6 +179,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
   <div id="v-list" aria-live="polite"></div>
   <div class="vfoot"><span id="v-msg">Automatisch gesichert: höchstens alle 10 Minuten, die letzten 50. Benannte bleiben.</span><button id="v-close" type="button">Schließen</button></div>
 </dialog>
+<div id="cards" hidden aria-label="Heldenreise: 22 Karten der Großen Arkana"></div>
 <main>
   <div id="stage" tabindex="0" aria-label="Planungsfläche. Doppelklick legt eine Szene an. Entf löscht die Auswahl.">
     <div id="world"><svg id="edges" aria-hidden="true"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><g id="eg" style="color:var(--text2)"></g><path class="tmp" id="tmp" hidden></path></svg><div id="nodes"></div></div>
@@ -178,7 +192,12 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 (()=>{
 const $=s=>document.querySelector(s);
 const stage=$('#stage'),world=$('#world'),nodesEl=$('#nodes'),eg=$('#eg'),tmp=$('#tmp'),insp=$('#insp'),status=$('#status'),hint=$('#hint');
-const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel'};
+const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel',character:'Charakter'};
+/* Große Arkana, Narr 0 bis Welt XXI (Rider-Waite-Reihenfolge). Muss mit worker/planner.js übereinstimmen (Test 65). */
+const ARC=[['0','Der Narr','Aufbruch'],['I','Der Magier','Fähigkeit'],['II','Die Hohepriesterin','Geheimnis'],['III','Die Herrscherin','Fülle'],['IV','Der Herrscher','Ordnung'],['V','Der Hierophant','Tradition'],['VI','Die Liebenden','Entscheidung'],['VII','Der Wagen','Antrieb'],['VIII','Die Kraft','Mut'],['IX','Der Eremit','Einkehr'],['X','Das Rad des Schicksals','Wendung'],['XI','Die Gerechtigkeit','Ausgleich'],['XII','Der Gehängte','Perspektivwechsel'],['XIII','Der Tod','Wandlung'],['XIV','Die Mäßigkeit','Maß'],['XV','Der Teufel','Versuchung'],['XVI','Der Turm','Zusammenbruch'],['XVII','Der Stern','Hoffnung'],['XVIII','Der Mond','Illusion'],['XIX','Die Sonne','Klarheit'],['XX','Das Gericht','Bilanz'],['XXI','Die Welt','Vollendung']];
+const isCard=c=>Number.isInteger(c)&&c>=0&&c<22;
+let cardCache=ARC.map(()=>({stations:[],chars:[]}));
+function cardStats(){const m=ARC.map(()=>({stations:[],chars:[]}));for(const g of Object.values(doc.graphs))for(const n of Object.values(g.nodes)){if(!isCard(n.card))continue;if(n.type==='chapter')m[n.card].stations.push({g:g.id,n});else if(n.type==='character')m[n.card].chars.push({g:g.id,n})}return m}
 const rid=()=>'n'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-3);
 const DID=new URLSearchParams(location.search).get('d')||'main',dq=DID==='main'?'':'?d='+encodeURIComponent(DID),BK='planner-backup'+(DID==='main'?'':'-'+DID);
 let docName=DID==='main'?'Hauptplan':'Entwurf',doc=null,rev=0,gid=null,sel=null,view={x:0,y:0,k:1},saving=false,pending=false,timer=0,stale=false,onlyMand=false;const views={};
@@ -224,6 +243,18 @@ function fit(){const ns=Object.values(G().nodes);if(!ns.length){view={x:60,y:60,
   for(const n of ns){const h=(el(n.id)||{offsetHeight:70}).offsetHeight;a=Math.min(a,n.x);b=Math.min(b,n.y);c=Math.max(c,n.x+W);d=Math.max(d,n.y+h)}
   const r=stage.getBoundingClientRect(),pad=50,k=Math.max(.2,Math.min(1,Math.min((r.width-2*pad)/(c-a),(r.height-2*pad)/(d-b))));
   view={k,x:(r.width-(c-a)*k)/2-a*k,y:(r.height-(d-b)*k)/2-b*k};applyView()}
+/* ---------- Heldenreise: Kartenleiste ---------- */
+function renderStrip(){
+  const el=$('#cards'),any=cardCache.some(x=>x.stations.length||x.chars.length);el.hidden=!any;if(!any)return;el.textContent='';
+  cardCache.forEach((x,i)=>{
+    const filled=x.stations.some(t=>t.n.graph&&doc.graphs[t.n.graph]&&Object.keys(doc.graphs[t.n.graph].nodes).length>0),state=x.stations.length?(filled?'full':'empty'):'none',cur=x.stations.some(t=>t.n.graph===gid)||x.chars.some(t=>t.g===gid);
+    const b=mk('button',{type:'button',class:'cell '+state+(cur?' cur':''),'data-card':String(i),title:ARC[i][0]+' · '+ARC[i][1]+' ('+ARC[i][2]+'): '+(x.stations.length?(filled?'Station mit Inhalt':'Station leer'):'keine Station')+' · '+x.chars.length+' Charakter(e)'},ARC[i][0]);
+    if(x.chars.length)b.append(mk('sup',{},String(x.chars.length)));
+    b.onclick=()=>jumpCard(i);el.append(b)})}
+function jumpCard(i){const x=cardCache[i],t=x.stations[0]||x.chars[0];if(!t)return;
+  if(t.g!==gid){views[gid]={...view};gid=t.g}
+  sel={kind:'node',id:t.n.id};render();inspect();const n=G().nodes[t.n.id],r=stage.getBoundingClientRect();
+  view={k:1,x:r.width/2-(n.x+W/2),y:r.height/2-(n.y+40)};applyView()}
 /* ---------- Kapitel ---------- */
 function hasMand(id,seen=new Set()){if(seen.has(id)||!doc.graphs[id])return false;seen.add(id);return Object.values(doc.graphs[id].nodes).some(n=>n.mandatory||(n.type==='chapter'&&n.graph&&hasMand(n.graph,seen)))}
 function isMand(n){return !!n.mandatory||(n.type==='chapter'&&!!n.graph&&hasMand(n.graph))}
@@ -242,22 +273,29 @@ function nodeEl(n){
   if(n.mandatory){e.classList.add('mand');e.append(mk('span',{class:'bd'},'Pflicht'))}
   if(onlyMand&&!isMand(n))e.classList.add('dim');
   e.append(mk('div',{class:'ty'},TYPES[n.type]||n.type),mk('div',{class:'ti'},n.title||'(ohne Titel)'));
+  if(isCard(n.card)&&(n.type==='chapter'||n.type==='character')&&!(n.title||'').includes(ARC[n.card][1])){const c=cardCache[n.card],dup=(n.type==='chapter'?c.stations:c.chars).length>1;e.append(mk('div',{class:'cd'+(dup?' dup':''),title:dup?'Diese Karte ist mehrfach vergeben':''},ARC[n.card][0]+' · '+ARC[n.card][1]+(dup?' ⚠ doppelt':'')))}
   if(n.type==='chapter'){const cg=n.graph&&doc.graphs[n.graph],ns=cg?Object.values(cg.nodes):[];e.append(mk('div',{class:'cnt'},ns.length+' Knoten'+(ns.some(x=>x.mandatory)||(cg&&hasMand(n.graph))?' · mit Pflicht':'')))}
   if(n.text)e.append(mk('div',{class:'tx'},n.text));
   e.append(mk('span',{class:'h i'}),mk('span',{class:'h o','data-out':'1',title:'Ziehen zum Verbinden'}));
   return e}
 function render(){
+  cardCache=cardStats();
   nodesEl.textContent='';for(const n of Object.values(G().nodes))nodesEl.append(nodeEl(n));
-  hint.hidden=Object.keys(G().nodes).length>0;renderEdges();crumbs()}
+  hint.hidden=Object.keys(G().nodes).length>0;renderEdges();crumbs();renderStrip()}
 function renderNode(id){const old=nodesEl.querySelector(`[data-id="${id}"]`),n=G().nodes[id];if(old&&n)old.replaceWith(nodeEl(n));renderEdges()}
 function box(id){const e=nodesEl.querySelector(`[data-id="${id}"]`),n=G().nodes[id];return {x:n.x,y:n.y,h:e?e.offsetHeight:70}}
-function path(a,b){const x1=a.x+W,y1=a.y+a.h/2,x2=b.x,y2=b.y+b.h/2,dx=Math.max(50,Math.abs(x2-x1)/2);return `M${x1} ${y1}C${x1+dx} ${y1} ${x2-dx} ${y2} ${x2} ${y2}`}
+function path(a,b,tmp){const x1=a.x+W,y1=a.y+a.h/2,x2=b.x,y2=b.y+b.h/2;
+  if(!tmp&&x2<x1+20){/* Ziel liegt links: Stufenlinie durch die Lücke zwischen den Zeilen, statt quer durch andere Kästen */
+    const ym=b.y>a.y+a.h?(a.y+a.h+b.y)/2:b.y+b.h<a.y?(b.y+b.h+a.y)/2:Math.max(a.y+a.h,b.y+b.h)+36;
+    return `M${x1} ${y1}H${x1+28}V${ym}H${x2-28}V${y2}H${x2}`}
+  const dx=Math.max(50,Math.abs(x2-x1)/2);return `M${x1} ${y1}C${x1+dx} ${y1} ${x2-dx} ${y2} ${x2} ${y2}`}
+function midY(a,b){return b.y>a.y+a.h?(a.y+a.h+b.y)/2:b.y+b.h<a.y?(b.y+b.h+a.y)/2:Math.max(a.y+a.h,b.y+b.h)+36}
 function renderEdges(){
   eg.textContent='';
   for(const ed of G().edges){const A=G().nodes[ed.from],B=G().nodes[ed.to];if(!A||!B)continue;
     const a=box(ed.from),b=box(ed.to),d=path(a,b),dim=onlyMand&&!(isMand(A)&&isMand(B)),g=mk('g',{'data-edge':ed.id,class:(sel&&sel.kind==='edge'&&sel.id===ed.id?'sel':'')+(dim?' dim':'')});
     g.append(mk('path',{class:'e',d,'marker-end':'url(#arr)'}),mk('path',{class:'hit',d}));
-    if(ed.label){g.append(mk('text',{x:(a.x+W+b.x)/2,y:(a.y+a.h/2+b.y+b.h/2)/2-6},ed.label))}
+    if(ed.label){const back=b.x<a.x+W+20;g.append(mk('text',{x:(a.x+W+b.x)/2,y:(back?midY(a,b):(a.y+a.h/2+b.y+b.h/2)/2)-6},ed.label))}
     eg.append(g)}}
 /* ---------- Auswahl und Eigenschaften ---------- */
 function select(s){sel=s;render();inspect()}
@@ -275,7 +313,9 @@ function inspect(){
     const del=mk('button',{type:'button',class:'danger',id:'f-del'},n.type==='chapter'?'Kapitel löschen':'Knoten löschen');del.onclick=()=>removeSel();
     insp.append(mk('h2',{},n.type==='chapter'?'Kapitel':'Knoten'),field('Titel',ti));
     if(n.type==='chapter'){const op=mk('button',{type:'button',id:'f-open'},'Kapitel öffnen');op.onclick=()=>openChapter(n.id);insp.append(op)}
-    else{const ty=mk('select',{id:'f-type'});for(const k of ['scene','branch','note'])ty.append(mk('option',{value:k},TYPES[k]));ty.value=n.type;ty.onchange=()=>{n.type=ty.value;renderNode(n.id);changed()};insp.append(field('Art',ty))}
+    else{const ty=mk('select',{id:'f-type'});for(const k of ['scene','branch','note','character'])ty.append(mk('option',{value:k},TYPES[k]));ty.value=n.type;ty.onchange=()=>{n.type=ty.value;if(n.type!=='character')delete n.card;render();inspect();changed()};insp.append(field('Art',ty))}
+    if(n.type==='chapter'||n.type==='character'){const cs=mk('select',{id:'f-card'});cs.append(mk('option',{value:''},'keine'));ARC.forEach((a,i)=>cs.append(mk('option',{value:String(i)},a[0]+' · '+a[1]+' ('+a[2]+')')));cs.value=isCard(n.card)?String(n.card):'';
+      cs.onchange=()=>{if(cs.value==='')delete n.card;else n.card=+cs.value;render();changed()};insp.append(field(n.type==='chapter'?'Karte der Station (Große Arkana)':'Karte des Charakters (Große Arkana)',cs))}
     insp.append(mw,field('Text / Notizen',tx),del)}
   else{const ed=G().edges.find(e=>e.id===sel.id);if(!ed){sel=null;insp.classList.remove('on');return}
     const lb=mk('input',{type:'text',maxlength:'60',id:'f-label',placeholder:'z. B. ja / nein'});lb.value=ed.label;
@@ -291,8 +331,14 @@ function removeSel(){
     delete g.nodes[sel.id];g.edges=g.edges.filter(e=>e.from!==sel.id&&e.to!==sel.id)}
   else g.edges=g.edges.filter(e=>e.id!==sel.id);
   sel=null;render();inspect();changed()}
+/* Freier Platz im sichtbaren Bereich: Raster um die Mitte, von innen nach außen. */
+function freeSpot(){
+  const r=stage.getBoundingClientRect(),c=toWorld(r.left+r.width/2,r.top+r.height/2),tl=toWorld(r.left+10,r.top+10),br=toWorld(r.right-10,r.bottom-10),ns=Object.values(G().nodes),sx=W+30,sy=130,cx=c.x-W/2,cy=c.y-30;
+  const free=(x,y)=>!ns.some(n=>Math.abs(n.x-x)<W+10&&Math.abs(n.y-y)<130),vis=(x,y)=>x>=tl.x&&x+W<=br.x&&y>=tl.y&&y+100<=br.y;let fb=null;
+  for(let ring=0;ring<=8;ring++)for(let i=-ring;i<=ring;i++)for(let j=-ring;j<=ring;j++){if(Math.max(Math.abs(i),Math.abs(j))!==ring)continue;const x=Math.round(cx+i*sx),y=Math.round(cy+j*sy);if(!free(x,y))continue;if(vis(x,y))return {x,y};if(!fb)fb={x,y}}
+  return fb||{x:Math.round(cx),y:Math.round(cy+9*sy)}}
 function addNode(type,x,y){
-  if(x==null){const r=stage.getBoundingClientRect(),p=toWorld(r.left+r.width/2,r.top+r.height/2);x=p.x-W/2;y=p.y-30;const ns=Object.values(G().nodes);for(let i=0;i<40&&ns.some(n=>Math.abs(n.x-x)<W&&Math.abs(n.y-y)<90);i++){x+=40;y+=50}}
+  if(x==null){const f=freeSpot();x=f.x;y=f.y}
   const n={id:rid(),type,title:TYPES[type],text:'',x:Math.round(x),y:Math.round(y),mandatory:false};
   if(type==='chapter'){const id=rid();doc.graphs[id]={id,name:n.title,parent:gid,nodes:{},edges:[]};n.graph=id}
   G().nodes[n.id]=n;select({kind:'node',id:n.id});changed();
@@ -322,7 +368,7 @@ window.addEventListener('pointermove',ev=>{
     if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;n.x=Math.round(drag.ox+dx);n.y=Math.round(drag.oy+dy);
     const e=nodesEl.querySelector(`[data-id="${drag.id}"]`);if(e){e.style.left=n.x+'px';e.style.top=n.y+'px'}renderEdges()}
   else if(drag.kind==='link'){const a=box(drag.from),p=toWorld(ev.clientX,ev.clientY);
-    tmp.setAttribute('d',path(a,{x:p.x,y:p.y-0,h:0}));
+    tmp.setAttribute('d',path(a,{x:p.x,y:p.y,h:0},true));
     const t=document.elementFromPoint(ev.clientX,ev.clientY),nd=t&&t.closest&&t.closest('.node');
     nodesEl.querySelectorAll('.link-target').forEach(e=>e.classList.remove('link-target'));
     if(nd&&nd.dataset.id!==drag.from)nd.classList.add('link-target')}});
@@ -343,7 +389,7 @@ window.addEventListener('keydown',ev=>{
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
   else if(ev.key==='Escape'&&sel)select(null)});
-$('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');
+$('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');$('#add-character').onclick=()=>addNode('character');
 $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute('aria-pressed',String(onlyMand));render()};
 $('#fit').onclick=fit;$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
 $('#zin').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25)};
@@ -446,7 +492,7 @@ async function init(){
   if(j){rev=j.rev;doc=j.doc||blank();setStatus(j.doc?'Gespeichert':'Neu')}
   gid=doc.root;render();fit();inspect();last=JSON.stringify(doc);histBtns();
   showDocName();dapi('GET','').then(j=>{const d=j.docs.find(x=>x.id===DID);if(d){docName=d.name;showDocName()}}).catch(()=>{});
-  window.__planner={did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
+  window.__planner={arcana:ARC,did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
 init();
 window.addEventListener('resize',()=>renderEdges());
 })();
