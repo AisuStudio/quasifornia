@@ -200,7 +200,7 @@ const $=s=>document.querySelector(s);
 const stage=$('#stage'),world=$('#world'),nodesEl=$('#nodes'),eg=$('#eg'),tmp=$('#tmp'),insp=$('#insp'),status=$('#status'),hint=$('#hint');
 const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel'},KINDS={character:'Charakter',event:'Ereignis',todo:'Todo',item:'Gegenstand'};
 const typeLbl=n=>n.type==='note'&&n.kind?KINDS[n.kind]:(TYPES[n.type]||n.type);
-/* Große Arkana, Narr 0 bis Welt XXI (Rider-Waite-Reihenfolge). Muss mit worker/planner.js übereinstimmen (Test 65). */
+/* Große Arkana, Narr 0 bis Welt XXI (Rider-Waite-Reihenfolge). Muss mit worker/planner.js übereinstimmen (Test 68). */
 const ARC=[['0','Der Narr','Aufbruch'],['I','Der Magier','Fähigkeit'],['II','Die Hohepriesterin','Geheimnis'],['III','Die Herrscherin','Fülle'],['IV','Der Herrscher','Ordnung'],['V','Der Hierophant','Tradition'],['VI','Die Liebenden','Entscheidung'],['VII','Der Wagen','Antrieb'],['VIII','Die Kraft','Mut'],['IX','Der Eremit','Einkehr'],['X','Das Rad des Schicksals','Wendung'],['XI','Die Gerechtigkeit','Ausgleich'],['XII','Der Gehängte','Perspektivwechsel'],['XIII','Der Tod','Wandlung'],['XIV','Die Mäßigkeit','Maß'],['XV','Der Teufel','Versuchung'],['XVI','Der Turm','Zusammenbruch'],['XVII','Der Stern','Hoffnung'],['XVIII','Der Mond','Illusion'],['XIX','Die Sonne','Klarheit'],['XX','Das Gericht','Bilanz'],['XXI','Die Welt','Vollendung']];
 const isCard=c=>Number.isInteger(c)&&c>=0&&c<22;
 let cardCache=ARC.map(()=>({stations:[],notes:[]}));
