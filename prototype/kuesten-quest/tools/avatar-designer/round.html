@@ -35,9 +35,11 @@ input[type=range]{width:100%;accent-color:var(--ac)}textarea{width:100%;height:9
 <h2>Pose</h2><div class="row"><select id="pose" aria-label="Pose"><option value="skate">Skaten (wie im Spiel)</option><option value="stand">Stehen</option><option value="walk">Gehen (Vorschau)</option></select></div>
 <h2>Ansicht</h2><div class="row"><label class="chk"><input type="checkbox" id="board" checked> Skateboard</label><label class="chk"><input type="checkbox" id="outl" checked> Kontur</label></div>
 <h2>Speichern</h2><div class="row"><button id="save">Im Browser speichern</button><button id="load">Laden</button><button id="export">JSON anzeigen</button><button id="import">JSON übernehmen</button><button id="dl">Als Datei laden</button></div>
+<h2>Auf dem Server (mit Versionen)</h2><div id="srv"></div>
 <textarea id="json" aria-label="Datensatz als JSON" spellcheck="false"></textarea><div id="msg" role="status"></div>
 <p class="sock">Anker im Format: Kopf (Haare, Mütze, Helm), Gesicht (Brille, Kopfhörer), Hals (Kette), Rücken (Rucksack), Handgelenk links (Uhr), Knie (Schoner). Gleiche Namen sollen später auf allen Skeletten gelten.</p>
 </div></div>
+<script src="srv.js"></script>
 <script type="importmap">{"imports":{"three":"../../node_modules/three/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -148,5 +150,6 @@ $('export').onclick=()=>{$('json').value=toJSON();msg('Datensatz unten, zum Kopi
 $('import').onclick=()=>{try{fromJSON($('json').value);msg('Übernommen.')}catch(e){msg('Das hat nicht geklappt: '+e.message)}};
 $('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([toJSON()],{type:'application/json'}));a.download='avatar-'+spec.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove()};
 ui();sync();rebuild();
+EntwurfSrv($('srv'),'avatar',{get:n=>{const o=JSON.parse(toJSON());return o},set:o=>fromJSON(JSON.stringify(o))});
 window.__rnd={get spec(){return spec},setPose:p=>{pose=p;$('pose').value=p;rebuild()},applyPose,setCam:(d,y)=>{dist=d;if(y!=null)camY=y},get pose(){return pose},PRESETS,newSpec,toJSON,fromJSON,rebuild,build,setPreset:k=>{spec=newSpec(k);sync();rebuild()},get av(){return av},THREE};
 </script></body></html>

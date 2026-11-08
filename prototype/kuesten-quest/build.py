@@ -108,4 +108,14 @@ import sys,os
 os.makedirs('dist',exist_ok=True)
 if '--dev' in sys.argv:open('dist/dev.html','w').write(build(False))
 open('dist/kuesten-quest.html','w').write(build(True))
+
+# Designer (intern) unter /designer/, hinter dem Seitenpasswort: gleiche Seiten wie tools/avatar-designer, Pfade für die Auslieferung umgeschrieben
+import shutil
+THREE_CDN='https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'
+os.makedirs('dist/designer/fonts',exist_ok=True)
+for f in ['index.html','round.html','pixel.html','haus.html']:
+    t=open('tools/avatar-designer/'+f).read()
+    t=t.replace('../../src/fonts/','fonts/').replace('../../node_modules/three/build/three.module.js',THREE_CDN).replace('../../src/bau-teile.js','bau-teile.js')
+    open('dist/designer/'+f,'w').write(t)
+shutil.copy('tools/avatar-designer/srv.js','dist/designer/srv.js');shutil.copy('src/bau-teile.js','dist/designer/bau-teile.js');shutil.copy('src/fonts/smarta-nova.otf','dist/designer/fonts/smarta-nova.otf')
 print(len(js))

@@ -29,10 +29,12 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px sol
   <div><h2>Teile</h2><div class="row" id="tabs"></div><div class="row" id="parts" style="margin-top:6px"></div></div>
   <div><h2>Farbe (feste Palette)</h2><div class="row" id="cols"></div></div>
   <div><h2>Drehen</h2><div class="row"><button id="rotl" aria-label="Links drehen">↶</button><button id="rotr" aria-label="Rechts drehen">↷</button><span id="rotv" style="align-self:center;color:var(--mu)">0°</span></div></div>
+  <div><h2>Auf dem Server (mit Versionen)</h2><div id="srv"></div></div>
   <div><h2>Export / Import (JSON wie im Spiel)</h2><textarea id="io" spellcheck="false" aria-label="JSON"></textarea><div class="row" style="margin-top:4px"><button id="exp">Exportieren</button><button id="imp">Importieren</button></div><div id="msg" role="status"></div></div>
  </div>
  <div id="stage"><canvas id="cv"></canvas></div>
 </div>
+<script src="srv.js"></script>
 <script type="importmap">{"imports":{"three":"../../node_modules/three/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -111,6 +113,7 @@ function size(){const b=cv.parentElement.getBoundingClientRect();R.setSize(b.wid
 addEventListener('resize',size);
 function loop(){cam.position.set(Math.sin(O.az)*Math.cos(O.el)*O.d,Math.sin(O.el)*O.d,Math.cos(O.az)*Math.cos(O.el)*O.d);cam.lookAt(0,2,0);R.render(sc,cam);requestAnimationFrame(loop)}
 mkPlot(S.N);ui();size();info();loop();
+EntwurfSrv($('srv'),'haus',{get:()=>({...bauSerialize(plot)}),set:o=>{bauLoadInto(plot,o);info()}});
 /* Schnittstelle für Tests */
 window.__haus={get plot(){return plot},S,put,deco,erase,paint,undo,pick,serialize:()=>bauSerialize(plot),load:d=>bauLoadInto(plot,d),parts:()=>Object.keys(BAU_PARTS),cols:()=>BAU_COLS.length,ready:true};
 </script></body></html>

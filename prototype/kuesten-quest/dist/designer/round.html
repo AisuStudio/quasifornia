@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rund (Avatar-Designer)</title>
+<!-- Avatar-Designer, Rund-Modus: bildet die jetzigen Avatare des Spiels nach (runde Formen in einer Gelenk-Hierarchie).
+     Eigener Code und eigenes Format ("AvatarSpec v2"), nichts davon ist mit dem Spiel verbunden. Die Gelenknamen entsprechen denen im Spiel (Hüfte, Oberschenkel, Unterschenkel, Fuß, Rumpf, Schulter, Ellbogen, Kopf),
+     damit sich beide später über einen Umsetzer zusammenführen lassen. -->
+<style>
+@font-face{font-family:"Smarta Nova";src:url(fonts/smarta-nova.otf)}
+:root{--bg:#1a1626;--pn:#241e36;--ln:#3a3256;--tx:#fdf6e8;--mu:#b9b0d0;--ac:#ff7ab8;--tl:#5ee0d0}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.4 "Smarta Nova","Trebuchet MS",sans-serif}
+#app{display:grid;grid-template-columns:minmax(300px,1fr) 440px;height:100%}
+#view{position:relative;min-width:0}#view canvas{display:block;width:100%;height:100%}
+#hint{position:absolute;left:14px;bottom:12px;color:var(--mu);font-size:13px;pointer-events:none}
+#side{overflow:auto;padding:14px 16px;background:var(--pn);border-left:2px solid var(--ln)}
+h1{font-size:22px;margin:0 0 2px;font-weight:400}h2{font-size:16px;margin:16px 0 6px;font-weight:400;color:var(--tl)}
+.sub{color:var(--mu);font-size:13px;margin:0 0 8px}.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
+button,select,input[type=text],textarea{font:inherit;color:var(--tx);background:#2f2748;border:2px solid var(--ln);border-radius:8px;padding:4px 10px}
+button{cursor:pointer}button.on{background:var(--ac);color:#1a1626;border-color:var(--ac)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--tl);outline-offset:1px}
+.g{display:grid;grid-template-columns:150px 1fr;gap:4px 8px;align-items:center}
+.g input[type=color]{width:46px;height:28px;padding:0;border:2px solid var(--ln);border-radius:6px;background:none}
+label.sl{display:grid;grid-template-columns:110px 1fr 40px;gap:8px;align-items:center;margin:3px 0}label.sl output{color:var(--mu);font-size:13px}
+input[type=range]{width:100%;accent-color:var(--ac)}textarea{width:100%;height:96px;font:12px/1.3 monospace;resize:vertical}
+#msg{min-height:20px;color:var(--ac);font-size:13px}.chk{display:inline-flex;gap:6px;align-items:center;margin-right:12px}
+.sock{color:var(--mu);font-size:13px}
+</style></head><body>
+<div id="app"><div id="view"><div id="hint">Ziehen: drehen · Mausrad: Abstand</div></div>
+<div id="side">
+<h1>Rund: die Avatare des Spiels</h1><p class="sub">Intern · eigenes Format (AvatarSpec v2) · nicht mit dem Spiel verbunden</p>
+<h2>Vorlage</h2><div class="row" id="presets"></div>
+<h2>Fächer und Zubehör (Anker)</h2>
+<div class="g" id="acc"></div>
+<h2>Farben (Zonen)</h2><div class="g" id="zones"></div>
+<h2>Körperform</h2><div id="sliders"></div>
+<h2>Pose</h2><div class="row"><select id="pose" aria-label="Pose"><option value="skate">Skaten (wie im Spiel)</option><option value="stand">Stehen</option><option value="walk">Gehen (Vorschau)</option></select></div>
+<h2>Ansicht</h2><div class="row"><label class="chk"><input type="checkbox" id="board" checked> Skateboard</label><label class="chk"><input type="checkbox" id="outl" checked> Kontur</label></div>
+<h2>Speichern</h2><div class="row"><button id="save">Im Browser speichern</button><button id="load">Laden</button><button id="export">JSON anzeigen</button><button id="import">JSON übernehmen</button><button id="dl">Als Datei laden</button></div>
+<h2>Auf dem Server (mit Versionen)</h2><div id="srv"></div>
+<textarea id="json" aria-label="Datensatz als JSON" spellcheck="false"></textarea><div id="msg" role="status"></div>
+<p class="sock">Anker im Format: Kopf (Haare, Mütze, Helm), Gesicht (Brille, Kopfhörer), Hals (Kette), Rücken (Rucksack), Handgelenk links (Uhr), Knie (Schoner). Gleiche Namen sollen später auf allen Skeletten gelten.</p>
+</div></div>
+<script src="srv.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+/* ---------- Datensatz AvatarSpec v2 ---------- */
+const HAIR=['none','cap','bun','puff','helmet'],HAIRN={none:'ohne',cap:'Kappe',bun:'Dutt',puff:'Puff',helmet:'Helm'};
+const SLOTS={skin:'Haut',top:'Oberteil',bot:'Hose',sole:'Sohle',hc:'Haare / Kappe',lens:'Brillengläser',frame:'Brillenrahmen',stripe:'Streifen',pack:'Rucksack',pads:'Schoner',phones:'Kopfhörer'};
+const OPT={skin:'#e0a98a',top:'#d54291',bot:'#2b2a33',sole:'#f0cf36',hc:'#141416',lens:'#1cafd1',frame:'#141416',stripe:'#eae8e8',pack:'#1cafd1',pads:'#d54291',phones:'#d54291'};
+/* Die vier Avatare des Spiels, als Daten abgeschrieben (Stand 2026-11-08) */
+const PRESETS={
+ pink:{name:'Pink',slots:{skin:'#e0a98a',top:'#d54291',bot:'#2b2a33',sole:'#f0cf36',hc:'#f0cf36',lens:'#1cafd1',frame:'#141416',stripe:'#eae8e8',pack:'#1cafd1',pads:'#d54291'},acc:{hair:'cap',watch:true,chain:false,quilt:false,pack:true,pads:true,phones:false}},
+ blau:{name:'Blau',slots:{skin:'#c98e6a',top:'#2499bb',bot:'#f0cf36',sole:'#d54291',hc:'#141416',lens:'#d54291',frame:'#eae8e8',stripe:'#eae8e8',pack:'#f0cf36',phones:'#d54291'},acc:{hair:'bun',watch:true,chain:false,quilt:false,pack:true,pads:false,phones:true}},
+ gelb:{name:'Gelb',slots:{skin:'#8a5a3c',top:'#f0cf36',bot:'#e87bb0',sole:'#1cafd1',hc:'#141416',lens:'#141416',frame:'#d54291',stripe:'#d54291',pads:'#1cafd1'},acc:{hair:'puff',watch:false,chain:true,quilt:true,pack:false,pads:true,phones:false}},
+ haendler:{name:'Händler',slots:{skin:'#f0c8a8',top:'#eae8e8',bot:'#312e42',sole:'#d54291',hc:'#1cafd1',lens:'#f0cf36',frame:'#141416',stripe:'#d54291',pack:'#d54291'},acc:{hair:'helmet',watch:true,chain:false,quilt:false,pack:true,pads:false,phones:false}}};
+const hex=v=>/^#[0-9a-fA-F]{6}$/.test(v);
+function newSpec(key='pink'){const p=PRESETS[key];return {v:2,species:'humanoid',name:p.name,body:{size:1,head:1,legs:1,arms:1,torso:1,hipDip:0,hipW:1,thighTop:1},slots:{...OPT,...p.slots},acc:{...p.acc}}}
+let spec=newSpec(),view={board:true,outline:true},pose='skate',tPose=0;
+const BR={size:[.6,1.5],head:[.6,1.5],legs:[.6,1.5],arms:[.6,1.5],torso:[.6,1.5],hipDip:[0,.12],hipW:[.7,1.4],thighTop:[.8,1.4]};
+const $=id=>document.getElementById(id),msg=t=>{$('msg').textContent=t};
+/* ---------- Bau (eigener Code, nach dem Aufbau der Spiel-Avatare) ---------- */
+const BX=new THREE.BoxGeometry(1,1,1),CY=new THREE.CylinderGeometry(1,1,1,16),SP=new THREE.SphereGeometry(1,12,9),HEMI=new THREE.SphereGeometry(1,16,9,0,Math.PI*2,0,Math.PI/2);
+const OUTM=new THREE.MeshBasicMaterial({color:'#141416',side:THREE.BackSide});
+function build(sp,opt){const o=sp.slots,a=sp.acc,b=sp.body,joints={};
+ const MS=(col,e={})=>new THREE.MeshStandardMaterial({color:col,roughness:.7,...e});
+ const skin=MS(o.skin),top=MS(o.top),bot=MS(o.bot),shoe=MS('#eae8e8'),sole=MS(o.sole),hairM=MS(o.hc),stripe=MS(o.stripe);
+ const g=new THREE.Group(),cap=(r,l)=>new THREE.CapsuleGeometry(r,l,4,12);
+ const S=(geo,mat,px,py,pz,par,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,mat);m.position.set(px,py,pz);m.scale.set(sx,sy,sz);(par||g).add(m);
+   if(opt.outline&&mat.transparent!==true){const q=new THREE.Mesh(geo,OUTM);q.scale.setScalar(1.12);q.userData.outline=1;m.add(q)}return m};
+ const parts=new THREE.Group();g.add(parts);
+ if(opt.board&&opt.pose==='skate'){const bd=new THREE.Group();g.add(bd);const deckM=MS('#2499bb',{flatShading:true});S(BX,deckM,0,.17,0,bd,.42,.035,1.55);S(BX,MS('#f0cf36'),0,.19,0,bd,.3,.01,1.3);
+  [[-.17,.55],[.17,.55],[-.17,-.55],[.17,-.55]].forEach(([x,z])=>{const w=S(CY,MS(o.sole),x*1.1,.075,z,bd,.075,.05,.075);w.rotation.z=Math.PI/2});[[.55],[-.55]].forEach(([z])=>S(BX,MS('#8a8a95'),0,.115,z,bd,.3,.03,.05))}
+ const P=new THREE.Group();P.position.y=.19;g.add(P);joints.hips=P;const hipY=.9;joints.thigh=[];joints.shin=[];joints.foot=[];
+ [[-1,.8,1.0,.3],[1,.62,1.0,-.32]].forEach(([s,aa,bb,zo])=>{
+  const th=new THREE.Group();th.position.set(s*.11,hipY,zo);th.rotation.x=-aa;P.add(th);joints.thigh.push(th);th.scale.y=b.legs;
+  S(cap(.095,.28),bot,0,-.225+(b.hipDip||0),0,th,b.thighTop||1,1,b.thighTop||1);
+  const sh=new THREE.Group();sh.position.y=-.45;sh.rotation.x=bb;th.add(sh);joints.shin.push(sh);
+  S(SP,bot,0,0,0,sh,.088,.088,.088);S(cap(.075,.3),bot,0,-.23,0,sh);S(CY,bot,0,-.4,0,sh,.085,.05,.085);
+  if(a.pads)S(SP,MS(o.pads),0,0,.07,sh,.1,.11,.065);
+  const ft=new THREE.Group();ft.position.y=-.46;ft.rotation.x=aa-bb;sh.add(ft);joints.foot.push(ft);
+  S(SP,shoe,0,-.03,.07,ft,.095,.085,.2);S(BX,sole,0,-.1,.07,ft,.2,.05,.42);S(SP,MS(o.sole),0,-.04,.17,ft,.085,.06,.1);S(CY,shoe,0,.04,0,ft,.09,.07,.09)});
+ S(SP,bot,0,hipY+.03-(b.hipDip||0)*.4,0,P,.19*(b.hipW||1),.13+(b.hipDip||0)*1.2,.15*(b.hipW||1));
+ const tz=new THREE.Group();tz.position.set(0,hipY+.05,0);tz.rotation.x=.3;P.add(tz);joints.torso=tz;tz.scale.set(b.torso,1,1);
+ S(cap(.17,.26),top,0,.3,0,tz,1,1,.78);S(CY,stripe,0,.36,0,tz,.178,.025,.14);
+ if(a.quilt)for(let k=0;k<5;k++)S(CY,MS('#c9a420'),0,.08+k*.115,0,tz,.178,.012,.14);
+ S(BX,MS(o.top),0,.15,.13,tz,.24,.09,.03).material.color.multiplyScalar(.85);
+ [-1,1].forEach(s=>S(CY,MS('#eae8e8'),s*.03,.42,.13,tz,.008,.12,.008));
+ S(SP,top,0,.67,-.06,tz,.14,.09,.09);S(CY,skin,0,.7,.01,tz,.05,.06,.05);[-1,1].forEach(s=>S(SP,top,s*.2,.54,0,tz,.095,.095,.095));
+ joints.shoulder=[];joints.elbow=[];
+ [-1,1].forEach(s=>{const sg=new THREE.Group();sg.position.set(s*.22,.55,0);sg.rotation.z=s*.8;sg.rotation.x=-.25;tz.add(sg);joints.shoulder.push(sg);sg.scale.y=b.arms;
+  S(cap(.058,.2),top,0,-.16,0,sg);const eg=new THREE.Group();eg.position.y=-.33;eg.rotation.z=s*.3;eg.rotation.x=-.5;sg.add(eg);joints.elbow.push(eg);
+  S(SP,top,0,0,0,eg,.06,.06,.06);S(cap(.05,.18),top,0,-.15,0,eg);S(CY,stripe,0,-.27,0,eg,.056,.02,.056);S(SP,skin,0,-.35,0,eg,.052,.06,.045);
+  if(a.watch&&s===-1){S(BX,MS('#141416'),0,-.22,0,eg,.1,.04,.08);S(BX,MS('#1cafd1',{emissive:'#1cafd1',emissiveIntensity:.8}),0,-.22,.04,eg,.07,.025,.01)}});
+ const hd=new THREE.Group();hd.position.set(0,.86,.04);tz.add(hd);hd.rotation.x=-.25;joints.head=hd;hd.scale.setScalar(b.head);
+ S(SP,skin,0,0,0,hd,.112,.132,.122);[-1,1].forEach(s=>S(SP,skin,s*.113,-.005,-.01,hd,.02,.035,.025));
+ S(SP,skin,0,-.025,.12,hd,.02,.027,.028);S(BX,MS('#9c4a48'),0,-.07,.112,hd,.04,.008,.01);
+ [-1,1].forEach(s=>{S(SP,MS(o.lens,{roughness:.2}),s*.052,.018,.112,hd,.046,.032,.012);S(SP,MS(o.frame),s*.052,.018,.108,hd,.052,.038,.01)});
+ S(BX,MS(o.frame),0,.026,.116,hd,.03,.008,.008);[-1,1].forEach(s=>S(BX,MS(o.frame),s*.112,.024,.05,hd,.008,.008,.13));
+ if(a.hair==='cap'){S(HEMI,hairM,0,.02,-.01,hd,.12,.115,.13);const br=S(BX,hairM,0,.03,-.14,hd,.15,.015,.1);br.rotation.x=.2}
+ if(a.hair==='bun'){S(HEMI,hairM,0,.015,-.01,hd,.118,.12,.128);S(SP,hairM,0,.14,-.06,hd,.06,.06,.06)}
+ if(a.hair==='puff')S(SP,hairM,0,.05,-.025,hd,.15,.14,.15);
+ if(a.hair==='helmet'){S(HEMI,hairM,0,.03,-.005,hd,.135,.13,.145);S(BX,stripe,0,.16,-.005,hd,.02,.012,.2)}
+ if(a.phones){const t=new THREE.Mesh(new THREE.TorusGeometry(.125,.011,8,20,Math.PI),MS(o.phones));hd.add(t);t.scale.set(1,1.1,1);[-1,1].forEach(s=>S(CY,MS(o.phones),s*.128,-.005,-.01,hd,.03,.018,.03).rotation.z=Math.PI/2)}
+ if(a.chain){const ch=new THREE.Mesh(new THREE.TorusGeometry(.085,.01,6,16),MS('#f0cf36',{emissive:'#a66b28',emissiveIntensity:.5}));ch.position.set(0,.62,.03);ch.rotation.x=Math.PI/2+.2;tz.add(ch);S(SP,MS('#f0cf36',{emissive:'#a66b28',emissiveIntensity:.5}),0,.55,.1,tz,.02,.02,.02)}
+ if(a.pack){S(BX,MS(o.pack),0,.32,-.17,tz,.27,.36,.13);S(BX,MS('#141416'),0,.4,-.24,tz,.2,.1,.02);[-1,1].forEach(s=>S(BX,MS('#141416'),s*.1,.45,.1,tz,.035,.03,.28));
+  S(CY,MS('#8a8a95'),.08,.58,-.17,tz,.008,.22,.008);S(SP,MS('#d54291',{emissive:'#d54291',emissiveIntensity:.8}),.08,.8,-.17,tz,.025,.025,.025)}
+ g.scale.setScalar(1.35*b.size);g.userData.joints=joints;return g}
+/* ---------- Vorschau ---------- */
+const vw=$('view'),R=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});vw.appendChild(R.domElement);R.setPixelRatio(Math.min(2,devicePixelRatio));R.outputColorSpace=THREE.SRGBColorSpace;
+const sc=new THREE.Scene();sc.background=new THREE.Color('#2a2442');const cam=new THREE.PerspectiveCamera(36,1,.1,50);let dist=7.4;
+sc.add(new THREE.HemisphereLight('#ffffff','#9a8fc0',1.7));const dl=new THREE.DirectionalLight('#ffffff',1.5);dl.position.set(3,6,4);sc.add(dl);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(2.2,40),new THREE.MeshBasicMaterial({color:'#3a3258'}));floor.rotation.x=-Math.PI/2;sc.add(floor);
+let av=null,yaw=-.6,drag=null,camY=1.45;
+function rebuild(){if(av){sc.remove(av);av.traverse(o=>{if(o.isMesh&&o.material&&o.material!==OUTM)o.material.dispose()})}av=build(spec,{...view,pose});sc.add(av);av.rotation.y=yaw;applyPose(0)}
+R.domElement.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:yaw};R.domElement.setPointerCapture(e.pointerId)});R.domElement.addEventListener('pointermove',e=>{if(drag)yaw=drag.y+(e.clientX-drag.x)*.01});R.domElement.addEventListener('pointerup',()=>drag=null);
+R.domElement.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(3,Math.min(12,dist+e.deltaY*.006))},{passive:false});
+function resize(){const w=vw.clientWidth,h=vw.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
+(function loop(){tPose=performance.now()/1000;if(pose==='walk')applyPose(tPose);cam.position.set(0,camY+.45,dist);cam.lookAt(0,camY,0);if(av)av.rotation.y=yaw;R.render(sc,cam);requestAnimationFrame(loop)})();
+/* ---------- Posen: Skaten = wie gebaut, Stehen und Gehen setzen nur die Gelenkwinkel ---------- */
+function applyPose(t){if(!av||pose==='skate')return;const j=av.userData.joints,L=spec.body.legs;
+  const base=L*1.035-.9;                              /* Hüfte so tief, dass die Sohle am Boden steht (Gelenk 0,9, Bein 0,45 + 0,46, Fuß 0,125) */
+  const set=(i,th,sh)=>{const T=j.thigh[i],S=j.shin[i],F=j.foot[i];T.position.z=0;T.rotation.x=th;S.rotation.x=sh;F.rotation.x=-(th+sh)};
+  const arms=(l,r,el)=>{[l,r].forEach((x,i)=>{j.shoulder[i].rotation.set(x,0,(i?1:-1)*.12);j.elbow[i].rotation.set(el,0,(i?1:-1)*.05)})};   /* l: linker, r: rechter Arm (x-Drehung, negativ = nach vorn) */
+  if(pose==='stand'){j.hips.position.y=base;set(0,0,0);set(1,0,0);j.torso.rotation.x=.04;j.head.rotation.x=0;arms(-.05,-.05,-.12)}
+  else{const ph=t*2*Math.PI*1.05,a0=Math.sin(ph),a1=-a0,f=x=>.12+.8*Math.max(0,x);
+    j.hips.position.y=base+.025*Math.cos(2*ph)-.03;set(0,-.5*a0,f(Math.cos(ph)));set(1,-.5*a1,f(-Math.cos(ph)));
+    j.torso.rotation.x=.1;j.torso.rotation.y=.12*a0;j.head.rotation.x=-.08;arms(.5*a0,-.5*a0,-.25)}}
+/* ---------- Oberfläche ---------- */
+function ui(){const pr=$('presets');pr.innerHTML='';Object.keys(PRESETS).forEach(k=>{const b=document.createElement('button');b.textContent=PRESETS[k].name;b.dataset.k=k;b.onclick=()=>{spec=newSpec(k);sync();rebuild();msg('Vorlage '+PRESETS[k].name+' geladen.')};pr.appendChild(b)});
+ const ac=$('acc');ac.innerHTML='';
+ const row=(label,el)=>{const l=document.createElement('label');l.textContent=label;ac.append(l,el)};
+ const hs=document.createElement('select');HAIR.forEach(h=>{const o=document.createElement('option');o.value=h;o.textContent=HAIRN[h];hs.appendChild(o)});hs.id='a-hair';hs.onchange=()=>{spec.acc.hair=hs.value;rebuild()};row('Kopf (Haare, Kappe)',hs);
+ [['phones','Gesicht: Kopfhörer'],['chain','Hals: Kette'],['pack','Rücken: Rucksack'],['watch','Handgelenk: Uhr'],['pads','Knie: Schoner'],['quilt','Rumpf: Steppjacke']].forEach(([k,t])=>{const c=document.createElement('input');c.type='checkbox';c.id='a-'+k;c.onchange=()=>{spec.acc[k]=c.checked;rebuild()};row(t,c)});
+ const z=$('zones');z.innerHTML='';Object.keys(SLOTS).forEach(k=>{const l=document.createElement('label');l.textContent=SLOTS[k];const i=document.createElement('input');i.type='color';i.id='z-'+k;i.oninput=()=>{spec.slots[k]=i.value;rebuild()};z.append(l,i)});
+ const sl=$('sliders');sl.innerHTML='';const SLD={size:['Gesamtgröße',.8,1.3,.05],head:['Kopf',.8,1.4,.05],torso:['Rumpfbreite',.8,1.3,.05],legs:['Beine',.8,1.3,.05],arms:['Arme',.8,1.3,.05],hipDip:['Hüfte: Eintauchen',0,.12,.01],hipW:['Hüftbreite',.8,1.3,.05],thighTop:['Oberschenkel dick',.85,1.3,.05]};
+ for(const k in SLD){const l=document.createElement('label');l.className='sl';const o=document.createElement('output');const i=document.createElement('input');i.type='range';i.min=SLD[k][1];i.max=SLD[k][2];i.step=SLD[k][3];i.id='s-'+k;i.oninput=()=>{spec.body[k]=+i.value;o.textContent=(+i.value).toFixed(2);rebuild()};l.append(SLD[k][0],i,o);sl.appendChild(l)}}
+function sync(){$('a-hair').value=spec.acc.hair;['phones','chain','pack','watch','pads','quilt'].forEach(k=>$('a-'+k).checked=!!spec.acc[k]);
+ for(const k in SLOTS)$('z-'+k).value=spec.slots[k];for(const k in spec.body){const i=$('s-'+k);i.value=spec.body[k];i.nextElementSibling.textContent=(+i.value).toFixed(2)}}
+$('pose').onchange=e=>{pose=e.target.value;rebuild()};$('board').onchange=e=>{view.board=e.target.checked;rebuild()};$('outl').onchange=e=>{view.outline=e.target.checked;rebuild()};
+/* ---------- Speichern, Laden ---------- */
+function toJSON(){return JSON.stringify(spec)}
+function fromJSON(t){const o=JSON.parse(t);if(!o||o.v!==2||o.species!=='humanoid')throw new Error('Unbekanntes Format');const s=newSpec('pink');s.name=String(o.name||'Entwurf').slice(0,40);
+ for(const k in s.body){const v=o.body?.[k];if(typeof v==='number'&&isFinite(v))s.body[k]=Math.max(BR[k][0],Math.min(BR[k][1],v))}
+ for(const k in s.slots){const v=o.slots?.[k];if(hex(v))s.slots[k]=v}
+ s.acc.hair=HAIR.includes(o.acc?.hair)?o.acc.hair:'none';['phones','chain','pack','watch','pads','quilt'].forEach(k=>s.acc[k]=!!o.acc?.[k]);
+ spec=s;sync();rebuild()}
+$('save').onclick=()=>{try{localStorage.setItem('kq-avd-round',toJSON());msg('Gespeichert (nur in diesem Browser).')}catch(e){msg('Speichern nicht möglich.')}};
+$('load').onclick=()=>{try{const t=localStorage.getItem('kq-avd-round');if(!t){msg('Noch nichts gespeichert.');return}fromJSON(t);msg('Geladen.')}catch(e){msg('Laden fehlgeschlagen: '+e.message)}};
+$('export').onclick=()=>{$('json').value=toJSON();msg('Datensatz unten, zum Kopieren.')};
+$('import').onclick=()=>{try{fromJSON($('json').value);msg('Übernommen.')}catch(e){msg('Das hat nicht geklappt: '+e.message)}};
+$('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([toJSON()],{type:'application/json'}));a.download='avatar-'+spec.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove()};
+ui();sync();rebuild();
+EntwurfSrv($('srv'),'avatar',{get:n=>{const o=JSON.parse(toJSON());return o},set:o=>fromJSON(JSON.stringify(o))});
+window.__rnd={get spec(){return spec},setPose:p=>{pose=p;$('pose').value=p;rebuild()},applyPose,setCam:(d,y)=>{dist=d;if(y!=null)camY=y},get pose(){return pose},PRESETS,newSpec,toJSON,fromJSON,rebuild,build,setPreset:k=>{spec=newSpec(k);sync();rebuild()},get av(){return av},THREE};
+</script></body></html>

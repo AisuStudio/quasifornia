@@ -1,4 +1,5 @@
 import {musikList,musikFile,designList,designFile,r2File} from './musik.js';
+import {entwurf} from './entwuerfe.js';
 export {Room} from './room.js';
 export {Stats} from './stats.js';
 export {Glitch} from './glitch.js';
@@ -41,6 +42,8 @@ export default{
       const org=request.headers.get('origin');if(org&&new URL(org).host!==url.host)return new Response('Falsche Herkunft',{status:403,headers:NOSTORE});
       if(!env.ROOM)return new Response('Räume nicht eingerichtet',{status:503,headers:NOSTORE});
       return env.ROOM.get(env.ROOM.idFromName(name)).fetch(request)}
+    /* Entwürfe aus dem Designer (Avatar, Haus) im Bucket "designs", mit Versionen: /api/entwurf/<art>[/<id>] */
+    if(url.pathname==='/api/entwurf'||url.pathname.startsWith('/api/entwurf/'))return entwurf(request,env,url);
     /* Graffiti-Speicher: Bilder bleiben ein Jahr auf dem Server (Durable Object), Liste = nur Zeitstempel, Bild einzeln */
     if(url.pathname==='/api/graffiti'||url.pathname.startsWith('/api/graffiti/')){
       if(!env.GRAF)return new Response('Speicher nicht eingerichtet',{status:503,headers:NOSTORE});

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Designer: Gebäude</title>
+<!-- Haus-Designer: nutzt dieselbe Teile-Datei wie der Builder im Spiel (src/bau-teile.js) und exportiert dasselbe JSON ({cells:{"x,y,z":[teil,farbe,drehung,[4 Seiten]]}}).
+     Bedienung: Linksklick setzt, Rechtsklick radiert, Ziehen dreht die Kamera, Mausrad zoomt. Farben: nur die feste Palette des Spiels. -->
+<style>
+@font-face{font-family:"Smarta Nova";src:url(fonts/smarta-nova.otf)}
+:root{--bg:#1a1626;--pn:#241e36;--ln:#3a3256;--tx:#fdf6e8;--mu:#b9b0d0;--ac:#ff7ab8;--tl:#5ee0d0}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.35 "Smarta Nova","Trebuchet MS",sans-serif}
+#app{display:grid;grid-template-columns:260px 1fr;height:100%}
+#side{background:var(--pn);border-right:2px solid var(--ln);overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+h2{font-weight:400;font-size:13px;color:var(--mu);margin:0 0 4px;letter-spacing:.06em;text-transform:uppercase}
+button,select,textarea,input{font:inherit;color:var(--tx);background:#2f2748;border:2px solid var(--ln);border-radius:8px}
+button{padding:3px 9px;cursor:pointer}button[aria-pressed=true]{background:var(--ac);color:#1a1626;border-color:var(--ac)}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--tl);outline-offset:1px}
+.row{display:flex;flex-wrap:wrap;gap:4px}
+#cols button{width:30px;height:30px;padding:0;border-radius:50%}#cols button[aria-pressed=true]{outline:3px solid var(--tx);outline-offset:1px}
+#stage{position:relative;min-width:0}canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;left:10px;bottom:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;pointer-events:none}
+#hud>*{pointer-events:auto}
+#io{width:100%;height:70px;padding:4px;font:11px/1.2 monospace;resize:vertical}
+#msg{color:var(--mu);font-size:12px;min-height:16px}
+@media(max-width:700px){#app{grid-template-columns:1fr;grid-template-rows:auto 1fr}#side{max-height:44vh}}
+</style></head><body>
+<div id="app">
+ <div id="side">
+  <div><h2>Grundstück</h2><div class="row"><select id="size" aria-label="Größe"><option value="6">6 × 6 (12 m)</option><option value="8">8 × 8 (16 m)</option><option value="10" selected>10 × 10 (20 m)</option><option value="12">12 × 12 (24 m)</option></select><button id="clear">Leeren</button><button id="undo">Zurück</button></div></div>
+  <div><h2>Werkzeug</h2><div class="row" id="tools"></div></div>
+  <div><h2>Teile</h2><div class="row" id="tabs"></div><div class="row" id="parts" style="margin-top:6px"></div></div>
+  <div><h2>Farbe (feste Palette)</h2><div class="row" id="cols"></div></div>
+  <div><h2>Drehen</h2><div class="row"><button id="rotl" aria-label="Links drehen">↶</button><button id="rotr" aria-label="Rechts drehen">↷</button><span id="rotv" style="align-self:center;color:var(--mu)">0°</span></div></div>
+  <div><h2>Auf dem Server (mit Versionen)</h2><div id="srv"></div></div>
+  <div><h2>Export / Import (JSON wie im Spiel)</h2><textarea id="io" spellcheck="false" aria-label="JSON"></textarea><div class="row" style="margin-top:4px"><button id="exp">Exportieren</button><button id="imp">Importieren</button></div><div id="msg" role="status"></div></div>
+ </div>
+ <div id="stage"><canvas id="cv"></canvas></div>
+</div>
+<script src="srv.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+window.THREE=THREE;
+/* Umgebung, die bau-teile.js erwartet (wie im Spiel): MT und die Grundgeometrien */
+const MTC={};window.MT=(c,em,ei)=>{const k=c+'|'+em+'|'+ei;return MTC[k]||(MTC[k]=new THREE.MeshStandardMaterial({color:c,roughness:.8,flatShading:true,...(em?{emissive:em,emissiveIntensity:ei||.8}:{})}))};
+window.BX=new THREE.BoxGeometry(1,1,1);window.CY=new THREE.CylinderGeometry(1,1,1,16);window.CN=new THREE.ConeGeometry(1,1,16);window.SP=new THREE.SphereGeometry(1,12,9);
+await new Promise((ok,no)=>{const s=document.createElement('script');s.src='bau-teile.js';s.onload=ok;s.onerror=()=>no(new Error('bau-teile.js fehlt'));document.head.appendChild(s)});
+const $=id=>document.getElementById(id);
+const S={tool:'put',tab:'form',part:'block',col:0,rot:0,undo:[],hover:null,ghost:null,N:10};
+const cv=$('cv'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});R.shadowMap.enabled=true;
+const sc=new THREE.Scene();sc.background=new THREE.Color('#bfe6f0');
+const cam=new THREE.PerspectiveCamera(50,1,.1,400);
+sc.add(new THREE.HemisphereLight('#ffffff','#a0b5c0',1.1));
+const sun=new THREE.DirectionalLight('#fff4e0',1.6);sun.position.set(20,40,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-30,right:30,top:30,bottom:-30,near:1,far:120});sc.add(sun);
+const O={az:.9,el:.85,d:34};
+let plot=null;
+function mkPlot(N){if(plot)sc.remove(plot.g);
+  const g=new THREE.Group();sc.add(g);plot={NX:N,NZ:N,x:0,z:0,g,cells:new Map,cg:new Map};
+  const W=N*BAU_C;const ground=new THREE.Mesh(new THREE.BoxGeometry(W,.2,W),MT('#9fd68a'));ground.position.y=-.1;ground.receiveShadow=true;g.add(ground);plot.pick=ground;
+  const gr=new THREE.GridHelper(W,N,'#5a8a52','#5a8a52');gr.position.y=.01;g.add(gr);
+  S.undo=[];S.hover=null;ghost();O.d=Math.max(26,N*4.2)}
+const key=(x,y,z)=>x+','+y+','+z;
+const keyOfObj=bauKeyOf;
+function push(k){S.undo.push([k,plot.cells.has(k)?JSON.parse(JSON.stringify(plot.cells.get(k))):null]);if(S.undo.length>200)S.undo.shift()}
+function put(gx,gy,gz,id,c,r){const k=key(gx,gy,gz),P=BAU_PARTS[id];if(!P||P.kind!=='v'||!bauOk(plot,gx,gz)||gy<0||gy>=BAU_LV||plot.cells.has(k))return false;push(k);plot.cells.set(k,{v:id,c,r,f:[0,0,0,0]});bauRefresh(plot,k);return true}
+function deco(gx,gy,gz,face,id,c){const k=key(gx,gy,gz),cell=plot.cells.get(k),P=BAU_PARTS[id];if(!cell||!P||P.kind!=='d'||face<0)return false;push(k);cell.f=cell.f||[0,0,0,0];cell.f[face]=[id,c];bauRefresh(plot,k);return true}
+function erase(k,face){const cell=plot.cells.get(k);if(!cell)return false;push(k);if(face>=0&&cell.f&&cell.f[face])cell.f[face]=0;else plot.cells.delete(k);bauRefresh(plot,k);return true}
+function paint(k,face,c){const cell=plot.cells.get(k);if(!cell)return false;push(k);if(face>=0&&cell.f&&cell.f[face])cell.f[face][1]=c;else cell.c=c;bauRefresh(plot,k);return true}
+function undo(){const u=S.undo.pop();if(!u)return;const [k,old]=u;if(old)plot.cells.set(k,old);else plot.cells.delete(k);bauRefresh(plot,k)}
+const rc=new THREE.Raycaster();
+function pick(ev){const b=cv.getBoundingClientRect();rc.setFromCamera(new THREE.Vector2((ev.clientX-b.left)/b.width*2-1,-((ev.clientY-b.top)/b.height*2-1)),cam);
+  plot.g.updateMatrixWorld(true);const hits=rc.intersectObjects([plot.pick,...plot.cg.values()],true);if(!hits.length)return null;const h=hits[0],k=keyOfObj(h.object);
+  if(k&&plot.cells.has(k)){const n=h.face.normal.clone().transformDirection(h.object.matrixWorld),ax=Math.abs(n.x)>Math.abs(n.y)&&Math.abs(n.x)>Math.abs(n.z)?'x':Math.abs(n.z)>Math.abs(n.y)?'z':'y';
+    const [gx,gy,gz]=k.split(',').map(Number),sg=Math.sign(ax==='x'?n.x:ax==='z'?n.z:n.y)||1,face=ax==='z'?(sg>0?0:2):ax==='x'?(sg>0?1:3):-1;
+    return {key:k,cell:[gx,gy,gz],face,next:ax==='x'?[gx+sg,gy,gz]:ax==='z'?[gx,gy,gz+sg]:[gx,gy+sg,gz],part:true}}
+  const lp=plot.g.worldToLocal(h.point.clone()),gx=Math.floor(lp.x/BAU_C+plot.NX/2),gz=Math.floor(lp.z/BAU_C+plot.NZ/2);
+  return {key:null,cell:[gx,0,gz],face:-1,next:[gx,0,gz],part:false}}
+function ghost(){if(S.ghost){S.ghost.parent&&S.ghost.parent.remove(S.ghost);S.ghost=null}
+  const t=S.hover;if(!plot||!t||S.tool!=='put')return;const P=BAU_PARTS[S.part];if(!P)return;const g=new THREE.Group();let cx,cy,cz;
+  if(P.kind==='v'){[cx,cy,cz]=t.next;if(!bauOk(plot,cx,cz)||cy<0||cy>=BAU_LV||plot.cells.has(key(cx,cy,cz)))return;const inner=new THREE.Group();inner.rotation.y=S.rot*Math.PI/4;P.mk(inner,bauColOf(S.col));g.add(inner)}
+  else{if(!t.part||t.face<0)return;[cx,cy,cz]=t.cell;const sub=new THREE.Group();sub.rotation.y=t.face*Math.PI/2;P.mk(sub,bauColOf(S.col));g.add(sub)}
+  g.position.set(bauCx(plot,cx),cy*BAU_C,bauCz(plot,cz));
+  g.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.55;o.castShadow=false}});plot.g.add(g);S.ghost=g}
+function act(ev,er){const t=pick(ev);if(!t)return;
+  if(er||S.tool==='erase'){if(t.part){const c=plot.cells.get(t.key);erase(t.key,t.face>=0&&c.f&&c.f[t.face]?t.face:-1)}}
+  else if(S.tool==='paint'){if(t.part)paint(t.key,t.face,S.col)}
+  else{const P=BAU_PARTS[S.part];if(P.kind==='v')put(t.next[0],t.next[1],t.next[2],S.part,S.col,S.rot);else if(t.part&&t.face>=0)deco(t.cell[0],t.cell[1],t.cell[2],t.face,S.part,S.col)}
+  S.hover=pick(ev);ghost();info()}
+/* Eingabe: Klick setzt, Ziehen dreht, Rechtsklick radiert */
+let dn=null;
+cv.addEventListener('pointerdown',e=>{dn={x:e.clientX,y:e.clientY,b:e.button,az:O.az,el:O.el,mv:false};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(dn){const dx=e.clientX-dn.x,dy=e.clientY-dn.y;if(Math.hypot(dx,dy)>5)dn.mv=true;if(dn.mv){O.az=dn.az-dx*.008;O.el=Math.max(.15,Math.min(1.5,dn.el+dy*.006))}}else{S.hover=pick(e);ghost()}});
+cv.addEventListener('pointerup',e=>{if(dn&&!dn.mv)act(e,dn.b===2);dn=null});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('wheel',e=>{e.preventDefault();O.d=Math.max(10,Math.min(90,O.d*(1+Math.sign(e.deltaY)*.08)))},{passive:false});
+addEventListener('keydown',e=>{if(/textarea|input|select/i.test(e.target.tagName))return;if(e.key==='z')undo();if(e.key==='r'||e.key==='R')rot(1)});
+/* Oberfläche */
+const TOOLS=[['put','Setzen'],['erase','Radieren'],['paint','Malen']];
+function btns(el,list,cur,fn){el.innerHTML='';list.forEach(([k,n,sw])=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(cur()===k));if(sw){b.style.background=sw;b.setAttribute('aria-label',n)}else b.textContent=n;b.onclick=()=>{fn(k);ui()};el.appendChild(b)})}
+function ui(){
+  btns($('tools'),TOOLS,()=>S.tool,k=>{S.tool=k;ghost()});
+  btns($('tabs'),BAU_TABS,()=>S.tab,k=>{S.tab=k;const f=Object.entries(BAU_PARTS).find(([,p])=>p.cat===k);if(f)S.part=f[0]});
+  btns($('parts'),Object.entries(BAU_PARTS).filter(([,p])=>p.cat===S.tab).map(([k,p])=>[k,p.n]),()=>S.part,k=>{S.part=k;S.tool='put';ghost()});
+  btns($('cols'),BAU_COLS.map((c,i)=>[i,'Farbe '+(i+1),c]),()=>S.col,k=>{S.col=k;ghost()});
+  $('rotv').textContent=(S.rot*45)+'°'}
+function rot(d){S.rot=(S.rot+d+8)%8;ui();ghost()}
+$('rotl').onclick=()=>rot(-1);$('rotr').onclick=()=>rot(1);$('undo').onclick=undo;
+$('clear').onclick=()=>{[...plot.cells.keys()].forEach(k=>{push(k);plot.cells.delete(k);bauRefresh(plot,k)});info()};
+$('size').onchange=e=>{S.N=+e.target.value;mkPlot(S.N)};
+const msg=t=>{$('msg').textContent=t};
+function info(){msg(plot.cells.size+' Zellen')}
+$('exp').onclick=()=>{$('io').value=JSON.stringify(bauSerialize(plot));msg('Exportiert: '+plot.cells.size+' Zellen')};
+$('imp').onclick=()=>{try{const d=JSON.parse($('io').value);bauLoadInto(plot,d);msg('Geladen: '+plot.cells.size+' Zellen (Teile, die es nicht gibt, oder Zellen außerhalb des Grundstücks wurden übersprungen)')}catch(e){msg('Kein gültiges JSON')}};
+function size(){const b=cv.parentElement.getBoundingClientRect();R.setSize(b.width,b.height,false);cam.aspect=b.width/b.height;cam.updateProjectionMatrix()}
+addEventListener('resize',size);
+function loop(){cam.position.set(Math.sin(O.az)*Math.cos(O.el)*O.d,Math.sin(O.el)*O.d,Math.cos(O.az)*Math.cos(O.el)*O.d);cam.lookAt(0,2,0);R.render(sc,cam);requestAnimationFrame(loop)}
+mkPlot(S.N);ui();size();info();loop();
+EntwurfSrv($('srv'),'haus',{get:()=>({...bauSerialize(plot)}),set:o=>{bauLoadInto(plot,o);info()}});
+/* Schnittstelle für Tests */
+window.__haus={get plot(){return plot},S,put,deco,erase,paint,undo,pick,serialize:()=>bauSerialize(plot),load:d=>bauLoadInto(plot,d),parts:()=>Object.keys(BAU_PARTS),cols:()=>BAU_COLS.length,ready:true};
+</script></body></html>

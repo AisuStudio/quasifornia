@@ -39,3 +39,10 @@ Tests: `node tests/59-avatar-designer.js` (Pixel-Netz), `node tests/60-avatar-ru
 Setzt Häuser aus denselben Teilen wie der Builder im Spiel. Der Katalog (Formen, Organisch, Dächer, Fenster & Türen, Garten), die 12 festen Farben, das Zellenformat und Export/Import liegen in `src/bau-teile.js`. Das Spiel und der Designer laden genau diese Datei, neue Teile also nur dort ergänzen.
 Bedienung: Linksklick setzt, Rechtsklick radiert, Ziehen dreht die Kamera, Mausrad zoomt, Z macht rückgängig, R dreht das Teil. Das Export-JSON ist das Spielformat (`{cells:{"x,y,z":[teil,farbe,drehung,[4 Seiten]]}}`) und lässt sich im Spiel mit `bauLoadInto` laden (Test 61).
 Nicht enthalten: Bauplätze der Karte, Aufträge und Belohnung.
+
+## Server-Speicher
+Avatar- und Haus-Entwürfe lassen sich auf dem Server speichern (Leiste "Auf dem Server (mit Versionen)", `srv.js`, Worker `worker/entwuerfe.js`).
+- Ablage im Bucket `designs` unter `entwuerfe/<art>/<kennung>/<version>.json`. Jede Speicherung ist eine neue Version, es wird nie überschrieben und nie gelöscht.
+- Zugang nur mit dem Seitenpasswort (wie alles unter `/api`). Der Server prüft Größe (höchstens 64 KB), Form und Werte, begrenzt auf 50 Entwürfe je Art und 20 Versionen je Entwurf und bremst auf 20 Speicherungen pro Minute und Adresse (`ENTW_RATE`).
+- Die Seite liegt auf dem Server unter `/designer/` (`build.py` kopiert sie nach `dist/designer/`). Lokal oder im Artefakt meldet die Leiste "Kein Server hier".
+- Test 62 braucht einen lokalen Worker: `npx wrangler dev --local --port 8790 --var SITE_PASSWORD:testpw --var STATS_PASSWORD:statspw --var ENTW_RATE:60`.
