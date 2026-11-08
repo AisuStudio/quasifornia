@@ -1,6 +1,6 @@
-# Avatar-Designer (intern, Prototyp v0)
+# Designer (intern, Prototyp)
 
-Ein internes Werkzeug zum Entwerfen von Avataren. Es ist **noch nicht Teil des Spiels** und nicht mit dem Spiel verbunden.
+Ein internes Werkzeug zum Entwerfen von Avataren und später weiteren Dingen. Es ist **noch nicht Teil des Spiels** und nicht mit dem Spiel verbunden. Es ändert keine Datei des Spiels.
 
 ## Starten
 Im Ordner `prototype/kuesten-quest` einen Webserver starten und die Seite öffnen:
@@ -10,22 +10,26 @@ python3 -m http.server 8080
 # dann im Browser: http://localhost:8080/tools/avatar-designer/
 ```
 
-## Was es kann (v0)
-- **Teile mit Netz:** Kopf, Rumpf, Arm, Bein, Schuh. Jedes Teil hat ein Pixelnetz (Kreuz-Muster, wie bei Minecraft-Skins). Arm, Bein und Schuh gibt es einmal, links ist rechts gespiegelt.
-- **Zonenfarben:** Grundfarbe je Teil aus der festen Palette.
-- **Malen** mit fester Palette (24 Farben), **Spiegeln** an der Mittelachse (Vorder-, Rück-, Oberseite im Gesicht, linke und rechte Seite gegeneinander), **Radieren**, **Füllen** (bleibt in der Fläche), **Zurück**.
-- **Aufkleber (Decals):** 8×8-Bilder (Stern, Herz, Blitz, Lächeln, Auge, Streifen), in einer eigenen Ebene über dem Malen, mit Spiegelkopie.
-- **Körperform:** Regler für Rumpfhöhe, Breite, Gliedmaßen und Kopf.
-- **Speichern:** im Browser (localStorage) oder als JSON (Datensatz "AvatarSpec", Version 1). Beim Einlesen werden Werte begrenzt und ungültige Einträge verworfen.
+## Aufbau
+- `index.html`: Rahmen mit **Reitern**: Avatar (aktiv), Mobs und Tiere, Props und Werkzeuge, Fahrzeuge, Gebäude, Landschaften (alle "bald", mit kurzer Erklärung). Jeder Reiter ist eine eigene Seite im Rahmen.
+- Reiter Avatar, zwei Modi:
+  - `round.html` **Rund (Avatare des Spiels)**: bildet die vier jetzigen Avatare nach (Pink, Blau, Gelb, Händler). Runde Formen in einer Gelenk-Hierarchie, eigener Bau-Code, eigenes Format **AvatarSpec v2**. Die Gelenknamen entsprechen denen im Spiel (hips, thigh, shin, foot, torso, shoulder, elbow, head), damit sie sich später über einen Umsetzer zusammenführen lassen.
+  - `pixel.html` **Pixel-Netz (Experiment)**: eckige Teile mit Pixelnetz, Malen mit Spiegelung, Füllen, Aufkleber (8×8). Gedacht für Kleidung und Aufkleber später.
 
-## Was es noch nicht kann
-- Andere Arten (insectoid, reptiloid, canid, ...): brauchen eigene Teile-Sätze und Skelette.
-- Animation, glTF-Export, Kleidung als eigene Teile mit freiem Malen, Relief-Ebene.
-- Hochladen von Bildern: ist absichtlich nicht vorgesehen (Regel des Projekts: nur Malen mit fester Auflösung und Palette).
-- Anbindung an das Spiel, Spieler-Zugang.
+## Rund-Modus (v2, erste Runde)
+- Vier Vorlagen als Daten abgeschrieben (Stand 2026-11-08).
+- **Zubehör an Ankern:** Kopf (Haare: ohne, Kappe, Dutt, Puff, Helm), Gesicht (Kopfhörer), Hals (Kette), Rücken (Rucksack), Handgelenk (Uhr), Knie (Schoner), Rumpf (Steppjacke).
+- **Farbzonen:** Haut, Oberteil, Hose, Sohle, Haare, Brillengläser, Brillenrahmen, Streifen, Rucksack, Schoner, Kopfhörer.
+- **Regler:** Gesamtgröße, Kopf, Rumpfbreite, Beine, Arme.
+- Ansicht: Skateboard und Kontur ein- und ausschaltbar. Die Kontur ist hier ein einfacher Ersatz und nicht dieselbe wie im Spiel.
+- Speichern im Browser, JSON anzeigen und übernehmen, als Datei laden. Beim Einlesen werden Werte begrenzt und Ungültiges verworfen.
 
-## Datensatz
-`{ v:1, species:'humanoid', body:{height,width,limb,head}, zones:{skin,top,bottom,shoes} (Palettenindex), paint:{teil:[Palettenindex je Pixel]}, decals:[{part,x,y,id,c,flip}] }`
-Der Kern ist allgemein gehalten (Teile, Netz, Zonen, Malen, Decals), damit später weitere Arten, Tiere, Werkzeuge und Fahrzeuge dazukommen können.
+AvatarSpec v2: `{ v:2, species:'humanoid', name, body:{size,head,legs,arms,torso}, slots:{skin,top,bot,sole,hc,lens,frame,stripe,pack,pads,phones}, acc:{hair,watch,chain,quilt,pack,pads,phones} }`
 
-Test: `node tests/59-avatar-designer.js`
+## Was noch nicht geht
+- Teile mit der Maus verschieben und skalieren, Aufkleber auf runden Flächen, eigene Paletten.
+- Andere Arten, Animation, glTF-Export, Server-Speicher für die Designer (geplant, Seiten-Passwort, Versionen).
+- Verbindung zum Spiel: Der Vergleich mit den Spielbildern fehlt noch (Kontur und Pose sind nachgebaut, nicht geprüft).
+- Hochladen von Bildern ist absichtlich nicht vorgesehen.
+
+Tests: `node tests/59-avatar-designer.js` (Pixel-Netz), `node tests/60-avatar-rund.js` (Rund und Reiter).

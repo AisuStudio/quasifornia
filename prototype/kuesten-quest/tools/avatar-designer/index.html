@@ -1,157 +1,45 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Avatar-Designer (intern, Prototyp)</title>
-<!-- Avatar-Designer v0: internes Werkzeug, noch nicht Teil des Spiels.
-     Kern: ein Datensatz aus TEILEN (Netz mit festen Pixeln), Zonenfarben (Palette), Malen mit Spiegelung und Aufklebern (Decals), dazu Regler für die Körperform.
-     Der Avatar ist die erste Art ("humanoid"). Weitere Arten (insectoid, reptiloid, canid), Tiere, Werkzeuge und Fahrzeuge folgen als weitere Teile-Sätze, siehe README.md.
-     Starten: im Ordner prototype/kuesten-quest einen Webserver starten (python3 -m http.server 8080) und /tools/avatar-designer/ öffnen. -->
+<title>Designer (intern, Prototyp)</title>
+<!-- Designer-Rahmen: Reiter für die Arten von Dingen, die später hier entworfen werden. Fokus ist der Avatar. Die anderen Reiter sind Platzhalter ("bald").
+     Jeder Reiter ist eine eigene Seite im Rahmen (iframe), damit sich die Teile unabhängig weiterentwickeln lassen. Der Rahmen ändert nichts am Spiel. -->
 <style>
 @font-face{font-family:"Smarta Nova";src:url(../../src/fonts/smarta-nova.otf)}
 :root{--bg:#1a1626;--pn:#241e36;--ln:#3a3256;--tx:#fdf6e8;--mu:#b9b0d0;--ac:#ff7ab8;--tl:#5ee0d0}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.4 "Smarta Nova","Trebuchet MS",sans-serif}
-#app{display:grid;grid-template-columns:minmax(320px,1fr) 440px;height:100%}
-#view{position:relative;min-width:0}#view canvas{display:block;width:100%;height:100%}
-#hint{position:absolute;left:14px;bottom:12px;color:var(--mu);font-size:13px;pointer-events:none}
-#side{overflow:auto;padding:14px 16px;background:var(--pn);border-left:2px solid var(--ln)}
-h1{font-size:22px;margin:0 0 2px;font-weight:400}h2{font-size:16px;margin:16px 0 6px;font-weight:400;color:var(--tl)}
-.sub{color:var(--mu);font-size:13px;margin:0 0 8px}
-.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
-button,select,input[type=text],textarea{font:inherit;color:var(--tx);background:#2f2748;border:2px solid var(--ln);border-radius:8px;padding:4px 10px}
-button{cursor:pointer}button.on{background:var(--ac);color:#1a1626;border-color:var(--ac)}
-button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--tl);outline-offset:1px}
-#pal{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
-#pal button{height:30px;padding:0;border-radius:6px;border:2px solid var(--ln)}#pal button.on{border-color:#fff;box-shadow:0 0 0 2px var(--ac)}
-#net{image-rendering:pixelated;border:2px solid var(--ln);border-radius:6px;max-width:100%;touch-action:none;cursor:crosshair;background:#120e1f}
-label.sl{display:grid;grid-template-columns:110px 1fr 40px;gap:8px;align-items:center;margin:3px 0}label.sl output{color:var(--mu);font-size:13px}
-input[type=range]{width:100%;accent-color:var(--ac)}
-textarea{width:100%;height:96px;font:12px/1.3 monospace;resize:vertical}
-#msg{min-height:20px;color:var(--ac);font-size:13px}
-.zone{display:inline-flex;align-items:center;gap:4px;margin:2px 10px 2px 0}
+#top{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--pn);border-bottom:2px solid var(--ln);flex-wrap:wrap}
+#top b{font-weight:400;font-size:18px;margin-right:10px}
+[role=tab]{font:inherit;color:var(--tx);background:#2f2748;border:2px solid var(--ln);border-radius:8px 8px 0 0;padding:5px 12px;cursor:pointer}
+[role=tab][aria-selected=true]{background:var(--ac);color:#1a1626;border-color:var(--ac)}
+[role=tab].soon{color:var(--mu)}
+[role=tab]:focus-visible,#sub button:focus-visible{outline:3px solid var(--tl);outline-offset:1px}
+#sub{display:flex;gap:6px;padding:6px 12px;background:#1f1a30;border-bottom:2px solid var(--ln)}
+#sub button{font:inherit;color:var(--tx);background:#2f2748;border:2px solid var(--ln);border-radius:8px;padding:2px 10px;cursor:pointer}
+#sub button.on{background:var(--tl);color:#1a1626;border-color:var(--tl)}
+main{height:calc(100% - 94px)}iframe{width:100%;height:100%;border:0;display:none}iframe.on{display:block}
+.soon-card{max-width:640px;margin:48px auto;padding:24px;background:var(--pn);border:2px solid var(--ln);border-radius:14px}
+.soon-card h1{font-weight:400;font-size:26px;margin:0 0 8px}.soon-card p{color:var(--mu);margin:6px 0}.tag{display:inline-block;background:var(--ac);color:#1a1626;border-radius:999px;padding:1px 12px;font-size:13px;margin-bottom:10px}
+#soon{display:none;overflow:auto;height:100%}#soon.on{display:block}
 </style></head><body>
-<div id="app"><div id="view"><div id="hint">Ziehen: drehen · Teile unten rechts wählen · Malen im Netz</div></div>
-<div id="side">
-<h1>Avatar-Designer</h1><p class="sub">Intern · Prototyp v0 · Art: Humanoid (weitere Arten folgen)</p>
-<h2>Teil</h2><div class="row" id="parts"></div>
-<h2>Netz (jedes Pixel ist ein Pixel am Körper)</h2>
-<canvas id="net" aria-label="Netz des gewählten Teils, zum Malen"></canvas>
-<div class="row"><button id="t-paint" class="on">Malen</button><button id="t-erase">Radieren</button><button id="t-fill">Füllen</button><button id="t-decal">Aufkleber</button>
-<label><input type="checkbox" id="mirror" checked> Spiegeln</label></div>
-<div class="row"><label for="decal">Aufkleber:</label><select id="decal"></select><button id="undo">Zurück</button><button id="clear">Teil leeren</button></div>
-<h2>Palette</h2><div id="pal"></div>
-<h2>Zonen (Grundfarbe je Teil)</h2><div id="zones"></div>
-<h2>Körperform</h2><div id="sliders"></div>
-<h2>Speichern</h2><div class="row"><button id="save">Im Browser speichern</button><button id="load">Laden</button><button id="export">JSON anzeigen</button><button id="import">JSON übernehmen</button></div>
-<textarea id="json" aria-label="Datensatz als JSON" spellcheck="false"></textarea><div id="msg" role="status"></div>
-</div></div>
-<script type="importmap">{"imports":{"three":"../../node_modules/three/build/three.module.js"}}</script>
-<script type="module">
-import * as THREE from 'three';
-/* ---------- Palette (feste Farben, wie im Spiel; Index 0 = leer) ---------- */
-const PAL=['#00000000','#1a1626','#fdf6e8','#ff7ab8','#d54291','#f0cf36','#47c2a5','#1cafd1','#5000ff','#ff2a2a','#f6df73','#a9e6d2','#a9d8f0','#f6c3a8','#d9a07a','#7a4a2a','#2b2a33','#ffffff','#8a8fa8','#ffa24a','#9bd13f','#c9b6ff','#3d3a5a','#b8135f'];
-const PX=.06;                        /* 1 Pixel = 0,06 Einheiten */
-/* Teile (Humanoid): Größe in Pixeln w,h,d; Netz nach dem Kreuz-Muster (wie Minecraft-Skins) */
-const PARTS={head:{w:8,h:8,d:8,z:'skin'},torso:{w:8,h:12,d:4,z:'top'},arm:{w:4,h:12,d:4,z:'top'},leg:{w:4,h:12,d:4,z:'bottom'},shoe:{w:4,h:3,d:6,z:'shoes'}};
-const PNAMES={head:'Kopf',torso:'Rumpf',arm:'Arm (links = rechts gespiegelt)',leg:'Bein (links = rechts gespiegelt)',shoe:'Schuh (links = rechts gespiegelt)'};
-const netW=p=>2*p.d+2*p.w, netH=p=>p.d+p.h;
-/* Flächen im Netz (x,y,w,h) in Pixeln */
-function faces(p){const{w,h,d}=p;return{top:[d,0,w,d],bottom:[d+w,0,w,d],right:[0,d,d,h],front:[d,d,w,h],left:[d+w,d,d,h],back:[d*2+w,d,w,h]}}
-function faceAt(p,x,y){const F=faces(p);for(const k in F){const[a,b,w,h]=F[k];if(x>=a&&x<a+w&&y>=b&&y<b+h)return k}return null}
-/* Spiegelung an der senkrechten Mittelachse des Teils: Vorder-/Rück-/Oberseite im Gesicht, linke und rechte Seite gegeneinander */
-function mirrorPx(p,x,y){const k=faceAt(p,x,y);if(!k)return null;const F=faces(p),[a,b,w,h]=F[k],lx=x-a,ly=y-b;
-  if(k==='left'||k==='right'){const o=k==='left'?'right':'left',[a2,b2,w2]=F[o];return[a2+(w2-1-lx),b2+ly]}
-  return[a+(w-1-lx),b+ly]}
-/* UV so setzen, dass jede Fläche ihren Bereich im Netz zeigt */
-function netUV(geo,p){const F=faces(p),W=netW(p),H=netH(p),order=['left','right','top','bottom','front','back'],uv=geo.attributes.uv;
-  order.forEach((k,i)=>{const[a,b,w,h]=F[k],u0=a/W,u1=(a+w)/W,v0=1-b/H,v1=1-(b+h)/H;
-    uv.setXY(i*4,u0,v0);uv.setXY(i*4+1,u1,v0);uv.setXY(i*4+2,u0,v1);uv.setXY(i*4+3,u1,v1)});uv.needsUpdate=true}
-/* Aufkleber (8x8) */
-const DECALS={Stern:['...##...','...##...','########','.######.','..####..','.##..##.','.#....#.','........'],Herz:['.##..##.','########','########','########','.######.','..####..','...##...','........'],Blitz:['....###.','...###..','..###...','.######.','...###..','..##....','.#......','........'],Lächeln:['..####..','.#....#.','#.#..#.#','#......#','#.#..#.#','#..##..#','.#....#.','..####..'],Auge:['........','..####..','.#.##.#.','#.####.#','#.####.#','.#.##.#.','..####..','........'],Streifen:['########','........','########','........','########','........','########','........']};
-const DNAMES=Object.keys(DECALS);
-/* ---------- Datensatz ---------- */
-const spec0=()=>({v:1,species:'humanoid',body:{height:1,width:1,limb:1,head:1},zones:{skin:14,top:6,bottom:16,shoes:4},paint:{},decals:[]});
-let spec=spec0();for(const k in PARTS)spec.paint[k]=new Array(netW(PARTS[k])*netH(PARTS[k])).fill(0);
-let cur='torso',tool='paint',col=3,undo=[];
-const $=id=>document.getElementById(id),msg=t=>{$('msg').textContent=t};
-/* ---------- Texturen ---------- */
-const cvs={},tex={};
-function compose(k){const p=PARTS[k],W=netW(p),H=netH(p);let c=cvs[k];if(!c){c=cvs[k]=document.createElement('canvas');c.width=W;c.height=H}
-  const g=c.getContext('2d');g.clearRect(0,0,W,H);g.fillStyle=PAL[spec.zones[p.z]];g.fillRect(0,0,W,H);
-  const pa=spec.paint[k];for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=pa[y*W+x];if(i>0){g.fillStyle=PAL[i];g.fillRect(x,y,1,1)}}
-  spec.decals.filter(d=>d.part===k).forEach(d=>{const bm=DECALS[d.id];if(!bm)return;g.fillStyle=PAL[d.c];for(let y=0;y<8;y++)for(let x=0;x<8;x++){if(bm[y][d.flip?7-x:x]==='#')g.fillRect(d.x+x,d.y+y,1,1)}});
-  if(tex[k])tex[k].needsUpdate=true;return c}
-/* ---------- 3D-Vorschau ---------- */
-const view=$('view'),R=new THREE.WebGLRenderer({antialias:false,preserveDrawingBuffer:true});view.appendChild(R.domElement);R.setPixelRatio(Math.min(2,devicePixelRatio));R.outputColorSpace=THREE.SRGBColorSpace;
-const sc=new THREE.Scene();sc.background=new THREE.Color('#1a1626');const cam=new THREE.PerspectiveCamera(40,1,.1,50);cam.position.set(0,1.6,6.2);cam.lookAt(0,1.5,0);
-sc.add(new THREE.HemisphereLight('#ffffff','#7a6fa0',1.5));const dl=new THREE.DirectionalLight('#ffffff',1.4);dl.position.set(3,6,5);sc.add(dl);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(2.2,40),new THREE.MeshBasicMaterial({color:'#2b2442'}));floor.rotation.x=-Math.PI/2;sc.add(floor);
-const rig=new THREE.Group();sc.add(rig);const meshes={};
-function mat(k){compose(k);const t=tex[k]=new THREE.CanvasTexture(cvs[k]);t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshStandardMaterial({map:t,roughness:1})}
-function box(k){const p=PARTS[k],g=new THREE.BoxGeometry(p.w*PX,p.h*PX,p.d*PX);netUV(g,p);return new THREE.Mesh(g,mat(k))}
-for(const k in PARTS){const m=box(k);meshes[k]=[m];if(k==='arm'||k==='leg'||k==='shoe'){const m2=new THREE.Mesh(m.geometry,m.material);m2.scale.x=-1;meshes[k].push(m2)}meshes[k].forEach(m=>rig.add(m))}
-function layout(){const b=spec.body,P=PARTS,H=PX;
-  const legH=P.leg.h*H*b.limb,shoeH=P.shoe.h*H,torsoH=P.torso.h*H*b.height,headS=b.head,headH=P.head.h*H*headS,armH=P.arm.h*H*b.limb;const w=b.width;
-  const yShoe=shoeH/2,yLeg=shoeH+legH/2,yTorso=shoeH+legH+torsoH/2,yHead=shoeH+legH+torsoH+headH/2,yArm=shoeH+legH+torsoH-armH/2;
-  const set=(k,sx,sy,sz,x,y,z)=>meshes[k].forEach((m,i)=>{const s=i?-1:1;m.scale.set(sx*s,sy,sz);m.position.set(x*(i?-1:1),y,z)});
-  set('shoe',w,1,1,P.leg.w*H*w/2+.02*0,yShoe,P.shoe.d*H/2-P.leg.d*H/2);meshes.shoe.forEach(m=>{});
-  set('leg',w,b.limb,w,(P.torso.w*H*w)/4,yLeg,0);
-  set('torso',w,b.height,w,0,yTorso,0);
-  set('head',headS,headS,headS,0,yHead,0);
-  set('arm',w,b.limb,w,(P.torso.w*H*w)/2+P.arm.w*H*w/2,yArm,0);
-  /* Schuhe unter die Beine setzen */
-  meshes.shoe.forEach((m,i)=>{m.position.x=(i?-1:1)*(P.torso.w*H*w)/4})}
-layout();
-let yaw=-.5,drag=null;R.domElement.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:yaw};R.domElement.setPointerCapture(e.pointerId)});R.domElement.addEventListener('pointermove',e=>{if(drag){yaw=drag.y+(e.clientX-drag.x)*.01}});R.domElement.addEventListener('pointerup',()=>drag=null);
-function resize(){const w=view.clientWidth,h=view.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
-function frame(){rig.rotation.y=yaw;R.render(sc,cam);requestAnimationFrame(frame)}frame();
-/* ---------- Netz-Editor ---------- */
-const net=$('net'),ng=net.getContext('2d');let Z=14;
-function drawNet(){const p=PARTS[cur],W=netW(p),H=netH(p);Z=Math.max(8,Math.min(22,Math.floor(400/Math.max(W,H*1.0))));net.width=W*Z;net.height=H*Z;
-  ng.imageSmoothingEnabled=false;ng.clearRect(0,0,net.width,net.height);ng.drawImage(compose(cur),0,0,net.width,net.height);
-  const F=faces(p);ng.lineWidth=1;ng.strokeStyle='#ffffff22';for(let x=0;x<=W;x++){ng.beginPath();ng.moveTo(x*Z+.5,0);ng.lineTo(x*Z+.5,H*Z);ng.stroke()}for(let y=0;y<=H;y++){ng.beginPath();ng.moveTo(0,y*Z+.5);ng.lineTo(W*Z,y*Z+.5);ng.stroke()}
-  ng.strokeStyle='#5ee0d0';ng.lineWidth=2;ng.fillStyle='#5ee0d0';ng.font='11px sans-serif';const NM={top:'oben',bottom:'unten',right:'rechts',front:'vorn',left:'links',back:'hinten'};
-  for(const k in F){const[a,b,w,h]=F[k];ng.strokeRect(a*Z+1,b*Z+1,w*Z-2,h*Z-2);ng.fillText(NM[k],a*Z+4,b*Z+12)}}
-const px=e=>{const r=net.getBoundingClientRect();return[Math.floor((e.clientX-r.left)/r.width*net.width/Z),Math.floor((e.clientY-r.top)/r.height*net.height/Z)]};
-function pushUndo(){undo.push(JSON.stringify({paint:spec.paint[cur],decals:spec.decals,part:cur}));if(undo.length>40)undo.shift()}
-function setPx(p,k,x,y,c){const W=netW(p),H=netH(p);if(x<0||y<0||x>=W||y>=H||!faceAt(p,x,y))return false;spec.paint[k][y*W+x]=c;return true}
-function paintAt(k,x,y,c,mirror){const p=PARTS[k];const ok=setPx(p,k,x,y,c);if(ok&&mirror){const m=mirrorPx(p,x,y);if(m)setPx(p,k,m[0],m[1],c)}return ok}
-function fillAt(k,x,y,c,mirror){const p=PARTS[k],W=netW(p),pa=spec.paint[k],f0=faceAt(p,x,y);if(!f0)return;const t=pa[y*W+x];if(t===c)return;const st=[[x,y]];
-  while(st.length){const[cx,cy]=st.pop();if(faceAt(p,cx,cy)!==f0||pa[cy*W+cx]!==t)continue;pa[cy*W+cx]=c;st.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1])}
-  if(mirror){const m=mirrorPx(p,x,y);if(m&&(m[0]!==x||m[1]!==y)){const t2=pa[m[1]*W+m[0]];if(t2!==c){const f1=faceAt(p,m[0],m[1]),s2=[[m[0],m[1]]];while(s2.length){const[cx,cy]=s2.pop();if(faceAt(p,cx,cy)!==f1||pa[cy*W+cx]!==t2)continue;pa[cy*W+cx]=c;s2.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1])}}}}}
-function decalFits(k,x,y){const p=PARTS[k],f=faceAt(p,x,y);return f&&[[x+7,y],[x,y+7],[x+7,y+7]].every(([a,b])=>faceAt(p,a,b)===f)}
-function stamp(k,x,y,id,c,mirror){if(!decalFits(k,x,y)){msg('Der Aufkleber (8×8) passt hier nicht ganz in eine Fläche.');return false}
-  spec.decals.push({part:k,x,y,id,c,flip:false});if(mirror){const p=PARTS[k],m=mirrorPx(p,x+7,y);if(m&&decalFits(k,m[0],m[1])&&(m[0]!==x||m[1]!==y))spec.decals.push({part:k,x:m[0],y:m[1],id,c,flip:true})}return true}
-function refresh(){for(const k in PARTS)compose(k);drawNet()}
-let down=false;
-function act(e,first){const[x,y]=px(e),mir=$('mirror').checked;if(first)pushUndo();
-  if(tool==='paint')paintAt(cur,x,y,col,mir);else if(tool==='erase')paintAt(cur,x,y,0,mir);else if(tool==='fill'&&first)fillAt(cur,x,y,col,mir);else if(tool==='decal'&&first)stamp(cur,x,y,$('decal').value,col||1,mir);
-  refresh()}
-net.addEventListener('pointerdown',e=>{down=true;net.setPointerCapture(e.pointerId);act(e,true)});net.addEventListener('pointermove',e=>{if(down&&(tool==='paint'||tool==='erase'))act(e,false)});net.addEventListener('pointerup',()=>down=false);
-/* ---------- Oberfläche ---------- */
-const pr=$('parts');for(const k in PARTS){const b=document.createElement('button');b.textContent=PNAMES[k].split(' ')[0];b.title=PNAMES[k];b.dataset.k=k;b.onclick=()=>{cur=k;[...pr.children].forEach(c=>c.classList.toggle('on',c===b));drawNet()};if(k===cur)b.classList.add('on');pr.appendChild(b)}
-const pal=$('pal');PAL.forEach((c,i)=>{const b=document.createElement('button');b.style.background=i?c:'repeating-conic-gradient(#555 0 25%,#333 0 50%) 0 0/10px 10px';b.title=i?c:'leer';b.dataset.i=i;b.onclick=()=>{col=i;[...pal.children].forEach(x=>x.classList.toggle('on',x===b))};if(i===col)b.classList.add('on');pal.appendChild(b)});
-['paint','erase','fill','decal'].forEach(t=>{$('t-'+t).onclick=()=>{tool=t;['paint','erase','fill','decal'].forEach(u=>$('t-'+u).classList.toggle('on',u===t))}});
-DNAMES.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;$('decal').appendChild(o)});
-$('undo').onclick=()=>{const s=undo.pop();if(!s)return;const o=JSON.parse(s);spec.paint[o.part]=o.paint;spec.decals=o.decals;refresh()};
-$('clear').onclick=()=>{pushUndo();spec.paint[cur].fill(0);spec.decals=spec.decals.filter(d=>d.part!==cur);refresh()};
-const ZN={skin:'Haut (Kopf)',top:'Oberteil (Rumpf, Arme)',bottom:'Hose (Beine)',shoes:'Schuhe'};const zs=$('zones');
-for(const z in ZN){const w=document.createElement('span');w.className='zone';const s=document.createElement('select');s.dataset.z=z;PAL.forEach((c,i)=>{if(!i)return;const o=document.createElement('option');o.value=i;o.textContent=i+' '+c;o.style.background=c;o.style.color='#000';s.appendChild(o)});s.value=spec.zones[z];s.onchange=()=>{spec.zones[z]=+s.value;refresh()};
-  const l=document.createElement('label');l.textContent=ZN[z]+': ';l.appendChild(s);w.appendChild(l);zs.appendChild(w)}
-const SL={height:['Rumpfhöhe',.8,1.3],width:['Breite',.8,1.3],limb:['Gliedmaßen',.8,1.3],head:['Kopfgröße',.8,1.4]};
-for(const k in SL){const l=document.createElement('label');l.className='sl';const o=document.createElement('output');o.textContent='1.0';const i=document.createElement('input');i.type='range';i.min=SL[k][1];i.max=SL[k][2];i.step=.05;i.value=1;i.dataset.k=k;
-  i.oninput=()=>{spec.body[k]=+i.value;o.textContent=(+i.value).toFixed(2);layout()};l.append(SL[k][0],i,o);$('sliders').appendChild(l)}
-/* ---------- Speichern, Laden, JSON ---------- */
-function toJSON(){return JSON.stringify(spec)}
-function fromJSON(t){const o=JSON.parse(t);if(!o||o.v!==1||o.species!=='humanoid')throw new Error('Unbekanntes Format');const s=spec0();
-  for(const k in s.body)if(typeof o.body?.[k]==='number')s.body[k]=Math.max(.5,Math.min(1.6,o.body[k]));
-  for(const z in s.zones){const v=o.zones?.[z]|0;s.zones[z]=v>=1&&v<PAL.length?v:s.zones[z]}
-  for(const k in PARTS){const n=netW(PARTS[k])*netH(PARTS[k]);s.paint[k]=new Array(n).fill(0);const a=o.paint?.[k];if(Array.isArray(a)&&a.length===n)for(let i=0;i<n;i++){const v=a[i]|0;s.paint[k][i]=v>=0&&v<PAL.length?v:0}}
-  s.decals=(Array.isArray(o.decals)?o.decals:[]).filter(d=>PARTS[d.part]&&DECALS[d.id]&&d.c>0&&d.c<PAL.length&&Number.isInteger(d.x)&&Number.isInteger(d.y)).slice(0,60).map(d=>({part:d.part,x:d.x,y:d.y,id:d.id,c:d.c|0,flip:!!d.flip}));
-  spec=s;syncUI();refresh();layout()}
-function syncUI(){document.querySelectorAll('#zones select').forEach(s=>s.value=spec.zones[s.dataset.z]);document.querySelectorAll('#sliders input').forEach(i=>{i.value=spec.body[i.dataset.k];i.nextElementSibling.textContent=(+i.value).toFixed(2)})}
-$('save').onclick=()=>{try{localStorage.setItem('kq-avd',toJSON());msg('Gespeichert (nur in diesem Browser).')}catch(e){msg('Speichern nicht möglich.')}};
-$('load').onclick=()=>{try{const t=localStorage.getItem('kq-avd');if(!t){msg('Noch nichts gespeichert.');return}fromJSON(t);msg('Geladen.')}catch(e){msg('Laden fehlgeschlagen: '+e.message)}};
-$('export').onclick=()=>{$('json').value=toJSON();msg('Datensatz unten. Zum Weitergeben kopieren.')};
-$('import').onclick=()=>{try{fromJSON($('json').value);msg('Übernommen.')}catch(e){msg('Das hat nicht geklappt: '+e.message)}};
-drawNet();
-window.__avd={get spec(){return spec},PAL,PARTS,paintAt,fillAt,stamp,mirrorPx,faceAt,netW,netH,toJSON,fromJSON,compose,refresh,setCur:k=>{cur=k;drawNet()},layout};
+<div id="top"><b>Designer</b><div role="tablist" aria-label="Art" id="tabs"></div></div>
+<div id="sub" role="group" aria-label="Avatar-Modus"><button id="s-round" class="on">Rund (Avatare des Spiels)</button><button id="s-pixel">Pixel-Netz (Experiment)</button></div>
+<main><iframe id="f-round" class="on" src="round.html" title="Avatar, rund"></iframe><iframe id="f-pixel" src="pixel.html" title="Avatar, Pixel-Netz"></iframe><div id="soon"></div></main>
+<script>
+const TABS=[
+ {id:'avatar',t:'Avatar'},
+ {id:'mobs',t:'Mobs und Tiere',soon:['Mobs und Tiere','Figuren mit anderem Skelett als der Mensch: Hunde, Vögel, Insekten, Echsen. Gleiche Anker und gleiche Regler wie beim Avatar, eigene Teile-Sätze und Animationen.']},
+ {id:'props',t:'Props und Werkzeuge',soon:['Props und Werkzeuge','Dinge zum Tragen und Benutzen: Skateboards, Sprühdosen, Rucksäcke, Werkzeuge. Feste Teile mit Gelenken, ohne Skelett.']},
+ {id:'fahr',t:'Fahrzeuge',soon:['Fahrzeuge','Autos, Boards, Busse: feste Teile mit Rädern und Klappen, Farbzonen, Aufkleber.']},
+ {id:'bau',t:'Gebäude',soon:['Gebäude','Der Haus-Builder im Spiel kann schon Häuser aus Teilen auf Bauplätzen. Er soll später hier einziehen: derselbe Bausatz, dieselben Zonenfarben und Aufkleber.']},
+ {id:'land',t:'Landschaften',soon:['Landschaften','Höhenkarten und Flächenmalerei sind ein eigenes Werkzeug und kommen vermutlich nicht in dieses Fenster. Der Reiter hält den Platz frei.']}];
+const tabs=document.getElementById('tabs');let cur='avatar';
+function show(id){cur=id;[...tabs.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.id===id));const av=id==='avatar';document.getElementById('sub').style.display=av?'flex':'none';
+  const sm=document.getElementById('soon');
+  if(av){sm.className='';sm.innerHTML='';sub(subMode)}else{const T=TABS.find(x=>x.id===id);['f-round','f-pixel'].forEach(f=>document.getElementById(f).classList.remove('on'));sm.className='on';sm.innerHTML='';
+    const c=document.createElement('div');c.className='soon-card';const tg=document.createElement('span');tg.className='tag';tg.textContent='bald';const h=document.createElement('h1');h.textContent=T.soon[0];const p=document.createElement('p');p.textContent=T.soon[1];c.append(tg,h,p);sm.appendChild(c)}}
+let subMode='round';
+function sub(m){subMode=m;document.getElementById('f-round').classList.toggle('on',m==='round');document.getElementById('f-pixel').classList.toggle('on',m==='pixel');document.getElementById('s-round').classList.toggle('on',m==='round');document.getElementById('s-pixel').classList.toggle('on',m==='pixel')}
+TABS.forEach(T=>{const b=document.createElement('button');b.setAttribute('role','tab');b.dataset.id=T.id;b.textContent=T.t+(T.soon?' · bald':'');if(T.soon)b.className='soon';b.onclick=()=>show(T.id);tabs.appendChild(b)});
+document.getElementById('s-round').onclick=()=>sub('round');document.getElementById('s-pixel').onclick=()=>sub('pixel');
+show('avatar');
 </script></body></html>

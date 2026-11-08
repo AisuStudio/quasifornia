@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const http=require('http'),fs=require('fs
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.otf':'font/otf'};
 const srv=http.createServer((q,s)=>{const u=decodeURIComponent(q.url.split('?')[0]);const f=path.join(ROOT,u.endsWith('/')?u+'index.html':u);fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);s.end();return}s.writeHead(200,{'content-type':MIME[path.extname(f)]||'application/octet-stream'});s.end(d)})}).listen(9001,async()=>{let b;try{
  b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});const p=await b.newPage({viewport:{width:1280,height:760}});p.on('pageerror',e=>console.log('ERR',e.message));
- await p.goto('http://localhost:9001/tools/avatar-designer/');await p.waitForFunction('window.__avd',null,{timeout:30000});
+ await p.goto('http://localhost:9001/tools/avatar-designer/pixel.html');await p.waitForFunction('window.__avd',null,{timeout:30000});
  const base=await p.evaluate(()=>{const a=__avd;return {teile:Object.keys(a.PARTS).join(','),palette:a.PAL.length,netz:Object.keys(a.PARTS).map(k=>a.netW(a.PARTS[k])+'x'+a.netH(a.PARTS[k])).join(' ')}});
  console.log('Teile',JSON.stringify(base),base.teile==='head,torso,arm,leg,shoe'&&base.palette===24);
  const sp=await p.evaluate(()=>{const a=__avd,k='torso',P=a.PARTS[k],W=a.netW(P);a.paintAt(k,5,6,3,true);const m=a.mirrorPx(P,5,6),pa=a.spec.paint[k];
