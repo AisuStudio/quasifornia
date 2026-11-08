@@ -41,6 +41,11 @@ body{background:var(--page);color:var(--text);font:15px/1.45 system-ui,-apple-sy
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:22px 0 14px}
 h1{font-size:22px;line-height:1.2;margin:0}
 h1 small{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-top:4px}
+.tabs{display:flex;gap:4px;order:-1;width:100%}
+.tabs a{color:var(--text2);text-decoration:none;padding:6px 12px;border-radius:8px;border:1px solid transparent}
+.tabs a:hover{border-color:var(--axis)}
+.tabs a[aria-current="page"]{color:var(--text);background:var(--panel);border-color:var(--axis);font-weight:600}
+.tabs a:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
 .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 select,button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--axis);border-radius:8px;padding:7px 11px;cursor:pointer}
 button:hover,select:hover{border-color:var(--text2)}
@@ -103,6 +108,7 @@ svg.map{width:100%;height:auto;background:var(--surface);border:1px solid var(--
 <div class="wrap">
 <header>
   <h1>Auswertung Port 36<small>Geschlossene Beta · Zahlen aus den Spielen der Testerinnen und Tester</small></h1>
+  <nav class="tabs" aria-label="Bereiche"><a href="/stats" aria-current="page">Auswertung</a><a href="/planner">Planner</a></nav>
   <div class="ctl">
     <label class="upd" for="days">Zeitraum</label>
     <select id="days"><option value="7">7 Tage</option><option value="14" selected>14 Tage</option><option value="30">30 Tage</option><option value="60">60 Tage</option></select>
