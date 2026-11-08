@@ -7,6 +7,7 @@
 @font-face{font-family:"Smarta Nova";src:url(../../src/fonts/smarta-nova.otf)}
 :root{--bg:#1a1626;--pn:#241e36;--ln:#3a3256;--tx:#fdf6e8;--mu:#b9b0d0;--ac:#ff7ab8;--tl:#5ee0d0}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.4 "Smarta Nova","Trebuchet MS",sans-serif}
+body{display:flex;flex-direction:column}
 #top{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--pn);border-bottom:2px solid var(--ln);flex-wrap:wrap}
 #top b{font-weight:400;font-size:18px;margin-right:10px}
 [role=tab]{font:inherit;color:var(--tx);background:#2f2748;border:2px solid var(--ln);border-radius:8px 8px 0 0;padding:5px 12px;cursor:pointer}
@@ -16,26 +17,26 @@
 #sub{display:flex;gap:6px;padding:6px 12px;background:#1f1a30;border-bottom:2px solid var(--ln)}
 #sub button{font:inherit;color:var(--tx);background:#2f2748;border:2px solid var(--ln);border-radius:8px;padding:2px 10px;cursor:pointer}
 #sub button.on{background:var(--tl);color:#1a1626;border-color:var(--tl)}
-main{height:calc(100% - 94px)}iframe{width:100%;height:100%;border:0;display:none}iframe.on{display:block}
+main{flex:1;min-height:0}iframe{width:100%;height:100%;border:0;display:none}iframe.on{display:block}
 .soon-card{max-width:640px;margin:48px auto;padding:24px;background:var(--pn);border:2px solid var(--ln);border-radius:14px}
 .soon-card h1{font-weight:400;font-size:26px;margin:0 0 8px}.soon-card p{color:var(--mu);margin:6px 0}.tag{display:inline-block;background:var(--ac);color:#1a1626;border-radius:999px;padding:1px 12px;font-size:13px;margin-bottom:10px}
 #soon{display:none;overflow:auto;height:100%}#soon.on{display:block}
 </style></head><body>
 <div id="top"><b>Designer</b><div role="tablist" aria-label="Art" id="tabs"></div></div>
 <div id="sub" role="group" aria-label="Avatar-Modus"><button id="s-round" class="on">Rund (Avatare des Spiels)</button><button id="s-pixel">Pixel-Netz (Experiment)</button></div>
-<main><iframe id="f-round" class="on" src="round.html" title="Avatar, rund"></iframe><iframe id="f-pixel" src="pixel.html" title="Avatar, Pixel-Netz"></iframe><div id="soon"></div></main>
+<main><iframe id="f-round" class="on" src="round.html" title="Avatar, rund"></iframe><iframe id="f-pixel" src="pixel.html" title="Avatar, Pixel-Netz"></iframe><iframe id="f-haus" src="haus.html" title="Gebäude" data-lazy="1"></iframe><div id="soon"></div></main>
 <script>
 const TABS=[
  {id:'avatar',t:'Avatar'},
  {id:'mobs',t:'Mobs und Tiere',soon:['Mobs und Tiere','Figuren mit anderem Skelett als der Mensch: Hunde, Vögel, Insekten, Echsen. Gleiche Anker und gleiche Regler wie beim Avatar, eigene Teile-Sätze und Animationen.']},
  {id:'props',t:'Props und Werkzeuge',soon:['Props und Werkzeuge','Dinge zum Tragen und Benutzen: Skateboards, Sprühdosen, Rucksäcke, Werkzeuge. Feste Teile mit Gelenken, ohne Skelett.']},
  {id:'fahr',t:'Fahrzeuge',soon:['Fahrzeuge','Autos, Boards, Busse: feste Teile mit Rädern und Klappen, Farbzonen, Aufkleber.']},
- {id:'bau',t:'Gebäude',soon:['Gebäude','Der Haus-Builder im Spiel kann schon Häuser aus Teilen auf Bauplätzen. Er soll später hier einziehen: derselbe Bausatz, dieselben Zonenfarben und Aufkleber.']},
+ {id:'bau',t:'Gebäude'},
  {id:'land',t:'Landschaften',soon:['Landschaften','Höhenkarten und Flächenmalerei sind ein eigenes Werkzeug und kommen vermutlich nicht in dieses Fenster. Der Reiter hält den Platz frei.']}];
 const tabs=document.getElementById('tabs');let cur='avatar';
 function show(id){cur=id;[...tabs.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.id===id));const av=id==='avatar';document.getElementById('sub').style.display=av?'flex':'none';
-  const sm=document.getElementById('soon');
-  if(av){sm.className='';sm.innerHTML='';sub(subMode)}else{const T=TABS.find(x=>x.id===id);['f-round','f-pixel'].forEach(f=>document.getElementById(f).classList.remove('on'));sm.className='on';sm.innerHTML='';
+  const sm=document.getElementById('soon');const hs=document.getElementById('f-haus');hs.classList.toggle('on',id==='bau');
+  if(av){sm.className='';sm.innerHTML='';sub(subMode)}else if(id==='bau'){['f-round','f-pixel'].forEach(f=>document.getElementById(f).classList.remove('on'));sm.className='';sm.innerHTML=''}else{const T=TABS.find(x=>x.id===id);['f-round','f-pixel'].forEach(f=>document.getElementById(f).classList.remove('on'));sm.className='on';sm.innerHTML='';
     const c=document.createElement('div');c.className='soon-card';const tg=document.createElement('span');tg.className='tag';tg.textContent='bald';const h=document.createElement('h1');h.textContent=T.soon[0];const p=document.createElement('p');p.textContent=T.soon[1];c.append(tg,h,p);sm.appendChild(c)}}
 let subMode='round';
 function sub(m){subMode=m;document.getElementById('f-round').classList.toggle('on',m==='round');document.getElementById('f-pixel').classList.toggle('on',m==='pixel');document.getElementById('s-round').classList.toggle('on',m==='round');document.getElementById('s-pixel').classList.toggle('on',m==='pixel')}

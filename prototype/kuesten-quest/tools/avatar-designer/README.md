@@ -34,3 +34,8 @@ AvatarSpec v2: `{ v:2, species:'humanoid', name, body:{size,head,legs,arms,torso
 - Hochladen von Bildern ist absichtlich nicht vorgesehen.
 
 Tests: `node tests/59-avatar-designer.js` (Pixel-Netz), `node tests/60-avatar-rund.js` (Rund und Reiter).
+
+## Reiter Gebäude (haus.html)
+Setzt Häuser aus denselben Teilen wie der Builder im Spiel. Der Katalog (Formen, Organisch, Dächer, Fenster & Türen, Garten), die 12 festen Farben, das Zellenformat und Export/Import liegen in `src/bau-teile.js`. Das Spiel und der Designer laden genau diese Datei, neue Teile also nur dort ergänzen.
+Bedienung: Linksklick setzt, Rechtsklick radiert, Ziehen dreht die Kamera, Mausrad zoomt, Z macht rückgängig, R dreht das Teil. Das Export-JSON ist das Spielformat (`{cells:{"x,y,z":[teil,farbe,drehung,[4 Seiten]]}}`) und lässt sich im Spiel mit `bauLoadInto` laden (Test 61).
+Nicht enthalten: Bauplätze der Karte, Aufträge und Belohnung.
