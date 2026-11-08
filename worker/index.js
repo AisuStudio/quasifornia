@@ -2,6 +2,7 @@ import {musikList,musikFile,designList,designFile,r2File} from './musik.js';
 import {entwurf} from './entwuerfe.js';
 export {Room} from './room.js';
 export {Stats} from './stats.js';
+import {PLAN} from './plan.js';
 export {Glitch} from './glitch.js';
 export {Planner} from './planner.js';
 // Passwortschutz für die ganze Seite (inklusive Song). Läuft in Cloudflare vor den statischen Dateien.
@@ -16,7 +17,7 @@ export default{
     const url0=new URL(request.url);
     /* Auswertung ansehen (Seite /stats und die Zahlen): eigenes Passwort STATS_PASSWORD, ersatzweise das Seitenpasswort.
        Wird vor der Seitenprüfung behandelt, weil ein Browser pro Anfrage nur ein Passwort schickt. */
-    if(url0.pathname==='/stats'||url0.pathname==='/stats/'||url0.pathname==='/api/stats/summary'||url0.pathname==='/api/stats/reset'||url0.pathname==='/api/glitch/reset'||url0.pathname==='/planner'||url0.pathname==='/planner/'||url0.pathname==='/api/planner'||url0.pathname.startsWith('/api/planner/')){
+    if(url0.pathname==='/stats'||url0.pathname==='/stats/'||url0.pathname==='/api/stats/summary'||url0.pathname==='/api/stats/plan'||url0.pathname==='/api/stats/reset'||url0.pathname==='/api/glitch/reset'||url0.pathname==='/planner'||url0.pathname==='/planner/'||url0.pathname==='/api/planner'||url0.pathname.startsWith('/api/planner/')){
       const spw=env.STATS_PASSWORD||env.SITE_PASSWORD;
       if(!spw)return new Response('Diese Seite ist gesperrt. Das Passwort wurde noch nicht eingerichtet.',{status:503,headers:{'content-type':'text/plain; charset=utf-8',...NOSTORE}});
       const sg=creds(request.headers.get('authorization'));
@@ -24,6 +25,7 @@ export default{
       if(url0.pathname==='/api/planner'||url0.pathname.startsWith('/api/planner/')){if(!env.PLANNER)return new Response('Planner nicht eingerichtet',{status:503,headers:NOSTORE});if(!['GET','PUT','POST','DELETE'].includes(request.method))return new Response('?',{status:405,headers:NOSTORE});return env.PLANNER.get(env.PLANNER.idFromName('main')).fetch(request)}
       if(url0.pathname.startsWith('/stats')||url0.pathname.startsWith('/planner')){const ap=url0.pathname.startsWith('/planner')?'/planner':'/stats';const r=await env.ASSETS.fetch(new Request(new URL(ap,url0),request));const o=new Response(r.body,r);o.headers.set('cache-control','private, no-store');o.headers.set('x-robots-tag','noindex, nofollow');return o}
       if(url0.pathname==='/api/glitch/reset'){if(!env.GLITCH)return new Response('Speicher nicht eingerichtet',{status:503,headers:NOSTORE});if(request.method!=='POST')return new Response('?',{status:405,headers:NOSTORE});return env.GLITCH.get(env.GLITCH.idFromName('main')).fetch(request)}
+      if(url0.pathname==='/api/stats/plan'){if(request.method!=='GET')return new Response('?',{status:405,headers:NOSTORE});return new Response(JSON.stringify(PLAN),{headers:{'content-type':'application/json; charset=utf-8',...NOSTORE}})}
       if(!env.STATS)return new Response('Auswertung nicht eingerichtet',{status:503,headers:NOSTORE});
       if(url0.pathname==='/api/stats/reset'&&request.method!=='POST')return new Response('?',{status:405,headers:NOSTORE});
       if(url0.pathname==='/api/stats/summary'&&request.method!=='GET')return new Response('?',{status:405,headers:NOSTORE});

@@ -102,6 +102,17 @@ svg.map{width:100%;height:auto;background:var(--surface);border:1px solid var(--
 .empty{font-size:13px;color:var(--muted);padding:6px 0}
 .note{font-size:12px;color:var(--muted);margin-top:18px}
 .err{color:var(--crit);padding:30px 0}
+
+.tabs{display:flex;gap:6px;margin:0 0 14px;border-bottom:1px solid var(--grid)}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:8px 8px 0 0;background:none;padding:8px 14px;font-weight:600;color:var(--text2)}
+.tabs button.on{color:var(--text);border-bottom-color:var(--s1)}
+.bmc{display:grid;gap:10px;grid-template-columns:repeat(10,1fr);grid-template-areas:"kp kp ka ka vp vp cr cr seg seg" "kp kp ka ka vp vp cr cr seg seg" "kp kp kr kr vp vp ch ch seg seg" "cost cost cost cost cost rev rev rev rev rev"}
+.bmc>div{background:var(--page);border:1px solid var(--grid);border-radius:10px;padding:10px 12px;font-size:12.5px;min-width:0}
+.bmc h3{font-size:12px;margin:0 0 6px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.bmc .kp{grid-area:kp}.bmc .ka{grid-area:ka}.bmc .kr{grid-area:kr}.bmc .vp{grid-area:vp}.bmc .cr{grid-area:cr}.bmc .ch{grid-area:ch}.bmc .seg{grid-area:seg}.bmc .cost{grid-area:cost}.bmc .rev{grid-area:rev}
+@media (max-width:860px){.bmc{grid-template-columns:1fr;grid-template-areas:"vp" "seg" "ch" "cr" "rev" "cost" "kp" "ka" "kr"}}
+.ok{color:var(--good);font-weight:600}
+.pbar{height:10px;background:var(--grid);border-radius:6px;overflow:hidden;margin:4px 0 2px}.pbar b{display:block;height:100%;background:var(--s1)}
 </style>
 </head>
 <body>
@@ -116,8 +127,10 @@ svg.map{width:100%;height:auto;background:var(--surface);border:1px solid var(--
     <span class="upd" id="upd"></span>
   </div>
 </header>
+<nav class="tabs" role="tablist"><button type="button" id="tabBeta" class="on" role="tab" aria-selected="true">Beta-Zahlen</button><button type="button" id="tabPlan" role="tab" aria-selected="false">Business Plan</button></nav>
 <div id="root"><p class="empty">Lade …</p></div>
-<p class="note">Aktualisiert sich alle 30 Sekunden. Gezählt werden Sitzungen, Spielzeit (nur bei sichtbarem Spiel), Aufträge, Scoops mit Grund, Fehler im Browser und Hänger (Gas gedrückt, aber man kommt nicht weiter). Rohdaten: <a id="raw" href="/api/stats/summary?days=14">JSON</a> ·
+<div id="plan" hidden></div>
+<p class="note" id="betanote">Aktualisiert sich alle 30 Sekunden. Gezählt werden Sitzungen, Spielzeit (nur bei sichtbarem Spiel), Aufträge, Scoops mit Grund, Fehler im Browser und Hänger (Gas gedrückt, aber man kommt nicht weiter). Rohdaten: <a id="raw" href="/api/stats/summary?days=14">JSON</a> ·
 <button id="reset" type="button" style="font-size:12px;padding:3px 8px">Alle Daten löschen</button> <button id="glreset" type="button" style="font-size:12px;padding:3px 8px">Glitch-Stände zurücksetzen</button></p>
 </div>
 <div class="tip" id="tip" role="tooltip"></div>
@@ -149,7 +162,8 @@ function map(d){
   const x0=-230,x1=330,z0=-430,z1=360,W=560,H=790,sx=x=>(x-x0)/(x1-x0)*W,sz=z=>(z-z0)/(z1-z0)*H;
   const pts=d.stuck.points.map(p=>`<circle cx="${sx(p[0]).toFixed(1)}" cy="${sz(p[1]).toFixed(1)}" r="5" fill="${p[2]===1?'var(--s2)':'var(--crit)'}" fill-opacity=".75" stroke="var(--surface)" stroke-width="2"><title>${p[2]===1?'Hänger':'Befreiung'} bei ${p[0]} / ${p[1]}</title></circle>`).join('');
   return `<svg class="map" viewBox="0 0 ${W} ${H}" role="img" aria-label="Karte der Hänger"><rect x="0" y="0" width="${W}" height="${H}" fill="none"/>${[-200,-100,0,100,200,300].map(x=>`<line x1="${sx(x)}" y1="0" x2="${sx(x)}" y2="${H}" stroke="var(--grid)"/><text x="${sx(x)+3}" y="12" font-size="11" fill="var(--muted)">${x}</text>`).join('')}${[-400,-300,-200,-100,0,100,200,300].map(z=>`<line x1="0" y1="${sz(z)}" x2="${W}" y2="${sz(z)}" stroke="var(--grid)"/><text x="3" y="${sz(z)-3}" font-size="11" fill="var(--muted)">${z}</text>`).join('')}${pts}</svg>`}
-function render(d){
+let LAST=null,PLANDATA=null,tab='beta';
+function render(d){LAST=d;
   const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Berlin'}),td=d.perDay.find(x=>x.day===today)||{players:0,sessions:0,play:0};
   let h='';
   h+=`<div class="kpi">${tile('Jetzt online',d.online.count,d.rooms.length?d.rooms.map(r=>esc(r.room)+' ('+r.n+')').join(', '):'in keinem Raum')}${tile('Spieler heute',td.players,td.sessions+' Sitzungen')}${tile('Spielzeit heute',dur(td.play),'')}${tile('Spieler gesamt',d.total.players,d.total.returning+' an 2+ Tagen')}${tile('Ø Sitzung',dur(d.total.avg),'Median '+dur(d.total.median))}${tile('Längste Sitzung',dur(d.total.longest),'Gesamt '+dur(d.total.play))}</div>`;
@@ -191,7 +205,7 @@ function render(d){
   h+=`<section class="card c12"><h2>Spieler</h2><p class="sub">Zuletzt aktive zuerst</p>${table(['','Name','Sitzungen','Spielzeit','Zuletzt','Scoops','Aufträge','Fehler','Gerät'],d.players.map(p=>[`<span class="dot${p.online?' on':''}" title="${p.online?'online':'offline'}"></span>`,esc(p.name),p.sessions,dur(p.play),p.online?'jetzt':ago(p.last),p.sc==null?'–':p.sc,p.quests,p.err?`<span class="crit"><span class="ico" aria-hidden="true">⚠</span>${p.err}</span>`:'0',p.dev==='m'?'Handy':'Computer']),[2,3,5,6,7])}</section>`;
   h+='</div>';
   root.innerHTML=h;
-  $('#raw').href='/api/stats/summary?days='+d.days;
+  $('#raw').href='/api/stats/summary?days='+d.days;if(tab==='plan')renderPlan();
 }
 async function load(){try{const r=await fetch('/api/stats/summary?days='+$('#days').value,{cache:'no-store'});if(!r.ok)throw new Error(r.status);const d=await r.json();render(d);$('#upd').textContent='Stand '+new Date().toLocaleTimeString('de-DE')}catch(e){root.innerHTML='<p class="err">Die Zahlen konnten nicht geladen werden ('+esc(e.message)+'). Ist die Auswertung eingerichtet?</p>'}}
 $('#days').onchange=load;$('#reload').onclick=load;
@@ -200,6 +214,44 @@ $('#reset').onclick=async()=>{if(!confirm('Wirklich ALLE gesammelten Daten lösc
 /* Tooltip für Säulen und Balken */
 function showTip(e){const t=e.target.closest('[data-tip]');if(!t){tip.style.display='none';return}tip.textContent=t.dataset.tip;tip.style.display='block';const x=(e.clientX!==undefined&&e.type!=='focusin')?e.clientX:t.getBoundingClientRect().left+10,y=(e.clientY!==undefined&&e.type!=='focusin')?e.clientY:t.getBoundingClientRect().top;tip.style.left=Math.min(innerWidth-tip.offsetWidth-8,x+12)+'px';tip.style.top=Math.max(8,y-tip.offsetHeight-12)+'px'}
 document.addEventListener('mousemove',showTip);document.addEventListener('focusin',showTip);document.addEventListener('mouseleave',()=>tip.style.display='none');document.addEventListener('focusout',()=>tip.style.display='none');
+
+/* Reiter Business Plan: Daten kommen nur über /api/stats/plan (Stats-Passwort), nicht aus dieser Datei */
+const E0=n=>fmt(n)+' €',nl=t=>esc(t).replace(/\n/g,'<br>');
+function renderPlan(){
+  const el=$('#plan');
+  if(!PLANDATA){el.innerHTML='<p class="empty">Lade …</p>';return}
+  const P=PLANDATA,d=LAST,g=P.basis==='Gewinn'?P.gewinn:P.umsatz;
+  const pct=(a,b)=>b?Math.min(100,Math.round(a/b*100)):0;
+  let h='<div class="kpi">'+tile(P.basis+' Ziel Jahr 1',E0(P.ziel[0]),'Plan '+E0(g[0])+' · '+(g[0]>=P.ziel[0]?'<span class="ok">erreicht</span>':'<span class="crit">Lücke '+E0(P.ziel[0]-g[0])+'</span>'))
+    +tile(P.basis+' Ziel Jahr 2',E0(P.ziel[1]),'Plan '+E0(g[1])+' · '+(g[1]>=P.ziel[1]?'<span class="ok">erreicht</span>':'<span class="crit">Lücke '+E0(P.ziel[1]-g[1])+'</span>'))
+    +tile('Umsatz Plan J1 / J2',E0(P.umsatz[0]),'Jahr 2: '+E0(P.umsatz[1]))
+    +tile('Zeit nötig pro Woche',P.stunden[0]+' h','Jahr 2: '+P.stunden[1]+' h · Auslastung '+Math.round(P.auslastung[1]*100)+' %')+'</div>';
+  h+='<div class="grid">';
+  if(d){
+    const sp=d.total.players,ret=d.total.returning,s1=P.spielerQ[3],s2=P.spielerQ[7];
+    h+='<section class="card c12"><h2>Beta gegen Plan</h2><p class="sub">Echte Zahlen der Beta (Zeitraum '+d.days+' Tage) neben den Spieler-Annahmen des Plans für das Familien-Abo</p><div class="kpi">'
+      +tile('Spieler in der Beta',fmt(sp),'verschiedene Spieler im Zeitraum')+tile('Wiederkehrend',fmt(ret),sp?Math.round(ret/sp*100)+' % der Spieler':'–')
+      +tile('Plan: aktive Spieler Ende J1',fmt(s1),'Beta bisher '+pct(sp,s1)+' %')+tile('Plan: aktive Spieler Ende J2',fmt(s2),'Beta bisher '+pct(sp,s2)+' %')+'</div>'
+      +'<div class="sub">Fortschritt zu Jahr 1</div><div class="pbar"><b style="width:'+pct(sp,s1)+'%"></b></div><div class="sub">Fortschritt zu Jahr 2</div><div class="pbar"><b style="width:'+pct(sp,s2)+'%"></b></div>'
+      +'<p class="sub" style="margin-top:8px">Das Abo braucht im Schnitt '+fmt(P.spielerNoetig[0])+' (J1) und '+fmt(P.spielerNoetig[1])+' (J2) aktive Spieler. Die Beta ist geschlossen und kein Maßstab für Reichweite, zeigt aber, wie viele Spieler wiederkommen.</p></section>';
+  }
+  const qi=P.umsatzQ.map((v,i)=>({v,x:P.quartale[i].replace('J','J').replace(' ','·'),tip:P.quartale[i]+': '+E0(v)+' Umsatz, '+E0(P.gewinnQ[i])+' Gewinn'}));
+  h+='<section class="card c8"><h2>Umsatz pro Quartal (Plan)</h2><p class="sub">Alle Kanäle zusammen, Hover zeigt Umsatz und Gewinn</p>'+cols(qi,{})
+    +asTable(['Quartal','Umsatz','Gewinn'],P.quartale.map((q,i)=>[q,E0(P.umsatzQ[i]),E0(P.gewinnQ[i])]),[1,2])+'</section>';
+  h+='<section class="card c4"><h2>Ergebnis</h2><p class="sub">Jahr 1 und Jahr 2</p>'+table(['','J1','J2'],[['Umsatz',E0(P.umsatz[0]),E0(P.umsatz[1])],['Variable Kosten','−'+E0(P.var[0]),'−'+E0(P.var[1])],['Fixkosten','−'+E0(P.fix[0]),'−'+E0(P.fix[1])],['<b>Gewinn</b>','<b>'+E0(P.gewinn[0])+'</b>','<b>'+E0(P.gewinn[1])+'</b>']],[1,2])+'<p class="sub" style="margin-top:8px">Vor Steuern und ohne Gründer-Gehalt.</p></section>';
+  h+='<section class="card c6"><h2>Umsatz je Kanal</h2><p class="sub">Plan, Stand '+esc(P.asof)+'</p>'+table(['Kanal','Jahr 1','Jahr 2'],P.streams.map(s=>[esc(s.name),E0(s.j1),E0(s.j2)]),[1,2])+'</section>';
+  h+='<section class="card c6"><h2>Förderungen: Rangliste</h2><p class="sub">Standort-Unabhängigkeit, Budget, Datum (je 1 bis 5)</p>'+table(['#','Programm','S','B','D','Score'],P.prio.map((p,i)=>[i+1,esc(p.name),p.standort,p.budget,p.datum,p.score.toFixed(2).replace('.',',')]),[0,2,3,4,5])+'</section>';
+  h+='<section class="card c12"><h2>Förderungen im Detail</h2><p class="sub">Recherche Stand '+esc(P.asof)+'. Vor jedem Antrag beim Geber prüfen. Darlehen zählen nicht als Umsatz.</p>'+P.foerderung.map(f=>'<details><summary><b>'+esc(f.name)+'</b> · '+esc(f.art)+' · Passung '+esc(f.passung)+'</summary><p class="sub"><b>Konditionen:</b> '+nl(f.betrag)+'<br><b>Frist/Stand:</b> '+nl(f.stand)+'<br><b>Hürden:</b> '+nl(f.huerden)+'<br><b>Nächster Schritt:</b> '+nl(f.schritt)+'<br><a href="'+esc(f.quelle)+'" target="_blank" rel="noopener noreferrer">Quelle</a></p></details>').join('')+'</section>';
+  const C=P.canvas,box=k=>'<div class="'+k+'"><h3>'+esc(C[k].t)+'</h3>'+nl(C[k].x.split('\n').filter(l=>!/Tabelle unten|Zahlen: /.test(l)).join('\n').trim())+'</div>';
+  h+='<section class="card c12"><h2>Business Model Canvas (Arbeitstitel)</h2><p class="sub">Vorschläge aus CONCEPT.md, nicht entschieden</p><div class="bmc">'+['kp','ka','kr','vp','cr','ch','seg','cost','rev'].map(box).join('')+'</div></section>';
+  h+='</div><p class="note">Schätzwerte aus BUSINESS-PLAN.xlsx (Stand '+esc(P.asof)+'). Zum Ändern die Excel-Datei bearbeiten und die Daten neu nach worker/plan.js exportieren.</p>';
+  el.innerHTML=h;
+}
+function setTab(t){tab=t;const p=t==='plan';$('#root').hidden=p;$('#betanote').hidden=p;$('#plan').hidden=!p;$('#tabBeta').classList.toggle('on',!p);$('#tabPlan').classList.toggle('on',p);$('#tabBeta').setAttribute('aria-selected',!p);$('#tabPlan').setAttribute('aria-selected',p);
+  if(p){renderPlan();if(!PLANDATA)fetch('/api/stats/plan',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(j=>{PLANDATA=j;renderPlan()}).catch(e=>{$('#plan').innerHTML='<p class="err">Plan nicht ladbar ('+esc(e.message)+')</p>'})}
+  try{location.hash=p?'plan':''}catch(e){}}
+$('#tabBeta').onclick=()=>setTab('beta');$('#tabPlan').onclick=()=>setTab('plan');
+if(location.hash==='#plan')setTab('plan');
 load();setInterval(()=>{if(!document.hidden)load()},30000);
 </script>
 </body>

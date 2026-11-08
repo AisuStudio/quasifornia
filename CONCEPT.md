@@ -127,7 +127,7 @@ Lernziel und Easter Egg:
 Offene Fragen aus der Notiz:
 - Was braucht ein Multiplayer-Test? Wie lässt sich das Spiel technisch verschlanken, ohne visuell zu verlieren (alles 2D)? Was braucht es für eine eigene Domain?
 - Name klären (Quasifornia).
-- Geschäftsmodell trotz Freemium und freier Software (Merch-Shop?); Business-Plan.
+- Geschäftsmodell trotz Freemium und freier Software (Merch-Shop?); Business-Plan (Entwurf, rückwärts gerechnet auf 40k/100k: `BUSINESS-PLAN.xlsx`, Annahmen sind Schätzungen).
 - Wie meldet man sich als Contributor an und fügt Welten hinzu? Sinnvoll: ein Worldpack zum Herunterladen, auf das der Browser zugreift?
 - Multiplayer als offene Welt mit Orten auf Planeten.
 - Kollaborationsvertrag für Artist- und Konstruktions-Collabs.
@@ -493,7 +493,7 @@ Roadmap (Plan des Nutzers):
 4. Werbung als Billboards in den Straßen, nur Branding, erst wenn der Spielspaß steht und eventuell ab etwa 1000 Nutzern.
 
 Geschäftsmodell-Ideen (Vorschlag, nicht entschieden):
-- Jetzt: Welten als Auftrag (Collab-Welten für Artists, Marken, Museen, Schulen), Förderprogramme (Games, Kultur, Bildung; aktuelle Programme noch recherchieren), Merch und Sticker.
+- Jetzt: Welten als Auftrag (Collab-Welten für Artists, Marken, Museen, Schulen), Förderprogramme (Games, Kultur, Bildung; Recherche Stand 2026-11-08 im Blatt "Förderung" von `BUSINESS-PLAN.xlsx`: passend sind vor allem BzKJ (Kinder, Zuschuss) und Medienboard (nur Darlehen); Bund erst ab 300.000 € Projektgröße), Merch und Sticker.
 - In 6 bis 12 Monaten: Schul- und Workshop-Pakete (Quests als Lerneinheiten, Ziel "systemisches Denken").
 - Später mit Reichweite: Familien-Abo für Eltern (Sicherheit und Komfort, keine Spielvorteile), gehostete Welten für Creator und Schulen.
 - Tabus: Banner und Popups im Spiel, Echtgeld für Scoops. Datenverkauf und geschlossener Code offen: Wie offen das System sein soll, ist noch nicht entschieden (Idee: Bewerbung für Collabs, dann bekommt man einen Fork).
