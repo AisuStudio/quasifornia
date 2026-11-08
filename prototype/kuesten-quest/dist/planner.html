@@ -48,10 +48,11 @@ button{cursor:pointer}
 button:hover{border-color:var(--text2)}
 button.danger{color:var(--crit)}
 button:disabled{opacity:.4;cursor:default}
+.docbtn{font-weight:600}.docbtn.draft{background:var(--s3);border-color:var(--s3);color:#fff}
 dialog{border:1px solid var(--axis);border-radius:12px;background:var(--panel);color:var(--text);padding:16px;width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 40px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h2{margin:0 0 10px;font-size:16px}
-.vnew{display:flex;gap:6px;margin-bottom:12px}.vnew input{flex:1;min-width:0}
+.vnew{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.vnew input{flex:1 1 180px;min-width:0}
 #v-list{display:flex;flex-direction:column;gap:6px;overflow:auto;max-height:50dvh}
 .vr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--grid);border-radius:8px;padding:8px 10px}
 .vr .vi{flex:1;min-width:150px}.vr .vt{font-size:12px;color:var(--muted)}
@@ -122,6 +123,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 <body>
 <header>
   <h1>Planner</h1>
+  <button id="docs" type="button" class="docbtn" title="Dokumente und Entwürfe">Hauptplan ▾</button>
   <nav class="tabs" aria-label="Bereiche"><a href="/stats">Auswertung</a><a href="/planner" aria-current="page">Planner</a></nav>
   <div class="bar">
     <button id="undo" type="button" aria-label="Rückgängig (Strg+Z)" title="Rückgängig (Strg+Z)" disabled>↶</button><button id="redo" type="button" aria-label="Wiederholen (Strg+Umschalt+Z)" title="Wiederholen (Strg+Umschalt+Z)" disabled>↷</button>
@@ -139,6 +141,13 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 </header>
 <p id="warn" role="alert"><span id="warntxt"></span><button id="reload" type="button">Neu laden (lokale Änderungen verwerfen)</button></p>
 <div id="crumbbar"><nav id="crumbs" aria-label="Ebene"></nav><button id="mand-filter" class="sp" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></div>
+<dialog id="ddlg" aria-labelledby="dh">
+  <h2 id="dh">Dokumente</h2>
+  <div id="d-list" aria-live="polite"></div>
+  <h2 style="margin-top:14px">Neuer Entwurf</h2>
+  <div class="vnew"><input id="d-name" type="text" maxlength="60" placeholder="Name, z. B. Antons Entwurf" aria-label="Name des Entwurfs"><select id="d-from" aria-label="Ausgangspunkt"><option value="blank">Leer</option><option value="copy">Kopie dieses Dokuments</option></select><button id="d-new" type="button">Anlegen</button></div>
+  <div class="vfoot"><span id="d-msg">Entwürfe haben eigenen Stand und eigene Versionen. Der Hauptplan bleibt unberührt.</span><button id="d-close" type="button">Schließen</button></div>
+</dialog>
 <dialog id="vdlg" aria-labelledby="vh">
   <h2 id="vh">Versionen</h2>
   <div class="vnew"><input id="v-name" type="text" maxlength="60" placeholder="Name, z. B. vor Umbau Akt 2" aria-label="Name der Version"><button id="v-save" type="button">Version sichern</button></div>
@@ -159,13 +168,14 @@ const $=s=>document.querySelector(s);
 const stage=$('#stage'),world=$('#world'),nodesEl=$('#nodes'),eg=$('#eg'),tmp=$('#tmp'),insp=$('#insp'),status=$('#status'),hint=$('#hint');
 const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel'};
 const rid=()=>'n'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-3);
-let doc=null,rev=0,gid=null,sel=null,view={x:0,y:0,k:1},saving=false,pending=false,timer=0,stale=false,onlyMand=false;const views={};
+const DID=new URLSearchParams(location.search).get('d')||'main',dq=DID==='main'?'':'?d='+encodeURIComponent(DID),BK='planner-backup'+(DID==='main'?'':'-'+DID);
+let docName=DID==='main'?'Hauptplan':'Entwurf',doc=null,rev=0,gid=null,sel=null,view={x:0,y:0,k:1},saving=false,pending=false,timer=0,stale=false,onlyMand=false;const views={};
 const mk=(t,a={},tx)=>{const e=document.createElementNS(t==='svg'||t==='path'||t==='g'||t==='text'?'http://www.w3.org/2000/svg':'http://www.w3.org/1999/xhtml',t);for(const k in a)e.setAttribute(k,a[k]);if(tx!=null)e.textContent=tx;return e};
 const blank=()=>({v:1,root:'g0',title:'Spiel',graphs:{g0:{id:'g0',name:'Spiel',parent:null,nodes:{},edges:[]}}});
 const G=()=>doc.graphs[gid];
 /* ---------- Speichern ---------- */
 function setStatus(t,bad){status.textContent=t;status.className=bad?'bad':''}
-function backup(){try{localStorage.setItem('planner-backup',JSON.stringify({t:Date.now(),doc}))}catch(e){}}
+function backup(){try{localStorage.setItem(BK,JSON.stringify({t:Date.now(),doc}))}catch(e){}}
 /* Rückgängig: Schnappschüsse des ganzen Dokuments. changed() vergleicht mit dem letzten Stand, so muss keine Aktion etwas davon wissen.
    Tippen in einem Feld zählt als ein Schritt, solange man nicht länger als 1,5 s pausiert. */
 let last='',undo=[],redo=[],undoSize=0,lastKey='',lastT=0;
@@ -185,14 +195,14 @@ async function save(){
   if(stale)return;if(saving){pending=true;return}
   saving=true;pending=false;setStatus('Speichert …');
   try{
-    const r=await fetch('/api/planner',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({rev,doc})});
+    const r=await fetch('/api/planner'+dq,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({rev,doc})});
     if(r.status===409){stale=true;warn('Anderswo wurde neuer gespeichert. Dein Stand ist veraltet und wird nicht mehr gespeichert.');setStatus('Veraltet',true)}
     else if(!r.ok){setStatus('Fehler '+r.status,true);pending=false}
     else{const j=await r.json();rev=j.rev;setStatus(pending?'Ungespeichert …':'Gespeichert')}
   }catch(e){setStatus('Offline – nur lokal gesichert',true)}
   saving=false;if(pending&&!stale)save()}
 function warn(t){$('#warntxt').textContent=t;$('#warn').classList.add('on')}
-$('#reload').onclick=()=>{try{localStorage.removeItem('planner-backup')}catch(e){}location.reload()};
+$('#reload').onclick=()=>{try{localStorage.removeItem(BK)}catch(e){}location.reload()};
 /* ---------- Ansicht ---------- */
 function applyView(){world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.k})`;stage.style.backgroundSize=`${24*view.k}px ${24*view.k}px`;stage.style.backgroundPosition=`${view.x}px ${view.y}px`}
 function toWorld(cx,cy){const r=stage.getBoundingClientRect();return {x:(cx-r.left-view.x)/view.k,y:(cy-r.top-view.y)/view.k}}
@@ -316,7 +326,7 @@ window.addEventListener('pointerup',endPtr);window.addEventListener('pointercanc
 stage.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.clientX,ev.clientY,Math.exp(-ev.deltaY*(ev.ctrlKey?.01:.0015)))},{passive:false});
 stage.addEventListener('dblclick',ev=>{const cn=ev.target.closest('.node');if(cn&&cn.classList.contains('chapter')){openChapter(cn.dataset.id);return}if(ev.target.closest('.node')||ev.target.closest('[data-edge]')||ev.target.closest('#zoomctl'))return;const p=toWorld(ev.clientX,ev.clientY);addNode('scene',p.x-W/2,p.y-24)});
 window.addEventListener('keydown',ev=>{
-  if(vdlg.open)return;
+  if(vdlg.open||ddlg.open)return;
   if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key.toLowerCase();if(k==='z'){ev.preventDefault();ev.shiftKey?doRedo():doUndo();return}if(k==='y'){ev.preventDefault();doRedo();return}}
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
@@ -331,7 +341,7 @@ const vdlg=$('#vdlg'),vlist=$('#v-list'),vmsg=$('#v-msg');
 const fmtT=t=>new Date(t).toLocaleString('de-DE',{timeZone:'Europe/Berlin',day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
 const curNodes=()=>Object.values(doc.graphs).reduce((a,g)=>a+Object.keys(g.nodes).length,0);
 async function flush(){clearTimeout(timer);for(let i=0;i<100&&saving;i++)await new Promise(r=>setTimeout(r,50));await save()}
-async function vapi(m,u,body){const r=await fetch('/api/planner/versions'+u,{method:m,headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&j.error)||('Fehler '+r.status));return j}
+async function vapi(m,u,body){const r=await fetch('/api/planner/versions'+u+dq,{method:m,headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&j.error)||('Fehler '+r.status));return j}
 async function loadVersions(){
   vlist.textContent='';
   let j;try{j=await vapi('GET','')}catch(e){vlist.append(mk('p',{class:'vt'},'Versionen nicht erreichbar: '+e.message));return}
@@ -342,8 +352,8 @@ async function loadVersions(){
     const nm=mk('strong',{},v.label||'Version');if(v.keep)nm.append(mk('span',{class:'keep'},'benannt'));
     inf.append(nm,mk('div',{class:'vt'},fmtT(v.t)+' · '+v.nodes+' Knoten, '+v.edges+' Verbindungen'+delta));
     const rb=mk('button',{type:'button','data-restore':v.id},'Wiederherstellen'),db=mk('button',{type:'button',class:'danger','data-del':v.id},'Löschen');
-    rb.onclick=()=>restoreVersion(v);db.onclick=async()=>{if(!confirm('Diese Version endgültig löschen?'))return;try{await vapi('DELETE','/'+v.id);loadVersions()}catch(e){vmsg.textContent=e.message}};
-    row.append(inf,rb,db);vlist.append(row)}}
+    const eb=mk('button',{type:'button','data-draft':v.id},'Als Entwurf');eb.onclick=()=>draftFromVersion(v);rb.onclick=()=>restoreVersion(v);db.onclick=async()=>{if(!confirm('Diese Version endgültig löschen?'))return;try{await vapi('DELETE','/'+v.id);loadVersions()}catch(e){vmsg.textContent=e.message}};
+    row.append(inf,rb,eb,db);vlist.append(row)}}
 async function saveVersion(){
   if(stale){vmsg.textContent='Stand veraltet: erst neu laden.';return}
   const name=$('#v-name').value.trim();vmsg.textContent='Sichert …';
@@ -360,6 +370,33 @@ $('#versions').onclick=()=>{vmsg.textContent='Automatisch gesichert: höchstens 
 $('#v-save').onclick=saveVersion;$('#v-close').onclick=()=>vdlg.close();
 $('#v-name').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();saveVersion()}});
 vdlg.addEventListener('click',ev=>{if(ev.target===vdlg)vdlg.close()});
+/* ---------- Dokumente und Entwürfe ---------- */
+const ddlg=$('#ddlg'),dlist=$('#d-list'),dmsg=$('#d-msg');
+async function dapi(m,u,body){const r=await fetch('/api/planner/docs'+u,{method:m,headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&j.error)||('Fehler '+r.status));return j}
+const goDoc=id=>{location.href='/planner'+(id==='main'?'':'?d='+encodeURIComponent(id))};
+function showDocName(){const b=$('#docs');b.textContent=(DID==='main'?'':'Entwurf: ')+docName+' ▾';b.classList.toggle('draft',DID!=='main');document.title='Planner · '+docName}
+async function loadDocs(){
+  dlist.textContent='';let j;try{j=await dapi('GET','')}catch(e){dlist.append(mk('p',{class:'vt'},'Nicht erreichbar: '+e.message));return}
+  for(const d of j.docs){if(d.id===DID){docName=d.name;showDocName()}
+    const row=mk('div',{class:'vr','data-did':d.id}),inf=mk('div',{class:'vi'}),nm=mk('strong',{},d.name);
+    if(d.id===DID)nm.append(mk('span',{class:'keep'},'aktuell'));if(d.id!=='main')nm.append(mk('span',{class:'keep',style:'background:var(--s3)'},'Entwurf'));
+    inf.append(nm,mk('div',{class:'vt'},'Zuletzt '+fmtT(d.updated)+' · '+d.nodes+' Knoten'));
+    const ob=mk('button',{type:'button','data-open':d.id},'Öffnen');ob.disabled=d.id===DID;ob.onclick=async()=>{await flush();goDoc(d.id)};
+    const rn=mk('button',{type:'button','data-rename':d.id},'Umbenennen');rn.onclick=async()=>{const n=prompt('Neuer Name',d.name);if(!n||!n.trim())return;try{await dapi('PUT','/'+d.id,{name:n.trim()});loadDocs()}catch(e){dmsg.textContent=e.message}};
+    row.append(inf,ob,rn);
+    if(d.id!=='main'){const db=mk('button',{type:'button',class:'danger','data-ddel':d.id},'Löschen');db.onclick=async()=>{if(!confirm('Entwurf „'+d.name+'“ mit allen Versionen endgültig löschen?'))return;try{await dapi('DELETE','/'+d.id);if(d.id===DID){goDoc('main');return}loadDocs()}catch(e){dmsg.textContent=e.message}};row.append(db)}
+    dlist.append(row)}}
+async function newDraft(){
+  const name=$('#d-name').value.trim();if(!name){dmsg.textContent='Bitte einen Namen eingeben.';return}
+  dmsg.textContent='Legt an …';
+  try{const from=$('#d-from').value;if(from==='copy')await flush();const j=await dapi('POST','',{name,from,d:DID});goDoc(j.id)}catch(e){dmsg.textContent=e.message}}
+async function draftFromVersion(v){
+  const n=prompt('Name des Entwurfs','Entwurf aus '+fmtT(v.t));if(!n||!n.trim())return;
+  try{const j=await dapi('POST','',{name:n.trim(),from:'version',d:DID,version:v.id});goDoc(j.id)}catch(e){vmsg.textContent=e.message}}
+$('#docs').onclick=()=>{dmsg.textContent='Entwürfe haben eigenen Stand und eigene Versionen. Der Hauptplan bleibt unberührt.';ddlg.showModal();loadDocs()};
+$('#d-new').onclick=newDraft;$('#d-close').onclick=()=>ddlg.close();
+$('#d-name').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();newDraft()}});
+ddlg.addEventListener('click',ev=>{if(ev.target===ddlg)ddlg.close()});
 /* ---------- Export und Import ---------- */
 $('#export').onclick=()=>{const b=new Blob([JSON.stringify(doc,null,1)],{type:'application/json'}),a=mk('a',{href:URL.createObjectURL(b),download:'planner-'+new Date().toISOString().slice(0,10)+'.json'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('#import').onclick=()=>$('#file').click();
@@ -370,13 +407,15 @@ $('#file').onchange=async ev=>{const f=ev.target.files[0];ev.target.value='';if(
   doc=d;gid=doc.root;sel=null;for(const k in views)delete views[k];render();inspect();fit();changed()};
 /* ---------- Start ---------- */
 async function init(){
-  let j=null;
-  try{const r=await fetch('/api/planner',{cache:'no-store'});if(!r.ok)throw new Error(r.status);j=await r.json()}
-  catch(e){setStatus('Server nicht erreichbar',true);let bk=null;try{bk=JSON.parse(localStorage.getItem('planner-backup')||'null')}catch(_){}
+  let j=null,missing=false;
+  try{const r=await fetch('/api/planner'+dq,{cache:'no-store'});if(r.status===404){missing=true;throw new Error('404')}if(!r.ok)throw new Error(r.status);j=await r.json()}
+  catch(e){if(missing){setStatus('Nicht gefunden',true);doc=blank();stale=true;warn('Dieses Dokument gibt es nicht (mehr). Öffne die Liste der Dokumente oder den Hauptplan.');gid=doc.root;render();fit();inspect();return}
+    setStatus('Server nicht erreichbar',true);let bk=null;try{bk=JSON.parse(localStorage.getItem(BK)||'null')}catch(_){}
     doc=bk&&bk.doc?bk.doc:blank();stale=true;warn('Der Server ist nicht erreichbar. Es wird nicht gespeichert.')}
   if(j){rev=j.rev;doc=j.doc||blank();setStatus(j.doc?'Gespeichert':'Neu')}
   gid=doc.root;render();fit();inspect();last=JSON.stringify(doc);histBtns();
-  window.__planner={doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
+  showDocName();dapi('GET','').then(j=>{const d=j.docs.find(x=>x.id===DID);if(d){docName=d.name;showDocName()}}).catch(()=>{});
+  window.__planner={did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
 init();
 window.addEventListener('resize',()=>renderEdges());
 })();
