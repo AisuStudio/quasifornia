@@ -15,12 +15,12 @@ export default{
     const url0=new URL(request.url);
     /* Auswertung ansehen (Seite /stats und die Zahlen): eigenes Passwort STATS_PASSWORD, ersatzweise das Seitenpasswort.
        Wird vor der Seitenprüfung behandelt, weil ein Browser pro Anfrage nur ein Passwort schickt. */
-    if(url0.pathname==='/stats'||url0.pathname==='/stats/'||url0.pathname==='/api/stats/summary'||url0.pathname==='/api/stats/reset'||url0.pathname==='/api/glitch/reset'||url0.pathname==='/planner'||url0.pathname==='/planner/'||url0.pathname==='/api/planner'){
+    if(url0.pathname==='/stats'||url0.pathname==='/stats/'||url0.pathname==='/api/stats/summary'||url0.pathname==='/api/stats/reset'||url0.pathname==='/api/glitch/reset'||url0.pathname==='/planner'||url0.pathname==='/planner/'||url0.pathname==='/api/planner'||url0.pathname.startsWith('/api/planner/')){
       const spw=env.STATS_PASSWORD||env.SITE_PASSWORD;
       if(!spw)return new Response('Diese Seite ist gesperrt. Das Passwort wurde noch nicht eingerichtet.',{status:503,headers:{'content-type':'text/plain; charset=utf-8',...NOSTORE}});
       const sg=creds(request.headers.get('authorization'));
       if(sg===null||!(await same(sg,spw)))return new Response('Passwort für die Auswertung erforderlich.',{status:401,headers:{'www-authenticate':'Basic realm="Port 36 Auswertung", charset="UTF-8"','content-type':'text/plain; charset=utf-8',...NOSTORE}});
-      if(url0.pathname==='/api/planner'){if(!env.PLANNER)return new Response('Planner nicht eingerichtet',{status:503,headers:NOSTORE});if(request.method!=='GET'&&request.method!=='PUT')return new Response('?',{status:405,headers:NOSTORE});return env.PLANNER.get(env.PLANNER.idFromName('main')).fetch(request)}
+      if(url0.pathname==='/api/planner'||url0.pathname.startsWith('/api/planner/')){if(!env.PLANNER)return new Response('Planner nicht eingerichtet',{status:503,headers:NOSTORE});if(!['GET','PUT','POST','DELETE'].includes(request.method))return new Response('?',{status:405,headers:NOSTORE});return env.PLANNER.get(env.PLANNER.idFromName('main')).fetch(request)}
       if(url0.pathname.startsWith('/stats')||url0.pathname.startsWith('/planner')){const ap=url0.pathname.startsWith('/planner')?'/planner':'/stats';const r=await env.ASSETS.fetch(new Request(new URL(ap,url0),request));const o=new Response(r.body,r);o.headers.set('cache-control','private, no-store');o.headers.set('x-robots-tag','noindex, nofollow');return o}
       if(url0.pathname==='/api/glitch/reset'){if(!env.GLITCH)return new Response('Speicher nicht eingerichtet',{status:503,headers:NOSTORE});if(request.method!=='POST')return new Response('?',{status:405,headers:NOSTORE});return env.GLITCH.get(env.GLITCH.idFromName('main')).fetch(request)}
       if(!env.STATS)return new Response('Auswertung nicht eingerichtet',{status:503,headers:NOSTORE});

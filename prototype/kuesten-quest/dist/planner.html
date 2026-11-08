@@ -48,6 +48,17 @@ button{cursor:pointer}
 button:hover{border-color:var(--text2)}
 button.danger{color:var(--crit)}
 button:disabled{opacity:.4;cursor:default}
+dialog{border:1px solid var(--axis);border-radius:12px;background:var(--panel);color:var(--text);padding:16px;width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 40px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 10px;font-size:16px}
+.vnew{display:flex;gap:6px;margin-bottom:12px}.vnew input{flex:1;min-width:0}
+#v-list{display:flex;flex-direction:column;gap:6px;overflow:auto;max-height:50dvh}
+.vr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--grid);border-radius:8px;padding:8px 10px}
+.vr .vi{flex:1;min-width:150px}.vr .vt{font-size:12px;color:var(--muted)}
+.vr .keep{font-size:10px;text-transform:uppercase;letter-spacing:.04em;background:var(--s1);color:#fff;border-radius:8px;padding:0 6px;margin-left:6px}
+.vr button{padding:3px 9px;font-size:13px}
+.vfoot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
+#v-msg{font-size:12px;color:var(--muted)}
 button:disabled:hover{border-color:var(--axis)}
 #status{font-size:12px;color:var(--muted);min-width:90px}
 #status.bad{color:var(--crit)}
@@ -119,6 +130,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
     <button id="add-note" type="button">+ Notiz</button>
     <button id="add-chapter" type="button">+ Kapitel</button>
     <button id="fit" type="button">Einpassen</button>
+    <button id="versions" type="button">Versionen</button>
     <button id="export" type="button">Export</button>
     <button id="import" type="button">Import</button>
     <input id="file" type="file" accept="application/json,.json" hidden>
@@ -127,6 +139,12 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 </header>
 <p id="warn" role="alert"><span id="warntxt"></span><button id="reload" type="button">Neu laden (lokale Änderungen verwerfen)</button></p>
 <div id="crumbbar"><nav id="crumbs" aria-label="Ebene"></nav><button id="mand-filter" class="sp" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></div>
+<dialog id="vdlg" aria-labelledby="vh">
+  <h2 id="vh">Versionen</h2>
+  <div class="vnew"><input id="v-name" type="text" maxlength="60" placeholder="Name, z. B. vor Umbau Akt 2" aria-label="Name der Version"><button id="v-save" type="button">Version sichern</button></div>
+  <div id="v-list" aria-live="polite"></div>
+  <div class="vfoot"><span id="v-msg">Automatisch gesichert: höchstens alle 10 Minuten, die letzten 50. Benannte bleiben.</span><button id="v-close" type="button">Schließen</button></div>
+</dialog>
 <main>
   <div id="stage" tabindex="0" aria-label="Planungsfläche. Doppelklick legt eine Szene an. Entf löscht die Auswahl.">
     <div id="world"><svg id="edges" aria-hidden="true"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><g id="eg" style="color:var(--text2)"></g><path class="tmp" id="tmp" hidden></path></svg><div id="nodes"></div></div>
@@ -298,6 +316,7 @@ window.addEventListener('pointerup',endPtr);window.addEventListener('pointercanc
 stage.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.clientX,ev.clientY,Math.exp(-ev.deltaY*(ev.ctrlKey?.01:.0015)))},{passive:false});
 stage.addEventListener('dblclick',ev=>{const cn=ev.target.closest('.node');if(cn&&cn.classList.contains('chapter')){openChapter(cn.dataset.id);return}if(ev.target.closest('.node')||ev.target.closest('[data-edge]')||ev.target.closest('#zoomctl'))return;const p=toWorld(ev.clientX,ev.clientY);addNode('scene',p.x-W/2,p.y-24)});
 window.addEventListener('keydown',ev=>{
+  if(vdlg.open)return;
   if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key.toLowerCase();if(k==='z'){ev.preventDefault();ev.shiftKey?doRedo():doUndo();return}if(k==='y'){ev.preventDefault();doRedo();return}}
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
@@ -307,6 +326,40 @@ $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute
 $('#fit').onclick=fit;$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
 $('#zin').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25)};
 $('#zout').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,.8)};
+/* ---------- Versionen ---------- */
+const vdlg=$('#vdlg'),vlist=$('#v-list'),vmsg=$('#v-msg');
+const fmtT=t=>new Date(t).toLocaleString('de-DE',{timeZone:'Europe/Berlin',day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+const curNodes=()=>Object.values(doc.graphs).reduce((a,g)=>a+Object.keys(g.nodes).length,0);
+async function flush(){clearTimeout(timer);for(let i=0;i<100&&saving;i++)await new Promise(r=>setTimeout(r,50));await save()}
+async function vapi(m,u,body){const r=await fetch('/api/planner/versions'+u,{method:m,headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&j.error)||('Fehler '+r.status));return j}
+async function loadVersions(){
+  vlist.textContent='';
+  let j;try{j=await vapi('GET','')}catch(e){vlist.append(mk('p',{class:'vt'},'Versionen nicht erreichbar: '+e.message));return}
+  if(!j.versions.length){vlist.append(mk('p',{class:'vt'},'Noch keine Versionen.'));return}
+  const cur=curNodes();
+  for(const v of j.versions){const row=mk('div',{class:'vr','data-vid':v.id}),inf=mk('div',{class:'vi'});
+    const d=v.nodes-cur,delta=d===0?'':' ('+(d>0?'+':'−')+Math.abs(d)+' gegenüber jetzt)';
+    const nm=mk('strong',{},v.label||'Version');if(v.keep)nm.append(mk('span',{class:'keep'},'benannt'));
+    inf.append(nm,mk('div',{class:'vt'},fmtT(v.t)+' · '+v.nodes+' Knoten, '+v.edges+' Verbindungen'+delta));
+    const rb=mk('button',{type:'button','data-restore':v.id},'Wiederherstellen'),db=mk('button',{type:'button',class:'danger','data-del':v.id},'Löschen');
+    rb.onclick=()=>restoreVersion(v);db.onclick=async()=>{if(!confirm('Diese Version endgültig löschen?'))return;try{await vapi('DELETE','/'+v.id);loadVersions()}catch(e){vmsg.textContent=e.message}};
+    row.append(inf,rb,db);vlist.append(row)}}
+async function saveVersion(){
+  if(stale){vmsg.textContent='Stand veraltet: erst neu laden.';return}
+  const name=$('#v-name').value.trim();vmsg.textContent='Sichert …';
+  try{await flush();await vapi('POST','',{label:name||'Version'});$('#v-name').value='';vmsg.textContent='Gesichert.';await loadVersions()}catch(e){vmsg.textContent=e.message}}
+async function restoreVersion(v){
+  if(stale){vmsg.textContent='Stand veraltet: erst neu laden.';return}
+  if(!confirm('Stand vom '+fmtT(v.t)+(v.label?' („'+v.label+'“)':'')+' wiederherstellen? Der aktuelle Stand wird vorher gesichert.'))return;
+  vmsg.textContent='Stellt wieder her …';
+  try{await flush();await vapi('POST','',{label:'Vor Wiederherstellung ('+fmtT(v.t)+')'});
+    const j=await vapi('GET','/'+v.id);if(!j.doc||j.doc.v!==1||!j.doc.graphs||!j.doc.graphs[j.doc.root])throw new Error('Version unlesbar');
+    doc=j.doc;gid=doc.root;sel=null;for(const k in views)delete views[k];render();inspect();fit();changed();vdlg.close();setStatus('Wiederhergestellt')}
+  catch(e){vmsg.textContent=e.message}}
+$('#versions').onclick=()=>{vmsg.textContent='Automatisch gesichert: höchstens alle 10 Minuten, die letzten 50. Benannte bleiben.';vdlg.showModal();loadVersions()};
+$('#v-save').onclick=saveVersion;$('#v-close').onclick=()=>vdlg.close();
+$('#v-name').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();saveVersion()}});
+vdlg.addEventListener('click',ev=>{if(ev.target===vdlg)vdlg.close()});
 /* ---------- Export und Import ---------- */
 $('#export').onclick=()=>{const b=new Blob([JSON.stringify(doc,null,1)],{type:'application/json'}),a=mk('a',{href:URL.createObjectURL(b),download:'planner-'+new Date().toISOString().slice(0,10)+'.json'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('#import').onclick=()=>$('#file').click();
