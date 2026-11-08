@@ -64,16 +64,20 @@ const {chromium}=require('playwright');const http=require('http'),fs=require('fs
  const clickNode=async t=>{const n=await nodeByTitle(t);const bb=await p.locator(`.node[data-id="${n.id}"]`).boundingBox();await p.mouse.click(bb.x+60,bb.y+12);return n};
  await p.goto('http://localhost:8939/planner');await p.waitForFunction('window.__planner');
  console.log('Seite und Server kennen dieselben 22 Karten',await p.evaluate(a=>JSON.stringify(__planner.arcana)===JSON.stringify(a),ARCANA));
+ await p.click('#docs');await p.waitForSelector('#d-list .vr');
+ console.log('Entwurfsdialog bietet keine Heldenreise-Vorlage mehr, nur Leer und Kopie',await p.evaluate(()=>[...document.querySelectorAll('#d-from option')].map(o=>o.value).join('|')==='blank|copy'));
+ await p.click('#d-close');
  console.log('Ohne Karten ist die Leiste verborgen',await p.evaluate(()=>document.querySelector('#cards').hidden));
- await p.click('#docs');await p.waitForSelector('#d-list .vr');await p.fill('#d-name','Reise');await p.selectOption('#d-from','heldenreise');await p.click('#d-new');
- await p.waitForFunction("location.search.startsWith('?d=')",null,{timeout:8000});await p.waitForFunction('window.__planner');
- console.log('Vorlage geöffnet: 22 Kapitel, Stichwort im Kasten',await p.evaluate(()=>document.querySelectorAll('.node.chapter').length===22&&[...document.querySelectorAll('.node.chapter .tx')].some(e=>e.textContent==='Aufbruch')));
+ await p.selectOption('#tpl','hero');
+ const st=i=>p.evaluate(i=>Object.values(__planner.doc().graphs.g0.nodes).find(n=>n.type==='chapter'&&n.card===i).id,i);
+ console.log('Vorlage im normalen Planner eingefügt: 22 Kapitel, Stichwort im Kasten',await p.evaluate(()=>document.querySelectorAll('.node.chapter').length===22&&[...document.querySelectorAll('.node.chapter .tx')].some(e=>e.textContent==='Aufbruch')));
  console.log('Kapitelkasten nennt die Karte im Titel, ohne sie doppelt zu zeigen',await p.evaluate(()=>[...document.querySelectorAll('.node.chapter .ti')].some(e=>e.textContent==='XVII · Der Stern')&&!document.querySelector('.node.chapter .cd')));
  console.log('Kartenleiste: 22 Felder von 0 bis XXI, alle als leere Station',await p.evaluate(()=>{const c=[...document.querySelectorAll('#cards .cell')];return !document.querySelector('#cards').hidden&&c.length===22&&c[0].textContent==='0'&&c[21].textContent==='XXI'&&c.every(x=>x.classList.contains('empty'))}));
  await p.click('#cards .cell[data-card="17"]');
- console.log('Klick auf Feld XVII wählt die Station',await p.evaluate(()=>{const n=__planner.doc().graphs.g0.nodes,s=__planner.sel();return s&&s.id==='c17'&&document.querySelector('#f-card').value==='17'&&document.querySelector('#insp h2').textContent==='Kapitel'}));
+ const c17=await st(17),c0=await st(0);
+ console.log('Klick auf Feld XVII wählt die Station',await p.evaluate(id=>{const s=__planner.sel();return s&&s.id===id&&document.querySelector('#f-card').value==='17'&&document.querySelector('#insp h2').textContent==='Kapitel'},c17));
  await p.fill('#f-title','Finale');
- console.log('Anderer Titel: Karte erscheint als eigene Zeile auf dem Kapitel',await p.evaluate(()=>{const n=document.querySelector('.node.chapter[data-id="c17"] .cd');return !!n&&n.textContent==='XVII · Der Stern'}));
+ console.log('Anderer Titel: Karte erscheint als eigene Zeile auf dem Kapitel',await p.evaluate(id=>{const n=document.querySelector('.node.chapter[data-id="'+id+'"] .cd');return !!n&&n.textContent==='XVII · Der Stern'},c17));
  await p.fill('#f-title','XVII · Der Stern');
  /* Charaktere */
  await p.click('#add-note');await p.fill('#f-title','Anton');await p.selectOption('#f-kind','character');await p.selectOption('#f-card','17');
@@ -85,21 +89,21 @@ const {chromium}=require('playwright');const http=require('http'),fs=require('fs
  await p.keyboard.press('Control+Shift+z');await clickNode('Mia');await p.selectOption('#f-card','0');
  console.log('Mia auf Karte 0: Warnung weg, Feld 0 zeigt einen Charakter',await p.evaluate(()=>document.querySelectorAll('.node.k-character .cd.dup').length===0&&document.querySelector('#cards .cell[data-card="0"] sup').textContent==='1'&&document.querySelector('#cards .cell[data-card="17"] sup').textContent==='1'));
  /* Station füllen */
- await p.dblclick('.node.chapter[data-id="c17"]');await p.waitForFunction("document.querySelectorAll('#crumbs button').length===2");
- console.log('Station öffnet, Brotkrumen „Reise › XVII · Der Stern“',await p.evaluate(()=>[...document.querySelectorAll('#crumbs button')].map(b=>b.textContent).join('>')==='Reise>XVII · Der Stern'));
+ await p.dblclick('.node.chapter[data-id="'+c17+'"]');await p.waitForFunction("document.querySelectorAll('#crumbs button').length===2");
+ console.log('Station öffnet, Brotkrumen „Spiel › XVII · Der Stern“',await p.evaluate(()=>[...document.querySelectorAll('#crumbs button')].map(b=>b.textContent).join('>')==='Spiel>XVII · Der Stern'));
  console.log('In der Station ist das Feld XVII markiert („aktuell“)',await p.evaluate(()=>document.querySelector('#cards .cell[data-card="17"]').classList.contains('cur')));
  await p.click('#add-scene');await p.fill('#f-title','Sternenwiese');
  await p.click('#crumbs button[data-go="g0"]');
  console.log('Station mit Inhalt: Feld XVII voll, Nachbarn leer',await p.evaluate(()=>document.querySelector('#cards .cell[data-card="17"]').classList.contains('full')&&document.querySelector('#cards .cell[data-card="16"]').classList.contains('empty')));
  /* Klick auf Feld mit Charakter, Karte ohne Station */
- await p.click('#cards .cell[data-card="0"]');console.log('Klick auf Feld 0 springt zur Station',await p.evaluate(()=>__planner.sel()&&__planner.sel().id==='c0'));
+ await p.click('#cards .cell[data-card="0"]');console.log('Klick auf Feld 0 springt zur Station',await p.evaluate(id=>__planner.sel()&&__planner.sel().id===id,c0));
  /* Art wechseln */
  await p.click('#fit');await clickNode('Anton');await p.selectOption('#f-type','scene');
  console.log('Notiz zur Szene gemacht: Karte entfällt, Feld XVII ohne Zähler',await p.evaluate(()=>{const n=Object.values(__planner.doc().graphs.g0.nodes).find(x=>x.title==='Anton');return n.type==='scene'&&n.card===undefined&&n.kind===undefined&&!document.querySelector('#cards .cell[data-card="17"] sup')&&!document.querySelector('#f-card')}));
  await p.keyboard.press('Control+z');
  console.log('Strg+Z stellt Charakter und Karte wieder her',await p.evaluate(()=>{const n=Object.values(__planner.doc().graphs.g0.nodes).find(x=>x.title==='Anton');return n.type==='note'&&n.kind==='character'&&n.card===17}));
  /* Speichern, Neuladen, Markdown vom Server */
- await saved();const did=await p.evaluate(()=>__planner.did);await p.reload();await p.waitForFunction('window.__planner');
+ await saved();const did=await p.evaluate(()=>__planner.did);console.log('Alles im normalen Planner (Hauptplan), kein eigener Modus',did==='main'&&await p.evaluate(()=>location.search===''));await p.reload();await p.waitForFunction('window.__planner');
  console.log('Nach Neuladen: Karten, Charaktere und Leiste sind da',await p.evaluate(()=>document.querySelectorAll('.node.chapter').length===22&&document.querySelectorAll('.node.k-character').length===2&&document.querySelectorAll('#cards .cell').length===22&&document.querySelector('#cards .cell[data-card="17"]').classList.contains('full')));
  const ex=await (await fetch('http://localhost:8939/api/planner/export?d='+did)).text();
  console.log('Markdown vom Server: Heldenreise mit Anton bei Karte XVII und Mia bei 0',/\*\*XVII · Der Stern\*\* \(Hoffnung\): Station .* \(1 Knoten\) · Charaktere: Anton/.test(ex)&&/\*\*0 · Der Narr\*\*.*Charaktere: Mia/.test(ex));

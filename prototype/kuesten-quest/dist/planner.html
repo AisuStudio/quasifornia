@@ -48,6 +48,7 @@ button{cursor:pointer}
 button:hover{border-color:var(--text2)}
 button.danger{color:var(--crit)}
 button:disabled{opacity:.4;cursor:default}
+#tpl{width:112px;padding-right:4px;cursor:pointer}
 .docbtn{font-weight:600}.docbtn.draft{background:var(--s3);border-color:var(--s3);color:#fff}
 dialog{border:1px solid var(--axis);border-radius:12px;background:var(--panel);color:var(--text);padding:16px;width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 40px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -151,6 +152,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
     <button id="add-branch" type="button">+ Verzweigung</button>
     <button id="add-note" type="button">+ Notiz</button>
     <button id="add-chapter" type="button">+ Kapitel</button>
+    <select id="tpl" aria-label="Vorlagen" title="Vorlage in die aktuelle Ebene einfügen"><option value="">Vorlagen ▾</option><option value="hero">Heldenreise einfügen (22 Stationen)</option></select>
     <button id="fit" type="button">Einpassen</button>
     <button id="versions" type="button">Versionen</button>
     <button id="agent" type="button" title="Lese-Link für Agenten">Agent-Link</button>
@@ -161,12 +163,12 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
   </div>
 </header>
 <p id="warn" role="alert"><span id="warntxt"></span><button id="reload" type="button">Neu laden (lokale Änderungen verwerfen)</button></p>
-<div id="crumbbar"><nav id="crumbs" aria-label="Ebene"></nav><button id="mand-filter" class="sp" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></div>
+<div id="crumbbar"><nav id="crumbs" aria-label="Ebene"></nav><span class="sp" style="display:flex;gap:6px"><button id="cards-toggle" type="button" aria-pressed="false" title="Kartenleiste der Großen Arkana ein- oder ausblenden">Karten</button><button id="mand-filter" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></span></div>
 <dialog id="ddlg" aria-labelledby="dh">
   <h2 id="dh">Dokumente</h2>
   <div id="d-list" aria-live="polite"></div>
   <h2 style="margin-top:14px">Neuer Entwurf</h2>
-  <div class="vnew"><input id="d-name" type="text" maxlength="60" placeholder="Name, z. B. Antons Entwurf" aria-label="Name des Entwurfs"><select id="d-from" aria-label="Ausgangspunkt"><option value="blank">Leer</option><option value="copy">Kopie dieses Dokuments</option><option value="heldenreise">Vorlage: Heldenreise (22 Karten)</option></select><button id="d-new" type="button">Anlegen</button></div>
+  <div class="vnew"><input id="d-name" type="text" maxlength="60" placeholder="Name, z. B. Antons Entwurf" aria-label="Name des Entwurfs"><select id="d-from" aria-label="Ausgangspunkt"><option value="blank">Leer</option><option value="copy">Kopie dieses Dokuments</option></select><button id="d-new" type="button">Anlegen</button></div>
   <div class="vfoot"><span id="d-msg">Entwürfe haben eigenen Stand und eigene Versionen. Der Hauptplan bleibt unberührt.</span><button id="d-close" type="button">Schließen</button></div>
 </dialog>
 <dialog id="adlg" aria-labelledby="ah">
@@ -246,23 +248,38 @@ $('#reload').onclick=()=>{try{localStorage.removeItem(BK)}catch(e){}location.rel
 function applyView(){world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.k})`;stage.style.backgroundSize=`${24*view.k}px ${24*view.k}px`;stage.style.backgroundPosition=`${view.x}px ${view.y}px`}
 function toWorld(cx,cy){const r=stage.getBoundingClientRect();return {x:(cx-r.left-view.x)/view.k,y:(cy-r.top-view.y)/view.k}}
 function zoomAt(cx,cy,f){const r=stage.getBoundingClientRect(),px=cx-r.left,py=cy-r.top,k=Math.max(.2,Math.min(2,view.k*f)),q=k/view.k;view.x=px-(px-view.x)*q;view.y=py-(py-view.y)*q;view.k=k;applyView()}
-function fit(){const ns=Object.values(G().nodes);if(!ns.length){view={x:60,y:60,k:1};applyView();return}
+function fit(list){const ns=list||Object.values(G().nodes);if(!ns.length){view={x:60,y:60,k:1};applyView();return}
   const el=id=>nodesEl.querySelector(`[data-id="${id}"]`);let a=1e9,b=1e9,c=-1e9,d=-1e9;
   for(const n of ns){const h=(el(n.id)||{offsetHeight:70}).offsetHeight;a=Math.min(a,n.x);b=Math.min(b,n.y);c=Math.max(c,n.x+W);d=Math.max(d,n.y+h)}
   const r=stage.getBoundingClientRect(),pad=50,k=Math.max(.2,Math.min(1,Math.min((r.width-2*pad)/(c-a),(r.height-2*pad)/(d-b))));
   view={k,x:(r.width-(c-a)*k)/2-a*k,y:(r.height-(d-b)*k)/2-b*k};applyView()}
 /* ---------- Heldenreise: Kartenleiste ---------- */
+let stripOn=(()=>{try{const v=localStorage.getItem('planner-strip');return v==='1'?true:v==='0'?false:null}catch(e){return null}})();
 function renderStrip(){
-  const el=$('#cards'),any=cardCache.some(x=>x.stations.length||x.notes.length);el.hidden=!any;if(!any)return;el.textContent='';
+  const el=$('#cards'),any=cardCache.some(x=>x.stations.length||x.notes.length),show=stripOn===null?any:stripOn;el.hidden=!show;$('#cards-toggle').setAttribute('aria-pressed',String(show));if(!show)return;el.textContent='';
   cardCache.forEach((x,i)=>{
     const filled=x.stations.some(t=>t.n.graph&&doc.graphs[t.n.graph]&&Object.keys(doc.graphs[t.n.graph].nodes).length>0),state=x.stations.length?(filled?'full':'empty'):'none',cur=x.stations.some(t=>t.n.graph===gid)||x.notes.some(t=>t.g===gid);
     const b=mk('button',{type:'button',class:'cell '+state+(cur?' cur':''),'data-card':String(i),title:ARC[i][0]+' · '+ARC[i][1]+' ('+ARC[i][2]+'): '+(x.stations.length?(filled?'Station mit Inhalt':'Station leer'):'keine Station')+' · '+(()=>{const c={};x.notes.forEach(t=>{const k=t.n.kind?KINDS[t.n.kind]:'Notiz';c[k]=(c[k]||0)+1});const a=Object.entries(c).map(([k,v])=>v+' '+k);return a.length?a.join(', '):'keine Notizen'})()},ARC[i][0]);
     if(x.notes.length)b.append(mk('sup',{},String(x.notes.length)));
     b.onclick=()=>jumpCard(i);el.append(b)})}
+$('#cards-toggle').onclick=()=>{stripOn=$('#cards').hidden;try{localStorage.setItem('planner-strip',stripOn?'1':'0')}catch(e){}renderStrip()};
 function jumpCard(i){const x=cardCache[i],t=x.stations[0]||x.notes[0];if(!t)return;
   if(t.g!==gid){views[gid]={...view};gid=t.g}
   sel={kind:'node',id:t.n.id};render();inspect();const n=G().nodes[t.n.id],r=stage.getBoundingClientRect();
   view={k:1,x:r.width/2-(n.x+W/2),y:r.height/2-(n.y+40)};applyView()}
+/* ---------- Vorlage: Heldenreise einfügen ---------- */
+function insertHero(){
+  const have=new Set();Object.values(G().nodes).forEach(n=>{if(n.type==='chapter'&&isCard(n.card))have.add(n.card)});
+  const missing=ARC.map((_,i)=>i).filter(i=>!have.has(i));
+  if(!missing.length){alert('Alle 22 Stationen der Heldenreise gibt es auf dieser Ebene schon.');return}
+  if(have.size&&!confirm('Auf dieser Ebene gibt es schon '+have.size+' Stationen mit Karte. Nur die fehlenden '+missing.length+' ergänzen?'))return;
+  const g=G(),ns=Object.values(g.nodes),x0=ns.length?Math.min(...ns.map(n=>n.x)):0,y0=ns.length?Math.max(...ns.map(n=>n.y))+200:0,made={};
+  for(const i of missing){const row=i<8?0:i<15?1:2,col=i<8?i:i<15?i-8:i-15,title=ARC[i][0]+' · '+ARC[i][1],nid=rid(),sub=rid();
+    g.nodes[nid]={id:nid,type:'chapter',title,text:ARC[i][2],x:x0+col*240,y:y0+row*190,mandatory:false,graph:sub,card:i};
+    doc.graphs[sub]={id:sub,name:title,parent:gid,nodes:{},edges:[]};made[i]=nid}
+  for(const i of missing)if(made[i-1]&&made[i])g.edges.push({id:rid(),from:made[i-1],to:made[i],label:''});
+  sel=null;render();inspect();fit(missing.map(i=>g.nodes[made[i]]));changed()}
+$('#tpl').onchange=ev=>{const v=ev.target.value;ev.target.value='';ev.target.blur();if(v==='hero')insertHero()};
 /* ---------- Kapitel ---------- */
 function hasMand(id,seen=new Set()){if(seen.has(id)||!doc.graphs[id])return false;seen.add(id);return Object.values(doc.graphs[id].nodes).some(n=>n.mandatory||(n.type==='chapter'&&n.graph&&hasMand(n.graph,seen)))}
 function isMand(n){return !!n.mandatory||(n.type==='chapter'&&!!n.graph&&hasMand(n.graph))}
@@ -365,6 +382,7 @@ function addEdge(from,to){
 const ptrs=new Map();let drag=null,pinch=null;
 stage.addEventListener('pointerdown',ev=>{
   if(ev.button>0)return;
+  {const ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))ae.blur()}
   ptrs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
   if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)};drag=null;return}
   const out=ev.target.closest('.h.o'),nd=ev.target.closest('.node'),hit=ev.target.closest('[data-edge]');
@@ -405,7 +423,7 @@ window.addEventListener('keydown',ev=>{
   else if(ev.key==='Escape'&&sel)select(null)});
 $('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');
 $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute('aria-pressed',String(onlyMand));render()};
-$('#fit').onclick=fit;$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
+$('#fit').onclick=()=>fit();$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
 $('#zin').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25)};
 $('#zout').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,.8)};
 /* ---------- Versionen ---------- */
