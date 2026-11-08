@@ -51,7 +51,7 @@ const BAU_PARTS={
  door:{n:'Tür',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,.95,1.55,.16,0,.78,1.03);bm(g,BX,'#3a3548',.8,1.42,.18,0,.74,1.04);bm(g,SP,'#f0cf36',.06,.06,.06,.3,.8,1.14)}},
  garage:{n:'Rolltor',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,'#d8dde3',1.8,1.5,.14,0,.75,1.03);for(let i=0;i<5;i++)bm(g,BX,'#aab3bd',1.8,.04,.16,0,.2+i*.28,1.04)}},
  glass:{n:'Glastür',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,1.8,1.7,.12,0,.85,1.02);bm(g,BX,BAU_GLASS,1.6,1.6,.14,0,.85,1.03,'#7fd8ff',.3);bm(g,BX,c,.06,1.6,.18,0,.85,1.04)}},
- balc:{n:'Balkon',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,2,.14,.9,0,1,1.45);[-.95,.95].forEach(x=>bm(g,BX,'#eae8e8',.06,.7,.06,x,1.4,1.85));bm(g,BX,'#eae8e8',2,.06,.06,0,1.75,1.88);bm(g,BX,'#eae8e8',.06,.7,.8,-.97,1.4,1.45);bm(g,BX,'#eae8e8',.06,.7,.8,.97,1.4,1.45)}},
+ balc:{n:'Balkon',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,2,.14,.9,0,.07,1.45);[-.95,.95].forEach(x=>bm(g,BX,'#eae8e8',.06,.8,.06,x,.54,1.87));bm(g,BX,'#eae8e8',2,.06,.06,0,.94,1.88);bm(g,BX,'#eae8e8',.06,.7,.8,-.97,.5,1.45);bm(g,BX,'#eae8e8',.06,.7,.8,.97,.5,1.45)}},
  awn:{n:'Markise',cat:'oeff',kind:'d',mk:(g,c)=>{for(let i=0;i<4;i++){const m=bm(g,BX,i%2?'#ffffff':c,.5,.06,.9,-.75+i*.5,1.6,1.4);m.rotation.x=.32}}},
  sign:{n:'Neonschild',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,'#2a3a52',1.5,.5,.1,0,1.7,1.05);bm(g,BX,c,1.3,.3,.06,0,1.7,1.12,c,.9)}},
  /* Garten */
