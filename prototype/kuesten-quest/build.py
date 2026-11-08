@@ -113,7 +113,7 @@ open('dist/kuesten-quest.html','w').write(build(True))
 import shutil
 THREE_CDN='https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'
 os.makedirs('dist/designer/fonts',exist_ok=True)
-for f in ['index.html','round.html','pixel.html','haus.html']:
+for f in ['index.html','round.html','pixel.html','haus.html','mesh.html']:
     t=open('tools/avatar-designer/'+f).read()
     t=t.replace('../../src/fonts/','fonts/').replace('../../node_modules/three/build/three.module.js',THREE_CDN).replace('../../src/bau-teile.js','bau-teile.js')
     open('dist/designer/'+f,'w').write(t)

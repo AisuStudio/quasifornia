@@ -20,6 +20,10 @@ const PUT=(p,body)=>W(p,{method:'PUT',headers:{'content-type':'application/json'
  console.log('Liste und Versionen',JSON.stringify({vs:vs.versionen.map(x=>x.v),me}),vs.versionen.length===2&&me&&me.v===2&&me.n===2&&me.name==='Pinky');
  /* Haus */
  const h1=await PUT('/api/entwurf/haus/'+idH,haus('Villa')).then(r=>r.json());console.log('Haus gespeichert',h1.v,h1.v===1);
+ /* Mesh-Avatar */
+ const mesh=(n,t)=>({v:1,kind:'mesh',species:'humanoid',pal:'bau12',name:n,tex:t||'0123456789ab'.repeat(342).slice(0,4096)});
+ const mv=await PUT('/api/entwurf/mesh/me-'+sx,mesh('Mesh Eins')).then(r=>r.json());const m1g=await W('/api/entwurf/mesh/me-'+sx).then(r=>r.json());
+ console.log('Mesh gespeichert',mv.v,m1g.tex.length,mv.v===1&&m1g.tex.length===4096);
  /* Ablehnen */
  const big=av('Gross');big.slots.x='#'+'a'.repeat(6);big.acc={t:'x'.repeat(70000)};
  const cases=[
@@ -37,6 +41,10 @@ const PUT=(p,body)=>W(p,{method:'PUT',headers:{'content-type':'application/json'
   ['Löschen verboten',W('/api/entwurf/avatar/'+idA,{method:'DELETE'}),405],
   ['Version unbekannt',W('/api/entwurf/avatar/'+idA+'?v=9'),404],
   ['Version Format',W('/api/entwurf/avatar/'+idA+'?v=abc'),400],
+  ['Mesh Textur zu kurz',PUT('/api/entwurf/mesh/x-'+sx,mesh('A','0'.repeat(4095))),400],
+  ['Mesh Textur Zeichen',PUT('/api/entwurf/mesh/x-'+sx,mesh('A','z'.repeat(4096))),400],
+  ['Mesh ohne Name',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),name:''}),400],
+  ['Textur bei Avatar',PUT('/api/entwurf/avatar/x-'+sx,{...av('T'),tex:'0'.repeat(4096)}),400],
   ['Entwurf unbekannt',W('/api/entwurf/avatar/gibtsnicht-'+sx),404]];
  const res=await Promise.all(cases.map(c=>c[1].then(r=>r.status)));
  console.log('Ungültiges abgelehnt',JSON.stringify(cases.map((c,i)=>c[0]+':'+res[i])),res.every((s,i)=>s===cases[i][2]));
