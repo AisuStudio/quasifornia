@@ -32,6 +32,7 @@ input[type=range]{width:100%;accent-color:var(--ac)}textarea{width:100%;height:9
 <div class="g" id="acc"></div>
 <h2>Farben (Zonen)</h2><div class="g" id="zones"></div>
 <h2>Körperform</h2><div id="sliders"></div>
+<h2>Pose</h2><div class="row"><select id="pose" aria-label="Pose"><option value="skate">Skaten (wie im Spiel)</option><option value="stand">Stehen</option><option value="walk">Gehen (Vorschau)</option></select></div>
 <h2>Ansicht</h2><div class="row"><label class="chk"><input type="checkbox" id="board" checked> Skateboard</label><label class="chk"><input type="checkbox" id="outl" checked> Kontur</label></div>
 <h2>Speichern</h2><div class="row"><button id="save">Im Browser speichern</button><button id="load">Laden</button><button id="export">JSON anzeigen</button><button id="import">JSON übernehmen</button><button id="dl">Als Datei laden</button></div>
 <textarea id="json" aria-label="Datensatz als JSON" spellcheck="false"></textarea><div id="msg" role="status"></div>
@@ -51,8 +52,9 @@ const PRESETS={
  gelb:{name:'Gelb',slots:{skin:'#8a5a3c',top:'#f0cf36',bot:'#e87bb0',sole:'#1cafd1',hc:'#141416',lens:'#141416',frame:'#d54291',stripe:'#d54291',pads:'#1cafd1'},acc:{hair:'puff',watch:false,chain:true,quilt:true,pack:false,pads:true,phones:false}},
  haendler:{name:'Händler',slots:{skin:'#f0c8a8',top:'#eae8e8',bot:'#312e42',sole:'#d54291',hc:'#1cafd1',lens:'#f0cf36',frame:'#141416',stripe:'#d54291',pack:'#d54291'},acc:{hair:'helmet',watch:true,chain:false,quilt:false,pack:true,pads:false,phones:false}}};
 const hex=v=>/^#[0-9a-fA-F]{6}$/.test(v);
-function newSpec(key='pink'){const p=PRESETS[key];return {v:2,species:'humanoid',name:p.name,body:{size:1,head:1,legs:1,arms:1,torso:1},slots:{...OPT,...p.slots},acc:{...p.acc}}}
-let spec=newSpec(),view={board:true,outline:true};
+function newSpec(key='pink'){const p=PRESETS[key];return {v:2,species:'humanoid',name:p.name,body:{size:1,head:1,legs:1,arms:1,torso:1,hipDip:0,hipW:1,thighTop:1},slots:{...OPT,...p.slots},acc:{...p.acc}}}
+let spec=newSpec(),view={board:true,outline:true},pose='skate',tPose=0;
+const BR={size:[.6,1.5],head:[.6,1.5],legs:[.6,1.5],arms:[.6,1.5],torso:[.6,1.5],hipDip:[0,.12],hipW:[.7,1.4],thighTop:[.8,1.4]};
 const $=id=>document.getElementById(id),msg=t=>{$('msg').textContent=t};
 /* ---------- Bau (eigener Code, nach dem Aufbau der Spiel-Avatare) ---------- */
 const BX=new THREE.BoxGeometry(1,1,1),CY=new THREE.CylinderGeometry(1,1,1,16),SP=new THREE.SphereGeometry(1,12,9),HEMI=new THREE.SphereGeometry(1,16,9,0,Math.PI*2,0,Math.PI/2);
@@ -64,18 +66,18 @@ function build(sp,opt){const o=sp.slots,a=sp.acc,b=sp.body,joints={};
  const S=(geo,mat,px,py,pz,par,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(geo,mat);m.position.set(px,py,pz);m.scale.set(sx,sy,sz);(par||g).add(m);
    if(opt.outline&&mat.transparent!==true){const q=new THREE.Mesh(geo,OUTM);q.scale.setScalar(1.12);q.userData.outline=1;m.add(q)}return m};
  const parts=new THREE.Group();g.add(parts);
- if(opt.board){const bd=new THREE.Group();g.add(bd);const deckM=MS('#2499bb',{flatShading:true});S(BX,deckM,0,.17,0,bd,.42,.035,1.55);S(BX,MS('#f0cf36'),0,.19,0,bd,.3,.01,1.3);
+ if(opt.board&&opt.pose==='skate'){const bd=new THREE.Group();g.add(bd);const deckM=MS('#2499bb',{flatShading:true});S(BX,deckM,0,.17,0,bd,.42,.035,1.55);S(BX,MS('#f0cf36'),0,.19,0,bd,.3,.01,1.3);
   [[-.17,.55],[.17,.55],[-.17,-.55],[.17,-.55]].forEach(([x,z])=>{const w=S(CY,MS(o.sole),x*1.1,.075,z,bd,.075,.05,.075);w.rotation.z=Math.PI/2});[[.55],[-.55]].forEach(([z])=>S(BX,MS('#8a8a95'),0,.115,z,bd,.3,.03,.05))}
  const P=new THREE.Group();P.position.y=.19;g.add(P);joints.hips=P;const hipY=.9;joints.thigh=[];joints.shin=[];joints.foot=[];
  [[-1,.8,1.0,.3],[1,.62,1.0,-.32]].forEach(([s,aa,bb,zo])=>{
   const th=new THREE.Group();th.position.set(s*.11,hipY,zo);th.rotation.x=-aa;P.add(th);joints.thigh.push(th);th.scale.y=b.legs;
-  S(cap(.095,.28),bot,0,-.225,0,th);
+  S(cap(.095,.28),bot,0,-.225+(b.hipDip||0),0,th,b.thighTop||1,1,b.thighTop||1);
   const sh=new THREE.Group();sh.position.y=-.45;sh.rotation.x=bb;th.add(sh);joints.shin.push(sh);
   S(SP,bot,0,0,0,sh,.088,.088,.088);S(cap(.075,.3),bot,0,-.23,0,sh);S(CY,bot,0,-.4,0,sh,.085,.05,.085);
   if(a.pads)S(SP,MS(o.pads),0,0,.07,sh,.1,.11,.065);
   const ft=new THREE.Group();ft.position.y=-.46;ft.rotation.x=aa-bb;sh.add(ft);joints.foot.push(ft);
   S(SP,shoe,0,-.03,.07,ft,.095,.085,.2);S(BX,sole,0,-.1,.07,ft,.2,.05,.42);S(SP,MS(o.sole),0,-.04,.17,ft,.085,.06,.1);S(CY,shoe,0,.04,0,ft,.09,.07,.09)});
- S(SP,bot,0,hipY+.03,0,P,.19,.13,.15);
+ S(SP,bot,0,hipY+.03-(b.hipDip||0)*.4,0,P,.19*(b.hipW||1),.13+(b.hipDip||0)*1.2,.15*(b.hipW||1));
  const tz=new THREE.Group();tz.position.set(0,hipY+.05,0);tz.rotation.x=.3;P.add(tz);joints.torso=tz;tz.scale.set(b.torso,1,1);
  S(cap(.17,.26),top,0,.3,0,tz,1,1,.78);S(CY,stripe,0,.36,0,tz,.178,.025,.14);
  if(a.quilt)for(let k=0;k<5;k++)S(CY,MS('#c9a420'),0,.08+k*.115,0,tz,.178,.012,.14);
@@ -106,12 +108,21 @@ const vw=$('view'),R=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuff
 const sc=new THREE.Scene();sc.background=new THREE.Color('#2a2442');const cam=new THREE.PerspectiveCamera(36,1,.1,50);let dist=7.4;
 sc.add(new THREE.HemisphereLight('#ffffff','#9a8fc0',1.7));const dl=new THREE.DirectionalLight('#ffffff',1.5);dl.position.set(3,6,4);sc.add(dl);
 const floor=new THREE.Mesh(new THREE.CircleGeometry(2.2,40),new THREE.MeshBasicMaterial({color:'#3a3258'}));floor.rotation.x=-Math.PI/2;sc.add(floor);
-let av=null,yaw=-.6,drag=null;
-function rebuild(){if(av){sc.remove(av);av.traverse(o=>{if(o.isMesh&&o.material&&o.material!==OUTM)o.material.dispose()})}av=build(spec,view);sc.add(av);av.rotation.y=yaw}
+let av=null,yaw=-.6,drag=null,camY=1.45;
+function rebuild(){if(av){sc.remove(av);av.traverse(o=>{if(o.isMesh&&o.material&&o.material!==OUTM)o.material.dispose()})}av=build(spec,{...view,pose});sc.add(av);av.rotation.y=yaw;applyPose(0)}
 R.domElement.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:yaw};R.domElement.setPointerCapture(e.pointerId)});R.domElement.addEventListener('pointermove',e=>{if(drag)yaw=drag.y+(e.clientX-drag.x)*.01});R.domElement.addEventListener('pointerup',()=>drag=null);
 R.domElement.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(3,Math.min(12,dist+e.deltaY*.006))},{passive:false});
 function resize(){const w=vw.clientWidth,h=vw.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',resize);resize();
-(function loop(){cam.position.set(0,1.9,dist);cam.lookAt(0,1.45,0);if(av)av.rotation.y=yaw;R.render(sc,cam);requestAnimationFrame(loop)})();
+(function loop(){tPose=performance.now()/1000;if(pose==='walk')applyPose(tPose);cam.position.set(0,camY+.45,dist);cam.lookAt(0,camY,0);if(av)av.rotation.y=yaw;R.render(sc,cam);requestAnimationFrame(loop)})();
+/* ---------- Posen: Skaten = wie gebaut, Stehen und Gehen setzen nur die Gelenkwinkel ---------- */
+function applyPose(t){if(!av||pose==='skate')return;const j=av.userData.joints,L=spec.body.legs;
+  const base=L*1.035-.9;                              /* Hüfte so tief, dass die Sohle am Boden steht (Gelenk 0,9, Bein 0,45 + 0,46, Fuß 0,125) */
+  const set=(i,th,sh)=>{const T=j.thigh[i],S=j.shin[i],F=j.foot[i];T.position.z=0;T.rotation.x=th;S.rotation.x=sh;F.rotation.x=-(th+sh)};
+  const arms=(l,r,el)=>{[l,r].forEach((x,i)=>{j.shoulder[i].rotation.set(x,0,(i?1:-1)*.12);j.elbow[i].rotation.set(el,0,(i?1:-1)*.05)})};   /* l: linker, r: rechter Arm (x-Drehung, negativ = nach vorn) */
+  if(pose==='stand'){j.hips.position.y=base;set(0,0,0);set(1,0,0);j.torso.rotation.x=.04;j.head.rotation.x=0;arms(-.05,-.05,-.12)}
+  else{const ph=t*2*Math.PI*1.05,a0=Math.sin(ph),a1=-a0,f=x=>.12+.8*Math.max(0,x);
+    j.hips.position.y=base+.025*Math.cos(2*ph)-.03;set(0,-.5*a0,f(Math.cos(ph)));set(1,-.5*a1,f(-Math.cos(ph)));
+    j.torso.rotation.x=.1;j.torso.rotation.y=.12*a0;j.head.rotation.x=-.08;arms(.5*a0,-.5*a0,-.25)}}
 /* ---------- Oberfläche ---------- */
 function ui(){const pr=$('presets');pr.innerHTML='';Object.keys(PRESETS).forEach(k=>{const b=document.createElement('button');b.textContent=PRESETS[k].name;b.dataset.k=k;b.onclick=()=>{spec=newSpec(k);sync();rebuild();msg('Vorlage '+PRESETS[k].name+' geladen.')};pr.appendChild(b)});
  const ac=$('acc');ac.innerHTML='';
@@ -119,15 +130,15 @@ function ui(){const pr=$('presets');pr.innerHTML='';Object.keys(PRESETS).forEach
  const hs=document.createElement('select');HAIR.forEach(h=>{const o=document.createElement('option');o.value=h;o.textContent=HAIRN[h];hs.appendChild(o)});hs.id='a-hair';hs.onchange=()=>{spec.acc.hair=hs.value;rebuild()};row('Kopf (Haare, Kappe)',hs);
  [['phones','Gesicht: Kopfhörer'],['chain','Hals: Kette'],['pack','Rücken: Rucksack'],['watch','Handgelenk: Uhr'],['pads','Knie: Schoner'],['quilt','Rumpf: Steppjacke']].forEach(([k,t])=>{const c=document.createElement('input');c.type='checkbox';c.id='a-'+k;c.onchange=()=>{spec.acc[k]=c.checked;rebuild()};row(t,c)});
  const z=$('zones');z.innerHTML='';Object.keys(SLOTS).forEach(k=>{const l=document.createElement('label');l.textContent=SLOTS[k];const i=document.createElement('input');i.type='color';i.id='z-'+k;i.oninput=()=>{spec.slots[k]=i.value;rebuild()};z.append(l,i)});
- const sl=$('sliders');sl.innerHTML='';const SLD={size:['Gesamtgröße',.8,1.3],head:['Kopf',.8,1.4],torso:['Rumpfbreite',.8,1.3],legs:['Beine',.8,1.3],arms:['Arme',.8,1.3]};
- for(const k in SLD){const l=document.createElement('label');l.className='sl';const o=document.createElement('output');const i=document.createElement('input');i.type='range';i.min=SLD[k][1];i.max=SLD[k][2];i.step=.05;i.id='s-'+k;i.oninput=()=>{spec.body[k]=+i.value;o.textContent=(+i.value).toFixed(2);rebuild()};l.append(SLD[k][0],i,o);sl.appendChild(l)}}
+ const sl=$('sliders');sl.innerHTML='';const SLD={size:['Gesamtgröße',.8,1.3,.05],head:['Kopf',.8,1.4,.05],torso:['Rumpfbreite',.8,1.3,.05],legs:['Beine',.8,1.3,.05],arms:['Arme',.8,1.3,.05],hipDip:['Hüfte: Eintauchen',0,.12,.01],hipW:['Hüftbreite',.8,1.3,.05],thighTop:['Oberschenkel dick',.85,1.3,.05]};
+ for(const k in SLD){const l=document.createElement('label');l.className='sl';const o=document.createElement('output');const i=document.createElement('input');i.type='range';i.min=SLD[k][1];i.max=SLD[k][2];i.step=SLD[k][3];i.id='s-'+k;i.oninput=()=>{spec.body[k]=+i.value;o.textContent=(+i.value).toFixed(2);rebuild()};l.append(SLD[k][0],i,o);sl.appendChild(l)}}
 function sync(){$('a-hair').value=spec.acc.hair;['phones','chain','pack','watch','pads','quilt'].forEach(k=>$('a-'+k).checked=!!spec.acc[k]);
  for(const k in SLOTS)$('z-'+k).value=spec.slots[k];for(const k in spec.body){const i=$('s-'+k);i.value=spec.body[k];i.nextElementSibling.textContent=(+i.value).toFixed(2)}}
-$('board').onchange=e=>{view.board=e.target.checked;rebuild()};$('outl').onchange=e=>{view.outline=e.target.checked;rebuild()};
+$('pose').onchange=e=>{pose=e.target.value;rebuild()};$('board').onchange=e=>{view.board=e.target.checked;rebuild()};$('outl').onchange=e=>{view.outline=e.target.checked;rebuild()};
 /* ---------- Speichern, Laden ---------- */
 function toJSON(){return JSON.stringify(spec)}
 function fromJSON(t){const o=JSON.parse(t);if(!o||o.v!==2||o.species!=='humanoid')throw new Error('Unbekanntes Format');const s=newSpec('pink');s.name=String(o.name||'Entwurf').slice(0,40);
- for(const k in s.body){const v=o.body?.[k];if(typeof v==='number'&&isFinite(v))s.body[k]=Math.max(.6,Math.min(1.5,v))}
+ for(const k in s.body){const v=o.body?.[k];if(typeof v==='number'&&isFinite(v))s.body[k]=Math.max(BR[k][0],Math.min(BR[k][1],v))}
  for(const k in s.slots){const v=o.slots?.[k];if(hex(v))s.slots[k]=v}
  s.acc.hair=HAIR.includes(o.acc?.hair)?o.acc.hair:'none';['phones','chain','pack','watch','pads','quilt'].forEach(k=>s.acc[k]=!!o.acc?.[k]);
  spec=s;sync();rebuild()}
@@ -137,5 +148,5 @@ $('export').onclick=()=>{$('json').value=toJSON();msg('Datensatz unten, zum Kopi
 $('import').onclick=()=>{try{fromJSON($('json').value);msg('Übernommen.')}catch(e){msg('Das hat nicht geklappt: '+e.message)}};
 $('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([toJSON()],{type:'application/json'}));a.download='avatar-'+spec.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove()};
 ui();sync();rebuild();
-window.__rnd={get spec(){return spec},PRESETS,newSpec,toJSON,fromJSON,rebuild,build,setPreset:k=>{spec=newSpec(k);sync();rebuild()},get av(){return av},THREE};
+window.__rnd={get spec(){return spec},setPose:p=>{pose=p;$('pose').value=p;rebuild()},applyPose,setCam:(d,y)=>{dist=d;if(y!=null)camY=y},get pose(){return pose},PRESETS,newSpec,toJSON,fromJSON,rebuild,build,setPreset:k=>{spec=newSpec(k);sync();rebuild()},get av(){return av},THREE};
 </script></body></html>

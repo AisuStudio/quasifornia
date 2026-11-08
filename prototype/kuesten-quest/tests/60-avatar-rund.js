@@ -20,6 +20,17 @@ const srv=http.createServer((q,s)=>{const u=decodeURIComponent(q.url.split('?')[
    r.fromJSON(JSON.stringify({v:2,species:'humanoid',name:'x'.repeat(200),body:{size:99,head:-5},slots:{top:'rot',skin:'#112233',evil:'#ffffff'},acc:{hair:'laser',pack:1,phones:'ja'}}));const s=r.spec;
    return {same,bytes:j.length,abgelehnt:bad.every(Boolean),size:s.body.size,head:s.body.head,top:s.slots.top,skin:s.slots.skin,fremd:'evil' in s.slots,hair:s.acc.hair,name:s.name.length}});
  console.log('JSON',JSON.stringify(js),js.same&&js.bytes<2000&&js.abgelehnt&&js.size<=1.5&&js.head>=.6&&js.top==='#d54291'&&js.skin==='#112233'&&!js.fremd&&js.hair==='none'&&js.name<=40);
+
+ const ps=await p.evaluate(async()=>{const r=__rnd,T=r.THREE,minY=()=>{const bb=new T.Box3();r.av.updateMatrixWorld(true);r.av.traverse(o=>{if(o.isMesh&&!o.userData.outline){const b=new T.Box3().setFromObject(o);bb.union(b)}});return bb.min.y};
+   r.setPreset('pink');const sk=minY();r.setPose('stand');const st=minY();const stBoard=(()=>{let n=0;r.av.traverse(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='BoxGeometry'&&o.scale.z>1.2)n++});return n})();
+   r.setPose('walk');r.applyPose(0);const j=r.av.userData.joints,a=j.thigh[0].rotation.x;r.applyPose(.25);const b=j.thigh[0].rotation.x;const opp=j.thigh[1].rotation.x;r.applyPose(0.25);
+   r.setPose('stand');const L=document.getElementById('s-legs');L.value=1.2;L.dispatchEvent(new Event('input'));const st2=minY();
+   return {skate:+sk.toFixed(3),stehen:+st.toFixed(3),stehenLang:+st2.toFixed(3),brett:stBoard,schritt:[+a.toFixed(2),+b.toFixed(2)],gegenlaeufig:Math.abs(b+opp)<1e-6}});
+ console.log('Posen',JSON.stringify(ps),Math.abs(ps.stehen)<.03&&Math.abs(ps.stehenLang)<.03&&ps.brett===0&&Math.abs(ps.schritt[0]-ps.schritt[1])>.3&&ps.gegenlaeufig);
+ const hip=await p.evaluate(()=>{const r=__rnd;r.setPose('skate');r.setPreset('pink');const pel=()=>{let m=null;r.av.userData.joints.hips.children.forEach(o=>{if(o.isMesh&&Math.abs(o.scale.x-.19*r.spec.body.hipW)<1e-6)m=o});return m};
+   const p0=pel().scale.y;const i=document.getElementById('s-hipDip');i.value=.08;i.dispatchEvent(new Event('input'));const p1=pel().scale.y;const w=document.getElementById('s-hipW');w.value=1.2;w.dispatchEvent(new Event('input'));const wide=pel().scale.x;
+   r.fromJSON(JSON.stringify({v:2,species:'humanoid',name:'t',body:{hipDip:5,hipW:0,thighTop:99},slots:{},acc:{}}));return {p0:+p0.toFixed(3),p1:+p1.toFixed(3),wide:+wide.toFixed(3),klemmDip:r.spec.body.hipDip,klemmW:r.spec.body.hipW,klemmT:r.spec.body.thighTop}});
+ console.log('Hüftregler',JSON.stringify(hip),hip.p1>hip.p0&&Math.abs(hip.wide-.228)<.005&&hip.klemmDip===.12&&hip.klemmW===.7&&hip.klemmT===1.4);
  await p.goto('http://localhost:9002/tools/avatar-designer/');await p.waitForSelector('[role=tab]');
  const tb=await p.evaluate(()=>({tabs:[...document.querySelectorAll('[role=tab]')].map(b=>b.textContent),avatarAktiv:document.querySelector('[role=tab][aria-selected=true]').textContent}));
  await p.click('[role=tab][data-id=bau]');const bau=await p.evaluate(()=>({text:document.getElementById('soon').textContent,sub:getComputedStyle(document.getElementById('sub')).display,frames:[...document.querySelectorAll('iframe')].map(f=>getComputedStyle(f).display)}));

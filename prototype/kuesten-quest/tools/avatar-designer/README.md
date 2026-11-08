@@ -20,11 +20,12 @@ python3 -m http.server 8080
 - Vier Vorlagen als Daten abgeschrieben (Stand 2026-11-08).
 - **Zubehör an Ankern:** Kopf (Haare: ohne, Kappe, Dutt, Puff, Helm), Gesicht (Kopfhörer), Hals (Kette), Rücken (Rucksack), Handgelenk (Uhr), Knie (Schoner), Rumpf (Steppjacke).
 - **Farbzonen:** Haut, Oberteil, Hose, Sohle, Haare, Brillengläser, Brillenrahmen, Streifen, Rucksack, Schoner, Kopfhörer.
-- **Regler:** Gesamtgröße, Kopf, Rumpfbreite, Beine, Arme.
+- **Regler:** Gesamtgröße, Kopf, Rumpfbreite, Beine, Arme, dazu im Hüftbereich **Hüfte: Eintauchen** (Oberschenkel taucht in die Hüfte, Standard 0 = wie im Spiel), **Hüftbreite** und **Oberschenkel dick**.
+- **Posen:** Skaten (wie im Spiel), Stehen (Füße am Boden, ohne Brett), Gehen (Vorschau als einfacher Zyklus, nur im Editor; im Spiel gibt es noch keine Gehbewegung).
 - Ansicht: Skateboard und Kontur ein- und ausschaltbar. Die Kontur ist hier ein einfacher Ersatz und nicht dieselbe wie im Spiel.
 - Speichern im Browser, JSON anzeigen und übernehmen, als Datei laden. Beim Einlesen werden Werte begrenzt und Ungültiges verworfen.
 
-AvatarSpec v2: `{ v:2, species:'humanoid', name, body:{size,head,legs,arms,torso}, slots:{skin,top,bot,sole,hc,lens,frame,stripe,pack,pads,phones}, acc:{hair,watch,chain,quilt,pack,pads,phones} }`
+AvatarSpec v2: `{ v:2, species:'humanoid', name, body:{size,head,legs,arms,torso,hipDip,hipW,thighTop}, slots:{skin,top,bot,sole,hc,lens,frame,stripe,pack,pads,phones}, acc:{hair,watch,chain,quilt,pack,pads,phones} }`
 
 ## Was noch nicht geht
 - Teile mit der Maus verschieben und skalieren, Aufkleber auf runden Flächen, eigene Paletten.
