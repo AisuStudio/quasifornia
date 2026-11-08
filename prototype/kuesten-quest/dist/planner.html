@@ -52,6 +52,7 @@ button:disabled{opacity:.4;cursor:default}
 dialog{border:1px solid var(--axis);border-radius:12px;background:var(--panel);color:var(--text);padding:16px;width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 40px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h2{margin:0 0 10px;font-size:16px}
+.arow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}.arow label{width:70px;font-size:12px;color:var(--text2)}.arow input{flex:1 1 200px;min-width:0;font:12px ui-monospace,Menlo,Consolas,monospace}
 .vnew{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.vnew input{flex:1 1 180px;min-width:0}
 #v-list{display:flex;flex-direction:column;gap:6px;overflow:auto;max-height:50dvh}
 .vr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--grid);border-radius:8px;padding:8px 10px}
@@ -133,6 +134,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
     <button id="add-chapter" type="button">+ Kapitel</button>
     <button id="fit" type="button">Einpassen</button>
     <button id="versions" type="button">Versionen</button>
+    <button id="agent" type="button" title="Lese-Link für Agenten">Agent-Link</button>
     <button id="export" type="button">Export</button>
     <button id="import" type="button">Import</button>
     <input id="file" type="file" accept="application/json,.json" hidden>
@@ -147,6 +149,16 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
   <h2 style="margin-top:14px">Neuer Entwurf</h2>
   <div class="vnew"><input id="d-name" type="text" maxlength="60" placeholder="Name, z. B. Antons Entwurf" aria-label="Name des Entwurfs"><select id="d-from" aria-label="Ausgangspunkt"><option value="blank">Leer</option><option value="copy">Kopie dieses Dokuments</option></select><button id="d-new" type="button">Anlegen</button></div>
   <div class="vfoot"><span id="d-msg">Entwürfe haben eigenen Stand und eigene Versionen. Der Hauptplan bleibt unberührt.</span><button id="d-close" type="button">Schließen</button></div>
+</dialog>
+<dialog id="adlg" aria-labelledby="ah">
+  <h2 id="ah">Agent-Link</h2>
+  <p class="vt" style="margin:0 0 10px">Lese-Link für dieses Dokument. Ein Agent (z. B. Claude Code) lädt ihn und liest den Plan als Markdown. Nur lesen, kein Passwort. Wer den Link hat, liest den ganzen Plan samt Notizen. Nicht in öffentliche Repos oder Chats legen. Bei Verdacht erneuern oder widerrufen.</p>
+  <p id="a-status" style="margin:0 0 10px;font-weight:600">Lädt …</p>
+  <div class="arow"><label for="a-md">Markdown</label><input id="a-md" type="text" readonly><button id="a-copy-md" type="button" disabled>Kopieren</button></div>
+  <div class="arow"><label for="a-json">JSON</label><input id="a-json" type="text" readonly><button id="a-copy-json" type="button" disabled>Kopieren</button></div>
+  <div class="vnew" style="margin-top:6px"><button id="a-new" type="button">Link erstellen</button><button id="a-rotate" type="button" hidden>Neu erzeugen</button><button id="a-revoke" type="button" class="danger" hidden>Widerrufen</button></div>
+  <div class="vnew"><button id="a-copy-text" type="button">Plan als Markdown kopieren (ohne Link)</button></div>
+  <div class="vfoot"><span id="a-msg">Der Link zeigt immer den zuletzt gespeicherten Stand.</span><button id="a-close" type="button">Schließen</button></div>
 </dialog>
 <dialog id="vdlg" aria-labelledby="vh">
   <h2 id="vh">Versionen</h2>
@@ -326,7 +338,7 @@ window.addEventListener('pointerup',endPtr);window.addEventListener('pointercanc
 stage.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.clientX,ev.clientY,Math.exp(-ev.deltaY*(ev.ctrlKey?.01:.0015)))},{passive:false});
 stage.addEventListener('dblclick',ev=>{const cn=ev.target.closest('.node');if(cn&&cn.classList.contains('chapter')){openChapter(cn.dataset.id);return}if(ev.target.closest('.node')||ev.target.closest('[data-edge]')||ev.target.closest('#zoomctl'))return;const p=toWorld(ev.clientX,ev.clientY);addNode('scene',p.x-W/2,p.y-24)});
 window.addEventListener('keydown',ev=>{
-  if(vdlg.open||ddlg.open)return;
+  if(vdlg.open||ddlg.open||adlg.open)return;
   if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key.toLowerCase();if(k==='z'){ev.preventDefault();ev.shiftKey?doRedo():doUndo();return}if(k==='y'){ev.preventDefault();doRedo();return}}
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
@@ -397,6 +409,25 @@ $('#docs').onclick=()=>{dmsg.textContent='Entwürfe haben eigenen Stand und eige
 $('#d-new').onclick=newDraft;$('#d-close').onclick=()=>ddlg.close();
 $('#d-name').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();newDraft()}});
 ddlg.addEventListener('click',ev=>{if(ev.target===ddlg)ddlg.close()});
+/* ---------- Agent-Link ---------- */
+const adlg=$('#adlg'),amsg=$('#a-msg');
+async function aapi(m){const r=await fetch('/api/planner/agent'+dq,{method:m});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&j.error)||('Fehler '+r.status));return j}
+function showAgent(j){const on=!!(j&&j.enabled),u=on?location.origin+'/agent/planner/'+j.token:'';
+  $('#a-status').textContent=on?'Link aktiv seit '+fmtT(j.created)+'.':'Kein Link aktiv. Der Plan ist nur mit Passwort lesbar.';
+  $('#a-md').value=u;$('#a-json').value=on?u+'?format=json':'';
+  $('#a-new').hidden=on;$('#a-rotate').hidden=!on;$('#a-revoke').hidden=!on;$('#a-copy-md').disabled=!on;$('#a-copy-json').disabled=!on}
+async function loadAgent(){try{showAgent(await aapi('GET'))}catch(e){$('#a-status').textContent='Nicht erreichbar: '+e.message}}
+async function copyText(t,ok){try{await navigator.clipboard.writeText(t);amsg.textContent=ok}catch(e){amsg.textContent='Kopieren nicht erlaubt: bitte markieren und Strg+C drücken.'}}
+$('#agent').onclick=()=>{amsg.textContent='Der Link zeigt immer den zuletzt gespeicherten Stand.';showAgent(null);$('#a-status').textContent='Lädt …';adlg.showModal();loadAgent()};
+$('#a-new').onclick=async()=>{try{showAgent(await aapi('POST'));amsg.textContent='Link erstellt.'}catch(e){amsg.textContent=e.message}};
+$('#a-rotate').onclick=async()=>{if(!confirm('Neuen Link erzeugen? Der alte Link funktioniert danach nicht mehr.'))return;try{showAgent(await aapi('POST'));amsg.textContent='Neuer Link erzeugt, der alte ist ungültig.'}catch(e){amsg.textContent=e.message}};
+$('#a-revoke').onclick=async()=>{if(!confirm('Link widerrufen? Agenten verlieren den Zugriff.'))return;try{await aapi('DELETE');showAgent(null);amsg.textContent='Widerrufen.'}catch(e){amsg.textContent=e.message}};
+$('#a-copy-md').onclick=()=>copyText($('#a-md').value,'Markdown-Link kopiert.');
+$('#a-copy-json').onclick=()=>copyText($('#a-json').value,'JSON-Link kopiert.');
+$('#a-copy-text').onclick=async()=>{amsg.textContent='Holt den Plan …';
+  try{await flush();const r=await fetch('/api/planner/export'+(dq?dq+'&':'?')+'format=md');if(!r.ok)throw new Error('Fehler '+r.status);const t=await r.text();await copyText(t,'Plan als Markdown kopiert ('+t.length+' Zeichen).')}catch(e){amsg.textContent=e.message}};
+$('#a-close').onclick=()=>adlg.close();
+adlg.addEventListener('click',ev=>{if(ev.target===adlg)adlg.close()});
 /* ---------- Export und Import ---------- */
 $('#export').onclick=()=>{const b=new Blob([JSON.stringify(doc,null,1)],{type:'application/json'}),a=mk('a',{href:URL.createObjectURL(b),download:'planner-'+new Date().toISOString().slice(0,10)+'.json'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('#import').onclick=()=>$('#file').click();

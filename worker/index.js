@@ -27,6 +27,11 @@ export default{
       if(url0.pathname==='/api/stats/reset'&&request.method!=='POST')return new Response('?',{status:405,headers:NOSTORE});
       if(url0.pathname==='/api/stats/summary'&&request.method!=='GET')return new Response('?',{status:405,headers:NOSTORE});
       return env.STATS.get(env.STATS.idFromName('main')).fetch(request)}
+    /* Agent-Link des Planners: Lese-Link mit unerratbarem Token, ohne Passwort, nur GET/HEAD. Wie die Eingangs-Links gilt: wer den Link hat, liest. */
+    if(url0.pathname.startsWith('/agent/planner/')){
+      if(request.method!=='GET'&&request.method!=='HEAD')return new Response('?',{status:405,headers:NOSTORE});
+      if(!env.PLANNER)return new Response('Planner nicht eingerichtet',{status:503,headers:NOSTORE});
+      return env.PLANNER.get(env.PLANNER.idFromName('main')).fetch(request)}
     const pw=env.SITE_PASSWORD;
     if(!pw)return new Response('Diese Seite ist gesperrt. Das Passwort wurde noch nicht eingerichtet.',{status:503,headers:{'content-type':'text/plain; charset=utf-8',...NOSTORE}});
     const given=creds(request.headers.get('authorization'));
