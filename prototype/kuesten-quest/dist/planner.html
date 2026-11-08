@@ -81,8 +81,15 @@ main{flex:1;display:flex;min-height:0;position:relative}
 .node.scene .ty{color:var(--s1)}.node.branch .ty{color:var(--s2)}.node.note .ty{color:var(--s3)}
 .node.note{background:color-mix(in srgb,var(--s3) 10%,var(--panel));border-style:dashed}
 .node.branch{border-radius:22px}
-.node.character{border-color:color-mix(in srgb,var(--s4) 60%,var(--axis));border-radius:20px 20px 10px 10px}
-.node.character .ty{color:var(--s4)}
+.node.note.k-character{border-style:solid;border-color:color-mix(in srgb,var(--s4) 60%,var(--axis));background:color-mix(in srgb,var(--s4) 8%,var(--panel));border-radius:20px 20px 10px 10px}
+.node.note.k-character .ty{color:var(--s4)}
+.node.note.k-event{border-style:solid;border-color:color-mix(in srgb,var(--s2) 60%,var(--axis));background:color-mix(in srgb,var(--s2) 8%,var(--panel))}
+.node.note.k-event .ty{color:var(--s2)}
+.node.note.k-item{border-style:solid;border-color:color-mix(in srgb,var(--s1) 55%,var(--axis));background:color-mix(in srgb,var(--s1) 8%,var(--panel));border-radius:4px 14px}
+.node.note.k-item .ty{color:var(--s1)}
+.node.note.k-todo{border-style:solid;border-color:color-mix(in srgb,var(--warn) 65%,var(--axis));background:color-mix(in srgb,var(--warn) 9%,var(--panel))}
+.node.note.k-todo .ty{color:var(--warn)}
+.node.note.done{opacity:.6}.node.note.done .ti{text-decoration:line-through}
 .node .cd{font-size:12px;font-weight:600;color:var(--s4);margin-top:1px}
 .node .cd.dup{color:var(--warn)}
 #cards{display:flex;flex-wrap:wrap;gap:3px;padding:6px 16px;border-bottom:1px solid var(--grid);background:var(--panel)}
@@ -143,7 +150,6 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
     <button id="add-scene" type="button">+ Szene</button>
     <button id="add-branch" type="button">+ Verzweigung</button>
     <button id="add-note" type="button">+ Notiz</button>
-    <button id="add-character" type="button">+ Charakter</button>
     <button id="add-chapter" type="button">+ Kapitel</button>
     <button id="fit" type="button">Einpassen</button>
     <button id="versions" type="button">Versionen</button>
@@ -192,16 +198,18 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 (()=>{
 const $=s=>document.querySelector(s);
 const stage=$('#stage'),world=$('#world'),nodesEl=$('#nodes'),eg=$('#eg'),tmp=$('#tmp'),insp=$('#insp'),status=$('#status'),hint=$('#hint');
-const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel',character:'Charakter'};
+const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel'},KINDS={character:'Charakter',event:'Ereignis',todo:'Todo',item:'Gegenstand'};
+const typeLbl=n=>n.type==='note'&&n.kind?KINDS[n.kind]:(TYPES[n.type]||n.type);
 /* Große Arkana, Narr 0 bis Welt XXI (Rider-Waite-Reihenfolge). Muss mit worker/planner.js übereinstimmen (Test 65). */
 const ARC=[['0','Der Narr','Aufbruch'],['I','Der Magier','Fähigkeit'],['II','Die Hohepriesterin','Geheimnis'],['III','Die Herrscherin','Fülle'],['IV','Der Herrscher','Ordnung'],['V','Der Hierophant','Tradition'],['VI','Die Liebenden','Entscheidung'],['VII','Der Wagen','Antrieb'],['VIII','Die Kraft','Mut'],['IX','Der Eremit','Einkehr'],['X','Das Rad des Schicksals','Wendung'],['XI','Die Gerechtigkeit','Ausgleich'],['XII','Der Gehängte','Perspektivwechsel'],['XIII','Der Tod','Wandlung'],['XIV','Die Mäßigkeit','Maß'],['XV','Der Teufel','Versuchung'],['XVI','Der Turm','Zusammenbruch'],['XVII','Der Stern','Hoffnung'],['XVIII','Der Mond','Illusion'],['XIX','Die Sonne','Klarheit'],['XX','Das Gericht','Bilanz'],['XXI','Die Welt','Vollendung']];
 const isCard=c=>Number.isInteger(c)&&c>=0&&c<22;
-let cardCache=ARC.map(()=>({stations:[],chars:[]}));
-function cardStats(){const m=ARC.map(()=>({stations:[],chars:[]}));for(const g of Object.values(doc.graphs))for(const n of Object.values(g.nodes)){if(!isCard(n.card))continue;if(n.type==='chapter')m[n.card].stations.push({g:g.id,n});else if(n.type==='character')m[n.card].chars.push({g:g.id,n})}return m}
+let cardCache=ARC.map(()=>({stations:[],notes:[]}));
+function cardStats(){const m=ARC.map(()=>({stations:[],notes:[]}));for(const g of Object.values(doc.graphs))for(const n of Object.values(g.nodes)){if(!isCard(n.card))continue;if(n.type==='chapter')m[n.card].stations.push({g:g.id,n});else if(n.type==='note')m[n.card].notes.push({g:g.id,n})}return m}
 const rid=()=>'n'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-3);
 const DID=new URLSearchParams(location.search).get('d')||'main',dq=DID==='main'?'':'?d='+encodeURIComponent(DID),BK='planner-backup'+(DID==='main'?'':'-'+DID);
 let docName=DID==='main'?'Hauptplan':'Entwurf',doc=null,rev=0,gid=null,sel=null,view={x:0,y:0,k:1},saving=false,pending=false,timer=0,stale=false,onlyMand=false;const views={};
 const mk=(t,a={},tx)=>{const e=document.createElementNS(t==='svg'||t==='path'||t==='g'||t==='text'?'http://www.w3.org/2000/svg':'http://www.w3.org/1999/xhtml',t);for(const k in a)e.setAttribute(k,a[k]);if(tx!=null)e.textContent=tx;return e};
+const migrate=d=>{if(d&&d.graphs)for(const g of Object.values(d.graphs))for(const n of Object.values(g.nodes||{}))if(n.type==='character'){n.type='note';n.kind='character'}return d};
 const blank=()=>({v:1,root:'g0',title:'Spiel',graphs:{g0:{id:'g0',name:'Spiel',parent:null,nodes:{},edges:[]}}});
 const G=()=>doc.graphs[gid];
 /* ---------- Speichern ---------- */
@@ -245,13 +253,13 @@ function fit(){const ns=Object.values(G().nodes);if(!ns.length){view={x:60,y:60,
   view={k,x:(r.width-(c-a)*k)/2-a*k,y:(r.height-(d-b)*k)/2-b*k};applyView()}
 /* ---------- Heldenreise: Kartenleiste ---------- */
 function renderStrip(){
-  const el=$('#cards'),any=cardCache.some(x=>x.stations.length||x.chars.length);el.hidden=!any;if(!any)return;el.textContent='';
+  const el=$('#cards'),any=cardCache.some(x=>x.stations.length||x.notes.length);el.hidden=!any;if(!any)return;el.textContent='';
   cardCache.forEach((x,i)=>{
-    const filled=x.stations.some(t=>t.n.graph&&doc.graphs[t.n.graph]&&Object.keys(doc.graphs[t.n.graph].nodes).length>0),state=x.stations.length?(filled?'full':'empty'):'none',cur=x.stations.some(t=>t.n.graph===gid)||x.chars.some(t=>t.g===gid);
-    const b=mk('button',{type:'button',class:'cell '+state+(cur?' cur':''),'data-card':String(i),title:ARC[i][0]+' · '+ARC[i][1]+' ('+ARC[i][2]+'): '+(x.stations.length?(filled?'Station mit Inhalt':'Station leer'):'keine Station')+' · '+x.chars.length+' Charakter(e)'},ARC[i][0]);
-    if(x.chars.length)b.append(mk('sup',{},String(x.chars.length)));
+    const filled=x.stations.some(t=>t.n.graph&&doc.graphs[t.n.graph]&&Object.keys(doc.graphs[t.n.graph].nodes).length>0),state=x.stations.length?(filled?'full':'empty'):'none',cur=x.stations.some(t=>t.n.graph===gid)||x.notes.some(t=>t.g===gid);
+    const b=mk('button',{type:'button',class:'cell '+state+(cur?' cur':''),'data-card':String(i),title:ARC[i][0]+' · '+ARC[i][1]+' ('+ARC[i][2]+'): '+(x.stations.length?(filled?'Station mit Inhalt':'Station leer'):'keine Station')+' · '+(()=>{const c={};x.notes.forEach(t=>{const k=t.n.kind?KINDS[t.n.kind]:'Notiz';c[k]=(c[k]||0)+1});const a=Object.entries(c).map(([k,v])=>v+' '+k);return a.length?a.join(', '):'keine Notizen'})()},ARC[i][0]);
+    if(x.notes.length)b.append(mk('sup',{},String(x.notes.length)));
     b.onclick=()=>jumpCard(i);el.append(b)})}
-function jumpCard(i){const x=cardCache[i],t=x.stations[0]||x.chars[0];if(!t)return;
+function jumpCard(i){const x=cardCache[i],t=x.stations[0]||x.notes[0];if(!t)return;
   if(t.g!==gid){views[gid]={...view};gid=t.g}
   sel={kind:'node',id:t.n.id};render();inspect();const n=G().nodes[t.n.id],r=stage.getBoundingClientRect();
   view={k:1,x:r.width/2-(n.x+W/2),y:r.height/2-(n.y+40)};applyView()}
@@ -268,12 +276,12 @@ function openChapter(nid){const n=G().nodes[nid];if(!n||n.type!=='chapter')retur
   goTo(n.graph)}
 /* ---------- Zeichnen ---------- */
 function nodeEl(n){
-  const e=mk('div',{class:'node '+n.type+(sel&&sel.kind==='node'&&sel.id===n.id?' sel':''),'data-id':n.id,tabindex:'-1'});
+  const e=mk('div',{class:'node '+n.type+(n.kind?' k-'+n.kind:'')+(n.kind==='todo'&&n.done?' done':'')+(sel&&sel.kind==='node'&&sel.id===n.id?' sel':''),'data-id':n.id,tabindex:'-1'});
   e.style.left=n.x+'px';e.style.top=n.y+'px';
   if(n.mandatory){e.classList.add('mand');e.append(mk('span',{class:'bd'},'Pflicht'))}
   if(onlyMand&&!isMand(n))e.classList.add('dim');
-  e.append(mk('div',{class:'ty'},TYPES[n.type]||n.type),mk('div',{class:'ti'},n.title||'(ohne Titel)'));
-  if(isCard(n.card)&&(n.type==='chapter'||n.type==='character')&&!(n.title||'').includes(ARC[n.card][1])){const c=cardCache[n.card],dup=(n.type==='chapter'?c.stations:c.chars).length>1;e.append(mk('div',{class:'cd'+(dup?' dup':''),title:dup?'Diese Karte ist mehrfach vergeben':''},ARC[n.card][0]+' · '+ARC[n.card][1]+(dup?' ⚠ doppelt':'')))}
+  e.append(mk('div',{class:'ty'},typeLbl(n)+(n.kind==='todo'?(n.done?' · erledigt':' · offen'):'')),mk('div',{class:'ti'},n.title||'(ohne Titel)'));
+  if(isCard(n.card)&&(n.type==='chapter'||n.type==='note')&&!(n.title||'').includes(ARC[n.card][1])){const c=cardCache[n.card],dup=n.type==='chapter'?c.stations.length>1:n.kind==='character'&&c.notes.filter(k=>k.n.kind==='character').length>1;e.append(mk('div',{class:'cd'+(dup?' dup':''),title:dup?'Diese Karte ist mehrfach vergeben':''},ARC[n.card][0]+' · '+ARC[n.card][1]+(dup?' ⚠ doppelt':'')))}
   if(n.type==='chapter'){const cg=n.graph&&doc.graphs[n.graph],ns=cg?Object.values(cg.nodes):[];e.append(mk('div',{class:'cnt'},ns.length+' Knoten'+(ns.some(x=>x.mandatory)||(cg&&hasMand(n.graph))?' · mit Pflicht':'')))}
   if(n.text)e.append(mk('div',{class:'tx'},n.text));
   e.append(mk('span',{class:'h i'}),mk('span',{class:'h o','data-out':'1',title:'Ziehen zum Verbinden'}));
@@ -313,9 +321,15 @@ function inspect(){
     const del=mk('button',{type:'button',class:'danger',id:'f-del'},n.type==='chapter'?'Kapitel löschen':'Knoten löschen');del.onclick=()=>removeSel();
     insp.append(mk('h2',{},n.type==='chapter'?'Kapitel':'Knoten'),field('Titel',ti));
     if(n.type==='chapter'){const op=mk('button',{type:'button',id:'f-open'},'Kapitel öffnen');op.onclick=()=>openChapter(n.id);insp.append(op)}
-    else{const ty=mk('select',{id:'f-type'});for(const k of ['scene','branch','note','character'])ty.append(mk('option',{value:k},TYPES[k]));ty.value=n.type;ty.onchange=()=>{n.type=ty.value;if(n.type!=='character')delete n.card;render();inspect();changed()};insp.append(field('Art',ty))}
-    if(n.type==='chapter'||n.type==='character'){const cs=mk('select',{id:'f-card'});cs.append(mk('option',{value:''},'keine'));ARC.forEach((a,i)=>cs.append(mk('option',{value:String(i)},a[0]+' · '+a[1]+' ('+a[2]+')')));cs.value=isCard(n.card)?String(n.card):'';
-      cs.onchange=()=>{if(cs.value==='')delete n.card;else n.card=+cs.value;render();changed()};insp.append(field(n.type==='chapter'?'Karte der Station (Große Arkana)':'Karte des Charakters (Große Arkana)',cs))}
+    else{const ty=mk('select',{id:'f-type'});for(const k of ['scene','branch','note'])ty.append(mk('option',{value:k},TYPES[k]));ty.value=n.type;ty.onchange=()=>{n.type=ty.value;if(n.type!=='note'){delete n.kind;delete n.done;delete n.card}render();inspect();changed()};insp.append(field('Art',ty))}
+    const cardSel=(id,label)=>{const cs=mk('select',{id});cs.append(mk('option',{value:''},'keiner'));ARC.forEach((a,i)=>cs.append(mk('option',{value:String(i)},a[0]+' · '+a[1]+' ('+a[2]+')')));cs.value=isCard(n.card)?String(n.card):'';
+      cs.onchange=()=>{if(cs.value==='')delete n.card;else n.card=+cs.value;render();changed()};return field(label,cs)};
+    if(n.type==='note'){
+      const ks=mk('select',{id:'f-kind'});ks.append(mk('option',{value:''},'keine (freie Notiz)'));for(const k in KINDS)ks.append(mk('option',{value:k},KINDS[k]));ks.value=n.kind||'';
+      ks.onchange=()=>{if(ks.value==='')delete n.kind;else n.kind=ks.value;if(n.kind!=='todo')delete n.done;render();inspect();changed()};
+      insp.append(field('Kategorie',ks),cardSel('f-card','Archetyp (Große Arkana)'));
+      if(n.kind==='todo'){const dc=mk('input',{type:'checkbox',id:'f-done'});dc.checked=!!n.done;dc.onchange=()=>{n.done=dc.checked;if(!n.done)delete n.done;render();changed()};const dw=mk('div',{class:'chk'});dw.append(dc,mk('label',{for:'f-done'},'Erledigt'));insp.append(dw)}}
+    if(n.type==='chapter')insp.append(cardSel('f-card','Karte der Station (Große Arkana)'));
     insp.append(mw,field('Text / Notizen',tx),del)}
   else{const ed=G().edges.find(e=>e.id===sel.id);if(!ed){sel=null;insp.classList.remove('on');return}
     const lb=mk('input',{type:'text',maxlength:'60',id:'f-label',placeholder:'z. B. ja / nein'});lb.value=ed.label;
@@ -389,7 +403,7 @@ window.addEventListener('keydown',ev=>{
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
   else if(ev.key==='Escape'&&sel)select(null)});
-$('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');$('#add-character').onclick=()=>addNode('character');
+$('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');
 $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute('aria-pressed',String(onlyMand));render()};
 $('#fit').onclick=fit;$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
 $('#zin').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25)};
@@ -481,14 +495,14 @@ $('#file').onchange=async ev=>{const f=ev.target.files[0];ev.target.value='';if(
   let d;try{d=JSON.parse(await f.text())}catch(e){alert('Keine gültige JSON-Datei.');return}
   if(!d||d.v!==1||!d.graphs||!d.graphs[d.root]){alert('Das ist kein Planner-Dokument.');return}
   if(!confirm('Importieren ersetzt das aktuelle Dokument. Fortfahren?'))return;
-  doc=d;gid=doc.root;sel=null;for(const k in views)delete views[k];render();inspect();fit();changed()};
+  doc=migrate(d);gid=doc.root;sel=null;for(const k in views)delete views[k];render();inspect();fit();changed()};
 /* ---------- Start ---------- */
 async function init(){
   let j=null,missing=false;
   try{const r=await fetch('/api/planner'+dq,{cache:'no-store'});if(r.status===404){missing=true;throw new Error('404')}if(!r.ok)throw new Error(r.status);j=await r.json()}
   catch(e){if(missing){setStatus('Nicht gefunden',true);doc=blank();stale=true;warn('Dieses Dokument gibt es nicht (mehr). Öffne die Liste der Dokumente oder den Hauptplan.');gid=doc.root;render();fit();inspect();return}
     setStatus('Server nicht erreichbar',true);let bk=null;try{bk=JSON.parse(localStorage.getItem(BK)||'null')}catch(_){}
-    doc=bk&&bk.doc?bk.doc:blank();stale=true;warn('Der Server ist nicht erreichbar. Es wird nicht gespeichert.')}
+    doc=bk&&bk.doc?migrate(bk.doc):blank();stale=true;warn('Der Server ist nicht erreichbar. Es wird nicht gespeichert.')}
   if(j){rev=j.rev;doc=j.doc||blank();setStatus(j.doc?'Gespeichert':'Neu')}
   gid=doc.root;render();fit();inspect();last=JSON.stringify(doc);histBtns();
   showDocName();dapi('GET','').then(j=>{const d=j.docs.find(x=>x.id===DID);if(d){docName=d.name;showDocName()}}).catch(()=>{});
