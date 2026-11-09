@@ -42,7 +42,8 @@ h1{font-size:18px;margin:0;line-height:1.2}
 .tabs a:hover{border-color:var(--axis)}
 .tabs a[aria-current="page"]{color:var(--text);background:var(--page);border-color:var(--axis);font-weight:600}
 .tabs a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
-.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.bar{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-left:auto}
+.bar button,.bar select{padding:6px 8px}
 button,select,input,textarea{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--axis);border-radius:8px;padding:6px 10px}
 button{cursor:pointer}
 button:hover{border-color:var(--text2)}
@@ -63,12 +64,15 @@ dialog h2{margin:0 0 10px;font-size:16px}
 .vfoot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
 #v-msg{font-size:12px;color:var(--muted)}
 button:disabled:hover{border-color:var(--axis)}
-#status{font-size:12px;color:var(--muted);min-width:90px}
+#status{font-size:12px;color:var(--muted);margin-right:4px;white-space:nowrap}
 #status.bad{color:var(--crit)}
 main{flex:1;display:flex;min-height:0;position:relative}
 #stage{flex:1;position:relative;overflow:hidden;touch-action:none;background:var(--surface);cursor:grab;
   background-image:radial-gradient(var(--grid) 1px,transparent 1px);background-size:24px 24px}
 #stage.pan{cursor:grabbing}
+#stage.seltool{cursor:crosshair}
+#box{position:absolute;border:1px dashed var(--s1);background:color-mix(in srgb,var(--s1) 12%,transparent);pointer-events:none;z-index:3}
+#box[hidden]{display:none}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #edges{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
 #edges path.e{fill:none;stroke:var(--text2);stroke-width:2;stroke-linejoin:round}
@@ -164,16 +168,16 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
     <button id="add-chapter" type="button">+ Kapitel</button>
     <select id="tpl" aria-label="Vorlagen" title="Vorlage in die aktuelle Ebene einfügen"><option value="">Vorlagen ▾</option><option value="hero">Heldenreise einfügen (22 Stationen)</option></select>
     <button id="fit" type="button">Einpassen</button>
+    <button id="tool-select" type="button" aria-pressed="false" title="Auswahl-Werkzeug: auf der Fläche einen Rahmen aufziehen (auch: Umschalt+Ziehen)">Auswählen</button>
     <button id="versions" type="button">Versionen</button>
     <button id="agent" type="button" title="Lese-Link für Agenten">Agent-Link</button>
     <button id="export" type="button">Export</button>
     <button id="import" type="button">Import</button>
     <input id="file" type="file" accept="application/json,.json" hidden>
-    <span id="status" role="status" aria-live="polite">Lade …</span>
   </div>
 </header>
 <p id="warn" role="alert"><span id="warntxt"></span><button id="reload" type="button">Neu laden (lokale Änderungen verwerfen)</button></p>
-<div id="crumbbar"><button id="up" type="button" hidden aria-label="Eine Ebene hoch" title="Eine Ebene hoch (Alt+↑)">↑ Ebene hoch</button><nav id="crumbs" aria-label="Ebene"></nav><span class="sp" style="display:flex;gap:6px"><button id="check-btn" type="button" title="Hinweise zum Ablauf: Start, Enden, Sackgassen">Prüfung</button><button id="cards-toggle" type="button" aria-pressed="false" title="Kartenleiste der Großen Arkana ein- oder ausblenden">Karten</button><button id="mand-filter" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></span></div>
+<div id="crumbbar"><button id="up" type="button" hidden aria-label="Eine Ebene hoch" title="Eine Ebene hoch (Alt+↑)">↑ Ebene hoch</button><nav id="crumbs" aria-label="Ebene"></nav><span class="sp" style="display:flex;gap:6px;align-items:center"><span id="status" role="status" aria-live="polite">Lade …</span><button id="check-btn" type="button" title="Hinweise zum Ablauf: Start, Enden, Sackgassen">Prüfung</button><button id="cards-toggle" type="button" aria-pressed="false" title="Kartenleiste der Großen Arkana ein- oder ausblenden">Karten</button><button id="mand-filter" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></span></div>
 <dialog id="ddlg" aria-labelledby="dh">
   <h2 id="dh">Dokumente</h2>
   <div id="d-list" aria-live="polite"></div>
@@ -205,7 +209,8 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 </dialog>
 <div id="cards" hidden aria-label="Heldenreise: 22 Karten der Großen Arkana"></div>
 <main>
-  <div id="stage" tabindex="0" aria-label="Planungsfläche. Doppelklick legt eine Szene an. Entf löscht die Auswahl.">
+  <div id="stage" tabindex="0" aria-label="Planungsfläche. Doppelklick legt eine Szene an. Umschalt+Ziehen wählt mehrere Knoten aus. Entf löscht die Auswahl.">
+    <div id="box" hidden></div>
     <div id="world"><svg id="edges" aria-hidden="true"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><g id="eg" style="color:var(--text2)"></g><path class="tmp" id="tmp" hidden></path></svg><div id="nodes"></div></div>
     <p id="hint" hidden>Noch leer.<br>Doppelklick auf die Fläche legt eine Szene an. Am Punkt rechts eines Kastens ziehen, um zu verbinden.</p>
     <div id="zoomctl"><button id="zin" type="button" aria-label="Vergrößern">+</button><button id="zout" type="button" aria-label="Verkleinern">−</button></div>
@@ -238,11 +243,11 @@ function backup(){try{localStorage.setItem(BK,JSON.stringify({t:Date.now(),doc})
 let last='',undo=[],redo=[],undoSize=0,lastKey='',lastT=0;
 function histBtns(){$('#undo').disabled=!undo.length;$('#redo').disabled=!redo.length}
 function sched(){backup();setStatus('Ungespeichert …');clearTimeout(timer);timer=setTimeout(save,800)}
-function changed(){
+function changed(ck){
   const cur=JSON.stringify(doc);
   if(cur!==last){
-    const ae=document.activeElement,typing=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&/^f-/.test(ae.id),key=typing?ae.id+'|'+(sel?sel.id:''):'',now=Date.now();
-    if(!(typing&&key===lastKey&&now-lastT<1500)){undo.push(last);undoSize+=last.length;while(undo.length>100||undoSize>3e7)undoSize-=undo.shift().length}
+    const ae=document.activeElement,typing=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&/^f-/.test(ae.id),key=ck||(typing?ae.id+'|'+(sel?sel.id:''):''),now=Date.now();
+    if(!(key&&key===lastKey&&now-lastT<1500)){undo.push(last);undoSize+=last.length;while(undo.length>100||undoSize>3e7)undoSize-=undo.shift().length}
     lastKey=key;lastT=now;last=cur;redo=[];histBtns()}
   sched()}
 function restore(snap){doc=JSON.parse(snap);if(!doc.graphs[gid])gid=doc.root;sel=null;for(const k in views)if(!doc.graphs[k])delete views[k];render();inspect();last=snap;lastKey='';histBtns();sched()}
@@ -343,7 +348,7 @@ function openChapter(nid){const n=G().nodes[nid];if(!n||n.type!=='chapter')retur
   goTo(n.graph)}
 /* ---------- Zeichnen ---------- */
 function nodeEl(n){
-  const e=mk('div',{class:'node '+n.type+(n.kind?' k-'+n.kind:'')+(n.kind==='todo'&&n.done?' done':'')+(sel&&sel.kind==='node'&&sel.id===n.id?' sel':''),'data-id':n.id,tabindex:'-1'});
+  const e=mk('div',{class:'node '+n.type+(n.kind?' k-'+n.kind:'')+(n.kind==='todo'&&n.done?' done':'')+(isSel(n.id)?' sel':''),'data-id':n.id,tabindex:'-1'});
   e.style.left=n.x+'px';e.style.top=n.y+'px';
   if(n.mandatory){e.classList.add('mand');e.append(mk('span',{class:'bd'},'Pflicht'))}
   if(n.role){e.classList.add('role-'+n.role);e.append(mk('span',{class:'bd role'},n.role==='start'?'Start':'Ende'))}
@@ -355,6 +360,7 @@ function nodeEl(n){
   e.append(mk('span',{class:'h i'}),mk('span',{class:'h o','data-out':'1',title:'Ziehen zum Verbinden'}));
   return e}
 function render(){
+  if(sel&&sel.kind==='multi'){sel.ids=sel.ids.filter(i=>G().nodes[i]);if(sel.ids.length<2)sel=sel.ids.length?{kind:'node',id:sel.ids[0]}:null}
   cardCache=cardStats();
   nodesEl.textContent='';for(const n of Object.values(G().nodes))nodesEl.append(nodeEl(n));
   hint.hidden=Object.keys(G().nodes).length>0;renderEdges();crumbs();renderStrip();renderCheck()}
@@ -375,9 +381,21 @@ function renderEdges(){
     eg.append(g)}}
 /* ---------- Auswahl und Eigenschaften ---------- */
 function select(s){sel=s;render();inspect()}
+/* Auswahl: ein Knoten, eine Verbindung oder mehrere Knoten ({kind:'multi',ids}). */
+let tool='pan';
+const selIds=()=>sel?(sel.kind==='node'?[sel.id]:sel.kind==='multi'?sel.ids:[]):[];
+const isSel=id=>selIds().includes(id);
+function setNodes(ids){ids=[...new Set(ids)].filter(i=>G().nodes[i]);select(ids.length>1?{kind:'multi',ids}:ids.length===1?{kind:'node',id:ids[0]}:null)}
+function toggleSel(id){const c=selIds();setNodes(c.includes(id)?c.filter(i=>i!==id):c.concat(id))}
+function nodeBox(n){const e=nodesEl.querySelector(`[data-id="${n.id}"]`);return {x:n.x,y:n.y,w:W,h:e?e.offsetHeight:70}}
+function nodesIn(r){const a=toWorld(r.l,r.t),b=toWorld(r.r,r.b);return Object.values(G().nodes).filter(n=>{const q=nodeBox(n);return q.x<b.x&&q.x+q.w>a.x&&q.y<b.y&&q.y+q.h>a.y}).map(n=>n.id)}
+function nudge(dx,dy){const ids=selIds();if(!ids.length)return;for(const id of ids){const n=G().nodes[id];n.x+=dx;n.y+=dy;const e=nodesEl.querySelector(`[data-id="${id}"]`);if(e){e.style.left=n.x+'px';e.style.top=n.y+'px'}}renderEdges();changed('nudge|'+ids[0]+'|'+ids.length)}
 function field(lbl,el){const w=mk('div');const l=mk('label',{},lbl);w.append(l,el);return w}
 function inspect(){
   insp.textContent='';insp.classList.toggle('on',!!sel);if(!sel)return;
+  if(sel.kind==='multi'){const k=sel.ids.length,cl=mk('button',{type:'button',id:'f-clear'},'Auswahl aufheben'),del=mk('button',{type:'button',class:'danger',id:'f-del'},'Alle löschen');
+    cl.onclick=()=>select(null);del.onclick=()=>removeSel();
+    insp.append(mk('h2',{},'Auswahl'),mk('p',{class:'vt',id:'f-count'},k+' Knoten ausgewählt. Ziehen verschiebt alle, die Pfeiltasten verschieben in Schritten (Umschalt: größer), Entf löscht alle.'),cl,del);return}
   if(sel.kind==='node'){const n=G().nodes[sel.id];if(!n){sel=null;insp.classList.remove('on');return}
     const ti=mk('input',{type:'text',maxlength:'120',id:'f-title'});ti.value=n.title;
     const tx=mk('textarea',{maxlength:'4000',id:'f-text'});tx.value=n.text;
@@ -409,12 +427,12 @@ function inspect(){
     insp.append(mk('h2',{},'Verbindung'),field('Beschriftung',lb),del)}}
 function removeSel(){
   if(!sel)return;const g=G();
-  if(sel.kind==='node'){const n=g.nodes[sel.id];
-    if(n&&n.type==='chapter'&&n.graph&&doc.graphs[n.graph]){const ids=descendants(n.graph),cnt=[...ids].reduce((a,i)=>a+Object.keys(doc.graphs[i].nodes).length,0);
-      if(cnt&&!confirm('Das Kapitel enthält '+cnt+' Knoten (mit Unterkapiteln). Alles löschen?'))return;
-      ids.forEach(i=>{delete doc.graphs[i];delete views[i]})}
-    delete g.nodes[sel.id];g.edges=g.edges.filter(e=>e.from!==sel.id&&e.to!==sel.id)}
-  else g.edges=g.edges.filter(e=>e.id!==sel.id);
+  if(sel.kind==='edge'){g.edges=g.edges.filter(e=>e.id!==sel.id);sel=null;render();inspect();changed();return}
+  const ids=selIds(),gs=new Set();
+  for(const id of ids){const n=g.nodes[id];if(n&&n.type==='chapter'&&n.graph&&doc.graphs[n.graph])descendants(n.graph).forEach(x=>gs.add(x))}
+  const cnt=[...gs].reduce((a,i)=>a+Object.keys(doc.graphs[i].nodes).length,0);
+  if(cnt&&!confirm(ids.length>1?'Die Auswahl enthält Kapitel mit insgesamt '+cnt+' Knoten (mit Unterkapiteln). Alles löschen?':'Das Kapitel enthält '+cnt+' Knoten (mit Unterkapiteln). Alles löschen?'))return;
+  gs.forEach(i=>{delete doc.graphs[i];delete views[i]});ids.forEach(id=>{delete g.nodes[id]});g.edges=g.edges.filter(e=>!ids.includes(e.from)&&!ids.includes(e.to));
   sel=null;render();inspect();changed()}
 /* Freier Platz im sichtbaren Bereich: Raster um die Mitte, von innen nach außen. */
 function freeSpot(){
@@ -441,18 +459,25 @@ stage.addEventListener('pointerdown',ev=>{
   if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)};drag=null;return}
   const out=ev.target.closest('.h.o'),nd=ev.target.closest('.node'),hit=ev.target.closest('[data-edge]');
   if(out&&nd){const id=nd.dataset.id;drag={kind:'link',from:id,pid:ev.pointerId};tmp.removeAttribute('hidden');ev.preventDefault();return}
-  if(nd){const id=nd.dataset.id,n=G().nodes[id];if(!(sel&&sel.kind==='node'&&sel.id===id))select({kind:'node',id});
-    drag={kind:'node',id,sx:ev.clientX,sy:ev.clientY,ox:n.x,oy:n.y,moved:false,pid:ev.pointerId};ev.preventDefault();return}
+  if(nd){const id=nd.dataset.id;
+    if(ev.shiftKey||ev.ctrlKey||ev.metaKey){toggleSel(id);ev.preventDefault();return}
+    const inMulti=!!sel&&sel.kind==='multi'&&sel.ids.includes(id);
+    if(!inMulti&&!(sel&&sel.kind==='node'&&sel.id===id))select({kind:'node',id});
+    const ids=inMulti?sel.ids.slice():[id];
+    drag={kind:'nodes',ids,starts:ids.map(i=>({id:i,x:G().nodes[i].x,y:G().nodes[i].y})),sx:ev.clientX,sy:ev.clientY,moved:false,pid:ev.pointerId,click:inMulti?id:null};ev.preventDefault();return}
   if(hit){select({kind:'edge',id:hit.dataset.edge});return}
+  if(tool==='select'||ev.shiftKey){drag={kind:'box',sx:ev.clientX,sy:ev.clientY,add:ev.shiftKey,base:ev.shiftKey?selIds():[],moved:false,pid:ev.pointerId};ev.preventDefault();return}
   drag={kind:'pan',sx:ev.clientX,sy:ev.clientY,ox:view.x,oy:view.y,moved:false,pid:ev.pointerId};stage.classList.add('pan')});
 window.addEventListener('pointermove',ev=>{
   if(ptrs.has(ev.pointerId))ptrs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
   if(pinch&&ptrs.size>=2){const [a,b]=[...ptrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch.d>0)zoomAt((a.x+b.x)/2,(a.y+b.y)/2,d/pinch.d);pinch.d=d;return}
   if(!drag||drag.pid!==ev.pointerId)return;
   if(drag.kind==='pan'){const dx=ev.clientX-drag.sx,dy=ev.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;view.x=drag.ox+dx;view.y=drag.oy+dy;applyView()}
-  else if(drag.kind==='node'){const n=G().nodes[drag.id],dx=(ev.clientX-drag.sx)/view.k,dy=(ev.clientY-drag.sy)/view.k;
-    if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;n.x=Math.round(drag.ox+dx);n.y=Math.round(drag.oy+dy);
-    const e=nodesEl.querySelector(`[data-id="${drag.id}"]`);if(e){e.style.left=n.x+'px';e.style.top=n.y+'px'}renderEdges()}
+  else if(drag.kind==='nodes'){const dx=(ev.clientX-drag.sx)/view.k,dy=(ev.clientY-drag.sy)/view.k;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;
+    for(const st of drag.starts){const n=G().nodes[st.id];n.x=Math.round(st.x+dx);n.y=Math.round(st.y+dy);const e=nodesEl.querySelector(`[data-id="${st.id}"]`);if(e){e.style.left=n.x+'px';e.style.top=n.y+'px'}}renderEdges()}
+  else if(drag.kind==='box'){const r=stage.getBoundingClientRect(),l=Math.min(drag.sx,ev.clientX),t=Math.min(drag.sy,ev.clientY),rr=Math.max(drag.sx,ev.clientX),bb=Math.max(drag.sy,ev.clientY);
+    if(rr-l+bb-t>6)drag.moved=true;if(!drag.moved)return;const bx=$('#box');bx.hidden=false;bx.style.left=(l-r.left)+'px';bx.style.top=(t-r.top)+'px';bx.style.width=(rr-l)+'px';bx.style.height=(bb-t)+'px';
+    drag.rect={l,t,r:rr,b:bb};const hit=new Set(drag.base.concat(nodesIn(drag.rect)));nodesEl.querySelectorAll('.node').forEach(e=>e.classList.toggle('sel',hit.has(e.dataset.id)))}
   else if(drag.kind==='link'){const a=box(drag.from),p=toWorld(ev.clientX,ev.clientY);
     tmp.setAttribute('d',path(a,{x:p.x,y:p.y,h:0},true));
     const t=document.elementFromPoint(ev.clientX,ev.clientY),nd=t&&t.closest&&t.closest('.node');
@@ -461,7 +486,10 @@ window.addEventListener('pointermove',ev=>{
 function endPtr(ev){
   ptrs.delete(ev.pointerId);if(ptrs.size<2)pinch=null;
   if(!drag||drag.pid!==ev.pointerId)return;
-  if(drag.kind==='node'&&drag.moved)changed();
+  if(drag.kind==='nodes'){if(drag.moved)changed();else if(drag.click&&ev.type==='pointerup')select({kind:'node',id:drag.click})}
+  if(drag.kind==='box'){$('#box').hidden=true;
+    if(ev.type!=='pointerup'||!drag.moved){if(ev.type==='pointerup'&&!drag.add)select(null);else render()}
+    else setNodes(drag.base.concat(nodesIn(drag.rect)))}
   if(drag.kind==='pan'){stage.classList.remove('pan');if(!drag.moved&&ev.type==='pointerup'&&sel){select(null)}}
   if(drag.kind==='link'){tmp.setAttribute('hidden','');tmp.removeAttribute('d');nodesEl.querySelectorAll('.link-target').forEach(e=>e.classList.remove('link-target'));
     if(ev.type==='pointerup'){const t=document.elementFromPoint(ev.clientX,ev.clientY),nd=t&&t.closest&&t.closest('.node');if(nd)addEdge(drag.from,nd.dataset.id)}}
@@ -474,12 +502,14 @@ window.addEventListener('keydown',ev=>{
   if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key.toLowerCase();if(k==='z'){ev.preventDefault();ev.shiftKey?doRedo():doUndo();return}if(k==='y'){ev.preventDefault();doRedo();return}}
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
   if(ev.altKey&&ev.key==='ArrowUp'){ev.preventDefault();goUp()}
+  else if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='a'){ev.preventDefault();setNodes(Object.keys(G().nodes))}
+  else if(!ev.altKey&&!ev.ctrlKey&&!ev.metaKey&&selIds().length&&/^Arrow(Left|Right|Up|Down)$/.test(ev.key)){ev.preventDefault();const st=ev.shiftKey?50:10;nudge(ev.key==='ArrowLeft'?-st:ev.key==='ArrowRight'?st:0,ev.key==='ArrowUp'?-st:ev.key==='ArrowDown'?st:0)}
   else if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
   else if(ev.key==='Backspace'&&!sel){ev.preventDefault();goUp()}
   else if(ev.key==='Escape'&&sel)select(null)});
 $('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');
 $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute('aria-pressed',String(onlyMand));render()};
-$('#fit').onclick=()=>fit();$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
+$('#fit').onclick=()=>fit();$('#tool-select').onclick=()=>{tool=tool==='select'?'pan':'select';$('#tool-select').setAttribute('aria-pressed',String(tool==='select'));stage.classList.toggle('seltool',tool==='select')};$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
 $('#zin').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25)};
 $('#zout').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,.8)};
 /* ---------- Versionen ---------- */
@@ -580,7 +610,7 @@ async function init(){
   if(j){rev=j.rev;doc=j.doc||blank();setStatus(j.doc?'Gespeichert':'Neu')}
   gid=doc.root;render();fit();inspect();last=JSON.stringify(doc);histBtns();
   showDocName();dapi('GET','').then(j=>{const d=j.docs.find(x=>x.id===DID);if(d){docName=d.name;showDocName()}}).catch(()=>{});
-  window.__planner={check:checkDoc,warnText,arcana:ARC,did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
+  window.__planner={tool:()=>tool,check:checkDoc,warnText,arcana:ARC,did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
 init();
 window.addEventListener('resize',()=>renderEdges());
 })();
