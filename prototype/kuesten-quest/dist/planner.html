@@ -108,6 +108,16 @@ main{flex:1;display:flex;min-height:0;position:relative}
 .node .bd{position:absolute;top:-10px;right:10px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--warn);color:#fff;padding:1px 7px;border-radius:9px}
 .node .cnt{font-size:12px;color:var(--text2);margin-top:2px}
 .node.dim,#eg g.dim{opacity:.22}
+.node.role-start{border-color:var(--good);border-width:3px}
+.node.role-end{border-color:var(--crit);border-width:3px}
+.node .bd.role{left:10px;right:auto}
+.node.role-start .bd.role{background:var(--good)}.node.role-end .bd.role{background:var(--crit)}
+fieldset.roles{border:1px solid var(--grid);border-radius:8px;padding:6px 10px 8px;margin:0;display:flex;gap:14px;flex-wrap:wrap}
+fieldset.roles legend{font-size:12px;color:var(--text2);padding:0 4px}
+#insp .rr{display:flex;align-items:center;gap:5px}#insp .rr input{width:auto}#insp .rr label{margin:0;font-size:14px;color:var(--text)}
+#check-btn.warn{border-color:var(--warn);color:var(--warn);font-weight:600}
+.kg{border:1px solid var(--grid);border-radius:8px;padding:8px 10px;margin-bottom:8px}.kg h3{font-size:13px;margin:0 0 2px}.kg .vt{margin-bottom:4px}
+.kw{display:block;width:100%;text-align:left;margin-top:4px;padding:4px 8px;font-size:13px}
 #crumbbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 16px;border-bottom:1px solid var(--grid);background:var(--panel);font-size:13px}
 #crumbbar button{padding:2px 9px;border-radius:14px}
 #crumbbar button[aria-current="true"]{font-weight:600;background:var(--page)}
@@ -163,13 +173,19 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
   </div>
 </header>
 <p id="warn" role="alert"><span id="warntxt"></span><button id="reload" type="button">Neu laden (lokale Änderungen verwerfen)</button></p>
-<div id="crumbbar"><nav id="crumbs" aria-label="Ebene"></nav><span class="sp" style="display:flex;gap:6px"><button id="cards-toggle" type="button" aria-pressed="false" title="Kartenleiste der Großen Arkana ein- oder ausblenden">Karten</button><button id="mand-filter" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></span></div>
+<div id="crumbbar"><button id="up" type="button" hidden aria-label="Eine Ebene hoch" title="Eine Ebene hoch (Alt+↑)">↑ Ebene hoch</button><nav id="crumbs" aria-label="Ebene"></nav><span class="sp" style="display:flex;gap:6px"><button id="check-btn" type="button" title="Hinweise zum Ablauf: Start, Enden, Sackgassen">Prüfung</button><button id="cards-toggle" type="button" aria-pressed="false" title="Kartenleiste der Großen Arkana ein- oder ausblenden">Karten</button><button id="mand-filter" type="button" aria-pressed="false" title="Nur Pflichtknoten hervorheben">Nur Pflicht</button></span></div>
 <dialog id="ddlg" aria-labelledby="dh">
   <h2 id="dh">Dokumente</h2>
   <div id="d-list" aria-live="polite"></div>
   <h2 style="margin-top:14px">Neuer Entwurf</h2>
   <div class="vnew"><input id="d-name" type="text" maxlength="60" placeholder="Name, z. B. Antons Entwurf" aria-label="Name des Entwurfs"><select id="d-from" aria-label="Ausgangspunkt"><option value="blank">Leer</option><option value="copy">Kopie dieses Dokuments</option></select><button id="d-new" type="button">Anlegen</button></div>
   <div class="vfoot"><span id="d-msg">Entwürfe haben eigenen Stand und eigene Versionen. Der Hauptplan bleibt unberührt.</span><button id="d-close" type="button">Schließen</button></div>
+</dialog>
+<dialog id="kdlg" aria-labelledby="kh">
+  <h2 id="kh">Prüfung des Ablaufs</h2>
+  <p class="vt" style="margin:0 0 10px">Hinweise je Ebene: Start und Enden, nicht erreichbare Knoten und Sackgassen. Das sind Anregungen, keine Fehler. Ein Klick springt zum Knoten.</p>
+  <div id="k-list" aria-live="polite"></div>
+  <div class="vfoot"><span id="k-msg"></span><button id="k-close" type="button">Schließen</button></div>
 </dialog>
 <dialog id="adlg" aria-labelledby="ah">
   <h2 id="ah">Agent-Link</h2>
@@ -263,21 +279,54 @@ function renderStrip(){
     if(x.notes.length)b.append(mk('sup',{},String(x.notes.length)));
     b.onclick=()=>jumpCard(i);el.append(b)})}
 $('#cards-toggle').onclick=()=>{stripOn=$('#cards').hidden;try{localStorage.setItem('planner-strip',stripOn?'1':'0')}catch(e){}renderStrip()};
-function jumpCard(i){const x=cardCache[i],t=x.stations[0]||x.notes[0];if(!t)return;
-  if(t.g!==gid){views[gid]={...view};gid=t.g}
-  sel={kind:'node',id:t.n.id};render();inspect();const n=G().nodes[t.n.id],r=stage.getBoundingClientRect();
-  view={k:1,x:r.width/2-(n.x+W/2),y:r.height/2-(n.y+40)};applyView()}
+function jumpCard(i){const x=cardCache[i],t=x.stations[0]||x.notes[0];if(!t)return;focusNode(t.g,t.n.id)}
+/* Ablauf-Prüfung je Ebene. Fluss-Knoten: Szene, Verzweigung, Kapitel sowie Notizen mit Rolle oder Verbindung. Ergebnis sind Hinweise, keine Fehler.
+   Dieser Block steht wortgleich in worker/planner.js; Test 71 vergleicht beide. */
+function flowNodes(g){const e=new Set();g.edges.forEach(x=>{e.add(x.from);e.add(x.to)});return Object.values(g.nodes).filter(n=>n.type!=='note'||n.role||e.has(n.id)).sort((a,b)=>a.x-b.x||a.y-b.y||(a.id<b.id?-1:a.id>b.id?1:0))}
+function checkGraph(g){
+  const flow=flowNodes(g);if(!flow.length)return null;
+  const ids=new Set(flow.map(n=>n.id)),adj={};flow.forEach(n=>{adj[n.id]=[]});g.edges.forEach(e=>{if(ids.has(e.from)&&ids.has(e.to))adj[e.from].push(e.to)});
+  const starts=flow.filter(n=>n.role==='start'),ends=flow.filter(n=>n.role==='end'),w=[];
+  if(!starts.length)w.push({kind:'nostart'});
+  if(!ends.length)w.push({kind:'noend'});
+  if(starts.length){const seen=new Set(starts.map(n=>n.id)),q=[...seen];while(q.length){const i=q.shift();for(const j of adj[i])if(!seen.has(j)){seen.add(j);q.push(j)}}for(const n of flow)if(!seen.has(n.id))w.push({kind:'unreachable',id:n.id,title:n.title})}
+  for(const n of flow)if(n.role!=='end'&&!adj[n.id].length)w.push({kind:'deadend',id:n.id,title:n.title});
+  return {starts:starts.map(n=>({id:n.id,title:n.title})),ends:ends.map(n=>({id:n.id,title:n.title})),warnings:w}}
+function checkDoc(doc){const out=[],order=[doc.root,...Object.keys(doc.graphs).filter(k=>k!==doc.root)];
+  for(const gid of order){const g=doc.graphs[gid];if(!g)continue;const r=checkGraph(g);if(!r)continue;
+    const path=[];let id=gid,guard=0;while(id&&doc.graphs[id]&&guard++<50){path.unshift(doc.graphs[id].name||'');id=doc.graphs[id].parent}
+    out.push({gid,name:g.name,path:path.join(' › '),...r})}
+  return out}
+function warnText(w,ids){const t='„'+(w.title||'(ohne Titel)')+'“'+(ids&&w.id?' `'+w.id+'`':'');
+  return w.kind==='nostart'?'Kein Start markiert':w.kind==='noend'?'Kein Ende markiert':w.kind==='unreachable'?'Vom Start nicht erreichbar: '+t:'Sackgasse (kein Ausgang, kein Ende): '+t}
+/* ---------- Prüfung und Ebenen-Navigation ---------- */
+const kdlg=$('#kdlg'),klist=$('#k-list');
+function checkCount(){return checkDoc(doc).reduce((a,c)=>a+c.warnings.length,0)}
+function renderCheck(){const n=checkCount(),b=$('#check-btn');b.textContent=n?'Prüfung ⚠ '+n:'Prüfung';b.classList.toggle('warn',n>0);b.setAttribute('aria-label',n?'Prüfung: '+n+' Hinweise':'Prüfung: keine Hinweise')}
+function fillCheck(){klist.textContent='';const res=checkDoc(doc).sort((a,b)=>(b.gid===gid)-(a.gid===gid));
+  if(!res.length){klist.append(mk('p',{class:'vt'},'Noch keine Knoten im Ablauf.'));return}
+  if(!res.some(c=>c.warnings.length))klist.append(mk('p',{class:'vt'},'Keine Hinweise. Alle Ebenen haben Start und Ende, nichts ist verwaist.'));
+  for(const c of res){const g=mk('div',{class:'kg','data-kg':c.gid});g.append(mk('h3',{},(c.path||c.name||'?')+(c.gid===gid?' (diese Ebene)':'')));
+    g.append(mk('div',{class:'vt'},'Start: '+(c.starts.length?c.starts.map(x=>x.title||'(ohne Titel)').join(', '):'—')+' · Enden: '+(c.ends.length?c.ends.map(x=>x.title||'(ohne Titel)').join(', '):'—')));
+    for(const w of c.warnings){const b=mk('button',{type:'button',class:'kw','data-kw':w.kind},'⚠ '+warnText(w,false));b.onclick=()=>{kdlg.close();if(w.id)focusNode(c.gid,w.id);else goTo(c.gid)};g.append(b)}
+    klist.append(g)}}
+$('#check-btn').onclick=()=>{fillCheck();kdlg.showModal()};$('#k-close').onclick=()=>kdlg.close();kdlg.addEventListener('click',ev=>{if(ev.target===kdlg)kdlg.close()});
+function focusNode(g2,id){if(g2!==gid){views[gid]={...view};gid=g2}
+  sel={kind:'node',id};render();inspect();const n=G().nodes[id],r=stage.getBoundingClientRect();if(n){view={k:1,x:r.width/2-(n.x+W/2),y:r.height/2-(n.y+40)};applyView()}}
+function goUp(){const par=doc.graphs[gid]&&doc.graphs[gid].parent;if(par&&doc.graphs[par])goTo(par);else if(gid!==doc.root)goTo(doc.root)}
+$('#up').onclick=goUp;
 /* ---------- Vorlage: Heldenreise einfügen ---------- */
 function insertHero(){
   const have=new Set();Object.values(G().nodes).forEach(n=>{if(n.type==='chapter'&&isCard(n.card))have.add(n.card)});
   const missing=ARC.map((_,i)=>i).filter(i=>!have.has(i));
   if(!missing.length){alert('Alle 22 Stationen der Heldenreise gibt es auf dieser Ebene schon.');return}
   if(have.size&&!confirm('Auf dieser Ebene gibt es schon '+have.size+' Stationen mit Karte. Nur die fehlenden '+missing.length+' ergänzen?'))return;
-  const g=G(),ns=Object.values(g.nodes),x0=ns.length?Math.min(...ns.map(n=>n.x)):0,y0=ns.length?Math.max(...ns.map(n=>n.y))+200:0,made={};
+  const g=G(),ns=Object.values(g.nodes),x0=ns.length?Math.min(...ns.map(n=>n.x)):0,y0=ns.length?Math.max(...ns.map(n=>n.y))+200:0,made={},hasStart=ns.some(n=>n.role==='start'),hasEnd=ns.some(n=>n.role==='end');
   for(const i of missing){const row=i<8?0:i<15?1:2,col=i<8?i:i<15?i-8:i-15,title=ARC[i][0]+' · '+ARC[i][1],nid=rid(),sub=rid();
     g.nodes[nid]={id:nid,type:'chapter',title,text:ARC[i][2],x:x0+col*240,y:y0+row*190,mandatory:false,graph:sub,card:i};
     doc.graphs[sub]={id:sub,name:title,parent:gid,nodes:{},edges:[]};made[i]=nid}
   for(const i of missing)if(made[i-1]&&made[i])g.edges.push({id:rid(),from:made[i-1],to:made[i],label:''});
+  if(made[0]&&!hasStart)g.nodes[made[0]].role='start';if(made[21]&&!hasEnd)g.nodes[made[21]].role='end';
   sel=null;render();inspect();fit(missing.map(i=>g.nodes[made[i]]));changed()}
 $('#tpl').onchange=ev=>{const v=ev.target.value;ev.target.value='';ev.target.blur();if(v==='hero')insertHero()};
 /* ---------- Kapitel ---------- */
@@ -286,6 +335,7 @@ function isMand(n){return !!n.mandatory||(n.type==='chapter'&&!!n.graph&&hasMand
 function descendants(id,seen=new Set()){if(seen.has(id)||!doc.graphs[id])return seen;seen.add(id);for(const n of Object.values(doc.graphs[id].nodes))if(n.type==='chapter'&&n.graph)descendants(n.graph,seen);return seen}
 function crumbs(){const c=$('#crumbs');c.textContent='';const chain=[];let id=gid,guard=0;while(id&&doc.graphs[id]&&guard++<50){chain.unshift(id);id=doc.graphs[id].parent}
   if(chain[0]!==doc.root)chain.unshift(doc.root);
+  $('#up').hidden=!(doc.graphs[gid]&&gid!==doc.root);
   chain.forEach((id,i)=>{if(i)c.append(mk('span',{class:'sep','aria-hidden':'true'},' › '));const last=i===chain.length-1,b=mk('button',{type:'button','data-go':id},(id===doc.root?(doc.title||doc.graphs[id].name):doc.graphs[id].name)||'(ohne Titel)');if(last)b.setAttribute('aria-current','true');b.onclick=()=>goTo(id);c.append(b)})}
 function goTo(id){if(!doc.graphs[id]||id===gid)return;views[gid]={...view};gid=id;sel=null;render();inspect();if(views[id]){view={...views[id]};applyView()}else fit()}
 function openChapter(nid){const n=G().nodes[nid];if(!n||n.type!=='chapter')return;
@@ -296,6 +346,7 @@ function nodeEl(n){
   const e=mk('div',{class:'node '+n.type+(n.kind?' k-'+n.kind:'')+(n.kind==='todo'&&n.done?' done':'')+(sel&&sel.kind==='node'&&sel.id===n.id?' sel':''),'data-id':n.id,tabindex:'-1'});
   e.style.left=n.x+'px';e.style.top=n.y+'px';
   if(n.mandatory){e.classList.add('mand');e.append(mk('span',{class:'bd'},'Pflicht'))}
+  if(n.role){e.classList.add('role-'+n.role);e.append(mk('span',{class:'bd role'},n.role==='start'?'Start':'Ende'))}
   if(onlyMand&&!isMand(n))e.classList.add('dim');
   e.append(mk('div',{class:'ty'},typeLbl(n)+(n.kind==='todo'?(n.done?' · erledigt':' · offen'):'')),mk('div',{class:'ti'},n.title||'(ohne Titel)'));
   if(isCard(n.card)&&(n.type==='chapter'||n.type==='note')&&!(n.title||'').includes(ARC[n.card][1])){const c=cardCache[n.card],dup=n.type==='chapter'?c.stations.length>1:n.kind==='character'&&c.notes.filter(k=>k.n.kind==='character').length>1;e.append(mk('div',{class:'cd'+(dup?' dup':''),title:dup?'Diese Karte ist mehrfach vergeben':''},ARC[n.card][0]+' · '+ARC[n.card][1]+(dup?' ⚠ doppelt':'')))}
@@ -306,7 +357,7 @@ function nodeEl(n){
 function render(){
   cardCache=cardStats();
   nodesEl.textContent='';for(const n of Object.values(G().nodes))nodesEl.append(nodeEl(n));
-  hint.hidden=Object.keys(G().nodes).length>0;renderEdges();crumbs();renderStrip()}
+  hint.hidden=Object.keys(G().nodes).length>0;renderEdges();crumbs();renderStrip();renderCheck()}
 function renderNode(id){const old=nodesEl.querySelector(`[data-id="${id}"]`),n=G().nodes[id];if(old&&n)old.replaceWith(nodeEl(n));renderEdges()}
 function box(id){const e=nodesEl.querySelector(`[data-id="${id}"]`),n=G().nodes[id];return {x:n.x,y:n.y,h:e?e.offsetHeight:70}}
 function path(a,b,tmp){const x1=a.x+W,y1=a.y+a.h/2,x2=b.x,y2=b.y+b.h/2;
@@ -343,11 +394,14 @@ function inspect(){
       cs.onchange=()=>{if(cs.value==='')delete n.card;else n.card=+cs.value;render();changed()};return field(label,cs)};
     if(n.type==='note'){
       const ks=mk('select',{id:'f-kind'});ks.append(mk('option',{value:''},'keine (freie Notiz)'));for(const k in KINDS)ks.append(mk('option',{value:k},KINDS[k]));ks.value=n.kind||'';
-      ks.onchange=()=>{if(ks.value==='')delete n.kind;else n.kind=ks.value;if(n.kind!=='todo')delete n.done;render();inspect();changed()};
+      ks.onchange=()=>{if(ks.value==='')delete n.kind;else n.kind=ks.value;if(n.kind!=='todo')delete n.done;if(n.kind==='character'||n.kind==='item'||n.kind==='todo')delete n.role;render();inspect();changed()};
       insp.append(field('Kategorie',ks),cardSel('f-card','Archetyp (Große Arkana)'));
       if(n.kind==='todo'){const dc=mk('input',{type:'checkbox',id:'f-done'});dc.checked=!!n.done;dc.onchange=()=>{n.done=dc.checked;if(!n.done)delete n.done;render();changed()};const dw=mk('div',{class:'chk'});dw.append(dc,mk('label',{for:'f-done'},'Erledigt'));insp.append(dw)}}
     if(n.type==='chapter')insp.append(cardSel('f-card','Karte der Station (Große Arkana)'));
-    insp.append(mw,field('Text / Notizen',tx),del)}
+    const roleOk=n.type==='scene'||n.type==='branch'||n.type==='chapter'||(n.type==='note'&&(!n.kind||n.kind==='event'));
+    const rf=mk('fieldset',{class:'roles'});rf.append(mk('legend',{},'Rolle im Ablauf'));
+    for(const [v,l] of [['','Normal'],['start','Start'],['end','Ende']]){const rid2='f-role-'+(v||'normal'),r=mk('input',{type:'radio',name:'f-role',id:rid2,value:v});r.checked=(n.role||'')===v;r.onchange=()=>{if(v)n.role=v;else delete n.role;render();changed()};const w=mk('span',{class:'rr'});w.append(r,mk('label',{for:rid2},l));rf.append(w)}
+    insp.append(...(roleOk?[rf]:[]),mw,field('Text / Notizen',tx),del)}
   else{const ed=G().edges.find(e=>e.id===sel.id);if(!ed){sel=null;insp.classList.remove('on');return}
     const lb=mk('input',{type:'text',maxlength:'60',id:'f-label',placeholder:'z. B. ja / nein'});lb.value=ed.label;
     lb.oninput=()=>{ed.label=lb.value;renderEdges();changed()};
@@ -416,10 +470,12 @@ window.addEventListener('pointerup',endPtr);window.addEventListener('pointercanc
 stage.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.clientX,ev.clientY,Math.exp(-ev.deltaY*(ev.ctrlKey?.01:.0015)))},{passive:false});
 stage.addEventListener('dblclick',ev=>{const cn=ev.target.closest('.node');if(cn&&cn.classList.contains('chapter')){openChapter(cn.dataset.id);return}if(ev.target.closest('.node')||ev.target.closest('[data-edge]')||ev.target.closest('#zoomctl'))return;const p=toWorld(ev.clientX,ev.clientY);addNode('scene',p.x-W/2,p.y-24)});
 window.addEventListener('keydown',ev=>{
-  if(vdlg.open||ddlg.open||adlg.open)return;
+  if(vdlg.open||ddlg.open||adlg.open||kdlg.open)return;
   if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key.toLowerCase();if(k==='z'){ev.preventDefault();ev.shiftKey?doRedo():doUndo();return}if(k==='y'){ev.preventDefault();doRedo();return}}
   const t=ev.target;if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
-  if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
+  if(ev.altKey&&ev.key==='ArrowUp'){ev.preventDefault();goUp()}
+  else if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
+  else if(ev.key==='Backspace'&&!sel){ev.preventDefault();goUp()}
   else if(ev.key==='Escape'&&sel)select(null)});
 $('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');
 $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute('aria-pressed',String(onlyMand));render()};
@@ -524,7 +580,7 @@ async function init(){
   if(j){rev=j.rev;doc=j.doc||blank();setStatus(j.doc?'Gespeichert':'Neu')}
   gid=doc.root;render();fit();inspect();last=JSON.stringify(doc);histBtns();
   showDocName();dapi('GET','').then(j=>{const d=j.docs.find(x=>x.id===DID);if(d){docName=d.name;showDocName()}}).catch(()=>{});
-  window.__planner={arcana:ARC,did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
+  window.__planner={check:checkDoc,warnText,arcana:ARC,did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
 init();
 window.addEventListener('resize',()=>renderEdges());
 })();
