@@ -350,6 +350,17 @@ Aus der Notiz des Nutzers: Man sprüht an die große Wand, braucht dafür Dosen 
 - Das Bild wird im Browser gespeichert und bleibt auf der Wand. Auftrag "Street-Artist" (mindestens 400 Sprühpunkte, 8 Scoops).
 - Später: Teilen und Likes (mit Likes bleibt ein Bild länger geschützt), Überschreiben durch andere im Multiplayer, Moderation, Zug besprühen (Hochbahn-Station), automatisches Reinigen des Zuges, wenn jeder Wagen voll ist, optionale Paletten pro Welt.
 
+### Designer (intern, im Prototyp gebaut, Stand 2026-11-09)
+Ein internes Werkzeug für das Entwurfsteam, getrennt vom Spiel (Ordner `prototype/kuesten-quest/tools/avatar-designer`, im Netz unter `/designer/` hinter dem Seitenpasswort). Es verändert das Spiel nicht. Reiter: Avatar, Mobs und Tiere (bald), Props und Werkzeuge (bald), Fahrzeuge (bald), Gebäude, Landschaften (bald).
+- **Avatar, Rund-Modus:** Die vier Avatare des Spiels als Daten (AvatarSpec v2, JSON), Zubehör an festen Ankern, Farbzonen, Regler für Körperform und Hüftbereich, Posen Skaten, Stehen, Gehen (Vorschau).
+- **Avatar, Mesh-Modus (Low Poly):** Eine Figur aus einem Stück (rund 480 Dreiecke) an denselben Gelenken wie im Spiel, mit weichem Übergang (Skinning). Texture-Painter: 64 × 64 Pixel in Palettennummern, malen auf der Figur oder der abgewickelten Fläche, Spiegeln, Füllen, Pipette, Zurück. Ohne Glättung dargestellt. Format AvatarMesh v1 (Textur als 4096 Zeichen). Kein Bild-Upload. Palette vorerst die 12 Farben des Haus-Builders (Platzhalter).
+- **Avatar, Pixel-Netz:** frühes Experiment mit Teilen und Pixelnetz.
+- **Gebäude:** Haus-Designer mit demselben Teile-Katalog wie der Builder im Spiel (`src/bau-teile.js`, wird von beiden geladen: 44 Teile, 12 feste Farben, Zellenformat). Export und Import im Spielformat.
+- **Server-Speicher (Worker `worker/entwuerfe.js`):** Entwürfe für Avatar, Haus und Mesh im Bucket `designs` unter `entwuerfe/<art>/<kennung>/<version>.json`. Jede Speicherung ist eine neue Version, nichts wird überschrieben oder gelöscht. Nur mit Seitenpasswort. Prüfung von Größe (höchstens 64 KB), Form und Werten, höchstens 50 Entwürfe je Art und 20 Versionen je Entwurf, Bremse von 20 Speicherungen pro Minute und Adresse.
+- **Noch nicht enthalten:** Zubehör und Kleidung beim Mesh-Avatar, Körperregler im Mesh-Modus, glTF-Import, weitere Arten und Skelette, eigene Paletten. Konzept und offene Fragen dazu stehen in der privaten Lore.
+- **Bekanntes Problem (ungeklärt, 2026-11-09):** Auf einem MacBook Pro mit Intel-Grafik in Safari fror beim Hinfahren zu einem Bauplatz der ganze Rechner ein. In Messungen mit Chromium ohne echte Grafikkarte fanden sich weder beim Builder noch an den 17 Bauplätzen Auffälligkeiten. Eine Messhilfe in der Koordinaten-Box (V) ist vorgeschlagen, aber noch nicht gebaut.
+- **Behoben (2026-11-09):** Im Builder löste ein Mausklick zusätzlich einen Board-Wurf aus (Meldung "Kein Ziel"). Jetzt wird der Wurf im offenen Builder übersprungen.
+
 ### Startbildschirm in drei Schritten (Idee vom Nutzer, 2026-11-01, gebaut)
 1. Avatar auswählen (Karussell).
 2. Quest wählen: 1. Erkunde die Stadt (Leicht), 2. Skate Contest (Mittel, das Küsten-Rennen), 3. Rette die Insel (Schwer). Weitere Welten sind unter "Weitere Welten (zum Ausprobieren)" eingeklappt.
