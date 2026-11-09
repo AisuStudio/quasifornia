@@ -45,7 +45,7 @@ Avatar- und Haus-Entwürfe lassen sich auf dem Server speichern (Leiste "Auf dem
 - Ablage im Bucket `designs` unter `entwuerfe/<art>/<kennung>/<version>.json`. Jede Speicherung ist eine neue Version, es wird nie überschrieben und nie gelöscht.
 - Zugang nur mit dem Seitenpasswort (wie alles unter `/api`). Der Server prüft Größe (höchstens 64 KB), Form und Werte, begrenzt auf 50 Entwürfe je Art und 20 Versionen je Entwurf und bremst auf 20 Speicherungen pro Minute und Adresse (`ENTW_RATE`).
 - Die Seite liegt auf dem Server unter `/designer/` (`build.py` kopiert sie nach `dist/designer/`). Lokal oder im Artefakt meldet die Leiste "Kein Server hier".
-- Test 62 braucht einen lokalen Worker: `npx wrangler dev --local --port 8790 --var SITE_PASSWORD:testpw --var STATS_PASSWORD:statspw --var ENTW_RATE:60`.
+- Test 74 braucht einen lokalen Worker: `npx wrangler dev --local --port 8790 --var SITE_PASSWORD:testpw --var STATS_PASSWORD:statspw --var ENTW_RATE:60`.
 
 ## Mesh-Avatar mit Texture-Painter (mesh.html)
 Unterreiter "Mesh (Low Poly)" im Reiter Avatar. Eine Figur aus einem Stück (rund 480 Dreiecke), per Code erzeugt, an denselben Gelenken wie die Avatare im Spiel (hips, torso, head, thigh, shin, foot, shoulder, elbow, jeweils L/R) mit weichem Übergang (Skinning, höchstens zwei Knochen je Ecke). Posen Stehen, Gehen, Skaten wie im Rund-Modus.
@@ -53,4 +53,4 @@ Unterreiter "Mesh (Low Poly)" im Reiter Avatar. Eine Figur aus einem Stück (run
 - **Flächen:** Kopf, Rumpf, Arm L/R, Bein L/R, Fuß L/R und "Kappen" (Enden) liegen als feste Rechtecke in der Textur. Spiegeln malt links/rechts gleichzeitig (Kopf und Rumpf an der Mittelachse, Arme, Beine und Füße als Paar).
 - **Malen:** direkt auf der Figur (ziehen) oder auf der abgewickelten Fläche. Stift, Füllen (nur innerhalb einer Fläche), Pipette, Zurück. Auf der Figur zieht man daneben oder mit der rechten Maustaste, um zu drehen.
 - **Format AvatarMesh v1:** `{v:1, kind:'mesh', species:'humanoid', name, pal:'bau12', tex:'<4096 Zeichen aus 0-9, a, b>'}`. Nicht kompatibel mit AvatarSpec v2 (Rund-Modus). Server-Art `mesh` (Prüfung der Textur in `worker/entwuerfe.js`).
-- **Nicht enthalten:** Zubehör, Kleidung, eigener Körperbau (Regler), Import fremder Meshes (glTF). Test 63.
+- **Nicht enthalten:** Zubehör, Kleidung, eigener Körperbau (Regler), Import fremder Meshes (glTF). Test 75.
