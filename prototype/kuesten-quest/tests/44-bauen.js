@@ -19,8 +19,11 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  /* Hilfsfunktion: Bildschirmpunkt zu Zell-Punkt */
  const scr=(gx,gy,gz,lx,ly,lz)=>p.evaluate(([gx,gy,gz,lx,ly,lz])=>{const N=__pl.NX,v=__qa.cam.position.clone();v.set((gx-N/2+.5)*2+lx,gy*2+ly,(gz-N/2+.5)*2+lz);__pl.g.localToWorld(v);v.project(__qa.cam);const rc=document.querySelector('#stage canvas, canvas').getBoundingClientRect();return {x:rc.left+(v.x+1)/2*rc.width,y:rc.top+(1-v.y)/2*rc.height}},[gx,gy,gz,lx,ly,lz]);
  const click=async(pt,btn)=>{await p.mouse.move(pt.x,pt.y);await p.mouse.down({button:btn||'left'});await p.mouse.up({button:btn||'left'});await p.waitForTimeout(60)};
+ /* 0 Klick im Builder wirft kein Board: keine Meldung "Kein Ziel", Wurf bleibt bereit */
+ await p.evaluate(()=>{const e=document.getElementById('toast');e.textContent='';e.removeAttribute('data-t')});
  /* 1 Boden anklicken: Würfel */
- await click(await scr(5,0,5,0,0,0));console.log('Würfel auf den Boden',await n(),await p.evaluate(()=>[...__pl.cells.keys()].join(' ')));
+ await click(await scr(5,0,5,0,0,0));console.log('Klick im Builder wirft kein Board',JSON.stringify(await p.evaluate(()=>({toast:document.getElementById('toast').getAttribute('data-t')||'',wurf:__qa.T.state}))),await p.evaluate(()=>(document.getElementById('toast').getAttribute('data-t')||'')!=='Kein Ziel'&&__qa.T.state==='ready'));
+ await p.evaluate(()=>{});console.log('Würfel auf den Boden',await n(),await p.evaluate(()=>[...__pl.cells.keys()].join(' ')));
  /* 2 auf die Oberseite klicken: darüber wird gebaut */
  await click(await scr(5,0,5,0,2,0));console.log('Zweiter Würfel obendrauf',await n(),await p.evaluate(()=>[...__pl.cells.keys()].join(' ')));
  /* 3 Fenster an die Wand */

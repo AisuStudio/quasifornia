@@ -585,7 +585,7 @@ G.muted=G0sfx;
 function musUi(){const b=$('b-snd');if(b){b.setAttribute('aria-pressed',String(!MUSE.paused));b.textContent=(MUSE.paused?'♪ Musik aus':'♪ Musik an')+' · M'}}
 function toggleSnd(){MUSE.paused=!MUSE.paused;if(MUSE.paused){MUS.pause();MUS.started=false}else{musGo()}musSave();musUi();if(typeof rpRender==='function'&&INV.open)rpRender()}
 function toggleSfx(){G.muted=!G.muted;musSave();if(typeof rpRender==='function'&&INV.open)rpRender()}
-addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GFOPEN&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
+addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0&&!GFOPEN&&!(typeof BAU!=='undefined'&&BAU.open)&&!(e.target.closest&&e.target.closest('button'))&&G.phase!=='title'){ac();throwBoard()}});
 $('t-trick').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('kickflip')});$('t-shove').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('shove')});$('t-tre').addEventListener('pointerdown',e=>{e.preventDefault();ac();doTrick('tre')});
 $('t-throw').addEventListener('pointerdown',e=>{e.preventDefault();ac();throwBoard()});
 $('b-snd').onclick=toggleSnd;musUi();musLoad();if(DECK.key)deckLoad();
