@@ -19,6 +19,17 @@ Ein offenes, vernetztes Welten-Spiel als Web-App, inspiriert von der OASIS aus "
 
 ## Ideenpool (nicht priorisiert)
 
+### Geteilte Häuser mit Likes (Idee vom Nutzer, 2026-11-09, noch nicht entschieden)
+Stand heute: Häuser aus dem Builder liegen nur im localStorage des eigenen Browsers (`kq-bau2`), niemand sonst sieht sie.
+- Idee: Kinder teilen ihre Häuser. Wer für einen Bauplatz mehr Likes bekommt, dessen Haus wird dort angezeigt und ersetzt das bisherige.
+- Offener Weblink pro Haus, ohne Account ansehbar, damit man ihn z. B. an Oma schicken kann. Gucken ist frei, Liken und Bauen braucht Identität.
+- Ersetzte Häuser gehen nicht verloren, sie bleiben in der eigenen Sammlung (passt zu: nur lokaler Weltzustand kann verloren gehen).
+- Kein Flackern: Wechsel nur in Runden (z. B. wöchentlich) oder bei deutlich mehr Likes.
+- Likes: eines pro Person und Haus, nicht für das eigene, nur von anderen. Braucht stabile Identität.
+- Sicherheit: nur Teile aus dem Baukasten, keine Bilder, kein freier Text. Meldefunktion reicht wohl. Namen oder Schilder erst, wenn freier Text erlaubt ist.
+- Der Bauauftrag (50 Scoops) bleibt einmalig pro Platz.
+- Offene Fragen: Wer besitzt einen Platz? Mehrere Häuser pro Platz als Kandidaten? Was zeigt der Weblink (3D-Ansicht, Bild, beides)? Server-Endpunkt analog zu `/api/graffiti`.
+
 ### Welten und Bauen
 - Prozedurale Welten wie No Man's Sky (Seed + Skript), keine groben Minecraft-Blöcke
 - Hybrid: glattes Terrain, modulare Bauteile, feine Details
