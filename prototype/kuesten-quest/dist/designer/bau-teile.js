@@ -14,7 +14,7 @@ function bauGeo(k){if(BAU_G[k])return BAU_G[k];let g;
   else if(k==='ico'){g=new THREE.IcosahedronGeometry(1,1);const a=g.attributes.position;for(let i=0;i<a.count;i++)if(a.getY(i)<0)a.setY(i,0);g.computeVertexNormals()}
   else if(k==='barrel'){const s=new THREE.Shape();s.moveTo(-1,0);s.absarc(0,0,1,Math.PI,0,true);s.closePath();g=new THREE.ExtrudeGeometry(s,{depth:2,bevelEnabled:false,curveSegments:10});g.translate(0,0,-1)}
   return BAU_G[k]=g}
-/* Teil bauen: g ist eine Gruppe in der Zelle (Mitte unten, 2 x 2 m, 2 m hoch); Dekos werden für die Seite +z gezeichnet und dann gedreht */
+/* Teil bauen: g ist eine Gruppe in der Zelle (Mitte unten, Teile sind für 2 x 2 x 2 gezeichnet und werden auf die Zellgröße BAU_C skaliert); Dekos werden für die Seite +z gezeichnet und dann gedreht */
 const bm=(g,geo,col,sx,sy,sz,x,y,z,em,ei)=>{const m=new THREE.Mesh(geo,MT(col,em,ei));m.scale.set(sx,sy,sz);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m};
 const BAU_GLASS='#bfeeff';
 const BAU_PARTS={
@@ -48,9 +48,9 @@ const BAU_PARTS={
  winr:{n:'Rundfenster',cat:'oeff',kind:'d',mk:(g,c)=>{const a=bm(g,CY,c,.5,.14,.5,0,1.15,1.03);a.rotation.x=Math.PI/2;const b=bm(g,CY,BAU_GLASS,.38,.16,.38,0,1.15,1.03,'#7fd8ff',.3);b.rotation.x=Math.PI/2}},
  port:{n:'Bullauge',cat:'oeff',kind:'d',mk:(g,c)=>{const a=bm(g,CY,'#d8dde3',.36,.16,.36,0,1.2,1.03);a.rotation.x=Math.PI/2;const b=bm(g,CY,BAU_GLASS,.26,.18,.26,0,1.2,1.03,'#7fd8ff',.3);b.rotation.x=Math.PI/2}},
  pano:{n:'Panoramafenster',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,1.9,1.5,.12,0,1,1.02);bm(g,BX,BAU_GLASS,1.7,1.3,.14,0,1,1.03,'#7fd8ff',.3);bm(g,BX,c,.05,1.3,.16,0,1,1.04)}},
- door:{n:'Tür',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,.95,1.55,.16,0,.78,1.03);bm(g,BX,'#3a3548',.8,1.42,.18,0,.74,1.04);bm(g,SP,'#f0cf36',.06,.06,.06,.3,.8,1.14)}},
- garage:{n:'Rolltor',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,'#d8dde3',1.8,1.5,.14,0,.75,1.03);for(let i=0;i<5;i++)bm(g,BX,'#aab3bd',1.8,.04,.16,0,.2+i*.28,1.04)}},
- glass:{n:'Glastür',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,1.8,1.7,.12,0,.85,1.02);bm(g,BX,BAU_GLASS,1.6,1.6,.14,0,.85,1.03,'#7fd8ff',.3);bm(g,BX,c,.06,1.6,.18,0,.85,1.04)}},
+ door:{n:'Tür',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,1.05,1.95,.16,0,.98,1.03);bm(g,BX,'#3a3548',.9,1.82,.18,0,.93,1.04);bm(g,SP,'#f0cf36',.07,.07,.07,.34,.95,1.14)}},
+ garage:{n:'Rolltor',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,'#d8dde3',1.8,1.9,.14,0,.95,1.03);for(let i=0;i<5;i++)bm(g,BX,'#aab3bd',1.8,.04,.16,0,.2+i*.35,1.04)}},
+ glass:{n:'Glastür',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,1.8,1.95,.12,0,.98,1.02);bm(g,BX,BAU_GLASS,1.6,1.85,.14,0,.95,1.03,'#7fd8ff',.3);bm(g,BX,c,.06,1.85,.18,0,.95,1.04)}},
  balc:{n:'Balkon',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,c,2,.14,.9,0,.07,1.45);[-.95,.95].forEach(x=>bm(g,BX,'#eae8e8',.06,.8,.06,x,.54,1.87));bm(g,BX,'#eae8e8',2,.06,.06,0,.94,1.88);bm(g,BX,'#eae8e8',.06,.7,.8,-.97,.5,1.45);bm(g,BX,'#eae8e8',.06,.7,.8,.97,.5,1.45)}},
  awn:{n:'Markise',cat:'oeff',kind:'d',mk:(g,c)=>{for(let i=0;i<4;i++){const m=bm(g,BX,i%2?'#ffffff':c,.5,.06,.9,-.75+i*.5,1.6,1.4);m.rotation.x=.32}}},
  sign:{n:'Neonschild',cat:'oeff',kind:'d',mk:(g,c)=>{bm(g,BX,'#2a3a52',1.5,.5,.1,0,1.7,1.05);bm(g,BX,c,1.3,.3,.06,0,1.7,1.12,c,.9)}},
@@ -67,14 +67,16 @@ const BAU_PARTS={
 };
 const bauColOf=i=>BAU_COLS[((i%BAU_COLS.length)+BAU_COLS.length)%BAU_COLS.length];
 /* Zellen und Bauplatz (Plot = {NX,NZ,x,z,g,cells:Map,cg:Map,mask?}); Zellgröße 2 m, bis zu 6 Ebenen */
-const BAU_C=2,BAU_LV=6;
+/* Skala: Der Avatar ist 2,8 Einheiten hoch und gilt als 1,8 m, also 1 m = 1,55 Einheiten. Eine Zelle ist 2 m = 3,1 Einheiten, ein Haus hat bis zu 5 Ebenen.
+   Die Teile unten sind für 2 x 2 x 2 gezeichnet und werden mit BAU_C/2 auf die Zellgröße skaliert. */
+const BAU_C=3.1,BAU_LV=5;
 const bauCx=(pl,gx)=>(gx-pl.NX/2+.5)*BAU_C,bauCz=(pl,gz)=>(gz-pl.NZ/2+.5)*BAU_C;
 const bauOk=(pl,gx,gz)=>gx>=0&&gx<pl.NX&&gz>=0&&gz<pl.NZ&&(!pl.mask||pl.mask.has(gx+','+gz));
 const bauKeyOf=o=>{while(o){if(o.userData&&o.userData.cellKey)return o.userData.cellKey;o=o.parent}return null};
 function bauCellGroup(plot,key,cell){const [gx,gy,gz]=key.split(',').map(Number),g=new THREE.Group();
   g.position.set(bauCx(plot,gx),gy*BAU_C,bauCz(plot,gz));g.userData.cellKey=key;
-  const P=BAU_PARTS[cell.v];if(P){const inner=new THREE.Group();inner.rotation.y=(cell.r||0)*Math.PI/4;P.mk(inner,bauColOf(cell.c));g.add(inner)}
-  (cell.f||[]).forEach((f,i)=>{if(!f)return;const D=BAU_PARTS[f[0]];if(!D)return;const sub=new THREE.Group();sub.rotation.y=i*Math.PI/2;D.mk(sub,bauColOf(f[1]));g.add(sub)});
+  const P=BAU_PARTS[cell.v];if(P){const inner=new THREE.Group();inner.scale.setScalar(BAU_C/2);inner.rotation.y=(cell.r||0)*Math.PI/4;P.mk(inner,bauColOf(cell.c));g.add(inner)}
+  (cell.f||[]).forEach((f,i)=>{if(!f)return;const D=BAU_PARTS[f[0]];if(!D)return;const sub=new THREE.Group();sub.scale.setScalar(BAU_C/2);sub.rotation.y=i*Math.PI/2;D.mk(sub,bauColOf(f[1]));g.add(sub)});
   g.traverse(o=>{if(o.isMesh)o.userData.cellKey=key});
   try{addOutlines(g,'prop')}catch(e){}
   return g}

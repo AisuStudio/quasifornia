@@ -75,8 +75,8 @@ function pick(ev){const b=cv.getBoundingClientRect();rc.setFromCamera(new THREE.
   return {key:null,cell:[gx,0,gz],face:-1,next:[gx,0,gz],part:false}}
 function ghost(){if(S.ghost){S.ghost.parent&&S.ghost.parent.remove(S.ghost);S.ghost=null}
   const t=S.hover;if(!plot||!t||S.tool!=='put')return;const P=BAU_PARTS[S.part];if(!P)return;const g=new THREE.Group();let cx,cy,cz;
-  if(P.kind==='v'){[cx,cy,cz]=t.next;if(!bauOk(plot,cx,cz)||cy<0||cy>=BAU_LV||plot.cells.has(key(cx,cy,cz)))return;const inner=new THREE.Group();inner.rotation.y=S.rot*Math.PI/4;P.mk(inner,bauColOf(S.col));g.add(inner)}
-  else{if(!t.part||t.face<0)return;[cx,cy,cz]=t.cell;const sub=new THREE.Group();sub.rotation.y=t.face*Math.PI/2;P.mk(sub,bauColOf(S.col));g.add(sub)}
+  if(P.kind==='v'){[cx,cy,cz]=t.next;if(!bauOk(plot,cx,cz)||cy<0||cy>=BAU_LV||plot.cells.has(key(cx,cy,cz)))return;const inner=new THREE.Group();inner.scale.setScalar(BAU_C/2);inner.rotation.y=S.rot*Math.PI/4;P.mk(inner,bauColOf(S.col));g.add(inner)}
+  else{if(!t.part||t.face<0)return;[cx,cy,cz]=t.cell;const sub=new THREE.Group();sub.scale.setScalar(BAU_C/2);sub.rotation.y=t.face*Math.PI/2;P.mk(sub,bauColOf(S.col));g.add(sub)}
   g.position.set(bauCx(plot,cx),cy*BAU_C,bauCz(plot,cz));
   g.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.55;o.castShadow=false}});plot.g.add(g);S.ghost=g}
 function act(ev,er){const t=pick(ev);if(!t)return;
