@@ -43,7 +43,7 @@ h1{font-size:18px;margin:0;line-height:1.2}
 .tabs a[aria-current="page"]{color:var(--text);background:var(--page);border-color:var(--axis);font-weight:600}
 .tabs a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
 .bar{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-left:auto}
-.bar button,.bar select{padding:6px 8px}
+.bar button,.bar select{padding:6px 7px}
 button,select,input,textarea{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--axis);border-radius:8px;padding:6px 10px}
 button{cursor:pointer}
 button:hover{border-color:var(--text2)}
@@ -73,6 +73,12 @@ main{flex:1;display:flex;min-height:0;position:relative}
 #stage.seltool{cursor:crosshair}
 #box{position:absolute;border:1px dashed var(--s1);background:color-mix(in srgb,var(--s1) 12%,transparent);pointer-events:none;z-index:3}
 #box[hidden]{display:none}
+#areas{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible}
+.area{position:absolute;--ac:var(--s1);border:2px dashed var(--ac);border-radius:14px;background:color-mix(in srgb,var(--ac) 8%,transparent);pointer-events:none}
+.area.c-green{--ac:var(--good)}.area.c-orange{--ac:var(--s2)}.area.c-purple{--ac:var(--s3)}.area.c-teal{--ac:var(--s4)}.area.c-red{--ac:var(--crit)}.area.c-gray{--ac:var(--muted)}
+.area.sel{outline:3px solid color-mix(in srgb,var(--s1) 40%,transparent);outline-offset:2px}
+.area .abar{pointer-events:auto;cursor:move;height:28px;line-height:22px;padding:3px 12px;font-weight:600;color:var(--ac);background:color-mix(in srgb,var(--ac) 16%,transparent);border-radius:12px 12px 0 0;user-select:none;-webkit-user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.area .ares{pointer-events:auto;position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;cursor:nwse-resize;border-right:5px solid var(--ac);border-bottom:5px solid var(--ac);border-radius:0 0 14px 0}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #edges{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
 #edges path.e{fill:none;stroke:var(--text2);stroke-width:2;stroke-linejoin:round}
@@ -166,11 +172,12 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
     <button id="add-branch" type="button">+ Verzweigung</button>
     <button id="add-note" type="button">+ Notiz</button>
     <button id="add-chapter" type="button">+ Kapitel</button>
+    <button id="add-area" type="button" title="Farbiger Rahmen um mehrere Knoten, z. B. ein Gebiet">+ Bereich</button>
     <select id="tpl" aria-label="Vorlagen" title="Vorlage in die aktuelle Ebene einfügen"><option value="">Vorlagen ▾</option><option value="hero">Heldenreise einfügen (22 Stationen)</option></select>
     <button id="fit" type="button">Einpassen</button>
     <button id="tool-select" type="button" aria-pressed="false" title="Auswahl-Werkzeug: auf der Fläche einen Rahmen aufziehen (auch: Umschalt+Ziehen)">Auswählen</button>
     <button id="versions" type="button">Versionen</button>
-    <button id="agent" type="button" title="Lese-Link für Agenten">Agent-Link</button>
+    <button id="agent" type="button" title="Lese-Link für Agenten (Markdown und JSON)">Agent</button>
     <button id="export" type="button">Export</button>
     <button id="import" type="button">Import</button>
     <input id="file" type="file" accept="application/json,.json" hidden>
@@ -211,7 +218,7 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 <main>
   <div id="stage" tabindex="0" aria-label="Planungsfläche. Doppelklick legt eine Szene an. Umschalt+Ziehen wählt mehrere Knoten aus. Entf löscht die Auswahl.">
     <div id="box" hidden></div>
-    <div id="world"><svg id="edges" aria-hidden="true"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><g id="eg" style="color:var(--text2)"></g><path class="tmp" id="tmp" hidden></path></svg><div id="nodes"></div></div>
+    <div id="world"><div id="areas"></div><svg id="edges" aria-hidden="true"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs><g id="eg" style="color:var(--text2)"></g><path class="tmp" id="tmp" hidden></path></svg><div id="nodes"></div></div>
     <p id="hint" hidden>Noch leer.<br>Doppelklick auf die Fläche legt eine Szene an. Am Punkt rechts eines Kastens ziehen, um zu verbinden.</p>
     <div id="zoomctl"><button id="zin" type="button" aria-label="Vergrößern">+</button><button id="zout" type="button" aria-label="Verkleinern">−</button></div>
   </div>
@@ -220,8 +227,8 @@ button[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);colo
 <script>
 (()=>{
 const $=s=>document.querySelector(s);
-const stage=$('#stage'),world=$('#world'),nodesEl=$('#nodes'),eg=$('#eg'),tmp=$('#tmp'),insp=$('#insp'),status=$('#status'),hint=$('#hint');
-const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel'},KINDS={character:'Charakter',event:'Ereignis',todo:'Todo',item:'Gegenstand'};
+const stage=$('#stage'),world=$('#world'),areasEl=$('#areas'),nodesEl=$('#nodes'),eg=$('#eg'),tmp=$('#tmp'),insp=$('#insp'),status=$('#status'),hint=$('#hint');
+const W=190,TYPES={scene:'Szene',branch:'Verzweigung',note:'Notiz',chapter:'Kapitel',area:'Bereich'},AREA_COLORS=['blue','green','orange','purple','teal','red','gray'],COLOR_LBL={blue:'Blau',green:'Grün',orange:'Orange',purple:'Lila',teal:'Türkis',red:'Rot',gray:'Grau'},KINDS={character:'Charakter',event:'Ereignis',todo:'Todo',item:'Gegenstand'};
 const typeLbl=n=>n.type==='note'&&n.kind?KINDS[n.kind]:(TYPES[n.type]||n.type);
 /* Große Arkana, Narr 0 bis Welt XXI (Rider-Waite-Reihenfolge). Muss mit worker/planner.js übereinstimmen (Test 68). */
 const ARC=[['0','Der Narr','Aufbruch'],['I','Der Magier','Fähigkeit'],['II','Die Hohepriesterin','Geheimnis'],['III','Die Herrscherin','Fülle'],['IV','Der Herrscher','Ordnung'],['V','Der Hierophant','Tradition'],['VI','Die Liebenden','Entscheidung'],['VII','Der Wagen','Antrieb'],['VIII','Die Kraft','Mut'],['IX','Der Eremit','Einkehr'],['X','Das Rad des Schicksals','Wendung'],['XI','Die Gerechtigkeit','Ausgleich'],['XII','Der Gehängte','Perspektivwechsel'],['XIII','Der Tod','Wandlung'],['XIV','Die Mäßigkeit','Maß'],['XV','Der Teufel','Versuchung'],['XVI','Der Turm','Zusammenbruch'],['XVII','Der Stern','Hoffnung'],['XVIII','Der Mond','Illusion'],['XIX','Die Sonne','Klarheit'],['XX','Das Gericht','Bilanz'],['XXI','Die Welt','Vollendung']];
@@ -271,23 +278,46 @@ function toWorld(cx,cy){const r=stage.getBoundingClientRect();return {x:(cx-r.le
 function zoomAt(cx,cy,f){const r=stage.getBoundingClientRect(),px=cx-r.left,py=cy-r.top,k=Math.max(.2,Math.min(2,view.k*f)),q=k/view.k;view.x=px-(px-view.x)*q;view.y=py-(py-view.y)*q;view.k=k;applyView()}
 function fit(list){const ns=list||Object.values(G().nodes);if(!ns.length){view={x:60,y:60,k:1};applyView();return}
   const el=id=>nodesEl.querySelector(`[data-id="${id}"]`);let a=1e9,b=1e9,c=-1e9,d=-1e9;
-  for(const n of ns){const h=(el(n.id)||{offsetHeight:70}).offsetHeight;a=Math.min(a,n.x);b=Math.min(b,n.y);c=Math.max(c,n.x+W);d=Math.max(d,n.y+h)}
+  for(const n of ns){const ar=n.type==='area',h=ar?n.h:(el(n.id)||{offsetHeight:70}).offsetHeight;a=Math.min(a,n.x);b=Math.min(b,n.y);c=Math.max(c,n.x+(ar?n.w:W));d=Math.max(d,n.y+h)}
   const r=stage.getBoundingClientRect(),pad=50,k=Math.max(.2,Math.min(1,Math.min((r.width-2*pad)/(c-a),(r.height-2*pad)/(d-b))));
   view={k,x:(r.width-(c-a)*k)/2-a*k,y:(r.height-(d-b)*k)/2-b*k};applyView()}
+/* ---------- Bereiche ---------- */
+const realCount=g=>Object.values(g.nodes).filter(n=>n.type!=='area').length;
+const elOf=n=>(n.type==='area'?areasEl:nodesEl).querySelector(`${n.type==='area'?'.area':'.node'}[data-id="${n.id}"]`);
+function placeEl(id){const n=G().nodes[id],e=n&&elOf(n);if(e){e.style.left=n.x+'px';e.style.top=n.y+'px'}}
+/* Beim Verschieben eines Bereichs wandert sein Inhalt (nach Lage, auch Unterbereiche) mit. */
+function expand(ids){const mem=areaMembers(G()),out=new Set(ids),walk=a=>{for(const n of mem[a].nodes)out.add(n);for(const c of mem[a].areas){out.add(c);walk(c)}};ids.forEach(i=>{if(mem[i])walk(i)});return [...out]}
+function areaEl(n){const e=mk('div',{class:'area c-'+(AREA_COLORS.includes(n.color)?n.color:'blue')+(isSel(n.id)?' sel':''),'data-id':n.id});
+  e.style.left=n.x+'px';e.style.top=n.y+'px';e.style.width=n.w+'px';e.style.height=n.h+'px';
+  e.append(mk('div',{class:'abar','data-id':n.id,title:'Ziehen verschiebt den Bereich samt Inhalt'},n.title||'(ohne Titel)'),mk('span',{class:'ares','data-id':n.id,title:'Größe ändern'}));return e}
+function frameSel(){const ids=selIds().filter(i=>G().nodes[i]&&G().nodes[i].type!=='area');if(!ids.length)return;
+  let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const i of ids){const q=nodeBox(G().nodes[i]);a=Math.min(a,q.x);b=Math.min(b,q.y);c=Math.max(c,q.x+q.w);d=Math.max(d,q.y+q.h)}
+  const n={id:rid(),type:'area',title:'Bereich',text:'',x:Math.round(a-30),y:Math.round(b-60),w:Math.round(c-a+60),h:Math.round(d-b+90),color:AREA_COLORS[Object.values(G().nodes).filter(x=>x.type==='area').length%AREA_COLORS.length],mandatory:false};
+  G().nodes[n.id]=n;select({kind:'node',id:n.id});changed()}
 /* ---------- Heldenreise: Kartenleiste ---------- */
 let stripOn=(()=>{try{const v=localStorage.getItem('planner-strip');return v==='1'?true:v==='0'?false:null}catch(e){return null}})();
 function renderStrip(){
   const el=$('#cards'),any=cardCache.some(x=>x.stations.length||x.notes.length),show=stripOn===null?any:stripOn;el.hidden=!show;$('#cards-toggle').setAttribute('aria-pressed',String(show));if(!show)return;el.textContent='';
   cardCache.forEach((x,i)=>{
-    const filled=x.stations.some(t=>t.n.graph&&doc.graphs[t.n.graph]&&Object.keys(doc.graphs[t.n.graph].nodes).length>0),state=x.stations.length?(filled?'full':'empty'):'none',cur=x.stations.some(t=>t.n.graph===gid)||x.notes.some(t=>t.g===gid);
+    const filled=x.stations.some(t=>t.n.graph&&doc.graphs[t.n.graph]&&realCount(doc.graphs[t.n.graph])>0),state=x.stations.length?(filled?'full':'empty'):'none',cur=x.stations.some(t=>t.n.graph===gid)||x.notes.some(t=>t.g===gid);
     const b=mk('button',{type:'button',class:'cell '+state+(cur?' cur':''),'data-card':String(i),title:ARC[i][0]+' · '+ARC[i][1]+' ('+ARC[i][2]+'): '+(x.stations.length?(filled?'Station mit Inhalt':'Station leer'):'keine Station')+' · '+(()=>{const c={};x.notes.forEach(t=>{const k=t.n.kind?KINDS[t.n.kind]:'Notiz';c[k]=(c[k]||0)+1});const a=Object.entries(c).map(([k,v])=>v+' '+k);return a.length?a.join(', '):'keine Notizen'})()},ARC[i][0]);
     if(x.notes.length)b.append(mk('sup',{},String(x.notes.length)));
     b.onclick=()=>jumpCard(i);el.append(b)})}
 $('#cards-toggle').onclick=()=>{stripOn=$('#cards').hidden;try{localStorage.setItem('planner-strip',stripOn?'1':'0')}catch(e){}renderStrip()};
 function jumpCard(i){const x=cardCache[i],t=x.stations[0]||x.notes[0];if(!t)return;focusNode(t.g,t.n.id)}
+/* Bereiche: Zugehörigkeit nach Lage (Mittelpunkt des Knotens im Rahmen), der kleinste umschließende Bereich gewinnt.
+   Dieser Block steht wortgleich in worker/planner.js; Test 73 vergleicht beide. */
+function areaCenter(n){return n.type==='area'?{x:n.x+n.w/2,y:n.y+n.h/2}:{x:n.x+95,y:n.y+40}}
+function inArea(a,c){return c.x>=a.x&&c.x<=a.x+a.w&&c.y>=a.y&&c.y<=a.y+a.h}
+function areaMembers(g){
+  const all=Object.values(g.nodes).sort((a,b)=>a.x-b.x||a.y-b.y||(a.id<b.id?-1:a.id>b.id?1:0)),areas=all.filter(n=>n.type==='area'),res={};
+  areas.forEach(a=>{res[a.id]={nodes:[],areas:[]}});
+  const owner=n=>{let best=null;for(const a of areas){if(a.id===n.id||!inArea(a,areaCenter(n)))continue;if(n.type==='area'&&!(a.w*a.h>n.w*n.h))continue;if(!best||a.w*a.h<best.w*best.h)best=a}return best};
+  for(const n of all){const o=owner(n);if(o)res[o.id][n.type==='area'?'areas':'nodes'].push(n.id)}
+  return res}
 /* Ablauf-Prüfung je Ebene. Fluss-Knoten: Szene, Verzweigung, Kapitel sowie Notizen mit Rolle oder Verbindung. Ergebnis sind Hinweise, keine Fehler.
    Dieser Block steht wortgleich in worker/planner.js; Test 71 vergleicht beide. */
-function flowNodes(g){const e=new Set();g.edges.forEach(x=>{e.add(x.from);e.add(x.to)});return Object.values(g.nodes).filter(n=>n.type!=='note'||n.role||e.has(n.id)).sort((a,b)=>a.x-b.x||a.y-b.y||(a.id<b.id?-1:a.id>b.id?1:0))}
+function flowNodes(g){const e=new Set();g.edges.forEach(x=>{e.add(x.from);e.add(x.to)});return Object.values(g.nodes).filter(n=>n.type!=='area'&&(n.type!=='note'||n.role||e.has(n.id))).sort((a,b)=>a.x-b.x||a.y-b.y||(a.id<b.id?-1:a.id>b.id?1:0))}
 function checkGraph(g){
   const flow=flowNodes(g);if(!flow.length)return null;
   const ids=new Set(flow.map(n=>n.id)),adj={};flow.forEach(n=>{adj[n.id]=[]});g.edges.forEach(e=>{if(ids.has(e.from)&&ids.has(e.to))adj[e.from].push(e.to)});
@@ -326,7 +356,7 @@ function insertHero(){
   const missing=ARC.map((_,i)=>i).filter(i=>!have.has(i));
   if(!missing.length){alert('Alle 22 Stationen der Heldenreise gibt es auf dieser Ebene schon.');return}
   if(have.size&&!confirm('Auf dieser Ebene gibt es schon '+have.size+' Stationen mit Karte. Nur die fehlenden '+missing.length+' ergänzen?'))return;
-  const g=G(),ns=Object.values(g.nodes),x0=ns.length?Math.min(...ns.map(n=>n.x)):0,y0=ns.length?Math.max(...ns.map(n=>n.y))+200:0,made={},hasStart=ns.some(n=>n.role==='start'),hasEnd=ns.some(n=>n.role==='end');
+  const g=G(),ns=Object.values(g.nodes),x0=ns.length?Math.min(...ns.map(n=>n.x)):0,y0=ns.length?Math.max(...ns.map(n=>n.type==='area'?n.y+n.h-200:n.y))+200:0,made={},hasStart=ns.some(n=>n.role==='start'),hasEnd=ns.some(n=>n.role==='end');
   for(const i of missing){const row=i<8?0:i<15?1:2,col=i<8?i:i<15?i-8:i-15,title=ARC[i][0]+' · '+ARC[i][1],nid=rid(),sub=rid();
     g.nodes[nid]={id:nid,type:'chapter',title,text:ARC[i][2],x:x0+col*240,y:y0+row*190,mandatory:false,graph:sub,card:i};
     doc.graphs[sub]={id:sub,name:title,parent:gid,nodes:{},edges:[]};made[i]=nid}
@@ -355,16 +385,16 @@ function nodeEl(n){
   if(onlyMand&&!isMand(n))e.classList.add('dim');
   e.append(mk('div',{class:'ty'},typeLbl(n)+(n.kind==='todo'?(n.done?' · erledigt':' · offen'):'')),mk('div',{class:'ti'},n.title||'(ohne Titel)'));
   if(isCard(n.card)&&(n.type==='chapter'||n.type==='note')&&!(n.title||'').includes(ARC[n.card][1])){const c=cardCache[n.card],dup=n.type==='chapter'?c.stations.length>1:n.kind==='character'&&c.notes.filter(k=>k.n.kind==='character').length>1;e.append(mk('div',{class:'cd'+(dup?' dup':''),title:dup?'Diese Karte ist mehrfach vergeben':''},ARC[n.card][0]+' · '+ARC[n.card][1]+(dup?' ⚠ doppelt':'')))}
-  if(n.type==='chapter'){const cg=n.graph&&doc.graphs[n.graph],ns=cg?Object.values(cg.nodes):[];e.append(mk('div',{class:'cnt'},ns.length+' Knoten'+(ns.some(x=>x.mandatory)||(cg&&hasMand(n.graph))?' · mit Pflicht':'')))}
+  if(n.type==='chapter'){const cg=n.graph&&doc.graphs[n.graph],ns=cg?Object.values(cg.nodes).filter(x=>x.type!=='area'):[];e.append(mk('div',{class:'cnt'},ns.length+' Knoten'+(ns.some(x=>x.mandatory)||(cg&&hasMand(n.graph))?' · mit Pflicht':'')))}
   if(n.text)e.append(mk('div',{class:'tx'},n.text));
   e.append(mk('span',{class:'h i'}),mk('span',{class:'h o','data-out':'1',title:'Ziehen zum Verbinden'}));
   return e}
 function render(){
   if(sel&&sel.kind==='multi'){sel.ids=sel.ids.filter(i=>G().nodes[i]);if(sel.ids.length<2)sel=sel.ids.length?{kind:'node',id:sel.ids[0]}:null}
   cardCache=cardStats();
-  nodesEl.textContent='';for(const n of Object.values(G().nodes))nodesEl.append(nodeEl(n));
+  nodesEl.textContent='';areasEl.textContent='';const all=Object.values(G().nodes);for(const n of all.filter(x=>x.type==='area').sort((a,b)=>b.w*b.h-a.w*a.h))areasEl.append(areaEl(n));for(const n of all)if(n.type!=='area')nodesEl.append(nodeEl(n));
   hint.hidden=Object.keys(G().nodes).length>0;renderEdges();crumbs();renderStrip();renderCheck()}
-function renderNode(id){const old=nodesEl.querySelector(`[data-id="${id}"]`),n=G().nodes[id];if(old&&n)old.replaceWith(nodeEl(n));renderEdges()}
+function renderNode(id){const n=G().nodes[id],old=n&&elOf(n);if(old&&n)old.replaceWith(n.type==='area'?areaEl(n):nodeEl(n));renderEdges()}
 function box(id){const e=nodesEl.querySelector(`[data-id="${id}"]`),n=G().nodes[id];return {x:n.x,y:n.y,h:e?e.offsetHeight:70}}
 function path(a,b,tmp){const x1=a.x+W,y1=a.y+a.h/2,x2=b.x,y2=b.y+b.h/2;
   if(!tmp&&x2<x1+20){/* Ziel liegt links: Stufenlinie durch die Lücke zwischen den Zeilen, statt quer durch andere Kästen */
@@ -387,16 +417,23 @@ const selIds=()=>sel?(sel.kind==='node'?[sel.id]:sel.kind==='multi'?sel.ids:[]):
 const isSel=id=>selIds().includes(id);
 function setNodes(ids){ids=[...new Set(ids)].filter(i=>G().nodes[i]);select(ids.length>1?{kind:'multi',ids}:ids.length===1?{kind:'node',id:ids[0]}:null)}
 function toggleSel(id){const c=selIds();setNodes(c.includes(id)?c.filter(i=>i!==id):c.concat(id))}
-function nodeBox(n){const e=nodesEl.querySelector(`[data-id="${n.id}"]`);return {x:n.x,y:n.y,w:W,h:e?e.offsetHeight:70}}
-function nodesIn(r){const a=toWorld(r.l,r.t),b=toWorld(r.r,r.b);return Object.values(G().nodes).filter(n=>{const q=nodeBox(n);return q.x<b.x&&q.x+q.w>a.x&&q.y<b.y&&q.y+q.h>a.y}).map(n=>n.id)}
-function nudge(dx,dy){const ids=selIds();if(!ids.length)return;for(const id of ids){const n=G().nodes[id];n.x+=dx;n.y+=dy;const e=nodesEl.querySelector(`[data-id="${id}"]`);if(e){e.style.left=n.x+'px';e.style.top=n.y+'px'}}renderEdges();changed('nudge|'+ids[0]+'|'+ids.length)}
+function nodeBox(n){if(n.type==='area')return {x:n.x,y:n.y,w:n.w,h:n.h};const e=elOf(n);return {x:n.x,y:n.y,w:W,h:e?e.offsetHeight:70}}
+function nodesIn(r){const a=toWorld(r.l,r.t),b=toWorld(r.r,r.b);return Object.values(G().nodes).filter(n=>{const q=nodeBox(n);return n.type==='area'?(q.x>=a.x&&q.x+q.w<=b.x&&q.y>=a.y&&q.y+q.h<=b.y):(q.x<b.x&&q.x+q.w>a.x&&q.y<b.y&&q.y+q.h>a.y)}).map(n=>n.id)}
+function nudge(dx,dy){const sid=selIds();if(!sid.length)return;for(const id of expand(sid)){const n=G().nodes[id];n.x+=dx;n.y+=dy;placeEl(id)}renderEdges();changed('nudge|'+sid[0]+'|'+sid.length)}
 function field(lbl,el){const w=mk('div');const l=mk('label',{},lbl);w.append(l,el);return w}
 function inspect(){
   insp.textContent='';insp.classList.toggle('on',!!sel);if(!sel)return;
   if(sel.kind==='multi'){const k=sel.ids.length,cl=mk('button',{type:'button',id:'f-clear'},'Auswahl aufheben'),del=mk('button',{type:'button',class:'danger',id:'f-del'},'Alle löschen');
+    const fr=mk('button',{type:'button',id:'f-frame',title:'Legt einen Bereich um die ausgewählten Knoten'},'Auswahl umrahmen');fr.disabled=!sel.ids.some(i=>G().nodes[i]&&G().nodes[i].type!=='area');fr.onclick=frameSel;
     cl.onclick=()=>select(null);del.onclick=()=>removeSel();
-    insp.append(mk('h2',{},'Auswahl'),mk('p',{class:'vt',id:'f-count'},k+' Knoten ausgewählt. Ziehen verschiebt alle, die Pfeiltasten verschieben in Schritten (Umschalt: größer), Entf löscht alle.'),cl,del);return}
+    insp.append(mk('h2',{},'Auswahl'),mk('p',{class:'vt',id:'f-count'},k+' Knoten ausgewählt. Ziehen verschiebt alle, die Pfeiltasten verschieben in Schritten (Umschalt: größer), Entf löscht alle.'),fr,cl,del);return}
   if(sel.kind==='node'){const n=G().nodes[sel.id];if(!n){sel=null;insp.classList.remove('on');return}
+    if(n.type==='area'){
+      const ti=mk('input',{type:'text',maxlength:'120',id:'f-title'});ti.value=n.title;ti.oninput=()=>{n.title=ti.value;renderNode(n.id);changed()};
+      const cs=mk('select',{id:'f-color'});for(const c of AREA_COLORS)cs.append(mk('option',{value:c},COLOR_LBL[c]));cs.value=n.color||'blue';cs.onchange=()=>{n.color=cs.value;renderNode(n.id);changed()};
+      const tx=mk('textarea',{maxlength:'4000',id:'f-text'});tx.value=n.text;tx.oninput=()=>{n.text=tx.value;changed()};
+      const m=areaMembers(G())[n.id]||{nodes:[],areas:[]},del=mk('button',{type:'button',class:'danger',id:'f-del'},'Bereich löschen (Inhalt bleibt)');del.onclick=()=>removeSel();
+      insp.append(mk('h2',{},'Bereich'),field('Titel',ti),field('Farbe',cs),mk('p',{class:'vt',id:'f-members'},'Enthält '+m.nodes.length+' Knoten'+(m.areas.length?' und '+m.areas.length+' Unterbereiche':'')+'. Ziehen an der Titelleiste verschiebt alles darin, die Ecke unten rechts ändert die Größe.'),field('Beschreibung',tx),del);return}
     const ti=mk('input',{type:'text',maxlength:'120',id:'f-title'});ti.value=n.title;
     const tx=mk('textarea',{maxlength:'4000',id:'f-text'});tx.value=n.text;
     ti.oninput=()=>{n.title=ti.value;if(n.type==='chapter'&&n.graph&&doc.graphs[n.graph])doc.graphs[n.graph].name=n.title;renderNode(n.id);crumbs();changed()};
@@ -430,24 +467,26 @@ function removeSel(){
   if(sel.kind==='edge'){g.edges=g.edges.filter(e=>e.id!==sel.id);sel=null;render();inspect();changed();return}
   const ids=selIds(),gs=new Set();
   for(const id of ids){const n=g.nodes[id];if(n&&n.type==='chapter'&&n.graph&&doc.graphs[n.graph])descendants(n.graph).forEach(x=>gs.add(x))}
-  const cnt=[...gs].reduce((a,i)=>a+Object.keys(doc.graphs[i].nodes).length,0);
+  const cnt=[...gs].reduce((a,i)=>a+realCount(doc.graphs[i]),0);
   if(cnt&&!confirm(ids.length>1?'Die Auswahl enthält Kapitel mit insgesamt '+cnt+' Knoten (mit Unterkapiteln). Alles löschen?':'Das Kapitel enthält '+cnt+' Knoten (mit Unterkapiteln). Alles löschen?'))return;
   gs.forEach(i=>{delete doc.graphs[i];delete views[i]});ids.forEach(id=>{delete g.nodes[id]});g.edges=g.edges.filter(e=>!ids.includes(e.from)&&!ids.includes(e.to));
   sel=null;render();inspect();changed()}
 /* Freier Platz im sichtbaren Bereich: Raster um die Mitte, von innen nach außen. */
 function freeSpot(){
-  const r=stage.getBoundingClientRect(),c=toWorld(r.left+r.width/2,r.top+r.height/2),tl=toWorld(r.left+10,r.top+10),br=toWorld(r.right-10,r.bottom-10),ns=Object.values(G().nodes),sx=W+30,sy=130,cx=c.x-W/2,cy=c.y-30;
+  const r=stage.getBoundingClientRect(),c=toWorld(r.left+r.width/2,r.top+r.height/2),tl=toWorld(r.left+10,r.top+10),br=toWorld(r.right-10,r.bottom-10),ns=Object.values(G().nodes).filter(n=>n.type!=='area'),sx=W+30,sy=130,cx=c.x-W/2,cy=c.y-30;
   const free=(x,y)=>!ns.some(n=>Math.abs(n.x-x)<W+10&&Math.abs(n.y-y)<130),vis=(x,y)=>x>=tl.x&&x+W<=br.x&&y>=tl.y&&y+100<=br.y;let fb=null;
   for(let ring=0;ring<=8;ring++)for(let i=-ring;i<=ring;i++)for(let j=-ring;j<=ring;j++){if(Math.max(Math.abs(i),Math.abs(j))!==ring)continue;const x=Math.round(cx+i*sx),y=Math.round(cy+j*sy);if(!free(x,y))continue;if(vis(x,y))return {x,y};if(!fb)fb={x,y}}
   return fb||{x:Math.round(cx),y:Math.round(cy+9*sy)}}
 function addNode(type,x,y){
+  if(type==='area'){const r=stage.getBoundingClientRect(),c=toWorld(r.left+r.width/2,r.top+r.height/2),w=560,h=340,n={id:rid(),type:'area',title:'Bereich',text:'',x:Math.round(c.x-w/2),y:Math.round(c.y-h/2),w,h,color:AREA_COLORS[Object.values(G().nodes).filter(a=>a.type==='area').length%AREA_COLORS.length],mandatory:false};
+    G().nodes[n.id]=n;select({kind:'node',id:n.id});changed();const t=$('#f-title');if(t&&matchMedia('(pointer:fine)').matches){t.focus();t.select()}return}
   if(x==null){const f=freeSpot();x=f.x;y=f.y}
   const n={id:rid(),type,title:TYPES[type],text:'',x:Math.round(x),y:Math.round(y),mandatory:false};
   if(type==='chapter'){const id=rid();doc.graphs[id]={id,name:n.title,parent:gid,nodes:{},edges:[]};n.graph=id}
   G().nodes[n.id]=n;select({kind:'node',id:n.id});changed();
   const t=$('#f-title');if(t&&matchMedia('(pointer:fine)').matches){t.focus();t.select()}}
 function addEdge(from,to){
-  if(from===to||!G().nodes[from]||!G().nodes[to])return;
+  if(from===to||!G().nodes[from]||!G().nodes[to]||G().nodes[from].type==='area'||G().nodes[to].type==='area')return;
   if(G().edges.some(e=>e.from===from&&e.to===to))return;
   const ed={id:rid(),from,to,label:''};G().edges.push(ed);select({kind:'edge',id:ed.id});changed()}
 /* ---------- Bedienung (Zeiger) ---------- */
@@ -457,13 +496,14 @@ stage.addEventListener('pointerdown',ev=>{
   {const ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))ae.blur()}
   ptrs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
   if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)};drag=null;return}
-  const out=ev.target.closest('.h.o'),nd=ev.target.closest('.node'),hit=ev.target.closest('[data-edge]');
+  const out=ev.target.closest('.h.o'),nd=ev.target.closest('.node')||ev.target.closest('.abar'),rz=ev.target.closest('.ares'),hit=ev.target.closest('[data-edge]');
+  if(rz){const id=rz.dataset.id,n=G().nodes[id];if(!(sel&&sel.kind==='node'&&sel.id===id))select({kind:'node',id});drag={kind:'resize',id,sx:ev.clientX,sy:ev.clientY,w:n.w,h:n.h,moved:false,pid:ev.pointerId};ev.preventDefault();return}
   if(out&&nd){const id=nd.dataset.id;drag={kind:'link',from:id,pid:ev.pointerId};tmp.removeAttribute('hidden');ev.preventDefault();return}
   if(nd){const id=nd.dataset.id;
     if(ev.shiftKey||ev.ctrlKey||ev.metaKey){toggleSel(id);ev.preventDefault();return}
     const inMulti=!!sel&&sel.kind==='multi'&&sel.ids.includes(id);
     if(!inMulti&&!(sel&&sel.kind==='node'&&sel.id===id))select({kind:'node',id});
-    const ids=inMulti?sel.ids.slice():[id];
+    const ids=expand(inMulti?sel.ids.slice():[id]);
     drag={kind:'nodes',ids,starts:ids.map(i=>({id:i,x:G().nodes[i].x,y:G().nodes[i].y})),sx:ev.clientX,sy:ev.clientY,moved:false,pid:ev.pointerId,click:inMulti?id:null};ev.preventDefault();return}
   if(hit){select({kind:'edge',id:hit.dataset.edge});return}
   if(tool==='select'||ev.shiftKey){drag={kind:'box',sx:ev.clientX,sy:ev.clientY,add:ev.shiftKey,base:ev.shiftKey?selIds():[],moved:false,pid:ev.pointerId};ev.preventDefault();return}
@@ -474,10 +514,11 @@ window.addEventListener('pointermove',ev=>{
   if(!drag||drag.pid!==ev.pointerId)return;
   if(drag.kind==='pan'){const dx=ev.clientX-drag.sx,dy=ev.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;view.x=drag.ox+dx;view.y=drag.oy+dy;applyView()}
   else if(drag.kind==='nodes'){const dx=(ev.clientX-drag.sx)/view.k,dy=(ev.clientY-drag.sy)/view.k;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;
-    for(const st of drag.starts){const n=G().nodes[st.id];n.x=Math.round(st.x+dx);n.y=Math.round(st.y+dy);const e=nodesEl.querySelector(`[data-id="${st.id}"]`);if(e){e.style.left=n.x+'px';e.style.top=n.y+'px'}}renderEdges()}
+    for(const st of drag.starts){const n=G().nodes[st.id];n.x=Math.round(st.x+dx);n.y=Math.round(st.y+dy);placeEl(st.id)}renderEdges()}
+  else if(drag.kind==='resize'){const n=G().nodes[drag.id],dx=(ev.clientX-drag.sx)/view.k,dy=(ev.clientY-drag.sy)/view.k;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;n.w=Math.max(140,Math.round(drag.w+dx));n.h=Math.max(90,Math.round(drag.h+dy));const e=elOf(n);if(e){e.style.width=n.w+'px';e.style.height=n.h+'px'}}
   else if(drag.kind==='box'){const r=stage.getBoundingClientRect(),l=Math.min(drag.sx,ev.clientX),t=Math.min(drag.sy,ev.clientY),rr=Math.max(drag.sx,ev.clientX),bb=Math.max(drag.sy,ev.clientY);
     if(rr-l+bb-t>6)drag.moved=true;if(!drag.moved)return;const bx=$('#box');bx.hidden=false;bx.style.left=(l-r.left)+'px';bx.style.top=(t-r.top)+'px';bx.style.width=(rr-l)+'px';bx.style.height=(bb-t)+'px';
-    drag.rect={l,t,r:rr,b:bb};const hit=new Set(drag.base.concat(nodesIn(drag.rect)));nodesEl.querySelectorAll('.node').forEach(e=>e.classList.toggle('sel',hit.has(e.dataset.id)))}
+    drag.rect={l,t,r:rr,b:bb};const hit=new Set(drag.base.concat(nodesIn(drag.rect)));world.querySelectorAll('.node,.area').forEach(e=>e.classList.toggle('sel',hit.has(e.dataset.id)))}
   else if(drag.kind==='link'){const a=box(drag.from),p=toWorld(ev.clientX,ev.clientY);
     tmp.setAttribute('d',path(a,{x:p.x,y:p.y,h:0},true));
     const t=document.elementFromPoint(ev.clientX,ev.clientY),nd=t&&t.closest&&t.closest('.node');
@@ -487,6 +528,7 @@ function endPtr(ev){
   ptrs.delete(ev.pointerId);if(ptrs.size<2)pinch=null;
   if(!drag||drag.pid!==ev.pointerId)return;
   if(drag.kind==='nodes'){if(drag.moved)changed();else if(drag.click&&ev.type==='pointerup')select({kind:'node',id:drag.click})}
+  if(drag.kind==='resize'&&drag.moved){inspect();changed()}
   if(drag.kind==='box'){$('#box').hidden=true;
     if(ev.type!=='pointerup'||!drag.moved){if(ev.type==='pointerup'&&!drag.add)select(null);else render()}
     else setNodes(drag.base.concat(nodesIn(drag.rect)))}
@@ -496,7 +538,7 @@ function endPtr(ev){
   drag=null}
 window.addEventListener('pointerup',endPtr);window.addEventListener('pointercancel',endPtr);
 stage.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.clientX,ev.clientY,Math.exp(-ev.deltaY*(ev.ctrlKey?.01:.0015)))},{passive:false});
-stage.addEventListener('dblclick',ev=>{const cn=ev.target.closest('.node');if(cn&&cn.classList.contains('chapter')){openChapter(cn.dataset.id);return}if(ev.target.closest('.node')||ev.target.closest('[data-edge]')||ev.target.closest('#zoomctl'))return;const p=toWorld(ev.clientX,ev.clientY);addNode('scene',p.x-W/2,p.y-24)});
+stage.addEventListener('dblclick',ev=>{const cn=ev.target.closest('.node');if(cn&&cn.classList.contains('chapter')){openChapter(cn.dataset.id);return}if(ev.target.closest('.node')||ev.target.closest('.abar')||ev.target.closest('.ares')||ev.target.closest('[data-edge]')||ev.target.closest('#zoomctl'))return;const p=toWorld(ev.clientX,ev.clientY);addNode('scene',p.x-W/2,p.y-24)});
 window.addEventListener('keydown',ev=>{
   if(vdlg.open||ddlg.open||adlg.open||kdlg.open)return;
   if((ev.ctrlKey||ev.metaKey)&&!ev.altKey){const k=ev.key.toLowerCase();if(k==='z'){ev.preventDefault();ev.shiftKey?doRedo():doUndo();return}if(k==='y'){ev.preventDefault();doRedo();return}}
@@ -507,7 +549,7 @@ window.addEventListener('keydown',ev=>{
   else if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ev.preventDefault();removeSel()}
   else if(ev.key==='Backspace'&&!sel){ev.preventDefault();goUp()}
   else if(ev.key==='Escape'&&sel)select(null)});
-$('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');
+$('#add-scene').onclick=()=>addNode('scene');$('#add-branch').onclick=()=>addNode('branch');$('#add-note').onclick=()=>addNode('note');$('#add-chapter').onclick=()=>addNode('chapter');$('#add-area').onclick=()=>addNode('area');
 $('#mand-filter').onclick=()=>{onlyMand=!onlyMand;$('#mand-filter').setAttribute('aria-pressed',String(onlyMand));render()};
 $('#fit').onclick=()=>fit();$('#tool-select').onclick=()=>{tool=tool==='select'?'pan':'select';$('#tool-select').setAttribute('aria-pressed',String(tool==='select'));stage.classList.toggle('seltool',tool==='select')};$('#undo').onclick=doUndo;$('#redo').onclick=doRedo;
 $('#zin').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.25)};
@@ -515,7 +557,7 @@ $('#zout').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(r.left+r.wi
 /* ---------- Versionen ---------- */
 const vdlg=$('#vdlg'),vlist=$('#v-list'),vmsg=$('#v-msg');
 const fmtT=t=>new Date(t).toLocaleString('de-DE',{timeZone:'Europe/Berlin',day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
-const curNodes=()=>Object.values(doc.graphs).reduce((a,g)=>a+Object.keys(g.nodes).length,0);
+const curNodes=()=>Object.values(doc.graphs).reduce((a,g)=>a+realCount(g),0);
 async function flush(){clearTimeout(timer);for(let i=0;i<100&&saving;i++)await new Promise(r=>setTimeout(r,50));await save()}
 async function vapi(m,u,body){const r=await fetch('/api/planner/versions'+u+dq,{method:m,headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&j.error)||('Fehler '+r.status));return j}
 async function loadVersions(){
@@ -610,7 +652,7 @@ async function init(){
   if(j){rev=j.rev;doc=j.doc||blank();setStatus(j.doc?'Gespeichert':'Neu')}
   gid=doc.root;render();fit();inspect();last=JSON.stringify(doc);histBtns();
   showDocName();dapi('GET','').then(j=>{const d=j.docs.find(x=>x.id===DID);if(d){docName=d.name;showDocName()}}).catch(()=>{});
-  window.__planner={tool:()=>tool,check:checkDoc,warnText,arcana:ARC,did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
+  window.__planner={members:areaMembers,tool:()=>tool,check:checkDoc,warnText,arcana:ARC,did:DID,doc:()=>doc,rev:()=>rev,view:()=>view,sel:()=>sel,gid:()=>gid,undoDepth:()=>undo.length,redoDepth:()=>redo.length,save}}
 init();
 window.addEventListener('resize',()=>renderEdges());
 })();
