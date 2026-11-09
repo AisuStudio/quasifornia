@@ -1,13 +1,13 @@
 /* ================= Baukasten: Bauplätze und Builder =================
    Bauplätze kommen aus der Karte: Ein Text "Bauplatz" (oder "Bauplatz 24" für 24 m Kantenlänge, sonst 20 m) auf freier Fläche.
-   Am Bauplatz startet der Builder direkt im Spiel: Die Kamera kreist über dem Grundstück, ein Gitter (Zellen von 2 m) erscheint, man setzt Teile.
+   Am Bauplatz startet der Builder direkt im Spiel: Die Kamera kreist über dem Grundstück, ein Gitter (Zellen von 2 m echter Größe, siehe BAU_C in bau-teile.js) erscheint, man setzt Teile.
    Jede Zelle hat höchstens ein Teil (Form, Dach oder Gartenteil) und auf jeder der vier Seiten eine Deko (Fenster, Tür, Balkon ...).
-   Gespeichert wird pro Person im Browser (localStorage "kq-bau"); ein Server-Speicher, damit alle die Häuser sehen, ist noch nicht gebaut.
+   Gespeichert wird pro Person im Browser (localStorage "kq-bau2"); ein Server-Speicher, damit alle die Häuser sehen, ist noch nicht gebaut.
    Teile sind Einträge in BAU_PARTS: neue Formen, Fenster oder Möbel später einfach dort ergänzen. */
 const BAU={C:BAU_C,LV:BAU_LV,open:false,plot:null,tab:'form',part:'block',col:0,rot:0,tool:'put',undo:[],hover:null,backup:'',cam:{az:.9,el:.85,d:34},drag:null,ghost:null,ui:null,ray:null,store:null};
 /* Teile-Katalog (BAU_COLS, BAU_TABS, bauGeo, BAU_PARTS, bauColOf): src/bau-teile.js, wird im Build vor dieser Datei eingefügt. */
-function bauStore(){if(BAU.store)return BAU.store;try{BAU.store=JSON.parse(localStorage.getItem('kq-bau')||'{}')||{}}catch(e){BAU.store={}}return BAU.store}
-function bauSave(plot){const s=bauStore();s[plot.id]=bauSerialize(plot);try{localStorage.setItem('kq-bau',JSON.stringify(s))}catch(e){}}
+function bauStore(){if(BAU.store)return BAU.store;try{BAU.store=JSON.parse(localStorage.getItem('kq-bau2')||'{}')||{}}catch(e){BAU.store={}}return BAU.store}
+function bauSave(plot){const s=bauStore();s[plot.id]=bauSerialize(plot);try{localStorage.setItem('kq-bau2',JSON.stringify(s))}catch(e){}}
 /* Zellen, die den Weg versperren: Kollisionsfläche im Raster neu setzen */
 function bauRaster(plot){const S=plot.snap;if(S){for(let y=0;y<S.h;y++)for(let x=0;x<S.w;x++){const i=(S.iy0+y)*MP.w+S.ix0+x;if(i>=0&&i<MP.cls.length&&S.iy0+y>=0&&S.ix0+x>=0&&S.ix0+x<MP.w)MP.cls[i]=S.data[y*S.w+x]}}
   const seen=new Set();plot.cells.forEach((c,k)=>{const P=BAU_PARTS[c.v];if(!P||!P.solid)return;const [gx,,gz]=k.split(',').map(Number),kk=gx+','+gz;if(seen.has(kk))return;seen.add(kk);
@@ -16,7 +16,7 @@ function bauSnap(plot){const hx=plot.NX*BAU.C/2+2,hz=plot.NZ*BAU.C/2+2,xs=[],zs=
   const ix0=Math.max(0,Math.floor(Math.min(...xs))),ix1=Math.min(MP.w-1,Math.ceil(Math.max(...xs))),iy0=Math.max(0,Math.floor(Math.min(...zs))),iy1=Math.min(MP.h-1,Math.ceil(Math.max(...zs)));
   const w=ix1-ix0+1,hh=iy1-iy0+1,data=new Uint8Array(Math.max(0,w*hh));if(!MP.cls||w<=0||hh<=0)return null;for(let y=0;y<hh;y++)for(let x=0;x<w;x++)data[y*w+x]=MP.cls[(iy0+y)*MP.w+ix0+x];return {ix0,iy0,w,h:hh,data}}
 /* Bauplatz anlegen (aus der Karte oder per Test). size in Metern (Quadrat); o: {NX,NZ,poly (lokale Eckpunkte in m),mask (Set "gx,gz"),type}. */
-function bauAddPlot(x,z,yaw,size,id,o){o=o||{};const NX=o.NX||Math.max(4,Math.min(18,Math.round((size||20)/2))),NZ=o.NZ||NX,
+function bauAddPlot(x,z,yaw,size,id,o){o=o||{};const NX=o.NX||Math.max(4,Math.min(18,Math.round((size||20)/BAU.C))),NZ=o.NZ||NX,
   plot={id:id||('p'+Math.round(x)+'_'+Math.round(z)),x,z,yaw,NX,NZ,type:o.type||'frei',mask:o.mask||null,poly:o.poly||null,g:new THREE.Group(),cells:new Map(),cg:new Map(),rew:false,snap:null,site:null,grid:null,pick:null};
   plot.snap=bauSnap(plot);const y0=typeof cityGround==='function'?cityGround(x,z):1.3;
   plot.g.position.set(x,y0,z);plot.g.rotation.y=yaw;plot.g.userData.noBake=true;W0.add(plot.g);
@@ -104,8 +104,8 @@ function bauPick(ev){const pl=BAU.plot;if(!pl)return null;const rc=r.domElement.
   return {key:null,cell:[gx,0,gz],face:-1,next:[gx,0,gz],part:false}}
 function bauGhost(){const pl=BAU.plot;if(BAU.ghost){if(BAU.ghost.parent)BAU.ghost.parent.remove(BAU.ghost);BAU.ghost=null}
   const t=BAU.hover;if(!pl||!t||BAU.tool!=='put')return;const P=BAU_PARTS[BAU.part];if(!P)return;const g=new THREE.Group();let cx,cy,cz;
-  if(P.kind==='v'){[cx,cy,cz]=t.next;if(!bauOk(pl,cx,cz)||cy<0||cy>=BAU.LV||pl.cells.has(cx+','+cy+','+cz))return;const inner=new THREE.Group();inner.rotation.y=BAU.rot*Math.PI/4;P.mk(inner,bauColOf(BAU.col));g.add(inner)}
-  else{if(!t.part||t.face<0)return;[cx,cy,cz]=t.cell;const sub=new THREE.Group();sub.rotation.y=t.face*Math.PI/2;P.mk(sub,bauColOf(BAU.col));g.add(sub)}
+  if(P.kind==='v'){[cx,cy,cz]=t.next;if(!bauOk(pl,cx,cz)||cy<0||cy>=BAU.LV||pl.cells.has(cx+','+cy+','+cz))return;const inner=new THREE.Group();inner.scale.setScalar(BAU.C/2);inner.rotation.y=BAU.rot*Math.PI/4;P.mk(inner,bauColOf(BAU.col));g.add(inner)}
+  else{if(!t.part||t.face<0)return;[cx,cy,cz]=t.cell;const sub=new THREE.Group();sub.scale.setScalar(BAU.C/2);sub.rotation.y=t.face*Math.PI/2;P.mk(sub,bauColOf(BAU.col));g.add(sub)}
   g.position.set(bauCx(pl,cx),cy*BAU.C,bauCz(pl,cz));
   g.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.55;o.castShadow=false}});pl.g.add(g);BAU.ghost=g}
 function bauAct(ev,erase){const pl=BAU.plot,t=bauPick(ev);if(!pl||!t)return;

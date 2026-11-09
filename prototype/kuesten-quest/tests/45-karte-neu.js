@@ -8,7 +8,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
  await p.goto('http://localhost:8946/?test=1');await p.waitForFunction('window.__ready',null,{timeout:120000});await p.click('#next1').then(()=>p.click('#go')).then(()=>p.click('#start'));
  const free=()=>p.evaluate(()=>{const q=__qa;q.DLG.open=false;document.getElementById('dlg').hidden=true;return true});
  /* Bauplätze */
- const pl=await p.evaluate(()=>{const q=__qa,P=q.HUB.plots;const t={};P.forEach(x=>t[x.type]=(t[x.type]||0)+1);return {n:P.length,typen:t,warn:q.HUB.plotWarn,alleBegehbar:P.every(x=>q.mpWalk(x.x,x.z)),maskeOk:P.every(x=>x.mask&&x.mask.size>=20),schief:P.some(x=>x.mask.size<x.NX*x.NZ)}});
+ const pl=await p.evaluate(()=>{const q=__qa,P=q.HUB.plots;const t={};P.forEach(x=>t[x.type]=(t[x.type]||0)+1);return {n:P.length,typen:t,warn:q.HUB.plotWarn,alleBegehbar:P.every(x=>q.mpWalk(x.x,x.z)),maskeOk:P.every(x=>x.mask&&x.mask.size>=8),schief:P.some(x=>x.mask.size<x.NX*x.NZ)}});
  console.log('Bauplätze',JSON.stringify(pl),pl.n===17&&pl.typen.wohn>=4&&pl.typen.gewerbe>=6&&pl.warn.length===0&&pl.alleBegehbar&&pl.maskeOk&&pl.schief);
  /* Aufforderung am Platz, Anforderungen je Typ, Bauen nur innerhalb des Umrisses */
  const r=await p.evaluate(()=>{const q=__qa,o={};const w=q.HUB.plots.find(x=>x.type==='wohn'),g=q.HUB.plots.find(x=>x.type==='gewerbe'),f=q.HUB.plots.find(x=>x.type==='frei');
