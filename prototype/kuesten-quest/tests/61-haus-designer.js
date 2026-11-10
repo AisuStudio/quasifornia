@@ -24,7 +24,7 @@ srv.listen(9003,async()=>{let b;try{
  /* Im Spiel laden und zurückholen */
  const g=await b.newPage({viewport:{width:1100,height:680}});g.on('pageerror',e=>console.log('ERR',e.message));await g.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
  await g.goto('http://localhost:9003/?test=1');await g.waitForFunction('window.__ready',null,{timeout:120000});await g.click('#next1').then(()=>g.click('#go')).then(()=>g.click('#start'));
- const back=await g.evaluate(j=>{const q=__qa,s=q.HUB.shops[0],pl=q.bauAddPlot(s.x+30,s.z+30,0,20,'t61');q.bauLoadInto(pl,JSON.parse(j));const o=q.bauSerialize(pl);const r=JSON.stringify(o);return {n:pl.cells.size,gleich:r===j,len:j.length,teile:Object.keys(q.BAU_PARTS).length,meshes:(()=>{let c=0;pl.g.traverse(m=>{if(m.isMesh)c++});return c})()}},json);
+ const back=await g.evaluate(j=>{const q=__qa,s=q.HUB.shops[0],pl=q.bauAddPlot(s.x+30,s.z+30,0,31,'t61');q.bauLoadInto(pl,JSON.parse(j));const o=q.bauSerialize(pl);const r=JSON.stringify(o);return {n:pl.cells.size,gleich:r===j,len:j.length,teile:Object.keys(q.BAU_PARTS).length,meshes:(()=>{let c=0;pl.g.traverse(m=>{if(m.isMesh)c++});return c})()}},json);
  console.log('Export im Spiel geladen und gleich zurück',JSON.stringify(back),back.gleich&&back.n===11&&back.meshes>40&&back.teile===a.teile);
  /* Rahmen: Reiter Gebäude zeigt den Haus-Designer */
  const f=await b.newPage({viewport:{width:1280,height:760}});f.on('pageerror',e=>console.log('ERR',e.message));await f.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
