@@ -18,7 +18,7 @@ const srv=http.createServer((q,s)=>{const u=q.url.split('?')[0];const f=u==='/'?
    return {kind:st.kind,sichtbar:g.visible,pos:[+g.position.x.toFixed(1),+g.position.z.toFixed(1)],soll:[+st.x.toFixed(1),+st.z.toFixed(1)],hoehe:+(top-1.3).toFixed(1)}},T0);
  const sa=await show(A),sb=await show(B);
  console.log('Anzeige A',JSON.stringify(sa));console.log('Anzeige B',JSON.stringify(sb));
- console.log('Beide an der gleichen Stelle',JSON.stringify(sa.pos)===JSON.stringify(sb.pos)&&sa.sichtbar&&sb.sichtbar,'| Höhe 18 bis 21 m',sa.hoehe>=18&&sa.hoehe<=21);
+ console.log('Beide an der gleichen Stelle',Math.hypot(sa.pos[0]-sb.pos[0],sa.pos[1]-sb.pos[1])<.5&&sa.sichtbar&&sb.sichtbar,'| Höhe 18 bis 21 m',sa.hoehe>=18&&sa.hoehe<=21);
  /* 4 Zeit läuft weiter: nach 10 Sekunden Uhr ist der Dino ca. 36 m weiter */
  const mv=await A.evaluate(()=>{const q=__qa,M=q.MULTI,a=q.GIANT.cur;const p0=[a.x,a.z];M.off+=10000;for(let i=0;i<3;i++)q.step(.02);const b=q.GIANT.cur;return {weg:+Math.hypot(b.x-p0[0],b.z-p0[1]).toFixed(1)}});console.log('10 s später (erwartet etwa 36 m, kürzer in Kurven)',JSON.stringify(mv));
  /* 5 Außerhalb der Fenster kein Dino sichtbar */

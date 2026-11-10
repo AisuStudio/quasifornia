@@ -45,8 +45,10 @@ function mpKaiju(col){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial
   for(let i=0;i<4;i++)P(SPH,m,0,3.4-i*.5,-3.6-i*1.9,1.7-i*.32,1.5-i*.28,2.0);
   return g}
 /* ---------- Riesen-Saurier als NPCs: drei Wesen mit Mode-Accessoires aus den Moodboards laufen alle 2-3 Minuten über die breiten Straßen (ca. 20 m hoch) ---------- */
-const GIANT={t:40,list:[],pool:{},n:0,roads:null,cur:null,SPEED:3.6,SCALE:1.62,kinds:['pink','gold','hoodie'],names:{pink:'Pink-Blob',gold:'Goldzilla',hoodie:'Hoodie-Zilla'}};
-function mpBuildGiant(kind){const g=new THREE.Group(),SPH=new THREE.SphereGeometry(1,14,10),CON=new THREE.ConeGeometry(1,1,7),CYL=new THREE.CylinderGeometry(1,1,1,10);
+const GIANT={t:40,list:[],pool:{},n:0,roads:null,cur:null,SPEED:3.6,SCALE:1.62,kinds:['pink','gold','hoodie','mecha'],names:{pink:'Pink-Blob',gold:'Goldzilla',hoodie:'Hoodie-Zilla',mecha:'Rocket Fist'},
+  /* Kamerawackeln bei Schritten: Reichweite r (Einheiten) und Stärke s je Art; der Mecha ist schwer, wackelt weiter und grollt schon beim Näherkommen (rumble) */
+  SHAKE:{pink:{r:45,s:.18},gold:{r:45,s:.18},hoodie:{r:45,s:.18},mecha:{r:95,s:.9,rumble:.16}}};
+function mpBuildGiant(kind){if(kind==='mecha')return mpBuildMecha();const g=new THREE.Group(),SPH=new THREE.SphereGeometry(1,14,10),CON=new THREE.ConeGeometry(1,1,7),CYL=new THREE.CylinderGeometry(1,1,1,10);
   const M=(c,o)=>new THREE.MeshStandardMaterial({color:c,roughness:.38,...(o||{})}),skin=kind==='gold'?M('#e6b422',{metalness:.85,roughness:.28}):kind==='pink'?M('#f4a6c8'):M('#b79cf0'),belly=kind==='gold'?M('#f1c84a',{metalness:.8,roughness:.3}):kind==='pink'?M('#ffd6e8'):M('#d8c6ff'),
     yel=M('#ffd04a'),dark=M('#2a1020',{roughness:.6}),white=M('#ffffff'),black=M('#141416',{roughness:.3});
   const P=(parent,geo,mat,x,y,z,sx,sy,sz)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;parent.add(o);return o};
@@ -84,6 +86,42 @@ function mpBuildGiant(kind){const g=new THREE.Group(),SPH=new THREE.SphereGeomet
   body.userData.rest=body.position.y;
   g.scale.setScalar(GIANT.SCALE*(kind==='gold'?1.04:kind==='hoodie'?.98:1));g.userData.noBake=true;g.visible=false;
   return {g,body,head,tail,arms,legs,kind,phase:0}}
+/* Rocket Fist: Mecha nach der Karte aus Pacific Sim (gelber Helm mit pinker Sonnenbrille, rosa Rumpf, Raketenfaust am erhobenen rechten Arm, Sneaker). Gleiche Gelenke wie die anderen Riesen (legs, arms, body, head, tail), zusätzlich pose() für die erhobene Faust. */
+function mpBuildMecha(){const g=new THREE.Group(),body=new THREE.Group();g.add(body);
+  const M=(c,o)=>new THREE.MeshStandardMaterial({color:c,roughness:.3,...(o||{})}),pink=M('#f58fbb'),yel=M('#ffc81f'),teal=M('#3fcfae'),gold=M('#f0bb3c',{metalness:.8,roughness:.28}),dark=M('#241a2b',{roughness:.5}),white=M('#fff8f0'),glass=M('#ff2a96',{roughness:.1,metalness:.4,emissive:'#ff2a96',emissiveIntensity:.35});
+  const add=(o,x,y,z,par)=>{o.position.set(x,y,z);o.castShadow=true;(par||g).add(o);return o};
+  const RB=(w,h,d,r,m,x,y,z,par)=>add(new THREE.Mesh(new RoundedBoxGeometry(w,h,d,1,r),m),x,y,z,par);
+  const SP=(r,m,x,y,z,par,sx=1,sy=1,sz=1)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,12,8),m);o.scale.set(sx,sy,sz);return add(o,x,y,z,par)};
+  const CY=(r,h,m,x,y,z,par,seg=14)=>add(new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg),m),x,y,z,par);
+  const legs=[],arms=[];
+  [-1,1].forEach(sd=>{const leg=new THREE.Group();leg.position.set(sd*1.5,3.7,0);g.add(leg);legs.push(leg);
+    RB(1.9,2.0,2.0,.4,pink,0,-1.0,0,leg);SP(.62,teal,0,-2.0,.3,leg);RB(1.6,1.7,1.7,.35,yel,0,-2.5,0,leg);
+    RB(2.0,.8,3.2,.35,pink,0,-3.2,.55,leg);RB(2.1,.3,3.3,.15,yel,0,-3.55,.55,leg);RB(1.8,.7,1.0,.3,teal,0,-3.1,1.8,leg)});
+  /* Becken, Rumpf, Brustplatte */
+  RB(4.8,1.2,2.5,.5,yel,0,3.9,0,body);RB(1.0,.9,.3,.15,gold,0,3.9,1.3,body);
+  RB(5.4,3.6,3.1,.8,pink,0,6.0,0,body);RB(3.4,2.0,.5,.4,yel,0,6.3,1.6,body);
+  [-1,1].forEach(sd=>{CY(.62,.12,teal,sd*.95,6.5,1.9,body).rotation.x=Math.PI/2});RB(4.6,.7,.4,.25,teal,0,4.85,1.5,body);
+  const chain=new THREE.Mesh(new THREE.TorusGeometry(1.5,.12,6,20,Math.PI*1.3),gold);chain.rotation.set(.35,0,Math.PI*1.15);add(chain,0,7.5,1.6,body);SP(.32,gold,0,5.9,2.1,body);
+  [-1,1].forEach(sd=>{SP(1.45,pink,sd*3.35,7.7,0,body,1.1,.9,1.05);CY(1.2,.35,yel,sd*3.35,8.9,0,body,16)});
+  /* Arme: links schwingt, rechts ist die Raketenfaust erhoben (pose) */
+  [-1,1].forEach((sd,i)=>{const a=new THREE.Group();a.position.set(sd*3.4,7.4,0);body.add(a);arms.push(a);
+    RB(1.3,2.1,1.3,.35,yel,0,-1.1,0,a);SP(.8,pink,0,-2.2,0,a);RB(1.2,1.9,1.2,.3,pink,0,-3.2,0,a);
+    if(i===0){RB(1.7,1.7,1.7,.45,yel,0,-4.4,.1,a)}
+    else{RB(2.7,2.7,2.3,.7,pink,0,-4.7,.2,a);const cone=new THREE.Mesh(new THREE.ConeGeometry(1.15,2.4,16),teal);cone.rotation.x=Math.PI;add(cone,0,-7.0,.2,a);CY(1.2,.5,yel,0,-5.9,.2,a,16)}});
+  /* Kopf */
+  const head=new THREE.Group();head.position.set(0,9.3,.4);body.add(head);
+  RB(2.7,2.4,2.5,.65,yel,0,0,0,head);RB(2.4,.65,.4,.3,glass,0,.3,1.2,head);RB(1.8,.55,.35,.2,dark,0,-.65,1.2,head);for(let i=0;i<5;i++)RB(.2,.32,.1,.04,white,-.6+i*.3,-.62,1.4,head);
+  [-1,1].forEach(sd=>{CY(.8,.45,gold,sd*1.45,0,0,head,16).rotation.z=Math.PI/2;CY(.5,.18,teal,sd*1.7,0,0,head,16).rotation.z=Math.PI/2;const hn=new THREE.Mesh(new THREE.ConeGeometry(.3,1.4,8),gold);hn.rotation.z=-sd*.5;add(hn,sd*.95,1.7,.1,head)});
+  const fin=new THREE.Mesh(new THREE.BoxGeometry(.22,1.6,1.0),gold);fin.rotation.x=.4;add(fin,0,1.7,-.2,head);CY(.05,1.6,gold,.9,2.0,-.5,head,6);SP(.16,glass,.9,2.85,-.5,head);
+  /* Rucksack mit Rohren und Zuckerwatte */
+  RB(3.8,3.8,2.0,.6,yel,0,6.4,-2.5,body);[-1,1].forEach(sd=>{CY(.4,3.0,teal,sd*1.0,6.4,-3.7,body,10);CY(.48,.25,gold,sd*1.0,7.95,-3.7,body,10)});
+  [[2.2,9.4,-2.8,1.3],[3.3,10.3,-2.2,1.05],[.8,10.4,-3.0,1.15],[2.6,11.2,-2.9,.95]].forEach(([x,y,z,r])=>SP(r,M('#ffb3d4',{roughness:.7}),x,y,z,body));
+  const tail=new THREE.Group();tail.position.set(0,4,-2.2);body.add(tail);
+  body.userData.rest=body.position.y;
+  g.scale.setScalar(GIANT.SCALE*.83);g.userData.noBake=true;g.visible=false;
+  /* Schreiten: wie die anderen, dazu die Raketenfaust nach vorn oben gestreckt (leichtes Wippen mit dem Schritt) und ein schwerer Körper */
+  const pose=(o,sw)=>{o.arms[1].rotation.set(-2.5+.06*sw,0,-.12);o.body.rotation.x=.03+Math.abs(Math.cos(o.phase))*.02};
+  return {g,body,head,tail,arms,legs,kind:'mecha',phase:0,pose}}
 function giantRoads(){if(GIANT.roads)return GIANT.roads;GIANT.roads=[];MAPD.roads.forEach(r=>{if(r.w<14)return;const pts=mpResample(r.pts,4).filter(s=>s.tx||s.tz);if(pts.length<20)return;GIANT.roads.push(pts)});return GIANT.roads}
 /* Dino-Fahrplan: nur von der Uhr abhängig, deshalb sieht im Raum jeder denselben Dino am selben Ort (Raum: Server-Uhr, allein: eigene Uhr).
    Alle 150 Sekunden beginnt ein Zeitfenster, in dem ein Dino (Pink-Blob, Goldzilla, Hoodie-Zilla der Reihe nach) 100 Sekunden lang eine breite Straße entlangläuft. */
@@ -91,7 +129,7 @@ GIANT.PERIOD=150000;GIANT.LIFE=100;GIANT.plans=new Map();GIANT.announced=-1;
 function giantClock(){return (typeof MULTI!=='undefined'&&MULTI.on&&MULTI.synced)?MULTI.now():Date.now()}
 function giantPlan(k){let p=GIANT.plans.get(k);if(p!==undefined)return p;const roads=giantRoads();if(!roads.length){GIANT.plans.set(k,null);return null}
   const R=mulberry(7000+k*131),ri=Math.floor(R()*roads.length),dir=R()<.5?1:-1,pts=roads[ri],start=dir>0?Math.floor(R()*pts.length*.25):pts.length-1-Math.floor(R()*pts.length*.25);
-  p={k,kind:GIANT.kinds[((k%3)+3)%3],ri,dir,u0:start,s0:R()*40};GIANT.plans.set(k,p);if(GIANT.plans.size>8)GIANT.plans.delete(GIANT.plans.keys().next().value);return p}
+  p={k,kind:GIANT.kinds[((k%GIANT.kinds.length)+GIANT.kinds.length)%GIANT.kinds.length],ri,dir,u0:start,s0:R()*40};GIANT.plans.set(k,p);if(GIANT.plans.size>8)GIANT.plans.delete(GIANT.plans.keys().next().value);return p}
 /* Stand des Dinos zur Zeit T (Millisekunden): Position, Blickrichtung, Laufphase, Größe; null, wenn gerade keiner läuft */
 function giantState(T){const k=Math.floor(T/GIANT.PERIOD),pl=giantPlan(k);if(!pl)return null;const t=(T-k*GIANT.PERIOD)/1000-pl.s0;if(t<0||t>GIANT.LIFE)return null;
   const pts=giantRoads()[pl.ri],u=pl.u0+pl.dir*t*GIANT.SPEED/4;if(u<0||u>pts.length-1.001)return null;
@@ -104,10 +142,12 @@ function giantStep(dt){const live=LV.id===0&&!G.under&&G.phase==='play'&&HUB.bui
   const base=o.g.userData.baseScale||(o.g.userData.baseScale=o.g.scale.x),pv=o.phase;o.phase=st.phase;GIANT.cur=st;
   o.g.visible=true;o.g.position.set(st.x,1.3-(1-st.fade)*3,st.z);o.g.rotation.y=st.yaw;o.g.scale.setScalar(base*(.35+.65*st.fade));
   const sw=Math.sin(o.phase);o.legs[0].rotation.x=sw*.5;o.legs[1].rotation.x=-sw*.5;o.arms[0].rotation.x=-sw*.35;o.arms[1].rotation.x=sw*.35;
-  o.body.position.y=Math.abs(Math.cos(o.phase))*.28;o.body.rotation.z=sw*.04;o.head.rotation.y=Math.sin(o.phase*.4)*.18;o.tail.rotation.y=Math.sin(o.phase*.5)*.35;
+  o.body.position.y=Math.abs(Math.cos(o.phase))*.28;o.body.rotation.z=sw*.04;o.head.rotation.y=Math.sin(o.phase*.4)*.18;o.tail.rotation.y=Math.sin(o.phase*.5)*.35;if(o.pose)o.pose(o,sw);
   const d=Math.hypot(st.x-P.x,st.z-P.z);
   if(GIANT.announced!==st.k){GIANT.announced=st.k;if(d<300)toast(GIANT.names[st.kind]+' kommt die Straße entlang!',2200)}
-  if(Math.floor((pv||0)/Math.PI)!==Math.floor(o.phase/Math.PI)&&d<130){tone(48+Math.random()*10,.4,'sine',Math.min(.06,.06*(1-d/130)+.01));if(d<45)G.shake=Math.max(G.shake||0,.18*(1-d/45))}}
+  const SK=GIANT.SHAKE[st.kind]||GIANT.SHAKE.pink;
+  if(SK.rumble&&d<SK.r)G.shake=Math.max(G.shake||0,SK.rumble*(1-d/SK.r));
+  if(Math.floor((pv||0)/Math.PI)!==Math.floor(o.phase/Math.PI)&&d<130){tone((SK.s>.3?36:48)+Math.random()*10,SK.s>.3?.55:.4,'sine',Math.min(SK.s>.3?.1:.06,(SK.s>.3?.1:.06)*(1-d/130)+.01));if(d<SK.r)G.shake=Math.max(G.shake||0,SK.s*(1-d/SK.r))}}
 /* ---------- Leuchtturm (oben) und Tarxarox (unten, an derselben Stelle): der rosa Kreis neben dem Label "Leuchtturm / Tarxarox" ---------- */
 function mpLighthouseSpot(){const labs=MAPD.labels.filter(l=>/Leuchtturm|Tarxarox/i.test(l.t));if(!labs.length||!MAPD.markers.length)return null;let best=null;
   MAPD.markers.forEach(m=>labs.forEach(l=>{const d=Math.hypot(m.x-l.x,m.y-l.y);if(d<120&&(!best||d<best.d))best={d,m}}));return best?{x:mwx(best.m.x),z:mwz(best.m.y),r:best.m.r*MP.SC}:null}
