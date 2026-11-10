@@ -24,6 +24,8 @@ const PUT=(p,body)=>W(p,{method:'PUT',headers:{'content-type':'application/json'
  const mesh=(n,t)=>({v:1,kind:'mesh',species:'humanoid',pal:'bau12',name:n,tex:t||'0123456789ab'.repeat(342).slice(0,4096)});
  const mv=await PUT('/api/entwurf/mesh/me-'+sx,mesh('Mesh Eins')).then(r=>r.json());const m1g=await W('/api/entwurf/mesh/me-'+sx).then(r=>r.json());
  console.log('Mesh gespeichert',mv.v,m1g.tex.length,mv.v===1&&m1g.tex.length===4096);
+ const mx=await PUT('/api/entwurf/mesh/mx-'+sx,{...mesh('Mit Form'),rings:{torso:{'3':[130,90]},legL:{'0':[80,80]}},grad:{torso:{m:8,c:[2,8],d:'v',a:0,b:100}}}).then(r=>r.json());const mxg=await W('/api/entwurf/mesh/mx-'+sx).then(r=>r.json());
+ console.log('Mesh mit Ringen und Verlauf',mx.v,JSON.stringify(mxg.rings),mx.v===1&&mxg.rings.torso['3'][0]===130&&mxg.grad.torso.c[1]===8);
  /* Ablehnen */
  const big=av('Gross');big.slots.x='#'+'a'.repeat(6);big.acc={t:'x'.repeat(70000)};
  const cases=[
@@ -43,6 +45,12 @@ const PUT=(p,body)=>W(p,{method:'PUT',headers:{'content-type':'application/json'
   ['Version Format',W('/api/entwurf/avatar/'+idA+'?v=abc'),400],
   ['Mesh Textur zu kurz',PUT('/api/entwurf/mesh/x-'+sx,mesh('A','0'.repeat(4095))),400],
   ['Mesh Textur Zeichen',PUT('/api/entwurf/mesh/x-'+sx,mesh('A','z'.repeat(4096))),400],
+  ['Ringe Teil unbekannt',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),rings:{tail:{'0':[100,100]}}}),400],
+  ['Ringe Wert zu groß',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),rings:{torso:{'0':[250,100]}}}),400],
+  ['Ringe Nummer',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),rings:{torso:{'9':[100,100]}}}),400],
+  ['Verlauf Richtung',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),grad:{torso:{m:1,c:[1,2],d:'x',a:0,b:100}}}),400],
+  ['Verlauf Farbe',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),grad:{torso:{m:1,c:[1,12],d:'v',a:0,b:100}}}),400],
+  ['Ringe Liste',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),rings:[1]}),400],
   ['Mesh ohne Name',PUT('/api/entwurf/mesh/x-'+sx,{...mesh('A'),name:''}),400],
   ['Textur bei Avatar',PUT('/api/entwurf/avatar/x-'+sx,{...av('T'),tex:'0'.repeat(4096)}),400],
   ['Entwurf unbekannt',W('/api/entwurf/avatar/gibtsnicht-'+sx),404]];
