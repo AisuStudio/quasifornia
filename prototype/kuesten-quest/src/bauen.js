@@ -35,7 +35,7 @@ function bauAddPlot(x,z,yaw,size,id,o){o=o||{};const NX=o.NX||Math.max(4,Math.mi
   {const pts=[],V=(a,b,c)=>new THREE.Vector3(a,.14,b);for(let gx=0;gx<NX;gx++)for(let gz=0;gz<NZ;gz++){if(!bauOk(plot,gx,gz))continue;const x0=gx*BAU.C-SX/2,z0=gz*BAU.C-SZ/2,x1=x0+BAU.C,z1=z0+BAU.C;pts.push(V(x0,z0),V(x1,z0),V(x1,z0),V(x1,z1),V(x1,z1),V(x0,z1),V(x0,z1),V(x0,z0))}
     const gr=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.7}));gr.visible=false;plot.g.add(gr);plot.grid=gr}
   const data=bauStore()[plot.id];if(data){bauLoadInto(plot,data);bauRaster(plot)}bauSiteUpdate(plot);
-  (HUB.plots||(HUB.plots=[])).push(plot);return plot}
+  (HUB.plots||(HUB.plots=[])).push(plot);if(typeof QUAL!=='undefined'&&QUAL.noPlots)plot.g.visible=false;return plot}
 function bauSiteUpdate(plot){/* Baustellen-Zubehör weg, sobald etwas steht */const built=plot.cells.size>0;plot.site.children.forEach((o,i)=>{if(i>0)o.visible=!built});plot.site.children[0].material=MT(built?'#9fd68a':'#d9c7a0')}
 function bauPlotsFromMap(){HUB.plots=HUB.plots||[];HUB.plotWarn=[];const L=(typeof MAPD!=='undefined'&&MAPD.labels)||[];
   const typeOf=ring=>{const l=L.find(l=>/plot|bauplatz|grundst/i.test(l.t)&&mpInPoly(ring,l.x,l.y));return !l?'frei':/re[cs]i?d|wohn/i.test(l.t)?'wohn':/commerc|gewerb/i.test(l.t)?'gewerbe':'frei'};
@@ -56,7 +56,7 @@ function bauPlotsFromMap(){HUB.plots=HUB.plots||[];HUB.plotWarn=[];const L=(type
   if(!(MAPD.plots||[]).length)L.forEach(l=>{if(!/^\s*Bauplatz/i.test(l.t))return;const m=l.t.match(/(\d+)/),size=m?Math.max(8,Math.min(36,+m[1])):20,ux=l.x,uy=l.y,X=mwx(ux),Z=mwz(uy);if(HUB.plots.some(p=>Math.hypot(p.x-X,p.z-Z)<2))return;
     bauAddPlot(X,Z,typeof mpFrontYaw==='function'?mpFrontYaw(ux,uy):0,size)})}
 /* Aktionen am Bauplatz */
-function bauActs(a){(HUB.plots||[]).forEach(p=>{if(Math.hypot(P.x-p.x,P.z-p.z)>60)return;const built=p.cells.size>0;
+function bauActs(a){if(typeof QUAL!=='undefined'&&QUAL.noPlots)return;(HUB.plots||[]).forEach(p=>{if(Math.hypot(P.x-p.x,P.z-p.z)>60)return;const built=p.cells.size>0;
   a.push({x:p.x,z:p.z,r:Math.max(p.NX,p.NZ)*BAU.C*.5+3.5,label:(built?'Umbauen: ':'Bauen: ')+bauTypeName(p),fn:()=>bauOpen(p)})})}
 function bauCounts(plot){const o={vol:0,door:0,win:0,roof:0,garden:0,shop:0,sign:0};plot.cells.forEach(c=>{const P=BAU_PARTS[c.v];if(P){if(P.cat==='dach')o.roof++;else if(P.cat==='garten')o.garden++;else o.vol++}
   (c.f||[]).forEach(f=>{if(!f)return;if(f[0]==='pano'||f[0]==='glass')o.shop++;if(f[0]==='sign')o.sign++;if(f[0]==='door'||f[0]==='garage'||f[0]==='glass')o.door++;else if(['win','wint','winr','port','pano'].includes(f[0]))o.win++})});return o}

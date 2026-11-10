@@ -93,9 +93,9 @@ function mkBlob(w,l){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THR
 blobP=mkBlob(3.4,3.8);
 
 /* ---------- Bake: statische Meshes pro Material zusammenfassen ---------- */
-const OUTM={};const outRes=new THREE.Vector2(1,1);
+let OUTVIS=true;const OUTM={};const outRes=new THREE.Vector2(1,1);
 function outMat(tier){if(OUTM[tier])return OUTM[tier];
-  return OUTM[tier]=new THREE.ShaderMaterial({side:THREE.BackSide,fog:false,uniforms:{px:{value:2},res:{value:outRes},col:{value:new THREE.Color('#1a1626')},fc:OUTFOG.fc,fn:OUTFOG.fn,ff:OUTFOG.ff},
+  return OUTM[tier]=new THREE.ShaderMaterial({visible:OUTVIS,side:THREE.BackSide,fog:false,uniforms:{px:{value:2},res:{value:outRes},col:{value:new THREE.Color('#1a1626')},fc:OUTFOG.fc,fn:OUTFOG.fn,ff:OUTFOG.ff},
    vertexShader:'uniform float px;uniform vec2 res;varying float vz;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vec4 p=projectionMatrix*mv;vz=-mv.z;vec3 n=normalize(normalMatrix*normal);vec2 d=(projectionMatrix*vec4(n,0.)).xy;float l=length(d);if(l>1e-4)d/=l;p.xy+=d*px*2./res*p.w;gl_Position=p;}',
    fragmentShader:'uniform vec3 col;uniform vec3 fc;uniform float fn;uniform float ff;varying float vz;void main(){gl_FragColor=vec4(mix(col,fc,smoothstep(fn,ff,vz)),1.);}'})}
 const TIERPX={stage:.45,prop:1,actor:1.35};
@@ -246,12 +246,34 @@ comp.addPass(fishPass);comp.addPass(pixPass);comp.addPass(new OutputPass());
 function fishActive(){return FISH.on&&G.phase!=='title'&&!(typeof BAU!=='undefined'&&BAU.open)}
 function fishUpdate(){const asp=cam.aspect,ty=Math.tan(FISH.vfov/2*Math.PI/180),tx=ty*asp,u=fishPass.uniforms;u.uAsp.value=asp;u.uTx.value=tx;u.uTy.value=ty;u.uR.value=Math.hypot(asp,1);u.uTh.value=Math.atan(Math.hypot(tx,ty))*.98}
 function fishSet(on){FISH.on=!!on;try{localStorage.setItem('kq-fish',FISH.on?'1':'0')}catch(e){}toast(FISH.on?'Fisheye an (0)':'Fisheye aus (0)',1000)}
+/* ---------- Qualitätsstufen (Hoch, Mittel, Leicht, Auto) und Messwerte ----------
+   Stufe bestimmt: Pixeldichte (höchstens), Schattenkarte (2048, 1024 oder aus) und Konturen (an/aus). Auto misst die Bildrate und geht bei dauerhaft unter 30 Bildern pro Sekunde eine Stufe runter,
+   bei dauerhaft über 72 wieder hoch (nie auf eine Stufe, die schon zu langsam war). Einstellbar im V-Fenster oder mit ?q=hoch|mittel|leicht|auto in der Adresse. */
+const QUAL={tiers:{hoch:{pr:1.5,shadow:2048,sh:true,out:true,n:'Hoch'},mittel:{pr:1,shadow:1024,sh:true,out:true,n:'Mittel'},leicht:{pr:.75,shadow:0,sh:false,out:false,n:'Leicht'}},order:['hoch','mittel','leicht'],mode:'auto',cur:'hoch',minIdx:0,slowN:0,fastN:0,cool:0,noPlots:false,fps:0,_n:0,_t:performance.now()};
+try{const q0=new URLSearchParams(location.search).get('q')||localStorage.getItem('kq-q');if(q0==='auto'||QUAL.tiers[q0])QUAL.mode=q0;QUAL.noPlots=localStorage.getItem('kq-noplots')==='1'}catch(e){}
+function qualApply(name){if(!QUAL.tiers[name])return;QUAL.cur=name;const t=QUAL.tiers[name];
+  sun.castShadow=t.sh;if(t.sh&&sun.shadow.mapSize.x!==t.shadow){sun.shadow.mapSize.set(t.shadow,t.shadow);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}
+  OUTVIS=t.out;Object.values(OUTM).forEach(m=>{m.visible=t.out});resize()}
+function qualMode(m){if(m!=='auto'&&!QUAL.tiers[m])return;QUAL.mode=m;try{localStorage.setItem('kq-q',m)}catch(e){}QUAL.minIdx=0;QUAL.slowN=QUAL.fastN=0;if(m!=='auto')qualApply(m);else qualApply(qualStart())}
+function qualStart(){const pr=Math.min(devicePixelRatio||1,1.5),px=innerWidth*innerHeight*pr*pr;return px>2.6e6?'mittel':'hoch'}
+/* Eine Messung (Bilder pro Sekunde über ein halbes Sekundenfenster); auch für Tests aufrufbar */
+function qualWindow(fps){QUAL.fps=fps;if(QUAL.mode!=='auto'||G.phase==='title')return;const i=QUAL.order.indexOf(QUAL.cur);
+  if(QUAL.cool>0){QUAL.cool--;return}
+  if(fps<30){QUAL.fastN=0;if(++QUAL.slowN>=3&&i<QUAL.order.length-1){QUAL.minIdx=i+1;QUAL.slowN=0;QUAL.cool=16;qualApply(QUAL.order[i+1]);toast('Grafik: '+QUAL.tiers[QUAL.cur].n+' (Auto)',1400)}}
+  else if(fps>=72){QUAL.slowN=0;if(++QUAL.fastN>=12&&i>QUAL.minIdx){QUAL.fastN=0;QUAL.cool=16;qualApply(QUAL.order[i-1])}}
+  else{QUAL.slowN=0;QUAL.fastN=0}}
+function qualStep(dt){QUAL._n++;const now=performance.now();if(now-QUAL._t>=500){const fps=QUAL._n*1000/(now-QUAL._t);QUAL._n=0;QUAL._t=now;if(dt<.5)qualWindow(fps);else QUAL.fps=fps}}
+function qualPlots(){(HUB.plots||[]).forEach(p=>{p.g.visible=!QUAL.noPlots})}
+function qualNoPlots(on){QUAL.noPlots=!!on;try{localStorage.setItem('kq-noplots',on?'1':'0')}catch(e){}qualPlots()}
+r.info.autoReset=false;
+QUAL.cur=QUAL.mode==='auto'?qualStart():QUAL.mode;
+qualApply(QUAL.cur);
 function resize(){const w=innerWidth,h=innerHeight;let rw,rh;
   if(G.pix){const ps=Math.max(3,Math.round(h/270));rw=Math.ceil(w/ps);rh=Math.ceil(h/ps)}
-  else{const pr=Math.min(devicePixelRatio||1,1.5);rw=Math.floor(w*pr);rh=Math.floor(h*pr)}
+  else{const pr=Math.min(devicePixelRatio||1,QUAL.tiers[QUAL.cur].pr);rw=Math.floor(w*pr);rh=Math.floor(h*pr)}
   r.setPixelRatio(1);r.setSize(rw,rh,false);comp.setPixelRatio(1);comp.setSize(rw,rh);outRes.set(rw,rh);
   const cv=r.domElement;cv.style.width=w+'px';cv.style.height=h+'px';cv.style.imageRendering=G.pix?'pixelated':'auto';cv.style.filter=G.pix?'none':'saturate(1.22) contrast(1.06)';
-  setOutlinePx(G.pix?1:2*Math.min(devicePixelRatio||1,1.5));cam.aspect=w/h;cam.updateProjectionMatrix()}
+  setOutlinePx(G.pix?1:2*Math.min(devicePixelRatio||1,QUAL.tiers[QUAL.cur].pr));cam.aspect=w/h;cam.updateProjectionMatrix()}
 function setPix(on){G.pix=on;document.getElementById('b-pix').setAttribute('aria-pressed',String(on));resize()}
 addEventListener('resize',resize);
 
@@ -668,19 +690,37 @@ function updateTrack(gap){const f=x=>Math.max(0,Math.min(1,(x+134)/260))*100+'%'
 const camPos=new V3(-148,6,-8),camLook=new V3(-134,3,-8);let gapNow=60;
 /* Positions-Anzeige für Tester und die Glitch-Inventur: x, z, Blickwinkel (0° = Norden, im Uhrzeigersinn), Höhe und Stand. Taste V schaltet sie, Klick kopiert die Zeile. */
 const POSH={on:false,el:null,t:0,txt:''};try{POSH.on=localStorage.getItem('kq-pos')==='1'}catch(e){}
-function posHudEl(){if(POSH.el)return POSH.el;const d=document.createElement('div');d.id='poshud';d.title='Klick: Position kopieren';d.style.cssText="position:absolute;left:16px;bottom:74px;padding:5px 9px;border-radius:9px;border:2px solid #0e0b18;background:rgba(26,22,38,.82);color:#fff;font:600 12px/1.3 'Smarta Nova','Trebuchet MS',sans-serif;z-index:3;pointer-events:auto;cursor:copy;display:none;white-space:pre";(document.getElementById('ui')||document.body).appendChild(d);
-  d.onclick=()=>{const t=POSH.txt;const ok=()=>toast('Position kopiert',1100);try{navigator.clipboard.writeText(t).then(ok,()=>prompt('Position:',t))}catch(e){prompt('Position:',t)}};return POSH.el=d}
+function posHudEl(){if(POSH.el)return POSH.el;const d=document.createElement('div');d.id='poshud';d.title='Klick auf den Text: alles kopieren';d.style.cssText="position:absolute;left:16px;bottom:74px;padding:6px 9px;border-radius:9px;border:2px solid #0e0b18;background:rgba(26,22,38,.86);color:#fff;font:600 12px/1.3 'Smarta Nova','Trebuchet MS',sans-serif;z-index:3;pointer-events:auto;display:none;max-width:360px";
+  const t=document.createElement('div');t.id='posh-t';t.style.cssText='white-space:pre-wrap;word-break:break-word;cursor:copy';const bb=document.createElement('div');bb.id='posh-b';bb.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin-top:5px';d.append(t,bb);
+  const mk=(id,label,fn)=>{const b=document.createElement('button');b.type='button';b.id=id;b.textContent=label;b.style.cssText="font:600 11px 'Smarta Nova','Trebuchet MS',sans-serif;color:#fff;background:#3a3256;border:2px solid #0e0b18;border-radius:7px;padding:2px 7px;cursor:pointer";b.onclick=e=>{e.stopPropagation();fn()};bb.appendChild(b);return b};
+  [['auto','Auto'],['hoch','Hoch'],['mittel','Mittel'],['leicht','Leicht']].forEach(([k,n])=>mk('pq-'+k,n,()=>qualMode(k)));mk('pq-plots','Bauplätze aus',()=>qualNoPlots(!QUAL.noPlots));mk('pq-fish','Fisheye (0)',()=>fishSet(!FISH.on));
+  t.onclick=()=>{const x=POSH.txt;const ok=()=>toast('Werte kopiert',1100);try{navigator.clipboard.writeText(x).then(ok,()=>prompt('Werte:',x))}catch(e){prompt('Werte:',x)}};(document.getElementById('ui')||document.body).appendChild(d);return POSH.el=d}
 function posHudSet(on){POSH.on=!!on;try{localStorage.setItem('kq-pos',POSH.on?'1':'0')}catch(e){}posHudEl().style.display=POSH.on&&G.phase!=='title'?'block':'none'}
+/* Grafikkartenname, soweit der Browser ihn verrät (Safari nennt oft nur "Apple GPU") */
+function gpuName(){if(POSH.gpu)return POSH.gpu;try{const gl=r.getContext(),e=gl.getExtension('WEBGL_debug_renderer_info');POSH.gpu=e?String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0,48):'unbekannt'}catch(x){POSH.gpu='unbekannt'}return POSH.gpu}
+/* Letzter Stand vor dem Beenden: wird jede Sekunde gespeichert, solange das V-Fenster an ist; "ok" kommt dazu, wenn die Seite sauber geschlossen wird. Nach einem Absturz zeigt das nächste V-Fenster, was zuletzt galt. */
+try{const o=JSON.parse(localStorage.getItem('kq-last')||'null');if(o&&o.t)POSH.prev=o}catch(e){}
+addEventListener('pagehide',()=>{try{const o=JSON.parse(localStorage.getItem('kq-last')||'null');if(o){o.ok=1;localStorage.setItem('kq-last',JSON.stringify(o))}}catch(e){}});
 function posHudStep(dt){const el=posHudEl();if(!POSH.on||G.phase==='title'){el.style.display='none';return}POSH.t-=dt;if(POSH.t>0)return;POSH.t=.1;
   let w=Math.atan2(Math.cos(P.h),-Math.sin(P.h))*180/Math.PI;w=((w%360)+360)%360;const dirs=['N','NO','O','SO','S','SW','W','NW'],dn=dirs[Math.round(w/45)%8];
-  const lv=LV.id===0?(G.under?'Unterwelt':'Stadt'):'Level '+LV.id;
-  POSH.txt='x '+P.x.toFixed(1)+'  z '+P.z.toFixed(1)+'  Winkel '+Math.round(w)+'° '+dn+'  y '+P.y.toFixed(1)+'  '+lv;el.textContent=POSH.txt+'\nStand '+(typeof STAT!=='undefined'?STAT.ver:'?')+'  (V aus, Klick kopiert)';el.style.display='block'}
+  const lv=LV.id===0?(G.under?'Unterwelt':'Stadt'):'Level '+LV.id,I=r.info,cv=r.domElement,q=QUAL.tiers[QUAL.cur];
+  const L=[];L.push('x '+P.x.toFixed(1)+'  z '+P.z.toFixed(1)+'  Winkel '+Math.round(w)+'° '+dn+'  y '+P.y.toFixed(1)+'  '+lv);
+  L.push('FPS '+Math.round(QUAL.fps)+'  Aufrufe '+I.render.calls+'  Dreiecke '+(I.render.triangles>=1e5?(I.render.triangles/1e6).toFixed(2)+' Mio.':I.render.triangles));
+  L.push('Geometrien '+I.memory.geometries+'  Texturen '+I.memory.textures+'  Programme '+(I.programs?I.programs.length:'?'));
+  L.push('Bild '+cv.width+'×'+cv.height+'  Dichte '+(devicePixelRatio||1)+'  Qualität '+q.n+(QUAL.mode==='auto'?' (Auto)':'')+(FISH.on?'  Fisheye':'')+(QUAL.noPlots?'  ohne Bauplätze':''));
+  L.push('Grafik '+gpuName()+(performance.memory?'  JS '+Math.round(performance.memory.usedJSHeapSize/1048576)+' MB':''));
+  if(POSH.prev){const o=POSH.prev,ago=Math.max(0,Math.round((Date.now()-o.t)/60000));L.push('Zuletzt '+(o.ok?'(sauber beendet)':'(NICHT sauber beendet)')+' vor '+ago+' min: x '+o.x+' z '+o.z+'  FPS '+o.fps+'  Aufrufe '+o.calls+'  Dreiecke '+o.tri+'  Qualität '+o.q)}
+  L.push('Stand '+(typeof STAT!=='undefined'?STAT.ver:'?')+'  (V aus, Klick auf Text kopiert alles)');
+  POSH.txt=L.join('\n');el.querySelector('#posh-t').textContent=POSH.txt;
+  ['auto','hoch','mittel','leicht'].forEach(k=>{const b=el.querySelector('#pq-'+k);b.style.background=(QUAL.mode==='auto'?k==='auto':QUAL.mode===k)?'#d54291':'#3a3256'});el.querySelector('#pq-plots').style.background=QUAL.noPlots?'#d54291':'#3a3256';el.querySelector('#pq-fish').style.background=FISH.on?'#d54291':'#3a3256';
+  const now=Date.now();if(now-(POSH.sv||0)>=1000){POSH.sv=now;try{localStorage.setItem('kq-last',JSON.stringify({t:now,x:+P.x.toFixed(1),z:+P.z.toFixed(1),fps:Math.round(QUAL.fps),calls:I.render.calls,tri:I.render.triangles,q:q.n+(QUAL.mode==='auto'?' (Auto)':''),ok:0}))}catch(e){}}
+  el.style.display='block'}
 addEventListener('keydown',e=>{if((e.code==='Digit0'||e.code==='Numpad0')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!(e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName||''))&&G.phase!=='title'&&!GFOPEN&&!(typeof BAU!=='undefined'&&BAU.open)){fishSet(!FISH.on)}});
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!(e.target&&e.target.tagName==='INPUT')&&typeof BAU!=='undefined'&&!BAU.open){posHudSet(!POSH.on)}});
 function step(dt){
   if(typeof multiStep==='function')multiStep(dt);
   if(typeof statsStep==='function')statsStep();
-  posHudStep(dt);
+  posHudStep(dt);qualStep(dt);
   if(INV.open||DLG.open||PAD.open||PUZ.open||GFOPEN||BAU.open){if(BAU.open)bauFrame(dt);if(typeof polBg==='function')polBg(dt);return}
   G.t+=dt;for(let i=TIMERS.length-1;i>=0;i--){TIMERS[i].t-=dt;if(TIMERS[i].t<=0){const f=TIMERS[i].fn;TIMERS.splice(i,1);f()}}
   if(narr.active){narr.shown=Math.min(narr.full.length,narr.shown+dt*46);narr.text.textContent=narr.full.slice(0,Math.floor(narr.shown));if(narr.shown>=narr.full.length){narr.hold-=dt;if(narr.hold<=0){narr.active=false;narr.el.classList.remove('on')}}}
@@ -721,7 +761,7 @@ function step(dt){
   // Licht folgt
   sun.position.set(P.x-40,NEWMAP&&LV.id===0&&!G.under&&DAY.sunY?DAY.sunY:16,P.z+30);sun.target.position.set(P.x,1.3,P.z);sky.position.copy(cam.position);
 }
-function render(){const fa=fishActive();if(G.pix||fa){pixPass.enabled=!!G.pix;fishPass.enabled=fa;if(fa)fishUpdate();comp.render()}else r.render(sc,cam)}
+function render(){r.info.reset();const fa=fishActive();if(G.pix||fa){pixPass.enabled=!!G.pix;fishPass.enabled=fa;if(fa)fishUpdate();comp.render()}else r.render(sc,cam)}
 
 /* ---------- Rivalen: andere Skater, die nerven und schubsen ---------- */
 const RIV={list:[],enabled:true,lastSay:-99,said:0,N:3,hitSaid:false};
@@ -1695,7 +1735,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={FISH,fishActive,fishSet,doseIcon,ubqShopHTML,ubqInvHTML,ubiqActs,grafWhatWall,grafSlot,grafEnsurePanel,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauLoadInto,bauSerialize,BAU_COLS,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={SUN:sun,QUAL,qualApply,qualMode,qualWindow,qualNoPlots,posHudEl,POSH,FISH,fishActive,fishSet,doseIcon,ubqShopHTML,ubqInvHTML,ubiqActs,grafWhatWall,grafSlot,grafEnsurePanel,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauLoadInto,bauSerialize,BAU_COLS,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
