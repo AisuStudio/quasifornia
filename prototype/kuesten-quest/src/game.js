@@ -231,7 +231,21 @@ const pixPass=new ShaderPass({uniforms:{tDiffuse:{value:null},uUW:{value:0}},
    gl_FragColor=vec4(pow(R[fam*5+int(lv)],vec3(2.2)),1.);return;}
   vec3 gh=rgb2hsv(clamp(g,0.,1.));float best=1e9;vec3 bc=P[0];for(int i=0;i<${PAL.length};i++){float dh=abs(gh.x-Q[i].x);dh=min(dh,1.-dh);float dd=abs(gh.z-Q[i].z)*1.3+abs(gh.y-Q[i].y)*.4+dh*6.5*gh.y;if(dd<best){best=dd;bc=P[i];}}
   gl_FragColor=vec4(pow(bc,vec3(2.2)),1.);}`});
-comp.addPass(pixPass);comp.addPass(new OutputPass());
+/* Fisheye (Taste 0): Szene mit weitem Winkel rendern und am Rand zusammenziehen (gleichabständige Projektion). Ein Schritt in der Nachbearbeitung; das Rarepod-Foto nimmt das fertige Bild und enthält ihn deshalb. Im Builder (Mausklicks auf Zellen) und auf dem Titel aus. */
+const FISH={on:false,vfov:100};try{FISH.on=localStorage.getItem('kq-fish')==='1'}catch(e){}
+const fishPass=new ShaderPass({uniforms:{tDiffuse:{value:null},uAsp:{value:1},uTx:{value:1},uTy:{value:1},uR:{value:1},uTh:{value:1}},
+ vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+ fragmentShader:`uniform sampler2D tDiffuse;uniform float uAsp,uTx,uTy,uR,uTh;varying vec2 vUv;
+ void main(){vec2 p=vec2((vUv.x-.5)*2.*uAsp,(vUv.y-.5)*2.);float L=length(p);vec2 uv=vUv;
+  if(L>1e-5){float th=(L/uR)*uTh;vec2 d=p/L;float t=tan(th);uv=vec2(.5+.5*d.x*t/uTx,.5+.5*d.y*t/uTy);}
+  float ca=.003*(L/uR)*(L/uR);vec2 n=L>1e-5?normalize(p)*vec2(1./uAsp,1.):vec2(0.);
+  vec3 c=vec3(texture2D(tDiffuse,uv+n*ca).r,texture2D(tDiffuse,uv).g,texture2D(tDiffuse,uv-n*ca).b);
+  c*=1.-.28*smoothstep(.55,1.,L/uR);gl_FragColor=vec4(c,1.);}`});
+fishPass.enabled=false;
+comp.addPass(fishPass);comp.addPass(pixPass);comp.addPass(new OutputPass());
+function fishActive(){return FISH.on&&G.phase!=='title'&&!(typeof BAU!=='undefined'&&BAU.open)}
+function fishUpdate(){const asp=cam.aspect,ty=Math.tan(FISH.vfov/2*Math.PI/180),tx=ty*asp,u=fishPass.uniforms;u.uAsp.value=asp;u.uTx.value=tx;u.uTy.value=ty;u.uR.value=Math.hypot(asp,1);u.uTh.value=Math.atan(Math.hypot(tx,ty))*.98}
+function fishSet(on){FISH.on=!!on;try{localStorage.setItem('kq-fish',FISH.on?'1':'0')}catch(e){}toast(FISH.on?'Fisheye an (0)':'Fisheye aus (0)',1000)}
 function resize(){const w=innerWidth,h=innerHeight;let rw,rh;
   if(G.pix){const ps=Math.max(3,Math.round(h/270));rw=Math.ceil(w/ps);rh=Math.ceil(h/ps)}
   else{const pr=Math.min(devicePixelRatio||1,1.5);rw=Math.floor(w*pr);rh=Math.floor(h*pr)}
@@ -661,6 +675,7 @@ function posHudStep(dt){const el=posHudEl();if(!POSH.on||G.phase==='title'){el.s
   let w=Math.atan2(Math.cos(P.h),-Math.sin(P.h))*180/Math.PI;w=((w%360)+360)%360;const dirs=['N','NO','O','SO','S','SW','W','NW'],dn=dirs[Math.round(w/45)%8];
   const lv=LV.id===0?(G.under?'Unterwelt':'Stadt'):'Level '+LV.id;
   POSH.txt='x '+P.x.toFixed(1)+'  z '+P.z.toFixed(1)+'  Winkel '+Math.round(w)+'° '+dn+'  y '+P.y.toFixed(1)+'  '+lv;el.textContent=POSH.txt+'\nStand '+(typeof STAT!=='undefined'?STAT.ver:'?')+'  (V aus, Klick kopiert)';el.style.display='block'}
+addEventListener('keydown',e=>{if((e.code==='Digit0'||e.code==='Numpad0')&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!(e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName||''))&&G.phase!=='title'&&!GFOPEN&&!(typeof BAU!=='undefined'&&BAU.open)){fishSet(!FISH.on)}});
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!(e.target&&e.target.tagName==='INPUT')&&typeof BAU!=='undefined'&&!BAU.open){posHudSet(!POSH.on)}});
 function step(dt){
   if(typeof multiStep==='function')multiStep(dt);
@@ -702,11 +717,11 @@ function step(dt){
   const k=(typeof POL!=='undefined'&&POL.cin&&POL.cin.pos)?1:1-Math.exp(-dt*(G.phase==='title'||G.phase==='win'?2:6));camPos.lerp(tp,k);camLook.lerp(tl,k);
   G.shake=Math.max(0,G.shake-dt*1.6);
   cam.position.copy(camPos);if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*.6;cam.position.y+=(Math.random()-.5)*G.shake*.6}
-  cam.lookAt(camLook);cam.fov=G.phase==='caught'?56:60+Math.min(14,(P.speed-4)*1.3)+(P.boost>0?4:0);cam.updateProjectionMatrix();
+  cam.lookAt(camLook);cam.fov=fishActive()?FISH.vfov:G.phase==='caught'?56:60+Math.min(14,(P.speed-4)*1.3)+(P.boost>0?4:0);cam.updateProjectionMatrix();
   // Licht folgt
   sun.position.set(P.x-40,NEWMAP&&LV.id===0&&!G.under&&DAY.sunY?DAY.sunY:16,P.z+30);sun.target.position.set(P.x,1.3,P.z);sky.position.copy(cam.position);
 }
-function render(){if(G.pix)comp.render();else r.render(sc,cam)}
+function render(){const fa=fishActive();if(G.pix||fa){pixPass.enabled=!!G.pix;fishPass.enabled=fa;if(fa)fishUpdate();comp.render()}else r.render(sc,cam)}
 
 /* ---------- Rivalen: andere Skater, die nerven und schubsen ---------- */
 const RIV={list:[],enabled:true,lastSay:-99,said:0,N:3,hitSaid:false};
@@ -1680,7 +1695,7 @@ function stepLevel0(dt){if(!W0||!W0.visible)return;stepTrain(dt);if(G.under)step
   g.save();g.translate(ex,ez);g.rotate(P.h);g.fillStyle='#ff5fa8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(7,0);g.lineTo(-5,-4.5);g.lineTo(-3,0);g.lineTo(-5,4.5);g.closePath();g.fill();g.stroke();g.restore();
   g.strokeStyle='#fff0b0';g.lineWidth=2;g.strokeRect(1,1,148,148)}
 
-window.__qa={doseIcon,ubqShopHTML,ubqInvHTML,ubiqActs,grafWhatWall,grafSlot,grafEnsurePanel,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauLoadInto,bauSerialize,BAU_COLS,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
+window.__qa={FISH,fishActive,fishSet,doseIcon,ubqShopHTML,ubqInvHTML,ubiqActs,grafWhatWall,grafSlot,grafEnsurePanel,grafCanSvg,ubqCanSvg,AMART,makeSprayCan,DOSE,grafEdges,toast,KAR,karDraw,karBuyPack,karOpenPack,karLoad,karRender,FOTO,fotSnap,fotPeer,fotToRoom,POSH,posHudSet,posHudStep,MAPD,ubqWallSpot,ubqSync,ubiqInitWorld,STAT,UBQ,ubiqUse,ubqBuy,skateCellD,DECK,deckEquip,SKATE,skateG,BAU,bauAddPlot,bauLoadInto,bauSerialize,BAU_COLS,bauOpen,bauClose,bauPutVol,bauPutDeco,bauErase,bauPaint,bauUndo,bauCounts,bauPick,BAU_PARTS,pmartEnter,pmartLeave,L7,cam,render,PUSH,termCmd,TERM,rpTab,INV,POLR,polNetIn,polNetCmd,polAlertGo,polG2Start,polQ2,polPath,polDispatch,polStep,giantState,giantClock,STAT,statEv,statFlush,MULTI,multiMsg,GIANT,giantSpawn,KR,kSync,grafSpray,POL,polAlert,polStep,polLos,polSees,DAY,GFSRV,grafFacadeNear,grafEnsurePanel,grafSync,invToggle,mpWalk,mpAt,mpNearRoad,MP,SHOP,shopEnter,MUSE,MUS,toggleSnd,toggleSfx,GF,grafOpen,grafClose,grafBuy,get UWE(){return UWE},UWQ,uwReset,get BQ(){return BQ},bqReset,beggarTalk,towerUp,towerDown,releaseTry,underApply,underEnter,underExit,pixPass,stepTrain,HILL,hillG,GR,grindEnd,TRICKS,edColor,PRE_OVR,ED,ED_ITEMS,edBuy,edToggle,ACC_OVR,cityGround,jump,get R(){return r},sc,GH,ghostSave,SKOWN,SKIN_PRICE,skBuy,skWear,SC,auComplete,scAdd,AUFTRAEGE,PORTAL_COST,stepXmas,ISL,L5,PUZ,puz1,puz2,puz3,puz4,islandSolved,islandWin,islandFail,islandActs,caesar,SECRET,get W5(){return W5},Q,DLG,PAD,CODE,DICT,MIS,curActs,actGo,manTalk,doorUse,vanUse,giveIce,freeMan,padOk,padKey,dlgNext,get L4(){return L4},INV,HUB,enterPortal,stepCity,jump,fallRespawn,get GAPS(){return GAPS},L3,RIV,applyLevel,LEVELS,L2,get LV(){return LV},E,iceTower,Tk,doTrick,CLAPPERS,T,throwBoard,flyBoard,G,P,K,step,render,startChase,beginPlay,scoops,cones,resetRun,win,caught,setPix,say,get dino(){return dinoG},cam};
 resize();showTitle();$('loading').remove();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);render();requestAnimationFrame(loop)}
