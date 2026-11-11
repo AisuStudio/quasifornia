@@ -50,6 +50,50 @@ srv.listen(9007,async()=>{let b;try{
    const box=()=>{M.av.updateMatrixWorld(true);M.mesh.computeBoundingBox&&M.mesh.computeBoundingBox();const bb=new T.Box3(),v=new T.Vector3(),g=M.mesh.geometry.attributes.position;for(let i=0;i<g.count;i++){M.mesh.getVertexPosition(i,v);v.applyMatrix4(M.mesh.matrixWorld);bb.expandByPoint(v)}return bb.max.y-bb.min.y};
    M.setPose('stand');const a=wp(),ha=box();M.setPose('skate');const b2=wp(),hb=box();M.setPose('stand');return {a,b2,ha:Math.round(ha*100)/100,hb:Math.round(hb*100)/100,tris:M.tris}});
  console.log('Posen',JSON.stringify(ps),JSON.stringify(ps.a)!==JSON.stringify(ps.b2)&&ps.hb<ps.ha&&ps.ha>2&&ps.ha<3);
+ /* Form: Ringe skalieren das Netz, 100 % ist unverändert, Spiegeln, Zurück */
+ const rg2=await p.evaluate(()=>{const M=__msh,T=M.THREE;const base=Array.from(M.geo.attributes.position.array);M.reshape();const same=Array.from(M.geo.attributes.position.array).every((v,i)=>Math.abs(v-base[i])<1e-5);
+   const wid=()=>{const g=M.geo.attributes.position,b=M.RB.torso;let mx=0;for(let i=0;i<=b.N;i++){const v=b.base+3*(b.N+1)+i;mx=Math.max(mx,Math.abs(g.getX(v)))}return mx};
+   const w0=wid();M.S.mir=true;M.S.rp='legL';M.S.rj=2;M.S.undo.length=0;
+   M.S.rp='torso';M.S.rj=3;M.setRing('torso',3,150,100);M.reshape();const w1=wid();
+   M.setRing('torso',3,50,100);M.reshape();const w2=wid();
+   M.setRing('legL',1,150,150);M.setRing('legR',1,150,150);M.reshape();
+   const lg=(k)=>{const g=M.geo.attributes.position,b=M.RB[k];let mx=0;for(let i=0;i<=b.N;i++)mx=Math.max(mx,Math.abs(g.getX(b.base+1*(b.N+1)+i)-g.getX(b.base+1*(b.N+1))));return mx};
+   const finite=Array.from(M.geo.attributes.position.array).every(Number.isFinite);
+   const o=M.toObj('R');const hasR=!!o.rings&&o.rings.torso['3'][0]===50&&o.rings.legL['1'][0]===150;
+   M.fromObj(JSON.parse(JSON.stringify(o)));const back=M.SC.torso['3'][0]===50;
+   const bad=[{...o,rings:{torso:{'9':[100,100]}}},{...o,rings:{x:{}}},{...o,rings:{torso:{'0':[10,100]}}},{...o,grad:{torso:{m:1,c:[1,2],d:'q',a:0,b:100}}}].map(x=>{try{M.fromObj(x);return false}catch(e){return true}});
+   const kept=M.SC.torso['3'][0]===50;
+   const u=M.S.undo.pop();M.restore(u);
+   for(const k in M.SC)delete M.SC[k];M.reshape();const w3=wid();
+   return {same,w0,w1,w2,w3,finite,hasR,back,bad,kept,legWide:lg('legL')>0}});
+ console.log('Ringe',JSON.stringify(rg2),rg2.same&&rg2.w1>rg2.w0*1.4&&rg2.w2<rg2.w0*0.6&&Math.abs(rg2.w3-rg2.w0)<1e-5&&rg2.finite&&rg2.hasR&&rg2.back&&rg2.bad.every(Boolean)&&rg2.kept);
+ /* Ringe mit Spiegeln, Regler und Zurück über die Oberfläche */
+ await p.evaluate(()=>{const M=__msh;for(const k in M.SC)delete M.SC[k];M.reshape();M.S.undo.length=0;M.S.mir=true;M.S.rp='armL';M.S.rj=1;});
+ await p.selectOption('#rpart','armL');await p.selectOption('#rring','1');await p.evaluate(()=>{const r=document.getElementById('rw');r.value=170;r.dispatchEvent(new Event('input'))});
+ const sl=await p.evaluate(()=>({l:__msh.SC.armL&&__msh.SC.armL[1],r:__msh.SC.armR&&__msh.SC.armR[1],u:__msh.S.undo.length,out:document.getElementById('rwo').textContent}));
+ console.log('Regler Breite spiegelt',JSON.stringify(sl),sl.l&&sl.r&&sl.l[0]===170&&sl.r[0]===170&&sl.out==='170 %');
+ await p.click('#rr2');const rr=await p.evaluate(()=>!__msh.SC.armL&&!__msh.SC.armR);console.log('Teil zurück',rr);
+ await p.click('#undo');const ur=await p.evaluate(()=>!!__msh.SC.armL&&__msh.SC.armL[1][0]===170);console.log('Zurück stellt Ringe wieder her',ur);
+ /* Verlauf: weich, ersetzt nur die häufigste Farbe, Maske, Datensatz */
+ const gr=await p.evaluate(()=>{const M=__msh;for(const k in M.SC)delete M.SC[k];M.reshape();M.defaults();M.render();const R=M.RECT.torso,cvs=document.createElement('canvas');
+   const m=M.commonCol('torso');const before=M.tex.slice();M.setGrad('torso',2,8,'v',0,100);M.render();
+   const ctx=document.getElementById('atlas').getContext('2d');const px=(x,y)=>Array.from(ctx.getImageData(x,y,1,1).data).slice(0,3);
+   const top=px(R[0]+2,R[1]+1),mid=px(R[0]+2,R[1]+9),low=px(R[0]+2,R[1]+R[3]-5);
+   const hx=c=>[1,3,5].map(i=>parseInt(M.PAL[c].slice(i,i+2),16));
+   const dist=(a,b)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2]);
+   const distinct=new Set();for(let j=0;j<R[3];j++)distinct.add(px(R[0]+2,R[1]+j).join());
+   const texSame=M.tex.every((v,i)=>v===before[i]);
+   const o=M.toObj('V');const keep=o.grad&&o.grad.torso&&o.grad.torso.m===m&&o.tex.length===4096;
+   M.delGrad('torso');M.render();const gone=dist(px(R[0]+2,R[1]+1),hx(m))<6;
+   M.fromObj(JSON.parse(JSON.stringify(o)));const back=!!M.GR.torso&&M.GR.torso.c[1]===8;
+   return {m,topNearFrom:dist(top,hx(2))<40,lowNearTo:dist(low,hx(8))<60,midBetween:dist(mid,hx(2))>20&&dist(mid,hx(8))>20,steps:distinct.size,texSame,keep,gone,back}});
+ console.log('Verlauf',JSON.stringify(gr),gr.topNearFrom&&gr.lowNearTo&&gr.midBetween&&gr.steps>=8&&gr.texSame&&gr.keep&&gr.gone&&gr.back);
+ /* Verlauf über die Oberfläche: Knopf, Spiegeln auf Paaren */
+ await p.evaluate(()=>{const M=__msh;M.defaults();M.render();M.S.mir=true;M.S.col=11});
+ await p.selectOption('#gpart','armL');await p.selectOption('#gdir','h');await p.click('#gc1');await p.click('#gok');
+ const gu=await p.evaluate(()=>({l:__msh.GR.armL,r:__msh.GR.armR,st:document.getElementById('gst').textContent,u:__msh.S.undo.length}));
+ console.log('Verlauf per Knopf',JSON.stringify(gu),gu.l&&gu.r&&gu.l.d==='h'&&gu.r.d==='h'&&gu.l.c[1]===11&&/aktiv/.test(gu.st)&&gu.u>=1);
+ await p.click('#gno');const g0=await p.evaluate(()=>!__msh.GR.armL&&!__msh.GR.armR);console.log('Verlauf entfernen',g0);
  /* Rahmen: Unterreiter Mesh */
  const f=await b.newPage({viewport:{width:1280,height:800}});f.on('pageerror',e=>console.log('ERR',e.message));await f.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());await f.route('**/api/**',r=>r.fulfill({status:404,body:''}));
  await f.goto('http://localhost:9007/tools/avatar-designer/index.html');await f.click('#s-mesh');await f.waitForTimeout(900);

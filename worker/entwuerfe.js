@@ -36,7 +36,15 @@ export function entwHaus(o){
 export function entwMesh(o){
   if(!o||typeof o!=='object'||o.v!==1||o.kind!=='mesh'||o.species!=='humanoid'||o.pal!=='bau12')return 'Kein gültiger Mesh-Avatar';
   if(typeof o.name!=='string'||!o.name.trim()||o.name.length>40)return 'Name fehlt';
-  if(typeof o.tex!=='string'||!/^[0-9ab]{4096}$/.test(o.tex))return 'Textur ungültig';return null}
+  if(typeof o.tex!=='string'||!/^[0-9ab]{4096}$/.test(o.tex))return 'Textur ungültig';
+  /* Zusatzfelder (optional): rings = {teil:{ring:[breite,tiefe]}} in Prozent 50 bis 200; grad = {fläche:{m,c:[von,nach],d,a,b}} */
+  const TEIL=['head','torso','armL','armR','legL','legR','footL','footR'],obj=x=>x&&typeof x==='object'&&!Array.isArray(x),I=(x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
+  if(o.rings!==undefined){if(!obj(o.rings))return 'Ringe ungültig';
+    for(const k of Object.keys(o.rings)){if(!TEIL.includes(k)||!obj(o.rings[k]))return 'Ringe ungültig';
+      for(const j of Object.keys(o.rings[k])){const q=o.rings[k][j];if(!/^[0-8]$/.test(j)||!Array.isArray(q)||q.length!==2||!I(q[0],50,200)||!I(q[1],50,200))return 'Ringe ungültig'}}}
+  if(o.grad!==undefined){if(!obj(o.grad))return 'Verlauf ungültig';
+    for(const k of Object.keys(o.grad)){const g=o.grad[k];if(!TEIL.includes(k)||!obj(g)||!I(g.m,0,11)||!Array.isArray(g.c)||g.c.length!==2||!I(g.c[0],0,11)||!I(g.c[1],0,11)||!['v','h','d'].includes(g.d)||!I(g.a,0,100)||!I(g.b,0,100))return 'Verlauf ungültig'}}
+  return null}
 const CHECK={avatar:entwAvatar,haus:entwHaus,mesh:entwMesh};
 const pad=n=>String(n).padStart(4,'0');
 async function versions(bucket,art,id){const out=[];let cur;do{const l=await bucket.list({prefix:'entwuerfe/'+art+'/'+id+'/',limit:100,cursor:cur,include:['customMetadata']});for(const o of l.objects){const m=/\/(\d{4})\.json$/.exec(o.key);if(m)out.push({v:+m[1],t:+(o.customMetadata&&o.customMetadata.t)||o.uploaded.getTime(),name:(o.customMetadata&&o.customMetadata.name)||'',bytes:o.size,key:o.key})}cur=l.truncated?l.cursor:null}while(cur&&out.length<500);return out.sort((a,b)=>a.v-b.v)}
