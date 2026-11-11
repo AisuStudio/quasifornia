@@ -144,7 +144,7 @@ function giantStep(dt){const live=LV.id===0&&!G.under&&G.phase==='play'&&HUB.bui
   const sw=Math.sin(o.phase);o.legs[0].rotation.x=sw*.5;o.legs[1].rotation.x=-sw*.5;o.arms[0].rotation.x=-sw*.35;o.arms[1].rotation.x=sw*.35;
   o.body.position.y=Math.abs(Math.cos(o.phase))*.28;o.body.rotation.z=sw*.04;o.head.rotation.y=Math.sin(o.phase*.4)*.18;o.tail.rotation.y=Math.sin(o.phase*.5)*.35;if(o.pose)o.pose(o,sw);
   const d=Math.hypot(st.x-P.x,st.z-P.z);
-  if(GIANT.announced!==st.k){GIANT.announced=st.k;if(d<300)toast(GIANT.names[st.kind]+' kommt die Straße entlang!',2200)}
+  if(GIANT.announced!==st.k){GIANT.announced=st.k;if(d<300)toast(GIANT.names[st.kind]+' kommt die Straße entlang! Auf der Karte, Foto = Scoops',2600)}
   const SK=GIANT.SHAKE[st.kind]||GIANT.SHAKE.pink;
   if(SK.rumble&&d<SK.r)G.shake=Math.max(G.shake||0,SK.rumble*(1-d/SK.r));
   if(Math.floor((pv||0)/Math.PI)!==Math.floor(o.phase/Math.PI)&&d<130){tone((SK.s>.3?36:48)+Math.random()*10,SK.s>.3?.55:.4,'sine',Math.min(SK.s>.3?.1:.06,(SK.s>.3?.1:.06)*(1-d/130)+.01));if(d<SK.r)G.shake=Math.max(G.shake||0,SK.s*(1-d/SK.r))}}
@@ -1038,6 +1038,11 @@ function mpMini(dt){const mm=HUB.mapn&&HUB.mm2;if(!mm)return;HUB.mmT+=dt;if(HUB.
   if(!G.under){(HUB.shops||[]).forEach(s=>{const [x,y]=pp(s.x,s.z);if(!inside(x,y))return;g.fillStyle='#00e8b6';g.strokeStyle='#f4f7ff';g.lineWidth=1.5;g.fillRect(x-5,y-5,10,10);g.strokeRect(x-5,y-5,10,10);g.fillStyle='#14463a';g.font='700 9px sans-serif';g.textAlign='center';g.fillText('A',x,y+3)});
     HUB.portals.forEach(p=>{if(HUB.found.has(p.world))dot(p.x,p.z,p.col,p.world,5)});if(HUB.gate)dot(HUB.gate.x,HUB.gate.z,'#ffe066','K',6);(HUB.courts||[]).forEach(c=>dot(c.x,c.z,c.col,c.txt,6));(HUB.marks||[]).forEach(m=>dot(m.x,m.z,m.col,m.txt,6));
     if(typeof MULTI!=='undefined')MULTI.peers.forEach(p=>{if(p.has&&p.g&&p.g.visible)dot(p.x,p.z,p.skin&&p.skin[0]==='#'?p.skin:'#e8f0ff','',4)});
+    /* Riese auf der Karte: pulsierender Marker in der Farbe der Art (B Pink-Blob, G Goldzilla, H Hoodie-Zilla, R Rocket Fist); außerhalb des Kartenausschnitts am Rand in seine Richtung */
+    {const gs=typeof GIANT!=='undefined'&&GIANT.cur;if(gs&&LV.id===0){const GC={pink:'#ff5fa8',gold:'#f0bb3c',hoodie:'#4cd9c0',mecha:'#ff7a1a'},GL={pink:'B',gold:'G',hoodie:'H',mecha:'R'},pulse=.5+.5*Math.sin(G.t*4);let [X,Y]=pp(gs.x,gs.z);
+      if(!inside(X,Y)){const dx=X-75,dy=Y-75,k=66/Math.max(Math.abs(dx),Math.abs(dy));X=75+dx*k;Y=75+dy*k}
+      g.globalAlpha=.3+.3*pulse;g.fillStyle=GC[gs.kind]||'#fff';g.beginPath();g.arc(X,Y,10+3*pulse,0,7);g.fill();g.globalAlpha=1;g.strokeStyle='#07070d';g.lineWidth=2;g.beginPath();g.arc(X,Y,6.5,0,7);g.fill();g.stroke();g.fillStyle='#07070d';g.font='800 9px sans-serif';g.textAlign='center';g.fillText(GL[gs.kind]||'?',X,Y+3)}}
+
     HUB.items.forEach(it=>{if(it.got){const [x,y]=pp(it.x,it.z);if(!inside(x,y))return;g.fillStyle=it.def.col;g.strokeStyle='#1a1626';g.lineWidth=1;g.beginPath();g.moveTo(x,y-4);g.lineTo(x+4,y);g.lineTo(x,y+4);g.lineTo(x-4,y);g.closePath();g.fill();g.stroke()}})}
   else if(HUB.uw){const U=HUB.uw;dot(U.bx,U.bz,'#2de0d0','L',6);
     if(U.tower&&typeof BQ!=='undefined'&&BQ.gave&&!BQ.released){const pulse=.5+.5*Math.sin(G.t*4),[tx,ty]=pp(U.tower.x,U.tower.z);let X=tx,Y=ty;if(!inside(X,Y)){const dx=tx-75,dy=ty-75,k=66/Math.max(Math.abs(dx),Math.abs(dy));X=75+dx*k;Y=75+dy*k}

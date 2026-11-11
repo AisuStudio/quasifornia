@@ -20,6 +20,9 @@ srv.listen(8976,async()=>{let b;try{
  const ph=await p.evaluate(async()=>{const q=__qa,f=q.fotSnap();const im=new Image();im.src=f.img;await im.decode();const R=q.R.domElement,w=R.width,h=R.height,S=Math.min(1,1280/w),sw=Math.round(w*S),sh=Math.round(h*S);
    const c=document.createElement('canvas');c.width=64;c.height=48;const x=c.getContext('2d');x.drawImage(im,18,18,sw,sh,0,0,64,48);return Array.from(x.getImageData(0,0,64,48).data)});
  const dB=diff(ph,B),dA=diff(ph,A);console.log('Foto enthält Fisheye',Math.round(dB*10)/10,'<',Math.round(dA*10)/10,dB<dA);
+ /* Konturen bleiben im Fisheye etwa gleich dick (Faktor gegen die Vergrößerung der Mitte) */
+ const ou=await p.evaluate(()=>{const q=__qa;q.fishSet(false);q.step(.03);q.render();const px=()=>Object.values(q.OUTM).map(m=>m.uniforms.px.value);const n0=px();q.fishSet(true);q.step(.03);q.render();const n1=px();q.fishSet(true);return {k:+q.OUTK.toFixed(2),n0:n0.map(v=>+v.toFixed(2)),n1:n1.map(v=>+v.toFixed(2))}});
+ console.log('Konturen im Fisheye nicht dicker',JSON.stringify(ou),ou.k>.3&&ou.k<.7&&ou.n1.every((v,i)=>v<ou.n0[i]*.75));
  /* Im Builder aus */
  const bd=await p.evaluate(()=>{const q=__qa,s=q.HUB.shops[0],pl=q.bauAddPlot(s.x+30,s.z+30,0,20,'t76');q.P.x=pl.x;q.P.z=pl.z;q.bauOpen(pl);const inB=q.fishActive();q.bauClose(false);return {inB,after:q.fishActive()}});
  console.log('Im Builder aus, danach wieder an',JSON.stringify(bd),!bd.inB&&bd.after);
