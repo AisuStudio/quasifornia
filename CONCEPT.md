@@ -509,6 +509,18 @@ Kandidaten mit Einschätzung:
 - Ähnlichkeit zu Fortnite: "Port" und "Fort" liegen einen Buchstaben auseinander. Kein Hindernis, aber Namen mit "Night" oder "Nite" vermeiden.
 - "Port" bleibt: steht für Portal, Meer und Reisen. Nachteil: allein nicht schützbar, bei Entwicklern auch "Netzwerkanschluss". Alternative zum Hafen-Gedanken (nur falls nötig): Bay, Dock.
 
+### Namensebenen und Argosy (Stand 2026-11-11, noch nicht entschieden)
+- **Drei Ebenen** (Vorschlag): **Plattform** (das offene, vernetzte Welten-Spiel mit Portalen, Worldpacks, Multiplayer), **Hauptgeschichte** (Aisus Kampagne), **Welt** (Port Lupo, Unterwelt, Vanilla IV …).
+- **Hauptgeschichte:** Favorit **Aisu Quest** (Figur gehört dem Nutzer, schon beliebt, passt zu Aisu.Studio; Muster "Aisu Quest: Port Lupo"). Zufall ohne Konzeptbedeutung: In "Aisu" steckt "AI".
+- **Plattform: Argosy** (Name des Nutzers, schon um 2011 für die ersten Samen dieser Story; Schreibvariante "Argaussy", darin steckt Gauß). Bedeutung: großes Handelsschiff bzw. Flotte (von Ragusa/Dubrovnik); Anklang an die Argo der Argonauten (Crew auf einer Quest); "Argosy" war auch ein US-Pulp-Magazin ab 1882 mit früher Science-Fiction. Passt zu Port Lupo, Marina, Arche, Reisen zwischen Inseln und zur neuen Nutzung der Simulation (das Schiff, das alle Zwischenwesen trägt). Ersetzt den früheren Vorschlag "Seedport".
+- **Schwächen:** für deutsche Kinder nicht lautgetreu ("Argosi"?); als englisches Wort allein schwer schützbar (es gab bereits Marken mit "Argosy"). Marken (EUIPO, DPMA) und Domain ungeprüft.
+- **Unterscheidender Zusatz (Ownifier), Kandidaten des Nutzers:**
+  - **R-Go-C:** clever, als Logo stark; deutsche Kinder lesen aber "Er-Go-Tse", der Witz funktioniert nur auf Englisch.
+  - **Cargosy:** eigenständig (Fracht + Schiff); "Car" lenkt auf Autos, die Argonauten-Bedeutung geht verloren.
+  - **Argosy 67:** Zahl macht schützbar, Muster wie "Port 36"; 67 ist seit 2025 ein Kinder-Meme ("six seven"), wirkt schnell veraltet. Bedeutung der 67 offen. Alternative: **Argosy 36** (Logo "PORT 36" existiert, 36 = 6×6 Kreuzungen).
+  - **Argosy Gate:** Gate = Portal, beschreibt die Plattform, gut lesbar; erinnert an Stargate und Skandal-Endungen ("-gate"). Empfehlung von Claude.
+- **Offen:** Favorit unter den Zusätzen; Schreibweise Argosy oder Argaussy; Markt- und Domainprüfung; Test mit Anton und Freunden (aufschreiben und aussprechen lassen).
+
 ## Roadmap und Geschäftsmodell (Stand 2026-11-01)
 Ziel des Nutzers: Studio-Standbein für AisuStudio. Ressourcen in den nächsten 6 bis 12 Monaten: regelmäßig Zeit, kleines Budget.
 
